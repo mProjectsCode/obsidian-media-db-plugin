@@ -1,22 +1,22 @@
-import {App, ButtonComponent, SuggestModal} from 'obsidian';
-import {APIResult} from '../api/APIResult';
-import {sleep} from '../utils/utils';
+import {App, SuggestModal} from 'obsidian';
+import {APIRequestResult} from '../api/APIRequestResult';
+import {APIManager} from '../api/APIManager';
 
-export class MediaDbSearchModal extends SuggestModal<APIResult> {
+export class MediaDbSearchModal extends SuggestModal<APIRequestResult> {
 	query: string;
-	hasChanged: boolean;
 	isBusy: boolean;
-	okBtn: ButtonComponent;
-	onChoose: (err: Error, result?: APIResult) => void;
+	apiManager: APIManager;
+	onChoose: (err: Error, result?: APIRequestResult) => void;
 
-	constructor(app: App, onChoose?: (err: Error, result?: APIResult) => void) {
+	constructor(app: App, apiManager: APIManager, onChoose?: (err: Error, result?: APIRequestResult) => void) {
 		super(app);
 
+		this.apiManager = apiManager;
 		this.onChoose = onChoose;
 		this.isBusy = false;
 	}
 
-	async search(force: boolean = false): Promise<APIResult[]> {
+	async search(force: boolean = false): Promise<APIRequestResult[]> {
 		if (!this.query) {
 			return;
 		}
@@ -25,72 +25,41 @@ export class MediaDbSearchModal extends SuggestModal<APIResult> {
 			this.isBusy = true;
 			const thisQuery: string = this.query;
 
-			console.log('query started with ' + thisQuery)
-			await sleep(1000); // TODO: replace with real api call
+			console.log('MDB | query started with ' + thisQuery);
+
+			const res = await this.apiManager.query(thisQuery);
+
+			// console.log(res)
+
+			// await sleep(1000);
 
 			if (this.query === thisQuery) {
 				this.isBusy = false;
-				return [ // TODO: replace with real api result
-					{title: thisQuery, type: 'movie', data: null} as APIResult,
-					{title: 'test2', type: 'series', data: {episodes: 24}} as APIResult,
-				];
+
+				return res;
+
+				// return [
+				// 	{title: thisQuery, type: 'movie', data: null} as APIRequestResult,
+				// 	{title: 'test2', type: 'series', data: {episodes: 24}} as APIRequestResult,
+				// ];
 			} else {
 				return await this.search(true);
 			}
 		}
 	}
 
-	async getSuggestions(query: string): Promise<APIResult[]> {
+	async getSuggestions(query: string): Promise<APIRequestResult[]> {
 		this.query = query;
 
 		return await this.search();
 	}
 
-	renderSuggestion(item: APIResult, el: HTMLElement): void {
+	renderSuggestion(item: APIRequestResult, el: HTMLElement): void {
 		el.createEl('div', {text: item.title});
 		el.createEl('small', {text: item.type});
 	}
 
-	onChooseSuggestion(item: APIResult, evt: MouseEvent | KeyboardEvent): void {
+	onChooseSuggestion(item: APIRequestResult, evt: MouseEvent | KeyboardEvent): void {
 		this.onChoose(null, item);
 	}
-
-
-	/*
-	onOpen() {
-		const { contentEl } = this;
-
-		contentEl.createEl('h2', { text: 'Search Media DB' });
-
-		const placeholder = 'Search by title';
-		const textComponent = new TextComponent(contentEl);
-
-		textComponent.setPlaceholder(placeholder);
-		textComponent.onChange(value => (this.query = value));
-
-		textComponent.inputEl.addEventListener('keydown', this.submitCallback.bind(this));
-		textComponent.inputEl.style.width = '100%';
-
-		contentEl.appendChild(textComponent.inputEl);
-		textComponent.inputEl.focus();
-
-		const resultsComponent = new
-
-		new Setting(contentEl)
-			.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()))
-			.addButton(btn => {
-				return (this.okBtn = btn
-					.setButtonText('Ok')
-					.setCta()
-					.onClick(() => {
-						this.search();
-					}));
-			});
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
-	}
-	*/
 }

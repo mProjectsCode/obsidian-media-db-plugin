@@ -1,9 +1,12 @@
 import {Plugin} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/settings';
 import {MediaDbSearchModal} from './modals/MediaDbSearchModal';
+import {APIManager} from './api/APIManager';
+import {TestAPI} from './api/apis/TestAPI';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
+	apiManager: APIManager;
 
 	async onload() {
 		await this.loadSettings();
@@ -23,17 +26,22 @@ export default class MediaDbPlugin extends Plugin {
 
 		// register the settings tab
 		this.addSettingTab(new MediaDbSettingTab(this.app, this));
+
+
+		this.apiManager = new APIManager();
+		// register APIs
+		this.apiManager.registerAPI(new TestAPI());
 	}
 
 	async createMediaDbNote(): Promise<void> {
 		const data = await this.openMediaDbSearchModal();
-		console.log('Create new note or something...');
+		console.log('MDB | Create new note or something...');
 		console.log(data);
 	}
 
 	async openMediaDbSearchModal(): Promise<any> {
 		return new Promise(((resolve, reject) => {
-			new MediaDbSearchModal(this.app, (err, result) => {
+			new MediaDbSearchModal(this.app, this.apiManager, (err, result) => {
 				if (err) return reject(err);
 				resolve(result);
 			}).open();
