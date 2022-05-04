@@ -1,5 +1,5 @@
 import {APIModel} from './APIModel';
-import {APIRequestResult} from './APIRequestResult';
+import {MediaTypeModel} from '../models/MediaTypeModel';
 
 export class APIManager {
 	apis: APIModel[];
@@ -8,10 +8,10 @@ export class APIManager {
 		this.apis = [];
 	}
 
-	async query(query: string, types: string[] = []): Promise<APIRequestResult[]> {
+	async query(query: string, types: string[] = []): Promise<MediaTypeModel[]> {
 		console.log('MDB | api manager queried');
 
-		let res: APIRequestResult[] = [];
+		let res: MediaTypeModel[] = [];
 
 		for (const api of this.apis) {
 			if (types.length === 0 || api.hasTypeOverlap(types)) {

@@ -1,14 +1,14 @@
 import {App, SuggestModal} from 'obsidian';
-import {APIRequestResult} from '../api/APIRequestResult';
 import {APIManager} from '../api/APIManager';
+import {MediaTypeModel} from '../models/MediaTypeModel';
 
-export class MediaDbSearchModal extends SuggestModal<APIRequestResult> {
+export class MediaDbSearchModal extends SuggestModal<MediaTypeModel> {
 	query: string;
 	isBusy: boolean;
 	apiManager: APIManager;
-	onChoose: (err: Error, result?: APIRequestResult) => void;
+	onChoose: (err: Error, result?: MediaTypeModel) => void;
 
-	constructor(app: App, apiManager: APIManager, onChoose?: (err: Error, result?: APIRequestResult) => void) {
+	constructor(app: App, apiManager: APIManager, onChoose?: (err: Error, result?: MediaTypeModel) => void) {
 		super(app);
 
 		this.apiManager = apiManager;
@@ -16,7 +16,7 @@ export class MediaDbSearchModal extends SuggestModal<APIRequestResult> {
 		this.isBusy = false;
 	}
 
-	async search(force: boolean = false): Promise<APIRequestResult[]> {
+	async search(force: boolean = false): Promise<MediaTypeModel[]> {
 		if (!this.query) {
 			return;
 		}
@@ -48,18 +48,18 @@ export class MediaDbSearchModal extends SuggestModal<APIRequestResult> {
 		}
 	}
 
-	async getSuggestions(query: string): Promise<APIRequestResult[]> {
+	async getSuggestions(query: string): Promise<MediaTypeModel[]> {
 		this.query = query;
 
 		return await this.search();
 	}
 
-	renderSuggestion(item: APIRequestResult, el: HTMLElement): void {
+	renderSuggestion(item: MediaTypeModel, el: HTMLElement): void {
 		el.createEl('div', {text: item.title});
 		el.createEl('small', {text: item.type});
 	}
 
-	onChooseSuggestion(item: APIRequestResult, evt: MouseEvent | KeyboardEvent): void {
+	onChooseSuggestion(item: MediaTypeModel, evt: MouseEvent | KeyboardEvent): void {
 		this.onChoose(null, item);
 	}
 }

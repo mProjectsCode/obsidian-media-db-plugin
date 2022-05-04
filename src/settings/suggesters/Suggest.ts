@@ -2,7 +2,7 @@
 
 import {App, ISuggestOwner, Scope} from 'obsidian';
 import {createPopper, Instance as PopperInstance} from '@popperjs/core';
-import {wrapAround} from 'src/utils/utils';
+import {wrapAround} from 'src/utils/Utils';
 
 export class Suggest<T> {
 	private owner: ISuggestOwner<T>;

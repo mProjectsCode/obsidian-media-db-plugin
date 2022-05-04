@@ -1,24 +1,25 @@
 import {APIModel} from '../APIModel';
-import {APIRequestResult} from '../APIRequestResult';
+import {MediaTypeModel} from '../../models/MediaTypeModel';
 
 export class TestAPI extends APIModel {
 	constructor() {
 		super();
-		this.name = 'testAPI';
+		this.apiName = 'testAPI';
+		this.apiUrl = 'www.test.api';
 		this.types = ['test'];
 	}
 
-	async getByTitle(title: string): Promise<APIRequestResult[]> {
-		console.log(`MDB | api "${this.name}" queried`);
+	async getByTitle(title: string): Promise<MediaTypeModel[]> {
+		console.log(`MDB | api "${this.apiName}" queried`);
 
 		return [
-			{title: 'test1', type: this.types[0], apiName: this.name, data: {length: 126}} as APIRequestResult,
-			{title: 'test2', type: this.types[0], apiName: this.name, description: 'some test description', data: {}} as APIRequestResult,
+			{title: 'test1', type: this.types[0], dataSource: this.apiName} as MediaTypeModel,
+			{title: 'test2', type: this.types[0], dataSource: this.apiName} as MediaTypeModel,
 		];
 	}
 
-	getMataDataFromResult(item: APIRequestResult): string {
-		if (item.apiName !== this.name) {
+	getMataDataFromResult(item: MediaTypeModel): string {
+		if (item.dataSource !== this.apiUrl) {
 			return '';
 		}
 

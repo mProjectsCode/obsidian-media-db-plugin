@@ -1,7 +1,8 @@
-import {APIRequestResult} from './APIRequestResult';
+import {MediaTypeModel} from '../models/MediaTypeModel';
 
 export abstract class APIModel {
-	name: string;
+	apiName: string;
+	apiUrl: string;
 	types: string[];
 
 	/**
@@ -9,14 +10,7 @@ export abstract class APIModel {
 	 *
 	 * @param title the title to query for
 	 */
-	abstract getByTitle(title: string): Promise<APIRequestResult[]>;
-
-	/**
-	 * This function should return the metadata corresponding to the api result. An implementation should check first, if the result is from this api.
-	 *
-	 * @param item
-	 */
-	abstract getMataDataFromResult(item: APIRequestResult): string;
+	abstract getByTitle(title: string): Promise<MediaTypeModel[]>;
 
 	hasType(type: string): boolean {
 		return this.types.contains(type);

@@ -1,5 +1,5 @@
 import {Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/settings';
+import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {MediaDbSearchModal} from './modals/MediaDbSearchModal';
 import {APIManager} from './api/APIManager';
 import {TestAPI} from './api/apis/TestAPI';
