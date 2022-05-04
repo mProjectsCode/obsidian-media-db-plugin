@@ -4,6 +4,7 @@ export class MovieModel extends MediaTypeModel {
 	type: string;
 	title: string;
 	dataSource: string;
+	id: string;
 
 	genres: string[];
 	producer: string;
@@ -19,14 +20,16 @@ export class MovieModel extends MediaTypeModel {
 	personalRating: number;
 
 
-	constructor() {
+	constructor(obj: any = {}) {
 		super();
+
+		Object.assign(this, obj);
 
 		this.type = 'movie';
 	}
 
 	toMetaData(): string {
-		return '';
+		return JSON.stringify(this);
 	}
 
 }

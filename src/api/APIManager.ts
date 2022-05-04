@@ -15,13 +15,21 @@ export class APIManager {
 
 		for (const api of this.apis) {
 			if (types.length === 0 || api.hasTypeOverlap(types)) {
-				const apiRes = await api.getByTitle(query);
+				const apiRes = await api.searchByTitle(query);
 				// console.log(apiRes);
 				res = res.concat(apiRes);
 			}
 		}
 
 		return res;
+	}
+
+	async queryDetailedInfo(item: MediaTypeModel): Promise<MediaTypeModel> {
+		for (const api of this.apis) {
+			if (api.apiName === item.dataSource) {
+				return api.getById(item);
+			}
+		}
 	}
 
 	registerAPI(api: APIModel): void {

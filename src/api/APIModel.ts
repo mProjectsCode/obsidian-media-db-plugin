@@ -10,7 +10,9 @@ export abstract class APIModel {
 	 *
 	 * @param title the title to query for
 	 */
-	abstract getByTitle(title: string): Promise<MediaTypeModel[]>;
+	abstract searchByTitle(title: string): Promise<MediaTypeModel[]>;
+
+	abstract getById(item: MediaTypeModel): Promise<MediaTypeModel>;
 
 	hasType(type: string): boolean {
 		return this.types.contains(type);

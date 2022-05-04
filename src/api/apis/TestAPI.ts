@@ -1,5 +1,6 @@
 import {APIModel} from '../APIModel';
 import {MediaTypeModel} from '../../models/MediaTypeModel';
+import {MovieModel} from '../../models/MovieModel';
 
 export class TestAPI extends APIModel {
 	constructor() {
@@ -9,20 +10,16 @@ export class TestAPI extends APIModel {
 		this.types = ['test'];
 	}
 
-	async getByTitle(title: string): Promise<MediaTypeModel[]> {
+	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried`);
 
 		return [
-			{title: 'test1', type: this.types[0], dataSource: this.apiName} as MediaTypeModel,
-			{title: 'test2', type: this.types[0], dataSource: this.apiName} as MediaTypeModel,
+			new MovieModel ({title: 'test_1', type: this.types[0], dataSource: this.apiName}) ,
+			new MovieModel ({title: 'test_2', type: this.types[0], dataSource: this.apiName, producer: 'Max Musterman'}),
 		];
 	}
 
-	getMataDataFromResult(item: MediaTypeModel): string {
-		if (item.dataSource !== this.apiUrl) {
-			return '';
-		}
-
-		return '';
+	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+		return item;
 	}
 }

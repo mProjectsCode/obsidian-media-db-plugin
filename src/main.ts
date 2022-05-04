@@ -3,6 +3,8 @@ import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './sett
 import {MediaDbSearchModal} from './modals/MediaDbSearchModal';
 import {APIManager} from './api/APIManager';
 import {TestAPI} from './api/apis/TestAPI';
+import {MediaTypeModel} from './models/MediaTypeModel';
+import {getFileName} from './utils/Utils';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -34,9 +36,28 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async createMediaDbNote(): Promise<void> {
-		const data = await this.openMediaDbSearchModal();
+		let data: MediaTypeModel = await this.openMediaDbSearchModal();
 		console.log('MDB | Create new note or something...');
+
+		data = await this.apiManager.queryDetailedInfo(data);
+
 		console.log(data);
+
+		data.toMetaData()
+
+		const fileContent = `---\n${data.toMetaData()}\n---\n`;
+
+		const fileName = getFileName(data);
+		const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
+		const targetFile = await this.app.vault.create(filePath, fileContent);
+
+		// open file
+		const activeLeaf = this.app.workspace.getLeaf();
+		if (!activeLeaf) {
+			console.warn('No active leaf');
+			return;
+		}
+		await activeLeaf.openFile(targetFile, { state: { mode: 'source' } });
 	}
 
 	async openMediaDbSearchModal(): Promise<any> {
