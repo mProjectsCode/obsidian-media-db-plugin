@@ -6,10 +6,12 @@ import {FolderSuggest} from './suggesters/FolderSuggester';
 
 export interface MediaDbPluginSettings {
 	folder: string,
+	OMDbKey: string,
 }
 
 export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	folder: '',
+	OMDbKey: '',
 };
 
 export class MediaDbSettingTab extends PluginSettingTab {
@@ -17,10 +19,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 	constructor(app: App, plugin: MediaDbPlugin) {
 		super(app, plugin);
+		this.plugin = plugin;
 	}
 
 	display(): void {
 		const {containerEl} = this;
+
+		containerEl.empty();
 
 		containerEl.createEl('h2', {text: 'Media DB Plugin Settings'});
 
@@ -33,6 +38,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.folder)
 					.onChange(data => {
 						this.plugin.settings.folder = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('OMDb API key')
+			.setDesc('API key for www.omdbapi.com.')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.OMDbKey)
+					.onChange(data => {
+						this.plugin.settings.OMDbKey = data;
 						this.plugin.saveSettings();
 					});
 			});

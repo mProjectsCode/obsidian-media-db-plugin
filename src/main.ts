@@ -5,6 +5,7 @@ import {APIManager} from './api/APIManager';
 import {TestAPI} from './api/apis/TestAPI';
 import {MediaTypeModel} from './models/MediaTypeModel';
 import {getFileName} from './utils/Utils';
+import {OMDbAPI} from './api/apis/OMDbAPI';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -33,6 +34,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager = new APIManager();
 		// register APIs
 		this.apiManager.registerAPI(new TestAPI());
+		this.apiManager.registerAPI(new OMDbAPI(this));
 	}
 
 	async createMediaDbNote(): Promise<void> {

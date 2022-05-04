@@ -31,7 +31,7 @@ export class MediaDbSearchModal extends SuggestModal<MediaTypeModel> {
 
 			// console.log(res)
 
-			// await sleep(1000);
+			await sleep(1000);
 
 			if (this.query === thisQuery) {
 				this.isBusy = false;
