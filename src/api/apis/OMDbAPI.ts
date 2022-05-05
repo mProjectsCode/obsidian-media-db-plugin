@@ -36,7 +36,7 @@ export class OMDbAPI extends APIModel {
 
 		for (const value of data.Search) {
 			if (value.Type === 'movie') {
-				ret.push(new MovieModel({title: value.Title, id: value.imdbID, dataSource: this.apiName, type: 'movie'} as MovieModel));
+				ret.push(new MovieModel({title: value.Title, id: value.imdbID, dataSource: this.apiName, type: 'movie', premiere: value.Year} as MovieModel));
 			}
 		}
 
@@ -54,7 +54,7 @@ export class OMDbAPI extends APIModel {
 
 		const data = await fetchData.json();
 		if (data.Type === 'movie') {
-			const model = new MovieModel({title: data.Title, id: data.imdbID, dataSource: this.apiName, type: 'movie'} as MovieModel);
+			const model = new MovieModel({title: data.Title, id: data.imdbID, dataSource: this.apiName, type: 'movie', premiere: data.Year} as MovieModel);
 
 			// TODO: mapping
 

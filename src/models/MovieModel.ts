@@ -5,6 +5,7 @@ import {stringifyYaml} from 'obsidian';
 export class MovieModel extends MediaTypeModel {
 	type: string;
 	title: string;
+	premiere: string;
 	dataSource: string;
 	id: string;
 
@@ -15,7 +16,6 @@ export class MovieModel extends MediaTypeModel {
 	image: string;
 
 	released: boolean;
-	premiere: string;
 
 	watched: boolean;
 	lastWatched: string;
