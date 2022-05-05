@@ -1,13 +1,22 @@
 .media-db-plugin-list-wrapper {
 	display: flex;
 	align-content: center;
-	/* margin: 5px; */
+	margin-bottom: 5px;
 }
 
 .media-db-plugin-list-toggle {
 
 }
 
-.media-db-plugin-list-text {
+.media-db-plugin-list-text-wrapper {
 	flex: 1;
+}
+
+
+.media-db-plugin-list-text {
+	display: block;
+}
+
+small.media-db-plugin-list-text{
+	color: var(--text-muted);
 }

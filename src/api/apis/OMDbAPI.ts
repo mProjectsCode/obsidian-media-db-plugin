@@ -11,6 +11,7 @@ export class OMDbAPI extends APIModel {
 
 		this.plugin = plugin;
 		this.apiName = 'OMDbAPI';
+		this.apiDescription = 'A free API for Movies and Series.';
 		this.apiUrl = 'http://www.omdbapi.com/';
 		this.types = ['movie', 'series'];
 	}

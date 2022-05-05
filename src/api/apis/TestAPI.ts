@@ -6,6 +6,7 @@ export class TestAPI extends APIModel {
 	constructor() {
 		super();
 		this.apiName = 'testAPI';
+		this.apiDescription = 'The test API used during development.';
 		this.apiUrl = 'www.test.api';
 		this.types = ['test'];
 	}

@@ -3,6 +3,7 @@ import {MediaTypeModel} from '../models/MediaTypeModel';
 export abstract class APIModel {
 	apiName: string;
 	apiUrl: string;
+	apiDescription: string;
 	types: string[];
 
 	/**

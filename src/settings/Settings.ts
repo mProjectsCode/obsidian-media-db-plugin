@@ -31,7 +31,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('New file location')
-			.setDesc('New book notes will be placed here.')
+			.setDesc('New media db entries will be placed here.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder('Example: folder1/folder2')
@@ -44,7 +44,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('OMDb API key')
-			.setDesc('API key for www.omdbapi.com.')
+			.setDesc('API key for "www.omdbapi.com".')
 			.addText(cb => {
 				cb.setPlaceholder('API key')
 					.setValue(this.plugin.settings.OMDbKey)
