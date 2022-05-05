@@ -4,7 +4,7 @@ export function wrapAround(value: number, size: number): number {
 	return ((value % size) + size) % size;
 }
 
-export function sleep (ms: number) {
+export function sleep(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 

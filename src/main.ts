@@ -1,11 +1,12 @@
-import {Plugin} from 'obsidian';
+import {Notice, Plugin} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
-import {MediaDbSearchModal} from './modals/MediaDbSearchModal';
 import {APIManager} from './api/APIManager';
 import {TestAPI} from './api/apis/TestAPI';
 import {MediaTypeModel} from './models/MediaTypeModel';
 import {getFileName} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
+import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
+import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -15,7 +16,7 @@ export default class MediaDbPlugin extends Plugin {
 		await this.loadSettings();
 
 		// add icon to the left ribbon
-		const ribbonIconEl = this.addRibbonIcon('book', 'Add new Media DB entry', (evt: MouseEvent) =>
+		const ribbonIconEl = this.addRibbonIcon('database', 'Add new Media DB entry', (evt: MouseEvent) =>
 			this.createMediaDbNote(),
 		);
 		ribbonIconEl.addClass('obsidian-media-db-plugin-ribbon-class');
@@ -38,35 +39,43 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async createMediaDbNote(): Promise<void> {
-		let data: MediaTypeModel = await this.openMediaDbSearchModal();
-		console.log('MDB | Create new note or something...');
+		try {
+			let data: MediaTypeModel = await this.openMediaDbSearchModal();
+			console.log('MDB | Create new note or something...');
 
-		data = await this.apiManager.queryDetailedInfo(data);
+			data = await this.apiManager.queryDetailedInfo(data);
 
-		console.log(data);
+			console.log(data);
 
-		data.toMetaData()
+			data.toMetaData();
 
-		const fileContent = `---\n${data.toMetaData()}\n---\n`;
+			const fileContent = `---\n${data.toMetaData()}\n---\n`;
 
-		const fileName = getFileName(data);
-		const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
-		const targetFile = await this.app.vault.create(filePath, fileContent);
+			const fileName = getFileName(data);
+			const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
+			const targetFile = await this.app.vault.create(filePath, fileContent);
 
-		// open file
-		const activeLeaf = this.app.workspace.getLeaf();
-		if (!activeLeaf) {
-			console.warn('No active leaf');
-			return;
+			// open file
+			const activeLeaf = this.app.workspace.getLeaf();
+			if (!activeLeaf) {
+				console.warn('No active leaf');
+				return;
+			}
+			await activeLeaf.openFile(targetFile, {state: {mode: 'source'}});
+		} catch (e) {
+			console.warn(e);
+			new Notice(e.toString());
 		}
-		await activeLeaf.openFile(targetFile, { state: { mode: 'source' } });
 	}
 
-	async openMediaDbSearchModal(): Promise<any> {
+	async openMediaDbSearchModal(): Promise<MediaTypeModel> {
 		return new Promise(((resolve, reject) => {
-			new MediaDbSearchModal(this.app, this.apiManager, (err, result) => {
+			new MediaDbAdvancedSearchModal(this.app, this.apiManager, (err, results) => {
 				if (err) return reject(err);
-				resolve(result);
+				new MediaDbSearchResultModal(this.app, results, (err2, res) => {
+					if (err) return reject(err2);
+					resolve(res);
+				}).open();
 			}).open();
 		}));
 	}

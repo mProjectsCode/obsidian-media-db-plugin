@@ -1,0 +1,13 @@
+.media-db-plugin-list-wrapper {
+	display: flex;
+	align-content: center;
+	/* margin: 5px; */
+}
+
+.media-db-plugin-list-toggle {
+
+}
+
+.media-db-plugin-list-text {
+	flex: 1;
+}

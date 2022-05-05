@@ -14,8 +14,8 @@ export class TestAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried`);
 
 		return [
-			new MovieModel ({title: 'test_1', type: this.types[0], dataSource: this.apiName}) ,
-			new MovieModel ({title: 'test_2', type: this.types[0], dataSource: this.apiName, producer: 'Max Musterman'}),
+			new MovieModel({title: 'test_1', type: this.types[0], dataSource: this.apiName}),
+			new MovieModel({title: 'test_2', type: this.types[0], dataSource: this.apiName, producer: 'Max Musterman'}),
 		];
 	}
 

@@ -1,4 +1,6 @@
 import {MediaTypeModel} from './MediaTypeModel';
+import {stringifyYaml} from 'obsidian';
+
 
 export class MovieModel extends MediaTypeModel {
 	type: string;
@@ -29,7 +31,7 @@ export class MovieModel extends MediaTypeModel {
 	}
 
 	toMetaData(): string {
-		return JSON.stringify(this);
+		return stringifyYaml(this);
 	}
 
 }

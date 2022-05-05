@@ -36,7 +36,7 @@ export class OMDbAPI extends APIModel {
 
 		for (const value of data.Search) {
 			if (value.Type === 'movie') {
-				ret.push(new MovieModel({title: value.Title, id: value.imdbID, dataSource: this.apiName, type: 'movie'} as MovieModel))
+				ret.push(new MovieModel({title: value.Title, id: value.imdbID, dataSource: this.apiName, type: 'movie'} as MovieModel));
 			}
 		}
 
@@ -61,6 +61,6 @@ export class OMDbAPI extends APIModel {
 			return model;
 		}
 
-		return ;
+		return;
 	}
 }
