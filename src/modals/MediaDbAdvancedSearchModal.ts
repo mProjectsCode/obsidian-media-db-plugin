@@ -1,4 +1,4 @@
-import {App, ButtonComponent, Component, Modal, Setting, TextComponent, ToggleComponent} from 'obsidian';
+import {App, ButtonComponent, Component, Modal, Notice, Setting, TextComponent, ToggleComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import {APIManager} from '../api/APIManager';
 
@@ -16,7 +16,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		this.onSubmit = onSubmit;
 		this.selectedApis = [];
 		for (const api of this.apiManager.apis) {
-			this.selectedApis[api.apiName] = true;
+			this.selectedApis[api.apiName] = false;
 		}
 	}
 
@@ -30,7 +30,20 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 		console.log(this.selectedApis);
 
-		if (!this.query) {
+		if (!this.query || this.query.length < 5) {
+			new Notice("MDB: Query to short");
+			return;
+		}
+
+		let selectedAPICount = 0;
+		for (const api in this.selectedApis) {
+			if (this.selectedApis[api]) {
+				selectedAPICount += 1;
+			}
+		}
+
+		if (selectedAPICount === 0) {
+			new Notice("MDB: No API selected");
 			return;
 		}
 

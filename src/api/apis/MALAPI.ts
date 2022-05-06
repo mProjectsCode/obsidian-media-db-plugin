@@ -13,7 +13,7 @@ export class MALAPI extends APIModel {
 
 		this.plugin = plugin;
 		this.apiName = 'MALAPI';
-		this.apiDescription = 'A free API for Anime.';
+		this.apiDescription = 'A free API for Anime. Some results may take a long time to load.';
 		this.apiUrl = 'https://jikan.moe/';
 		this.types = ['movie', 'series', 'anime'];
 	}
@@ -62,18 +62,31 @@ export class MALAPI extends APIModel {
 		console.log(data);
 		const result = data.data;
 
-		// if (data.Type === 'movie') {
+		if (result.type === 'Movie') {
 			const model = new MovieModel({
 				type: result.type,
 				title: result.title,
-				year: result.year,
+				year: result.year ?? result.aired?.prop?.from?.year ?? '',
 				dataSource: this.apiName,
 				id: result.mal_id,
+
+				genres: result.genres?.map((x: any) => x.name) ?? [],
+				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
+				duration: result.duration ?? 'unknown',
+				onlineRating: result.score ?? 0,
+				image: result.images?.jpg?.image_url ?? '',
+
+				released: true,
+				premiere: result.aired?.string ?? 'unknown',
+
+				watched: false,
+				lastWatched: '',
+				personalRating: 0,
 			} as MovieModel);
 
 			return model;
-		// }
+		}
 
-		// return;
+		return;
 	}
 }

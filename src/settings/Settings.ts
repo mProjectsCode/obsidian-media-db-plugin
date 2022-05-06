@@ -6,11 +6,13 @@ import {FolderSuggest} from './suggesters/FolderSuggester';
 
 export interface MediaDbPluginSettings {
 	folder: string,
+	sfwFilter: boolean,
 	OMDbKey: string,
 }
 
 export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	folder: '',
+	sfwFilter: true,
 	OMDbKey: '',
 };
 
@@ -50,6 +52,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.OMDbKey)
 					.onChange(data => {
 						this.plugin.settings.OMDbKey = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('SFW filter')
+			.setDesc('Only shows SFW results for APIs that offer filtering.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.sfwFilter)
+					.onChange(data => {
+						this.plugin.settings.sfwFilter = data;
 						this.plugin.saveSettings();
 					});
 			});

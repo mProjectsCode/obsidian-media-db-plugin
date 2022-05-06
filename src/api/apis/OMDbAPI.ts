@@ -22,6 +22,10 @@ export class OMDbAPI extends APIModel {
 		const searchUrl = `http://www.omdbapi.com/?s=${title}&apikey=${this.plugin.settings.OMDbKey}`;
 
 		const fetchData = await fetch(searchUrl);
+
+		if (fetchData.status === 401) {
+			throw Error(`Authentication for ${this.apiName} failed. Check the API key.`);
+		}
 		if (fetchData.status !== 200) {
 			throw Error(`Received status code ${fetchData.status} from an API.`);
 		}
@@ -55,6 +59,9 @@ export class OMDbAPI extends APIModel {
 		const searchUrl = `http://www.omdbapi.com/?i=${item.id}&apikey=${this.plugin.settings.OMDbKey}`;
 
 		const fetchData = await fetch(searchUrl);
+		if (fetchData.status === 401) {
+			throw Error(`Authentication for ${this.apiName} failed. Check the API key.`);
+		}
 		if (fetchData.status !== 200) {
 			throw Error(`Received status code ${fetchData.status} from an API.`);
 		}
