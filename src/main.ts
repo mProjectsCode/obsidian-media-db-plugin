@@ -7,6 +7,7 @@ import {getFileName} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
+import {MALAPI} from './api/apis/MALAPI';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -36,6 +37,7 @@ export default class MediaDbPlugin extends Plugin {
 		// register APIs
 		this.apiManager.registerAPI(new TestAPI());
 		this.apiManager.registerAPI(new OMDbAPI(this));
+		this.apiManager.registerAPI(new MALAPI(this));
 	}
 
 	async createMediaDbNote(): Promise<void> {

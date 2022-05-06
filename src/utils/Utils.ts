@@ -9,7 +9,7 @@ export function sleep(ms: number) {
 }
 
 export function getFileName(item: MediaTypeModel) {
-	return replaceIllegalFileNameCharactersInString(item.premiere ? `${item.title} (${item.premiere})` : `${item.title}`);
+	return replaceIllegalFileNameCharactersInString(item.year ? `${item.title} (${item.year})` : `${item.title}`);
 }
 
 export function replaceIllegalFileNameCharactersInString(string: string) {

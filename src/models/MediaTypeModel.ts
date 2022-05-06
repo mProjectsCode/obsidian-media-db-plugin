@@ -1,7 +1,7 @@
 export abstract class MediaTypeModel {
 	type: string;
 	title: string;
-	premiere: string;
+	year: string;
 	dataSource: string;
 	id: string;
 
