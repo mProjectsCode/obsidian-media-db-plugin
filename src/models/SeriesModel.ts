@@ -2,7 +2,7 @@ import {MediaTypeModel} from './MediaTypeModel';
 import {stringifyYaml} from 'obsidian';
 
 
-export class MovieModel extends MediaTypeModel {
+export class SeriesModel extends MediaTypeModel {
 	type: string;
 	title: string;
 	year: string;
@@ -10,13 +10,16 @@ export class MovieModel extends MediaTypeModel {
 	id: string;
 
 	genres: string[];
-	producer: string;
+	studios: string[];
+	episodes: number;
 	duration: string;
 	onlineRating: number;
 	image: string;
 
 	released: boolean;
-	premiere: string;
+	airing: boolean;
+	airedFrom: string;
+	airedTo: string;
 
 	watched: boolean;
 	lastWatched: string;
@@ -28,7 +31,7 @@ export class MovieModel extends MediaTypeModel {
 
 		Object.assign(this, obj);
 
-		this.type = 'movie';
+		this.type = 'series';
 	}
 
 	toMetaData(): string {
@@ -36,7 +39,7 @@ export class MovieModel extends MediaTypeModel {
 	}
 
 	getFileName(): string {
-		return this.title + (this.year ? ` (${this.year})` : '');
+		return this.title;
 	}
 
 }

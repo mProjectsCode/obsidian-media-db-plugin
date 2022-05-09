@@ -3,7 +3,7 @@ import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './sett
 import {APIManager} from './api/APIManager';
 import {TestAPI} from './api/apis/TestAPI';
 import {MediaTypeModel} from './models/MediaTypeModel';
-import {getFileName} from './utils/Utils';
+import {replaceIllegalFileNameCharactersInString} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
@@ -51,9 +51,9 @@ export default class MediaDbPlugin extends Plugin {
 
 			data.toMetaData();
 
-			const fileContent = `---\n${data.toMetaData()}\n---\n`;
+			const fileContent = `---\n${data.toMetaData()}---\n`;
 
-			const fileName = getFileName(data);
+			const fileName = replaceIllegalFileNameCharactersInString(data.getFileName());
 			const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
 			const targetFile = await this.app.vault.create(filePath, fileContent);
 

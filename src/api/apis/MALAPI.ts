@@ -4,6 +4,7 @@ import {MovieModel} from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
 // @ts-ignore
 import Jikanjs from '@mateoaranda/jikanjs';
+import {SeriesModel} from '../../models/SeriesModel';
 
 export class MALAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -34,16 +35,24 @@ export class MALAPI extends APIModel {
 
 		let ret: MediaTypeModel[] = [];
 
-		for (const value of data.data) {
-			// if (value.Type === 'movie') {
+		for (const result of data.data) {
+			if (result.type.toLowerCase() === 'movie') {
 				ret.push(new MovieModel({
-					type: value.type,
-					title: value.title,
-					year: value.year,
+					type: result.type,
+					title: result.title,
+					year: result.year ?? result.aired?.prop?.from?.year ?? '',
 					dataSource: this.apiName,
-					id: value.mal_id,
+					id: result.mal_id,
 				} as MovieModel));
-			// }
+			} else if (result.type.toLowerCase() === 'tv') {
+				ret.push(new SeriesModel({
+					type: result.type,
+					title: result.title,
+					year: result.year ?? result.aired?.prop?.from?.year ?? '',
+					dataSource: this.apiName,
+					id: result.mal_id,
+				} as SeriesModel));
+			}
 		}
 
 		return ret;
@@ -62,7 +71,7 @@ export class MALAPI extends APIModel {
 		console.log(data);
 		const result = data.data;
 
-		if (result.type === 'Movie') {
+		if (result.type.toLowerCase() === 'movie') {
 			const model = new MovieModel({
 				type: result.type,
 				title: result.title,
@@ -83,6 +92,32 @@ export class MALAPI extends APIModel {
 				lastWatched: '',
 				personalRating: 0,
 			} as MovieModel);
+
+			return model;
+		} else if (result.type.toLowerCase() === 'tv') {
+			const model = new SeriesModel({
+				type: result.type,
+				title: result.title,
+				year: result.year ?? result.aired?.prop?.from?.year ?? '',
+				dataSource: this.apiName,
+				id: result.mal_id,
+
+				genres: result.genres?.map((x: any) => x.name) ?? [],
+				studios: result.studios?.map((x: any) => x.name) ?? [],
+				episodes: result.episodes,
+				duration: result.duration ?? 'unknown',
+				onlineRating: result.score ?? 0,
+				image: result.images?.jpg?.image_url ?? '',
+
+				released: true,
+				airedFrom: (new Date(result.aired?.from)).toLocaleDateString() ?? 'unknown',
+				airedTo: (new Date(result.aired?.to)).toLocaleDateString() ?? 'unknown',
+				airing: result.airing,
+
+				watched: false,
+				lastWatched: '',
+				personalRating: 0,
+			} as SeriesModel);
 
 			return model;
 		}

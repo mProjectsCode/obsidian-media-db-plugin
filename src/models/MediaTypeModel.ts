@@ -6,4 +6,6 @@ export abstract class MediaTypeModel {
 	id: string;
 
 	abstract toMetaData(): string;
+
+	abstract getFileName(): string;
 }

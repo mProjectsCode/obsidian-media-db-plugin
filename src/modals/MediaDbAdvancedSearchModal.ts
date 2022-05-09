@@ -31,7 +31,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		console.log(this.selectedApis);
 
 		if (!this.query || this.query.length < 5) {
-			new Notice("MDB: Query to short");
+			new Notice('MDB: Query to short');
 			return;
 		}
 
@@ -43,7 +43,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		}
 
 		if (selectedAPICount === 0) {
-			new Notice("MDB: No API selected");
+			new Notice('MDB: No API selected');
 			return;
 		}
 
