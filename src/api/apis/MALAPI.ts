@@ -86,7 +86,7 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				premiere: result.aired?.string ?? 'unknown',
+				premiere: (new Date(result.aired?.from)).toLocaleDateString() ?? 'unknown',
 
 				watched: false,
 				lastWatched: '',

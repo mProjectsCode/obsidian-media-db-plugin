@@ -2,18 +2,23 @@ import {App, PluginSettingTab, Setting} from 'obsidian';
 
 import MediaDbPlugin from '../main';
 import {FolderSuggest} from './suggesters/FolderSuggester';
+import {FileSuggest} from './suggesters/FileSuggester';
 
 
 export interface MediaDbPluginSettings {
 	folder: string,
 	sfwFilter: boolean,
 	OMDbKey: string,
+	movieTemplate: string,
+	seriesTemplate: string,
 }
 
 export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	folder: '',
 	sfwFilter: true,
 	OMDbKey: '',
+	movieTemplate: '',
+	seriesTemplate: '',
 };
 
 export class MediaDbSettingTab extends PluginSettingTab {
@@ -40,6 +45,32 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.folder)
 					.onChange(data => {
 						this.plugin.settings.folder = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Movie template')
+			.setDesc('Template file to be used when creating a new note for a movie.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: movieTemplate.md')
+					.setValue(this.plugin.settings.movieTemplate)
+					.onChange(data => {
+						this.plugin.settings.movieTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Series template')
+			.setDesc('Template file to be used when creating a new note for a series.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: seriesTemplate.md')
+					.setValue(this.plugin.settings.seriesTemplate)
+					.onChange(data => {
+						this.plugin.settings.seriesTemplate = data;
 						this.plugin.saveSettings();
 					});
 			});

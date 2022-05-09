@@ -1,4 +1,4 @@
-import {Notice, Plugin} from 'obsidian';
+import {Notice, Plugin, TFile} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {TestAPI} from './api/apis/TestAPI';
@@ -43,7 +43,7 @@ export default class MediaDbPlugin extends Plugin {
 	async createMediaDbNote(): Promise<void> {
 		try {
 			let data: MediaTypeModel = await this.openMediaDbSearchModal();
-			console.log('MDB | Create new note or something...');
+			console.log('MDB | Creating new note...');
 
 			data = await this.apiManager.queryDetailedInfo(data);
 
@@ -51,7 +51,23 @@ export default class MediaDbPlugin extends Plugin {
 
 			data.toMetaData();
 
-			const fileContent = `---\n${data.toMetaData()}---\n`;
+			let fileContent = `---\n${data.toMetaData()}---\n`;
+
+			if (data.type === 'movie' && this.settings.movieTemplate) {
+				const templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.movieTemplate).first();
+				if (templateFile) {
+					let template = await this.app.vault.read(templateFile);
+					// console.log(template);
+					fileContent += template;
+				}
+			} else if (data.type === 'series' && this.settings.seriesTemplate) {
+				const templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.seriesTemplate).first();
+				if (templateFile) {
+					let template = await this.app.vault.read(templateFile);
+					// console.log(template);
+					fileContent += template;
+				}
+			}
 
 			const fileName = replaceIllegalFileNameCharactersInString(data.getFileName());
 			const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;

@@ -2,6 +2,7 @@ import {APIModel} from '../APIModel';
 import {MediaTypeModel} from '../../models/MediaTypeModel';
 import {MovieModel} from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
+import {SeriesModel} from '../../models/SeriesModel';
 
 export class OMDbAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -48,6 +49,14 @@ export class OMDbAPI extends APIModel {
 					dataSource: this.apiName,
 					id: value.imdbID,
 				} as MovieModel));
+			} else if (value.Type === 'series') {
+				ret.push(new SeriesModel({
+					type: 'series',
+					title: value.Title,
+					year: value.Year,
+					dataSource: this.apiName,
+					id: value.imdbID,
+				} as SeriesModel));
 			}
 		}
 
@@ -66,30 +75,56 @@ export class OMDbAPI extends APIModel {
 			throw Error(`Received status code ${fetchData.status} from an API.`);
 		}
 
-		const data = await fetchData.json();
-		console.log(data);
+		const result = await fetchData.json();
+		console.log(result);
 
-		if (data.Type === 'movie') {
+		if (result.Type === 'movie') {
 			const model = new MovieModel({
 				type: 'movie',
-				title: data.Title,
-				year: data.Year,
+				title: result.Title,
+				year: result.Year,
 				dataSource: this.apiName,
-				id: data.imdbID,
+				id: result.imdbID,
 
-				genres: data.Genre?.split(', ') ?? [],
-				producer: data.Director ?? 'unknown',
-				duration: data.Runtime ?? 'unknown',
-				onlineRating: Number.parseFloat(data.imdbRating ?? 0),
-				image: data.Poster ?? '',
+				genres: result.Genre?.split(', ') ?? [],
+				producer: result.Director ?? 'unknown',
+				duration: result.Runtime ?? 'unknown',
+				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
+				image: result.Poster ?? '',
 
 				released: true,
-				premiere: data.Released ?? 'unknown',
+				premiere: (new Date(result.Released)).toLocaleDateString() ?? 'unknown',
 
 				watched: false,
 				lastWatched: '',
 				personalRating: 0,
 			} as MovieModel);
+
+			return model;
+		} else if (result.Type === 'series') {
+			const model = new SeriesModel({
+				type: 'series',
+				title: result.Title,
+				year: result.Year,
+				dataSource: this.apiName,
+				id: result.imdbID,
+
+				genres: result.Genre?.split(', ') ?? [],
+				studios: [result.Director] ?? 'unknown',
+				episodes: 0,
+				duration: result.Runtime ?? 'unknown',
+				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
+				image: result.Poster ?? '',
+
+				released: true,
+				airing: false,
+				airedFrom: (new Date(result.Released)).toLocaleDateString() ?? 'unknown',
+				airedTo: 'unknown',
+
+				watched: false,
+				lastWatched: '',
+				personalRating: 0,
+			} as SeriesModel);
 
 			return model;
 		}
