@@ -7,6 +7,7 @@ export class MovieModel extends MediaTypeModel {
 	title: string;
 	year: string;
 	dataSource: string;
+	url: string;
 	id: string;
 
 	genres: string[];

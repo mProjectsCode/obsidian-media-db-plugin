@@ -42,6 +42,16 @@ export class APIManager {
 		}
 	}
 
+	getApiByName(name: string): APIModel {
+		for (const api of this.apis) {
+			if (api.apiName === name) {
+				return api;
+			}
+		}
+
+		return null;
+	}
+
 	registerAPI(api: APIModel): void {
 		this.apis.push(api);
 	}

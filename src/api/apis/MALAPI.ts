@@ -77,6 +77,7 @@ export class MALAPI extends APIModel {
 				title: result.title,
 				year: result.year ?? result.aired?.prop?.from?.year ?? '',
 				dataSource: this.apiName,
+				url: result.url,
 				id: result.mal_id,
 
 				genres: result.genres?.map((x: any) => x.name) ?? [],
@@ -100,6 +101,7 @@ export class MALAPI extends APIModel {
 				title: result.title,
 				year: result.year ?? result.aired?.prop?.from?.year ?? '',
 				dataSource: this.apiName,
+				url: result.url,
 				id: result.mal_id,
 
 				genres: result.genres?.map((x: any) => x.name) ?? [],

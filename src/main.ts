@@ -8,6 +8,7 @@ import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
 import {MALAPI} from './api/apis/MALAPI';
+import {MediaDbIdSearchModal} from './modals/MediaDbIdSearchModal';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -18,7 +19,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		// add icon to the left ribbon
 		const ribbonIconEl = this.addRibbonIcon('database', 'Add new Media DB entry', (evt: MouseEvent) =>
-			this.createMediaDbNote(),
+			this.createMediaDbNote(this.openMediaDbSearchModal.bind(this)),
 		);
 		ribbonIconEl.addClass('obsidian-media-db-plugin-ribbon-class');
 
@@ -26,7 +27,13 @@ export default class MediaDbPlugin extends Plugin {
 		this.addCommand({
 			id: 'open-media-db-search-modal',
 			name: 'Add new Media DB entry',
-			callback: () => this.createMediaDbNote(),
+			callback: () => this.createMediaDbNote(this.openMediaDbSearchModal.bind(this)),
+		});
+		// register command to open id search modal
+		this.addCommand({
+			id: 'open-media-db-id-search-modal',
+			name: 'Add new Media DB entry by id',
+			callback: () => this.createMediaDbNote(this.openMediaDbIdSearchModal.bind(this)),
 		});
 
 		// register the settings tab
@@ -40,9 +47,9 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new MALAPI(this));
 	}
 
-	async createMediaDbNote(): Promise<void> {
+	async createMediaDbNote(modal: () => Promise<MediaTypeModel>): Promise<void> {
 		try {
-			let data: MediaTypeModel = await this.openMediaDbSearchModal();
+			let data: MediaTypeModel = await modal();
 			console.log('MDB | Creating new note...');
 
 			data = await this.apiManager.queryDetailedInfo(data);
@@ -91,9 +98,18 @@ export default class MediaDbPlugin extends Plugin {
 			new MediaDbAdvancedSearchModal(this.app, this.apiManager, (err, results) => {
 				if (err) return reject(err);
 				new MediaDbSearchResultModal(this.app, results, (err2, res) => {
-					if (err) return reject(err2);
+					if (err2) return reject(err2);
 					resolve(res);
 				}).open();
+			}).open();
+		}));
+	}
+
+	async openMediaDbIdSearchModal(): Promise<MediaTypeModel> {
+		return new Promise(((resolve, reject) => {
+			new MediaDbIdSearchModal(this.app, this.apiManager, (err, res) => {
+				if (err) return reject(err);
+				resolve(res);
 			}).open();
 		}));
 	}

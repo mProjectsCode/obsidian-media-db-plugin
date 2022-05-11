@@ -32,6 +32,10 @@ export class OMDbAPI extends APIModel {
 		}
 		const data = await fetchData.json();
 
+		if (data.Response === 'False') {
+			throw Error(`Received error from ${this.apiName}: ${data.Error}`);
+		}
+
 		if (!data.Search) {
 			return [];
 		}
@@ -76,7 +80,12 @@ export class OMDbAPI extends APIModel {
 		}
 
 		const result = await fetchData.json();
+
 		console.log(result);
+
+		if (result.Response === 'False') {
+			throw Error(`Received error from ${this.apiName}: ${result.Error}`);
+		}
 
 		if (result.Type === 'movie') {
 			const model = new MovieModel({
@@ -84,6 +93,7 @@ export class OMDbAPI extends APIModel {
 				title: result.Title,
 				year: result.Year,
 				dataSource: this.apiName,
+				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
 
 				genres: result.Genre?.split(', ') ?? [],
@@ -107,6 +117,7 @@ export class OMDbAPI extends APIModel {
 				title: result.Title,
 				year: result.Year,
 				dataSource: this.apiName,
+				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
 
 				genres: result.Genre?.split(', ') ?? [],

@@ -1,8 +1,8 @@
 import {App, PluginSettingTab, Setting} from 'obsidian';
 
 import MediaDbPlugin from '../main';
-import {FolderSuggest} from './suggesters/FolderSuggester';
-import {FileSuggest} from './suggesters/FileSuggester';
+import {FolderSuggest} from './suggesters/FolderSuggest';
+import {FileSuggest} from './suggesters/FileSuggest';
 
 
 export interface MediaDbPluginSettings {
