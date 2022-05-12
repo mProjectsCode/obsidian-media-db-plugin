@@ -9,6 +9,11 @@ Search by the Name of the movie, series, anime or game.
 #### Search by ID
 Allows you to search by an ID that varies from API to API. Concrete info can be found in the description of the individual APIs.
 
+### Currently supported media types
+- movies (including specials)
+- series (including OVAs)
+- games
+
 ### Currently supported APIs:
 - [Jikan](https://jikan.moe/), an API that uses [My Anime List](https://myanimelist.net)
   - supported formats
@@ -17,7 +22,7 @@ Allows you to search by an ID that varies from API to API. Concrete info can be 
     - specials
     - OVAs
   - authentication
-    - no authentication needed
+    - no authentication or API key needed
   - SFW filter support
     - yes
   - Search by ID
@@ -25,8 +30,8 @@ Allows you to search by an ID that varies from API to API. Concrete info can be 
     - you can find this ID in the URL
       - e.g. for "Beyond the Boundary" the URL looks like this `https://myanimelist.net/anime/18153/Kyoukai_no_Kanata` so the ID is `18153`
   - notes
-    - the api is very slow sometimes, this is normal
-    - the titles have to be with the titles that they have on [My Anime List](https://myanimelist.net), which are in most cases the japanese titles
+    - sometimes the api is very slow, this is normal
+    - you need to use the title the anime has on [My Anime List](https://myanimelist.net), which is in most cases the japanese title
       - e.g. instead of "Demon Slayer" you have to search "Kimetsu no Yaiba"
     - the API is rate limited to
       - 60 requests per minute
@@ -38,21 +43,16 @@ Allows you to search by an ID that varies from API to API. Concrete info can be 
     - games
   - authentication
     - an API key is needed
-    - you can get one for free [here](https://www.omdbapi.com/apikey.aspx)
+    - you can get one [here](https://www.omdbapi.com/apikey.aspx) for free
   - SFW filter support
-    - no, but I haven't encountered ant NSFW content in testing
+    - no, but I haven't encountered any NSFW content while developing this plugin
   - Search by ID
     - the ID you need is the ID of the movie or show on [IMDb](https://www.imdb.com)
     - you can find this ID in the URL
       - e.g. for "Rogue One" the URL looks like this `https://www.imdb.com/title/tt3748528/` so the ID is `tt3748528`
   - notes
     - the api is rate limited to 1000 requests a day
-
-### Currently supported media types
-- movies (including specials)
-- series (including OVAs)
-- games
-
+    
 ### Contributions
 Thank you for wanting to contribute to this project. 
 
