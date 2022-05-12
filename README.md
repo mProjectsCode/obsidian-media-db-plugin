@@ -4,7 +4,7 @@ A plugin that can query multiple APIs for movies, series, anime and games, and i
 
 ### Features
 #### Search by Title
-Search by the Name of the movie, series, anime or game.
+Search a movie, series, anime or game by its name across multiple APIs.
 
 #### Search by ID
 Allows you to search by an ID that varies from API to API. Concrete info can be found in the description of the individual APIs.
