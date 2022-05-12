@@ -1,6 +1,6 @@
 ## Obsidian Media DB Plugin
 
-This plugin can query multiple APIs for movies, series, anime and games, and creates notes containing their information.
+A plugin that can query multiple APIs for movies, series, anime and games, and import them into your vault.
 
 ### Features
 #### Search by Title
