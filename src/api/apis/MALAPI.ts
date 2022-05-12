@@ -2,8 +2,6 @@ import {APIModel} from '../APIModel';
 import {MediaTypeModel} from '../../models/MediaTypeModel';
 import {MovieModel} from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
-// @ts-ignore
-import Jikanjs from '@mateoaranda/jikanjs';
 import {SeriesModel} from '../../models/SeriesModel';
 
 export class MALAPI extends APIModel {
@@ -36,18 +34,20 @@ export class MALAPI extends APIModel {
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of data.data) {
-			if (result.type.toLowerCase() === 'movie') {
+			if (result.type.toLowerCase() === 'movie' || result.type.toLowerCase() === 'special') {
 				ret.push(new MovieModel({
 					type: result.type,
 					title: result.title,
+					englishTitle: result.title_english ?? result.title,
 					year: result.year ?? result.aired?.prop?.from?.year ?? '',
 					dataSource: this.apiName,
 					id: result.mal_id,
 				} as MovieModel));
-			} else if (result.type.toLowerCase() === 'tv') {
+			} else if (result.type.toLowerCase() === 'tv' || result.type.toLowerCase() === 'ova') {
 				ret.push(new SeriesModel({
 					type: result.type,
 					title: result.title,
+					englishTitle: result.title_english ?? result.title,
 					year: result.year ?? result.aired?.prop?.from?.year ?? '',
 					dataSource: this.apiName,
 					id: result.mal_id,
@@ -71,10 +71,11 @@ export class MALAPI extends APIModel {
 		console.log(data);
 		const result = data.data;
 
-		if (result.type.toLowerCase() === 'movie') {
+		if (result.type.toLowerCase() === 'movie' || result.type.toLowerCase() === 'special') {
 			const model = new MovieModel({
 				type: result.type,
 				title: result.title,
+				englishTitle: result.title_english ?? result.title,
 				year: result.year ?? result.aired?.prop?.from?.year ?? '',
 				dataSource: this.apiName,
 				url: result.url,
@@ -95,10 +96,11 @@ export class MALAPI extends APIModel {
 			} as MovieModel);
 
 			return model;
-		} else if (result.type.toLowerCase() === 'tv') {
+		} else if (result.type.toLowerCase() === 'tv' || result.type.toLowerCase() === 'ova') {
 			const model = new SeriesModel({
 				type: result.type,
 				title: result.title,
+				englishTitle: result.title_english ?? result.title,
 				year: result.year ?? result.aired?.prop?.from?.year ?? '',
 				dataSource: this.apiName,
 				url: result.url,

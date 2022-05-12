@@ -2,7 +2,7 @@ import {MediaTypeModel} from './MediaTypeModel';
 import {stringifyYaml} from 'obsidian';
 
 
-export class MovieModel extends MediaTypeModel {
+export class GameModel extends MediaTypeModel {
 	type: string;
 	title: string;
 	englishTitle: string;
@@ -12,16 +12,13 @@ export class MovieModel extends MediaTypeModel {
 	id: string;
 
 	genres: string[];
-	producer: string;
-	duration: string;
 	onlineRating: number;
 	image: string;
 
 	released: boolean;
-	premiere: string;
+	releaseDate: string;
 
-	watched: boolean;
-	lastWatched: string;
+	played: boolean;
 	personalRating: number;
 
 

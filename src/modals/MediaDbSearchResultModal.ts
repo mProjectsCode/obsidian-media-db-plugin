@@ -21,6 +21,7 @@ export class MediaDbSearchResultModal extends SuggestModal<MediaTypeModel> {
 	// Renders each suggestion item.
 	renderSuggestion(item: MediaTypeModel, el: HTMLElement) {
 		el.createEl('div', {text: item.getFileName()});
+		el.createEl('small', {text: `${item.englishTitle}\n`});
 		el.createEl('small', {text: `${item.type.toUpperCase()} from ${item.dataSource}`});
 	}
 

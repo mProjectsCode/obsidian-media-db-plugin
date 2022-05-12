@@ -5,6 +5,7 @@ import {stringifyYaml} from 'obsidian';
 export class SeriesModel extends MediaTypeModel {
 	type: string;
 	title: string;
+	englishTitle: string;
 	year: string;
 	dataSource: string;
 	url: string;
@@ -31,8 +32,6 @@ export class SeriesModel extends MediaTypeModel {
 		super();
 
 		Object.assign(this, obj);
-
-		this.type = 'series';
 	}
 
 	toMetaData(): string {

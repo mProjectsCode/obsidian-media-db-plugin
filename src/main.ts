@@ -74,6 +74,13 @@ export default class MediaDbPlugin extends Plugin {
 					// console.log(template);
 					fileContent += template;
 				}
+			} else if (data.type === 'game' && this.settings.seriesTemplate) {
+				const templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.gameTemplate).first();
+				if (templateFile) {
+					let template = await this.app.vault.read(templateFile);
+					// console.log(template);
+					fileContent += template;
+				}
 			}
 
 			const fileName = replaceIllegalFileNameCharactersInString(data.getFileName());

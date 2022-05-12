@@ -11,6 +11,7 @@ export interface MediaDbPluginSettings {
 	OMDbKey: string,
 	movieTemplate: string,
 	seriesTemplate: string,
+	gameTemplate: string,
 }
 
 export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
@@ -19,6 +20,7 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
 	movieTemplate: '',
 	seriesTemplate: '',
+	gameTemplate: '',
 };
 
 export class MediaDbSettingTab extends PluginSettingTab {
@@ -71,6 +73,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.seriesTemplate)
 					.onChange(data => {
 						this.plugin.settings.seriesTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Game template')
+			.setDesc('Template file to be used when creating a new note for a game.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: gameTemplate.md')
+					.setValue(this.plugin.settings.gameTemplate)
+					.onChange(data => {
+						this.plugin.settings.gameTemplate = data;
 						this.plugin.saveSettings();
 					});
 			});
