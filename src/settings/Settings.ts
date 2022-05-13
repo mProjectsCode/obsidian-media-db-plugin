@@ -12,6 +12,7 @@ export interface MediaDbPluginSettings {
 	movieTemplate: string,
 	seriesTemplate: string,
 	gameTemplate: string,
+	templates: boolean,
 }
 
 export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
@@ -21,6 +22,7 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	movieTemplate: '',
 	seriesTemplate: '',
 	gameTemplate: '',
+	templates: true,
 };
 
 export class MediaDbSettingTab extends PluginSettingTab {
@@ -47,6 +49,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.folder)
 					.onChange(data => {
 						this.plugin.settings.folder = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Resolve {{ tags }} in templates')
+			.setDesc('Whether to resolve {{ tags }} in templates. The spaces inside the curly braces are important.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.templates)
+					.onChange(data => {
+						this.plugin.settings.templates = data;
 						this.plugin.saveSettings();
 					});
 			});

@@ -3,7 +3,7 @@ import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './sett
 import {APIManager} from './api/APIManager';
 import {TestAPI} from './api/apis/TestAPI';
 import {MediaTypeModel} from './models/MediaTypeModel';
-import {replaceIllegalFileNameCharactersInString} from './utils/Utils';
+import {replaceIllegalFileNameCharactersInString, replaceTags} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
@@ -60,27 +60,23 @@ export default class MediaDbPlugin extends Plugin {
 
 			let fileContent = `---\n${data.toMetaData()}---\n`;
 
+			let templateFile: TFile = null;
+
 			if (data.type === 'movie' && this.settings.movieTemplate) {
-				const templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.movieTemplate).first();
-				if (templateFile) {
-					let template = await this.app.vault.read(templateFile);
-					// console.log(template);
-					fileContent += template;
-				}
+				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.movieTemplate).first();
 			} else if (data.type === 'series' && this.settings.seriesTemplate) {
-				const templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.seriesTemplate).first();
-				if (templateFile) {
-					let template = await this.app.vault.read(templateFile);
-					// console.log(template);
-					fileContent += template;
+				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.seriesTemplate).first();
+			} else if (data.type === 'game' && this.settings.gameTemplate) {
+				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.gameTemplate).first();
+			}
+
+			if (templateFile) {
+				let template = await this.app.vault.read(templateFile);
+				// console.log(template);
+				if (this.settings.templates) {
+					template = replaceTags(template, data);
 				}
-			} else if (data.type === 'game' && this.settings.seriesTemplate) {
-				const templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.gameTemplate).first();
-				if (templateFile) {
-					let template = await this.app.vault.read(templateFile);
-					// console.log(template);
-					fileContent += template;
-				}
+				fileContent += template;
 			}
 
 			const fileName = replaceIllegalFileNameCharactersInString(data.getFileName());

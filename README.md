@@ -9,6 +9,12 @@ Search a movie, series, anime or game by its name across multiple APIs.
 #### Search by ID
 Allows you to search by an ID that varies from API to API. Concrete info can be found in the description of the individual APIs.
 
+#### Templates
+The plugin allows you to set a template note that gets added to the end of any note created by this plugin.
+The plugin also offers simple "template tgs". E.g. if the template includes `{{ title }}`, it will be replaced by the title of the movie, show or game.
+Note that "template tags" are surrounded with two curly braces and that the spaces inside the curly braces are important.
+I also published my own templates [here](https://github.com/mProjectsCode/obsidian-media-db-templates).
+
 ### Currently supported media types
 - movies (including specials)
 - series (including OVAs)
