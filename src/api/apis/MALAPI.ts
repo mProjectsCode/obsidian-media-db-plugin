@@ -6,6 +6,7 @@ import {SeriesModel} from '../../models/SeriesModel';
 
 export class MALAPI extends APIModel {
 	plugin: MediaDbPlugin;
+	typeMappings: Map<string, string>;
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -15,6 +16,11 @@ export class MALAPI extends APIModel {
 		this.apiDescription = 'A free API for Anime. Some results may take a long time to load.';
 		this.apiUrl = 'https://jikan.moe/';
 		this.types = ['movie', 'series', 'anime'];
+		this.typeMappings = new Map<string, string>();
+		this.typeMappings.set('movie', 'movie');
+		this.typeMappings.set('special', 'special');
+		this.typeMappings.set('tv', 'series');
+		this.typeMappings.set('ova', 'ova');
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
@@ -34,18 +40,22 @@ export class MALAPI extends APIModel {
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of data.data) {
-			if (result.type.toLowerCase() === 'movie' || result.type.toLowerCase() === 'special') {
+			const type = this.typeMappings.get(result.type.toLowerCase());
+			if (type === undefined) {
+				continue;
+			}
+			if (type === 'movie' || type === 'special') {
 				ret.push(new MovieModel({
-					type: result.type,
+					type: type,
 					title: result.title,
 					englishTitle: result.title_english ?? result.title,
 					year: result.year ?? result.aired?.prop?.from?.year ?? '',
 					dataSource: this.apiName,
 					id: result.mal_id,
 				} as MovieModel));
-			} else if (result.type.toLowerCase() === 'tv' || result.type.toLowerCase() === 'ova') {
+			} else if (type === 'series' || type === 'ova') {
 				ret.push(new SeriesModel({
-					type: result.type,
+					type: type,
 					title: result.title,
 					englishTitle: result.title_english ?? result.title,
 					year: result.year ?? result.aired?.prop?.from?.year ?? '',
@@ -71,9 +81,14 @@ export class MALAPI extends APIModel {
 		console.log(data);
 		const result = data.data;
 
-		if (result.type.toLowerCase() === 'movie' || result.type.toLowerCase() === 'special') {
+		const type = this.typeMappings.get(result.type.toLowerCase());
+		if (type === undefined) {
+			throw Error(`${result.type.toLowerCase()} is an unsupported type.`);
+		}
+
+		if (type === 'movie' || type === 'special') {
 			const model = new MovieModel({
-				type: result.type,
+				type: type,
 				title: result.title,
 				englishTitle: result.title_english ?? result.title,
 				year: result.year ?? result.aired?.prop?.from?.year ?? '',
@@ -96,9 +111,9 @@ export class MALAPI extends APIModel {
 			} as MovieModel);
 
 			return model;
-		} else if (result.type.toLowerCase() === 'tv' || result.type.toLowerCase() === 'ova') {
+		} else if (type === 'series' || type === 'ova') {
 			const model = new SeriesModel({
-				type: result.type,
+				type: type,
 				title: result.title,
 				englishTitle: result.title_english ?? result.title,
 				year: result.year ?? result.aired?.prop?.from?.year ?? '',

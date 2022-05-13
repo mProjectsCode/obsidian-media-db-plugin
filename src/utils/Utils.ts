@@ -13,7 +13,7 @@ export function getFileName(item: MediaTypeModel) {
 }
 
 export function replaceIllegalFileNameCharactersInString(string: string) {
-	return string.replace(/[\\,#%&{}/*<>$"@.]*/g, '').replace(/:+/g, ' -');
+	return string.replace(/[\\,#%&{}/*<>$"@.?]*/g, '').replace(/:+/g, ' -');
 }
 
 export function replaceTags(template: string, mediaTypeModel: MediaTypeModel): string {

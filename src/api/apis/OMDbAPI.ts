@@ -7,6 +7,7 @@ import {GameModel} from '../../models/GameModel';
 
 export class OMDbAPI extends APIModel {
 	plugin: MediaDbPlugin;
+	typeMappings: Map<string, string>;
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -16,6 +17,10 @@ export class OMDbAPI extends APIModel {
 		this.apiDescription = 'A free API for Movies, Series and Games.';
 		this.apiUrl = 'http://www.omdbapi.com/';
 		this.types = ['movie', 'series'];
+		this.typeMappings = new Map<string, string>();
+		this.typeMappings.set('movie', 'movie');
+		this.typeMappings.set('series', 'series');
+		this.typeMappings.set('game', 'game');
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
@@ -46,6 +51,10 @@ export class OMDbAPI extends APIModel {
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of data.Search) {
+			const type = this.typeMappings.get(result.type.toLowerCase());
+			if (type === undefined) {
+				continue;
+			}
 			if (result.Type === 'movie') {
 				ret.push(new MovieModel({
 					type: 'movie',
@@ -99,9 +108,14 @@ export class OMDbAPI extends APIModel {
 			throw Error(`Received error from ${this.apiName}: ${result.Error}`);
 		}
 
-		if (result.Type === 'movie') {
+		const type = this.typeMappings.get(result.type.toLowerCase());
+		if (type === undefined) {
+			throw Error(`${result.type.toLowerCase()} is an unsupported type.`);
+		}
+
+		if (type === 'movie') {
 			const model = new MovieModel({
-				type: 'movie',
+				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
 				year: result.Year,
@@ -124,9 +138,9 @@ export class OMDbAPI extends APIModel {
 			} as MovieModel);
 
 			return model;
-		} else if (result.Type === 'series') {
+		} else if (type === 'series') {
 			const model = new SeriesModel({
-				type: 'series',
+				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
 				year: result.Year,
@@ -152,9 +166,9 @@ export class OMDbAPI extends APIModel {
 			} as SeriesModel);
 
 			return model;
-		} else if (result.Type === 'game') {
+		} else if (type === 'game') {
 			const model = new GameModel({
-				type: 'game',
+				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
 				year: result.Year,
