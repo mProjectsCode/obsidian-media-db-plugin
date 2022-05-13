@@ -51,31 +51,31 @@ export class OMDbAPI extends APIModel {
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of data.Search) {
-			const type = this.typeMappings.get(result.type.toLowerCase());
+			const type = this.typeMappings.get(result.Type.toLowerCase());
 			if (type === undefined) {
 				continue;
 			}
-			if (result.Type === 'movie') {
+			if (type === 'movie') {
 				ret.push(new MovieModel({
-					type: 'movie',
+					type: type,
 					title: result.Title,
 					englishTitle: result.Title,
 					year: result.Year,
 					dataSource: this.apiName,
 					id: result.imdbID,
 				} as MovieModel));
-			} else if (result.Type === 'series') {
+			} else if (type === 'series') {
 				ret.push(new SeriesModel({
-					type: 'series',
+					type: type,
 					title: result.Title,
 					englishTitle: result.Title,
 					year: result.Year,
 					dataSource: this.apiName,
 					id: result.imdbID,
 				} as SeriesModel));
-			} else if (result.Type === 'game') {
+			} else if (type === 'game') {
 				ret.push(new GameModel({
-					type: 'game',
+					type: type,
 					title: result.Title,
 					englishTitle: result.Title,
 					year: result.Year,
@@ -108,7 +108,7 @@ export class OMDbAPI extends APIModel {
 			throw Error(`Received error from ${this.apiName}: ${result.Error}`);
 		}
 
-		const type = this.typeMappings.get(result.type.toLowerCase());
+		const type = this.typeMappings.get(result.Type.toLowerCase());
 		if (type === undefined) {
 			throw Error(`${result.type.toLowerCase()} is an unsupported type.`);
 		}
