@@ -79,3 +79,7 @@ Thank you for wanting to contribute to this project.
 
 Contributions are always welcome. If you have an idea, feel free to open a feature request under the issue tab or even create a pull request.
 
+### Credits
+Credits go to:
+- https://github.com/anpigon/obsidian-book-search-plugin for some inspiration and the idea to make this plugin
+- https://github.com/liamcain/obsidian-periodic-notes for 99% of `Suggest.ts` and `FolderSuggest.ts`
