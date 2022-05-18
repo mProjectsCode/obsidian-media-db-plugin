@@ -9,6 +9,7 @@ import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
 import {MALAPI} from './api/apis/MALAPI';
 import {MediaDbIdSearchModal} from './modals/MediaDbIdSearchModal';
+import {WikipediaAPI} from './api/apis/WikipediaAPI';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -45,6 +46,8 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new TestAPI());
 		this.apiManager.registerAPI(new OMDbAPI(this));
 		this.apiManager.registerAPI(new MALAPI(this));
+		this.apiManager.registerAPI(new WikipediaAPI(this));
+		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 	}
 
 	async createMediaDbNote(modal: () => Promise<MediaTypeModel>): Promise<void> {
