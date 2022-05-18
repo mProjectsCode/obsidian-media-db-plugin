@@ -35,7 +35,7 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
 		let obj = traverseMetaData(path, mediaTypeModel);
 
 		if (obj === undefined) {
-			return '{{ INVALID TEMPLATE TAG }}';
+			return '{{ INVALID TEMPLATE TAG - object undefined }}';
 		}
 
 		return obj;
@@ -47,7 +47,7 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
 		let obj = traverseMetaData(path, mediaTypeModel);
 
 		if (obj === undefined) {
-			return '{{ INVALID TEMPLATE TAG }}';
+			return '{{ INVALID TEMPLATE TAG - object undefined }}';
 		}
 
 		if (operator === 'LIST') {

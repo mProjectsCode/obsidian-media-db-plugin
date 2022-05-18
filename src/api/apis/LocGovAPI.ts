@@ -2,6 +2,7 @@ import {APIModel} from '../APIModel';
 import {MediaTypeModel} from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 
+// WIP
 export class LocGovAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	typeMappings: Map<string, string>;
@@ -21,7 +22,7 @@ export class LocGovAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried`);
 
-		const searchUrl = `https://www.loc.gov/search/?q=${title}&fo=json&c=20`;
+		const searchUrl = `https://www.loc.gov/search/?q=${encodeURIComponent(title)}&fo=json&c=20`;
 
 		const fetchData = await fetch(searchUrl);
 		console.log(fetchData);

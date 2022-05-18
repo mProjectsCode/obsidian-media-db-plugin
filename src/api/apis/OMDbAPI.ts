@@ -26,7 +26,7 @@ export class OMDbAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried`);
 
-		const searchUrl = `http://www.omdbapi.com/?s=${title}&apikey=${this.plugin.settings.OMDbKey}`;
+		const searchUrl = `http://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`;
 
 		const fetchData = await fetch(searchUrl);
 

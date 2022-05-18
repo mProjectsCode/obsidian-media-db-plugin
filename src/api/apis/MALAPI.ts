@@ -26,7 +26,7 @@ export class MALAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried`);
 
-		const searchUrl = `https://api.jikan.moe/v4/anime?q=${title}&limit=20${this.plugin.settings.sfwFilter ? '&sfw' : ''}`;
+		const searchUrl = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(title)}&limit=20${this.plugin.settings.sfwFilter ? '&sfw' : ''}`;
 
 		const fetchData = await fetch(searchUrl);
 		console.log(fetchData);

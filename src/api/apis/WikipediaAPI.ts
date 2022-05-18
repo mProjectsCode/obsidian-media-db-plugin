@@ -19,7 +19,7 @@ export class WikipediaAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried`);
 
-		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${title}&srlimit=20&utf8=&format=json&origin=*`;
+		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&srlimit=20&utf8=&format=json&origin=*`;
 
 		const fetchData = await fetch(searchUrl);
 		console.log(fetchData);

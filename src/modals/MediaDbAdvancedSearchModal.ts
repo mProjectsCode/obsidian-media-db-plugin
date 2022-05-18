@@ -30,7 +30,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 		console.log(this.selectedApis);
 
-		if (!this.query || this.query.length < 5) {
+		if (!this.query || this.query.length < 3) {
 			new Notice('MDB: Query to short');
 			return;
 		}

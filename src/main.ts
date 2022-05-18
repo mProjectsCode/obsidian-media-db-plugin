@@ -1,7 +1,6 @@
 import {Notice, Plugin, TFile} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
-import {TestAPI} from './api/apis/TestAPI';
 import {MediaTypeModel} from './models/MediaTypeModel';
 import {replaceIllegalFileNameCharactersInString, replaceTags} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
@@ -10,6 +9,7 @@ import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
 import {MALAPI} from './api/apis/MALAPI';
 import {MediaDbIdSearchModal} from './modals/MediaDbIdSearchModal';
 import {WikipediaAPI} from './api/apis/WikipediaAPI';
+import {MusicBrainzAPI} from './api/apis/MusicBrainzAPI';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -43,10 +43,10 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.apiManager = new APIManager();
 		// register APIs
-		this.apiManager.registerAPI(new TestAPI());
 		this.apiManager.registerAPI(new OMDbAPI(this));
 		this.apiManager.registerAPI(new MALAPI(this));
 		this.apiManager.registerAPI(new WikipediaAPI(this));
+		this.apiManager.registerAPI(new MusicBrainzAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 	}
 
@@ -71,6 +71,10 @@ export default class MediaDbPlugin extends Plugin {
 				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.seriesTemplate).first();
 			} else if (data.type === 'game' && this.settings.gameTemplate) {
 				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.gameTemplate).first();
+			} else if (data.type === 'wiki' && this.settings.wikiTemplate) {
+				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.wikiTemplate).first();
+			} else if (data.type === 'musicRelease' && this.settings.musicReleaseTemplate) {
+				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.musicReleaseTemplate).first();
 			}
 
 			if (templateFile) {
