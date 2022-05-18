@@ -79,3 +79,7 @@ function traverseMetaData(path: Array<string>, mediaTypeModel: MediaTypeModel): 
 
 	return o;
 }
+
+export const pluginName = 'obsidian-media-db-plugin';
+export const contactEmail = 'm.projects.code@gmail.com';
+export const mediaDbTag = 'mediaDB';

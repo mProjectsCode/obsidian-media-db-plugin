@@ -3,6 +3,7 @@ import {MediaTypeModel} from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 import {requestUrl} from 'obsidian';
 import {MusicReleaseModel} from '../../models/MusicReleaseModel';
+import {contactEmail, pluginName} from '../../utils/Utils';
 // import {MusicBrainzApi} from 'musicbrainz-api';
 
 // WIP
@@ -27,7 +28,7 @@ export class MusicBrainzAPI extends APIModel {
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			headers: {
-				'User-Agent': 'obsidian-media-db-plugin/0.1.7 ( m.projects.code@gmail.com )',
+				'User-Agent': `${pluginName}/0.1.7 (${contactEmail})`,
 			},
 		});
 
@@ -68,7 +69,7 @@ export class MusicBrainzAPI extends APIModel {
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			headers: {
-				'User-Agent': 'MyAwesomeTagger/1.2.0 ( me@example.com )',
+				'User-Agent': `${pluginName}/0.1.7 (${contactEmail})`,
 			},
 		});
 

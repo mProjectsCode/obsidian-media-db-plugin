@@ -10,4 +10,6 @@ export abstract class MediaTypeModel {
 	abstract toMetaData(): string;
 
 	abstract getFileName(): string;
+
+	abstract getTags(): string[];
 }
