@@ -3,6 +3,7 @@ import {MediaTypeModel} from '../../models/MediaTypeModel';
 import {MovieModel} from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
 import {SeriesModel} from '../../models/SeriesModel';
+import {debugLog} from '../../utils/Utils';
 
 export class MALAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -24,18 +25,18 @@ export class MALAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried`);
+		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `https://api.jikan.moe/v4/anime?q=${title}&limit=20${this.plugin.settings.sfwFilter ? '&sfw' : ''}`;
+		const searchUrl = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(title)}&limit=20${this.plugin.settings.sfwFilter ? '&sfw' : ''}`;
 
 		const fetchData = await fetch(searchUrl);
-		console.log(fetchData);
+		debugLog(fetchData);
 		if (fetchData.status !== 200) {
-			throw Error(`Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
 		const data = await fetchData.json();
 
-		console.log(data);
+		debugLog(data);
 
 		let ret: MediaTypeModel[] = [];
 
@@ -69,16 +70,17 @@ export class MALAPI extends APIModel {
 	}
 
 	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const searchUrl = `https://api.jikan.moe/v4/anime/${item.id}`;
-
 		const fetchData = await fetch(searchUrl);
+
 		if (fetchData.status !== 200) {
-			throw Error(`Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
 
 		const data = await fetchData.json();
-		console.log(data);
+		debugLog(data);
 		const result = data.data;
 
 		const type = this.typeMappings.get(result.type.toLowerCase());

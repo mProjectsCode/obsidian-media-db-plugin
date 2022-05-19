@@ -3,7 +3,7 @@ import {stringifyYaml} from 'obsidian';
 import {mediaDbTag} from '../utils/Utils';
 
 
-export class SeriesModel extends MediaTypeModel {
+export class MusicReleaseModel extends MediaTypeModel {
 	type: string;
 	title: string;
 	englishTitle: string;
@@ -13,21 +13,11 @@ export class SeriesModel extends MediaTypeModel {
 	id: string;
 
 	genres: string[];
-	studios: string[];
-	episodes: number;
-	duration: string;
-	onlineRating: number;
-	image: string;
+	artists: string[];
+	subType: string;
+	rating: number;
 
-	released: boolean;
-	airing: boolean;
-	airedFrom: string;
-	airedTo: string;
-
-	watched: boolean;
-	lastWatched: string;
 	personalRating: number;
-
 
 	constructor(obj: any = {}) {
 		super();
@@ -40,11 +30,11 @@ export class SeriesModel extends MediaTypeModel {
 	}
 
 	getFileName(): string {
-		return this.title + ' (' + this.year + ')';
+		return this.title + ' (' + this.artists.join(', ') + ' - ' + this.year + ' - ' + this.subType + ')';
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'tv', 'series'];
+		return [mediaDbTag, 'music', 'album'];
 	}
 
 }

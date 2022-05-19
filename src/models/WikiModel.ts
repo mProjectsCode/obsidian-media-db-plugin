@@ -3,7 +3,7 @@ import {stringifyYaml} from 'obsidian';
 import {mediaDbTag} from '../utils/Utils';
 
 
-export class SeriesModel extends MediaTypeModel {
+export class WikiModel extends MediaTypeModel {
 	type: string;
 	title: string;
 	englishTitle: string;
@@ -12,21 +12,9 @@ export class SeriesModel extends MediaTypeModel {
 	url: string;
 	id: string;
 
-	genres: string[];
-	studios: string[];
-	episodes: number;
-	duration: string;
-	onlineRating: number;
-	image: string;
-
-	released: boolean;
-	airing: boolean;
-	airedFrom: string;
-	airedTo: string;
-
-	watched: boolean;
-	lastWatched: string;
-	personalRating: number;
+	wikiUrl: string;
+	lastUpdated: string;
+	length: number;
 
 
 	constructor(obj: any = {}) {
@@ -40,11 +28,11 @@ export class SeriesModel extends MediaTypeModel {
 	}
 
 	getFileName(): string {
-		return this.title + ' (' + this.year + ')';
+		return this.title;
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'tv', 'series'];
+		return [mediaDbTag, 'wiki'];
 	}
 
 }

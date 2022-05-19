@@ -12,6 +12,8 @@ export interface MediaDbPluginSettings {
 	movieTemplate: string,
 	seriesTemplate: string,
 	gameTemplate: string,
+	wikiTemplate: string,
+	musicReleaseTemplate: string,
 	templates: boolean,
 }
 
@@ -22,6 +24,8 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	movieTemplate: '',
 	seriesTemplate: '',
 	gameTemplate: '',
+	wikiTemplate: '',
+	musicReleaseTemplate: '',
 	templates: true,
 };
 
@@ -99,6 +103,32 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.gameTemplate)
 					.onChange(data => {
 						this.plugin.settings.gameTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Wiki template')
+			.setDesc('Template file to be used when creating a new note for a wiki entry.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: wikiTemplate.md')
+					.setValue(this.plugin.settings.wikiTemplate)
+					.onChange(data => {
+						this.plugin.settings.wikiTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Music Release template')
+			.setDesc('Template file to be used when creating a new note for a music release.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: musicReleaseTemplate.md')
+					.setValue(this.plugin.settings.musicReleaseTemplate)
+					.onChange(data => {
+						this.plugin.settings.musicReleaseTemplate = data;
 						this.plugin.saveSettings();
 					});
 			});

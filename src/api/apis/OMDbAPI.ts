@@ -4,6 +4,7 @@ import {MovieModel} from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
 import {SeriesModel} from '../../models/SeriesModel';
 import {GameModel} from '../../models/GameModel';
+import {debugLog} from '../../utils/Utils';
 
 export class OMDbAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -24,29 +25,28 @@ export class OMDbAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried`);
+		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `http://www.omdbapi.com/?s=${title}&apikey=${this.plugin.settings.OMDbKey}`;
-
+		const searchUrl = `http://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`;
 		const fetchData = await fetch(searchUrl);
 
 		if (fetchData.status === 401) {
-			throw Error(`Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (fetchData.status !== 200) {
-			throw Error(`Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
+
 		const data = await fetchData.json();
 
 		if (data.Response === 'False') {
-			throw Error(`Received error from ${this.apiName}: ${data.Error}`);
+			throw Error(`MDB | Received error from ${this.apiName}: ${data.Error}`);
 		}
-
 		if (!data.Search) {
 			return [];
 		}
 
-		console.log(data.Search);
+		debugLog(data.Search);
 
 		let ret: MediaTypeModel[] = [];
 
@@ -89,23 +89,23 @@ export class OMDbAPI extends APIModel {
 	}
 
 	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const searchUrl = `http://www.omdbapi.com/?i=${item.id}&apikey=${this.plugin.settings.OMDbKey}`;
-
 		const fetchData = await fetch(searchUrl);
+
 		if (fetchData.status === 401) {
-			throw Error(`Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (fetchData.status !== 200) {
-			throw Error(`Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
 
 		const result = await fetchData.json();
-
-		console.log(result);
+		debugLog(result);
 
 		if (result.Response === 'False') {
-			throw Error(`Received error from ${this.apiName}: ${result.Error}`);
+			throw Error(`MDB | Received error from ${this.apiName}: ${result.Error}`);
 		}
 
 		const type = this.typeMappings.get(result.Type.toLowerCase());

@@ -1,6 +1,7 @@
 import {App, ButtonComponent, Component, Modal, Notice, Setting, TextComponent, ToggleComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import {APIManager} from '../api/APIManager';
+import {debugLog} from '../utils/Utils';
 
 export class MediaDbAdvancedSearchModal extends Modal {
 	query: string;
@@ -28,10 +29,10 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 	async search(): Promise<MediaTypeModel[]> {
 
-		console.log(this.selectedApis);
+		debugLog(this.selectedApis);
 
-		if (!this.query || this.query.length < 5) {
-			new Notice('MDB: Query to short');
+		if (!this.query || this.query.length < 3) {
+			new Notice('MDB | Query to short');
 			return;
 		}
 
@@ -43,7 +44,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		}
 
 		if (selectedAPICount === 0) {
-			new Notice('MDB: No API selected');
+			new Notice('MDB | No API selected');
 			return;
 		}
 
@@ -53,12 +54,9 @@ export class MediaDbAdvancedSearchModal extends Modal {
 				this.searchBtn.setDisabled(false);
 				this.searchBtn.setButtonText('Searching...');
 
-				console.log('MDB | query started with ' + this.query);
+				console.log(`MDB | query started with title ${this.query}`);
 
 				const res = await this.apiManager.query(this.query, this.selectedApis);
-
-				// console.log(res)
-
 				this.onSubmit(null, res);
 			} catch (e) {
 				this.onSubmit(e);
