@@ -1,6 +1,7 @@
 import {App, ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import {APIManager} from '../api/APIManager';
+import {debugLog} from '../utils/Utils';
 
 export class MediaDbIdSearchModal extends Modal {
 	query: string;
@@ -25,15 +26,15 @@ export class MediaDbIdSearchModal extends Modal {
 
 	async search(): Promise<MediaTypeModel> {
 
-		console.log(this.selectedApi);
+		debugLog(this.selectedApi);
 
 		if (!this.query) {
-			new Notice('MDB: no Id entered');
+			new Notice('MDB | no Id entered');
 			return;
 		}
 
 		if (!this.selectedApi) {
-			new Notice('MDB: No API selected');
+			new Notice('MDB | No API selected');
 			return;
 		}
 
@@ -43,16 +44,13 @@ export class MediaDbIdSearchModal extends Modal {
 				this.searchBtn.setDisabled(false);
 				this.searchBtn.setButtonText('Searching...');
 
-				console.log('MDB | query started with id ' + this.query);
+				console.log(`MDB | query started with id ${this.query}`);
 
 				const api = this.apiManager.getApiByName(this.selectedApi);
 				if (!api) {
 					this.onSubmit(new Error('the selected api does not exist'));
 				}
 				const res = await api.getById({id: this.query} as MediaTypeModel); // TODO: fix jank
-
-				// console.log(res)
-
 				this.onSubmit(null, res);
 			} catch (e) {
 				this.onSubmit(e);

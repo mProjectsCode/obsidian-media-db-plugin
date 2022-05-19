@@ -3,10 +3,8 @@ import {MediaTypeModel} from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 import {requestUrl} from 'obsidian';
 import {MusicReleaseModel} from '../../models/MusicReleaseModel';
-import {contactEmail, pluginName} from '../../utils/Utils';
-// import {MusicBrainzApi} from 'musicbrainz-api';
+import {contactEmail, debugLog, mediaDbVersion, pluginName} from '../../utils/Utils';
 
-// WIP
 export class MusicBrainzAPI extends APIModel {
 	plugin: MediaDbPlugin;
 
@@ -21,26 +19,25 @@ export class MusicBrainzAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried`);
+		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		const searchUrl = `https://musicbrainz.org/ws/2/release-group?query=${encodeURIComponent(title)}&limit=20&fmt=json`;
 
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			headers: {
-				'User-Agent': `${pluginName}/0.1.7 (${contactEmail})`,
+				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
 			},
 		});
 
-		console.log(fetchData);
+		debugLog(fetchData);
 
 		if (fetchData.status !== 200) {
-			throw Error(`Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
+
 		const data = await fetchData.json;
-
-		console.log(data);
-
+		debugLog(data);
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of data['release-groups']) {
@@ -62,10 +59,9 @@ export class MusicBrainzAPI extends APIModel {
 	}
 
 	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried`);
+		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const searchUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(item.id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
-
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			headers: {
@@ -73,10 +69,12 @@ export class MusicBrainzAPI extends APIModel {
 			},
 		});
 
+		if (fetchData.status !== 200) {
+			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+		}
+
 		const data = await fetchData.json;
-
-		console.log(data);
-
+		debugLog(data);
 		const result = data;
 
 		const model = new MusicReleaseModel({

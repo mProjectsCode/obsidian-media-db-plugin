@@ -57,9 +57,7 @@ export default class MediaDbPlugin extends Plugin {
 
 			data = await this.apiManager.queryDetailedInfo(data);
 
-			console.log(data);
-
-			data.toMetaData();
+			// console.log(data);
 
 			let fileContent = `---\n${data.toMetaData()}---\n`;
 
@@ -78,7 +76,7 @@ export default class MediaDbPlugin extends Plugin {
 			}
 
 			if (templateFile) {
-				let template = await this.app.vault.read(templateFile);
+				let template = await this.app.vault.cachedRead(templateFile);
 				// console.log(template);
 				if (this.settings.templates) {
 					template = replaceTags(template, data);
@@ -91,9 +89,9 @@ export default class MediaDbPlugin extends Plugin {
 			const targetFile = await this.app.vault.create(filePath, fileContent);
 
 			// open file
-			const activeLeaf = this.app.workspace.getLeaf();
+			const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 			if (!activeLeaf) {
-				console.warn('No active leaf');
+				console.warn('MDB | no active leaf, not opening media db note');
 				return;
 			}
 			await activeLeaf.openFile(targetFile, {state: {mode: 'source'}});

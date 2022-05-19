@@ -1,18 +1,24 @@
 import {MediaTypeModel} from '../models/MediaTypeModel';
 
+
+export const pluginName: string = 'obsidian-media-db-plugin';
+export const contactEmail: string = 'm.projects.code@gmail.com';
+export const mediaDbTag: string = 'mediaDB';
+export const mediaDbVersion: string = '0.1.7';
+export const debug: boolean = false;
+
+
 export function wrapAround(value: number, size: number): number {
 	return ((value % size) + size) % size;
 }
 
-export function sleep(ms: number) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+export function debugLog(o: any): void {
+	if (debug) {
+		console.log(o);
+	}
 }
 
-export function getFileName(item: MediaTypeModel) {
-	return replaceIllegalFileNameCharactersInString(item.year ? `${item.title} (${item.year})` : `${item.title}`);
-}
-
-export function replaceIllegalFileNameCharactersInString(string: string) {
+export function replaceIllegalFileNameCharactersInString(string: string): string {
 	return string.replace(/[\\,#%&{}/*<>$"@.?]*/g, '').replace(/:+/g, ' -');
 }
 
@@ -79,7 +85,3 @@ function traverseMetaData(path: Array<string>, mediaTypeModel: MediaTypeModel): 
 
 	return o;
 }
-
-export const pluginName = 'obsidian-media-db-plugin';
-export const contactEmail = 'm.projects.code@gmail.com';
-export const mediaDbTag = 'mediaDB';

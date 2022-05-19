@@ -3,7 +3,7 @@
 	"name": "Media DB Plugin",
 	"version": "0.1.7",
 	"minAppVersion": "0.14.0",
-	"description": "A plugin that can query multiple APIs for movies, series, anime and games, and import them into your vault.",
+	"description": "A plugin that can query multiple APIs for movies, series, anime, games, music and wiki articles, and import them into your vault.  ",
 	"author": "Moritz Jung",
 	"authorUrl": "https://mprojectscode.github.io/",
 	"isDesktopOnly": false

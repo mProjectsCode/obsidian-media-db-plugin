@@ -19,6 +19,7 @@ export abstract class APIModel {
 		return this.types.contains(type);
 	}
 
+	// for future use (https://github.com/mProjectsCode/obsidian-media-db-plugin/issues/5)
 	hasTypeOverlap(types: string[]): boolean {
 		for (const type of types) {
 			if (this.hasType(type)) {
