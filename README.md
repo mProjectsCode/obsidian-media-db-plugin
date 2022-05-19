@@ -61,7 +61,7 @@ I also published my own templates [here](https://github.com/mProjectsCode/obsidi
 	- you can find this ID in the URL
 		- e.g. for "Rogue One" the URL looks like this `https://www.imdb.com/title/tt3748528/` so the ID is `tt3748528`
 - [MusicBrainz](https://musicbrainz.org/)
-	- the id of a release is not easyly accessibe, you are better of just searching by title
+	- the id of a release is not easily accessibe, you are better of just searching by title
 - [Wikipedia](https://en.wikipedia.org/wiki/Main_Page)
 	- [here](https://en.wikipedia.org/wiki/Wikipedia:Finding_a_Wikidata_ID) is a guide to finding the Wikipedia ID for an article
 
