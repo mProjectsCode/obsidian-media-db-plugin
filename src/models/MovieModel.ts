@@ -5,6 +5,7 @@ import {mediaDbTag} from '../utils/Utils';
 
 export class MovieModel extends MediaTypeModel {
 	type: string;
+	subType: string;
 	title: string;
 	englishTitle: string;
 	year: string;
@@ -30,6 +31,8 @@ export class MovieModel extends MediaTypeModel {
 		super();
 
 		Object.assign(this, obj);
+
+		this.type = 'movie';
 	}
 
 	toMetaData(): string {

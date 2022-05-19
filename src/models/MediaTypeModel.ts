@@ -1,5 +1,6 @@
 export abstract class MediaTypeModel {
 	type: string;
+	subType: string;
 	title: string;
 	englishTitle: string;
 	year: string;
@@ -12,4 +13,5 @@ export abstract class MediaTypeModel {
 	abstract getFileName(): string;
 
 	abstract getTags(): string[];
+
 }

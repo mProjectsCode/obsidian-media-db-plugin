@@ -5,6 +5,7 @@ import {mediaDbTag} from '../utils/Utils';
 
 export class WikiModel extends MediaTypeModel {
 	type: string;
+	subType: string;
 	title: string;
 	englishTitle: string;
 	year: string;
@@ -21,6 +22,8 @@ export class WikiModel extends MediaTypeModel {
 		super();
 
 		Object.assign(this, obj);
+
+		this.type = 'wiki';
 	}
 
 	toMetaData(): string {

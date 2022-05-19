@@ -5,6 +5,7 @@ import {mediaDbTag} from '../utils/Utils';
 
 export class MusicReleaseModel extends MediaTypeModel {
 	type: string;
+	subType: string;
 	title: string;
 	englishTitle: string;
 	year: string;
@@ -14,7 +15,6 @@ export class MusicReleaseModel extends MediaTypeModel {
 
 	genres: string[];
 	artists: string[];
-	subType: string;
 	rating: number;
 
 	personalRating: number;
@@ -23,6 +23,8 @@ export class MusicReleaseModel extends MediaTypeModel {
 		super();
 
 		Object.assign(this, obj);
+
+		this.type = 'musicRelease';
 	}
 
 	toMetaData(): string {

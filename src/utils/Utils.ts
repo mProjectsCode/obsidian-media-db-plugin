@@ -1,4 +1,5 @@
 import {MediaTypeModel} from '../models/MediaTypeModel';
+import {TFile} from 'obsidian';
 
 
 export const pluginName: string = 'obsidian-media-db-plugin';
@@ -84,4 +85,8 @@ function traverseMetaData(path: Array<string>, mediaTypeModel: MediaTypeModel): 
 	}
 
 	return o;
+}
+
+export function updateNote(file: TFile) {
+
 }

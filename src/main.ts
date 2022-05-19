@@ -37,6 +37,12 @@ export default class MediaDbPlugin extends Plugin {
 			callback: () => this.createMediaDbNote(this.openMediaDbIdSearchModal.bind(this)),
 		});
 
+		this.addCommand({
+			id: 'update-media-db-note',
+			name: 'Update the open note, if it is a Media DB entry.',
+			callback: () => this.updateActiveNote(),
+		});
+
 		// register the settings tab
 		this.addSettingTab(new MediaDbSettingTab(this.app, this));
 
@@ -53,10 +59,18 @@ export default class MediaDbPlugin extends Plugin {
 	async createMediaDbNote(modal: () => Promise<MediaTypeModel>): Promise<void> {
 		try {
 			let data: MediaTypeModel = await modal();
-			console.log('MDB | Creating new note...');
-
 			data = await this.apiManager.queryDetailedInfo(data);
 
+			await this.createMediaDbNoteFromModel(data);
+		} catch (e) {
+			console.warn(e);
+			new Notice(e.toString());
+		}
+	}
+
+	async createMediaDbNoteFromModel(data: MediaTypeModel): Promise<void> {
+		try {
+			console.log('MDB | Creating new note...');
 			// console.log(data);
 
 			let fileContent = `---\n${data.toMetaData()}---\n`;
@@ -86,6 +100,8 @@ export default class MediaDbPlugin extends Plugin {
 
 			const fileName = replaceIllegalFileNameCharactersInString(data.getFileName());
 			const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
+
+			await this.app.vault.delete(this.app.vault.getAbstractFileByPath(filePath));
 			const targetFile = await this.app.vault.create(filePath, fileContent);
 
 			// open file
@@ -95,6 +111,7 @@ export default class MediaDbPlugin extends Plugin {
 				return;
 			}
 			await activeLeaf.openFile(targetFile, {state: {mode: 'source'}});
+
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
@@ -120,6 +137,27 @@ export default class MediaDbPlugin extends Plugin {
 				resolve(res);
 			}).open();
 		}));
+	}
+
+	async updateActiveNote() {
+		const activeLeaf: TFile = this.app.workspace.getActiveFile();
+		if (!activeLeaf.name) return;
+
+		let metadata = this.app.metadataCache.getFileCache(activeLeaf).frontmatter;
+
+		if (!metadata.type || !metadata.dataSource || !metadata.id) {
+			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
+		}
+
+		const newMetadata = await this.apiManager.queryDetailedInfo({dataSource: metadata.dataSource, id: metadata.id} as MediaTypeModel);
+
+		if (!newMetadata) {
+			return;
+		}
+
+		console.log('MDB | deleting old entry');
+		await this.app.vault.delete(activeLeaf);
+		await this.createMediaDbNoteFromModel(newMetadata);
 	}
 
 	async loadSettings() {
