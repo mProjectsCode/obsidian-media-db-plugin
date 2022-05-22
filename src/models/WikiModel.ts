@@ -1,6 +1,6 @@
 import {MediaTypeModel} from './MediaTypeModel';
-import {stringifyYaml} from 'obsidian';
 import {mediaDbTag} from '../utils/Utils';
+import {MediaType} from '../utils/MediaType';
 
 
 export class WikiModel extends MediaTypeModel {
@@ -23,19 +23,15 @@ export class WikiModel extends MediaTypeModel {
 
 		Object.assign(this, obj);
 
-		this.type = 'wiki';
-	}
-
-	toMetaData(): string {
-		return stringifyYaml({...this, tags: '#' + this.getTags().join('/')});
-	}
-
-	getFileName(): string {
-		return this.title;
+		this.type = this.getMediaType();
 	}
 
 	getTags(): string[] {
 		return [mediaDbTag, 'wiki'];
+	}
+
+	getMediaType(): MediaType {
+		return MediaType.Wiki;
 	}
 
 }

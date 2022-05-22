@@ -1,6 +1,6 @@
 import {MediaTypeModel} from './MediaTypeModel';
-import {stringifyYaml} from 'obsidian';
 import {mediaDbTag} from '../utils/Utils';
+import {MediaType} from '../utils/MediaType';
 
 
 export class MusicReleaseModel extends MediaTypeModel {
@@ -24,19 +24,15 @@ export class MusicReleaseModel extends MediaTypeModel {
 
 		Object.assign(this, obj);
 
-		this.type = 'musicRelease';
-	}
-
-	toMetaData(): string {
-		return stringifyYaml({...this, tags: '#' + this.getTags().join('/')});
-	}
-
-	getFileName(): string {
-		return this.title + ' (' + this.artists.join(', ') + ' - ' + this.year + ' - ' + this.subType + ')';
+		this.type = this.getMediaType();
 	}
 
 	getTags(): string[] {
 		return [mediaDbTag, 'music', 'album'];
+	}
+
+	getMediaType(): MediaType {
+		return MediaType.MusicRelease;
 	}
 
 }

@@ -1,6 +1,6 @@
 import {MediaTypeModel} from './MediaTypeModel';
-import {stringifyYaml} from 'obsidian';
 import {mediaDbTag} from '../utils/Utils';
+import {MediaType} from '../utils/MediaType';
 
 
 export class SeriesModel extends MediaTypeModel {
@@ -35,19 +35,15 @@ export class SeriesModel extends MediaTypeModel {
 
 		Object.assign(this, obj);
 
-		this.type = 'series';
-	}
-
-	toMetaData(): string {
-		return stringifyYaml({...this, tags: '#' + this.getTags().join('/')});
-	}
-
-	getFileName(): string {
-		return this.title + ' (' + this.year + ')';
+		this.type = this.getMediaType();
 	}
 
 	getTags(): string[] {
 		return [mediaDbTag, 'tv', 'series'];
+	}
+
+	getMediaType(): MediaType {
+		return MediaType.Series;
 	}
 
 }

@@ -1,3 +1,6 @@
+import {MediaType} from '../utils/MediaType';
+import {stringifyYaml} from 'obsidian';
+
 export abstract class MediaTypeModel {
 	type: string;
 	subType: string;
@@ -8,10 +11,12 @@ export abstract class MediaTypeModel {
 	url: string;
 	id: string;
 
-	abstract toMetaData(): string;
-
-	abstract getFileName(): string;
+	abstract getMediaType(): MediaType;
 
 	abstract getTags(): string[];
+
+	toMetaData(): string {
+		return stringifyYaml({...this, tags: '#' + this.getTags().join('/')});
+	}
 
 }

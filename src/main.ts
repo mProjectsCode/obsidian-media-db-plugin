@@ -2,7 +2,7 @@ import {Notice, Plugin, TFile} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
-import {replaceIllegalFileNameCharactersInString, replaceTags} from './utils/Utils';
+import {replaceIllegalFileNameCharactersInString} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
@@ -10,10 +10,12 @@ import {MALAPI} from './api/apis/MALAPI';
 import {MediaDbIdSearchModal} from './modals/MediaDbIdSearchModal';
 import {WikipediaAPI} from './api/apis/WikipediaAPI';
 import {MusicBrainzAPI} from './api/apis/MusicBrainzAPI';
+import {MediaTypeManager} from './utils/MediaTypeManager';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
 	apiManager: APIManager;
+	mediaTypeManager: MediaTypeManager;
 
 	async onload() {
 		await this.loadSettings();
@@ -54,6 +56,8 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
+
+		this.mediaTypeManager = new MediaTypeManager(this.settings);
 	}
 
 	async createMediaDbNote(modal: () => Promise<MediaTypeModel>): Promise<void> {
@@ -68,37 +72,18 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
-	async createMediaDbNoteFromModel(data: MediaTypeModel): Promise<void> {
+	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel): Promise<void> {
 		try {
 			console.log('MDB | Creating new note...');
-			// console.log(data);
+			// console.log(mediaTypeModel);
 
-			let fileContent = `---\n${data.toMetaData()}---\n`;
+			let fileContent = `---\n${mediaTypeModel.toMetaData()}---\n`;
 
-			let templateFile: TFile = null;
-
-			if (data.type === 'movie' && this.settings.movieTemplate) {
-				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.movieTemplate).first();
-			} else if (data.type === 'series' && this.settings.seriesTemplate) {
-				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.seriesTemplate).first();
-			} else if (data.type === 'game' && this.settings.gameTemplate) {
-				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.gameTemplate).first();
-			} else if (data.type === 'wiki' && this.settings.wikiTemplate) {
-				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.wikiTemplate).first();
-			} else if (data.type === 'musicRelease' && this.settings.musicReleaseTemplate) {
-				templateFile = this.app.vault.getFiles().filter((f: TFile) => f.name === this.settings.musicReleaseTemplate).first();
+			if (this.settings.templates) {
+				fileContent += await this.mediaTypeManager.getContent(mediaTypeModel, this.app);
 			}
 
-			if (templateFile) {
-				let template = await this.app.vault.cachedRead(templateFile);
-				// console.log(template);
-				if (this.settings.templates) {
-					template = replaceTags(template, data);
-				}
-				fileContent += template;
-			}
-
-			const fileName = replaceIllegalFileNameCharactersInString(data.getFileName());
+			const fileName = replaceIllegalFileNameCharactersInString(this.mediaTypeManager.getFileName(mediaTypeModel));
 			const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
 
 			await this.app.vault.delete(this.app.vault.getAbstractFileByPath(filePath));
@@ -120,9 +105,9 @@ export default class MediaDbPlugin extends Plugin {
 
 	async openMediaDbSearchModal(): Promise<MediaTypeModel> {
 		return new Promise(((resolve, reject) => {
-			new MediaDbAdvancedSearchModal(this.app, this.apiManager, (err, results) => {
+			new MediaDbAdvancedSearchModal(this.app, this, (err, results) => {
 				if (err) return reject(err);
-				new MediaDbSearchResultModal(this.app, results, (err2, res) => {
+				new MediaDbSearchResultModal(this.app, this, results, (err2, res) => {
 					if (err2) return reject(err2);
 					resolve(res);
 				}).open();
@@ -132,7 +117,7 @@ export default class MediaDbPlugin extends Plugin {
 
 	async openMediaDbIdSearchModal(): Promise<MediaTypeModel> {
 		return new Promise(((resolve, reject) => {
-			new MediaDbIdSearchModal(this.app, this.apiManager, (err, res) => {
+			new MediaDbIdSearchModal(this.app, this, (err, res) => {
 				if (err) return reject(err);
 				resolve(res);
 			}).open();
@@ -165,6 +150,7 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async saveSettings() {
+		this.mediaTypeManager.updateTemplates(this.settings);
 		await this.saveData(this.settings);
 	}
 }

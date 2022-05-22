@@ -1,5 +1,4 @@
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {TFile} from 'obsidian';
 
 
 export const pluginName: string = 'obsidian-media-db-plugin';
@@ -7,7 +6,6 @@ export const contactEmail: string = 'm.projects.code@gmail.com';
 export const mediaDbTag: string = 'mediaDB';
 export const mediaDbVersion: string = '0.1.8';
 export const debug: boolean = false;
-
 
 export function wrapAround(value: number, size: number): number {
 	return ((value % size) + size) % size;
@@ -85,8 +83,4 @@ function traverseMetaData(path: Array<string>, mediaTypeModel: MediaTypeModel): 
 	}
 
 	return o;
-}
-
-export function updateNote(file: TFile) {
-
 }

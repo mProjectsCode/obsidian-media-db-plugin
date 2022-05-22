@@ -1,22 +1,22 @@
 import {App, ButtonComponent, Component, Modal, Notice, Setting, TextComponent, ToggleComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {APIManager} from '../api/APIManager';
 import {debugLog} from '../utils/Utils';
+import MediaDbPlugin from '../main';
 
 export class MediaDbAdvancedSearchModal extends Modal {
 	query: string;
 	isBusy: boolean;
-	apiManager: APIManager;
+	plugin: MediaDbPlugin;
 	searchBtn: ButtonComponent;
 	selectedApis: any;
 	onSubmit: (err: Error, result?: MediaTypeModel[]) => void;
 
-	constructor(app: App, apiManager: APIManager, onSubmit?: (err: Error, result?: MediaTypeModel[]) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (err: Error, result?: MediaTypeModel[]) => void) {
 		super(app);
-		this.apiManager = apiManager;
+		this.plugin = plugin;
 		this.onSubmit = onSubmit;
 		this.selectedApis = [];
-		for (const api of this.apiManager.apis) {
+		for (const api of this.plugin.apiManager.apis) {
 			this.selectedApis[api.apiName] = false;
 		}
 	}
@@ -56,7 +56,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 				console.log(`MDB | query started with title ${this.query}`);
 
-				const res = await this.apiManager.query(this.query, this.selectedApis);
+				const res = await this.plugin.apiManager.query(this.query, this.selectedApis);
 				this.onSubmit(null, res);
 			} catch (e) {
 				this.onSubmit(e);
@@ -84,7 +84,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		contentEl.createEl('h3', {text: 'APIs to search'});
 
 		const apiToggleComponents: Component[] = [];
-		for (const api of this.apiManager.apis) {
+		for (const api of this.plugin.apiManager.apis) {
 			const apiToggleListElementWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
 
 			const apiToggleTextWrapper = apiToggleListElementWrapper.createEl('div', {cls: 'media-db-plugin-list-text-wrapper'});
