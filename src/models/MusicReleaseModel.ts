@@ -28,7 +28,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'music', 'album'];
+		return [mediaDbTag, 'music', this.subType];
 	}
 
 	getMediaType(): MediaType {

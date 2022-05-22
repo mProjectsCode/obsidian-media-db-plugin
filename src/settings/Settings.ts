@@ -26,7 +26,7 @@ export interface MediaDbPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
-	folder: '',
+	folder: 'Media DB',
 	sfwFilter: true,
 	OMDbKey: '',
 
@@ -40,7 +40,7 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	seriesFileNameTemplate: '{{ title }} ({{ year }})',
 	gameFileNameTemplate: '{{ title }} ({{ year }})',
 	wikiFileNameTemplate: '{{ title }}',
-	musicReleaseFileNameTemplate: '{{ title }} (by {{ artists.0 }} - {{ year }})',
+	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
 
 	templates: true,
 };
@@ -182,7 +182,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Movie file name template')
 			.setDesc('Template for the file name used when creating a new note for a movie.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.movieFileNameTemplate}`)
 					.setValue(this.plugin.settings.movieFileNameTemplate)
 					.onChange(data => {
@@ -195,7 +194,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Series file name template')
 			.setDesc('Template for the file name used when creating a new note for a series.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.seriesFileNameTemplate}`)
 					.setValue(this.plugin.settings.seriesFileNameTemplate)
 					.onChange(data => {
@@ -208,7 +206,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Game file name template')
 			.setDesc('Template for the file name used when creating a new note for a game.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.gameFileNameTemplate}`)
 					.setValue(this.plugin.settings.gameFileNameTemplate)
 					.onChange(data => {
@@ -221,7 +218,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Wiki file name template')
 			.setDesc('Template for the file name used when creating a new note for a wiki entry.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.wikiFileNameTemplate}`)
 					.setValue(this.plugin.settings.wikiFileNameTemplate)
 					.onChange(data => {
@@ -234,7 +230,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Music Release file name template')
 			.setDesc('Template for the file name used when creating a new note for a music release.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.musicReleaseFileNameTemplate}`)
 					.setValue(this.plugin.settings.musicReleaseFileNameTemplate)
 					.onChange(data => {
