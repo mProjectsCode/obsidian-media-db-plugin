@@ -22,7 +22,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		// add icon to the left ribbon
 		const ribbonIconEl = this.addRibbonIcon('database', 'Add new Media DB entry', (evt: MouseEvent) =>
-			this.createMediaDbNote(this.openMediaDbSearchModal.bind(this)),
+			this.createMediaDbNote(this.openMediaDbAdvancedSearchModal.bind(this)),
 		);
 		ribbonIconEl.addClass('obsidian-media-db-plugin-ribbon-class');
 
@@ -30,7 +30,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.addCommand({
 			id: 'open-media-db-search-modal',
 			name: 'Add new Media DB entry',
-			callback: () => this.createMediaDbNote(this.openMediaDbSearchModal.bind(this)),
+			callback: () => this.createMediaDbNote(this.openMediaDbAdvancedSearchModal.bind(this)),
 		});
 		// register command to open id search modal
 		this.addCommand({
@@ -38,7 +38,7 @@ export default class MediaDbPlugin extends Plugin {
 			name: 'Add new Media DB entry by id',
 			callback: () => this.createMediaDbNote(this.openMediaDbIdSearchModal.bind(this)),
 		});
-
+		// register command to update the open note
 		this.addCommand({
 			id: 'update-media-db-note',
 			name: 'Update the open note, if it is a Media DB entry.',
@@ -103,7 +103,7 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
-	async openMediaDbSearchModal(): Promise<MediaTypeModel> {
+	async openMediaDbAdvancedSearchModal(): Promise<MediaTypeModel> {
 		return new Promise(((resolve, reject) => {
 			new MediaDbAdvancedSearchModal(this.app, this, (err, results) => {
 				if (err) return reject(err);
