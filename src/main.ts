@@ -11,6 +11,7 @@ import {MediaDbIdSearchModal} from './modals/MediaDbIdSearchModal';
 import {WikipediaAPI} from './api/apis/WikipediaAPI';
 import {MusicBrainzAPI} from './api/apis/MusicBrainzAPI';
 import {MediaTypeManager} from './utils/MediaTypeManager';
+import {SteamAPI} from './api/apis/SteamAPI';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -55,6 +56,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new MALAPI(this));
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
+		this.apiManager.registerAPI(new SteamAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager(this.settings);
