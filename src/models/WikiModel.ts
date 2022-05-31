@@ -17,6 +17,7 @@ export class WikiModel extends MediaTypeModel {
 	lastUpdated: string;
 	length: number;
 
+	userData: {};
 
 	constructor(obj: any = {}) {
 		super();

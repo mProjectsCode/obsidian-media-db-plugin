@@ -3,6 +3,11 @@ import {MediaType} from './MediaType';
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import {replaceTags} from './Utils';
 import {App, TFile} from 'obsidian';
+import {MovieModel} from '../models/MovieModel';
+import {SeriesModel} from '../models/SeriesModel';
+import {GameModel} from '../models/GameModel';
+import {WikiModel} from '../models/WikiModel';
+import {MusicReleaseModel} from '../models/MusicReleaseModel';
 
 export class MediaTypeManager {
 	mediaFileNameTemplateMap: Map<MediaType, string>;
@@ -48,5 +53,21 @@ export class MediaTypeManager {
 		const template = await app.vault.cachedRead(templateFile);
 		// console.log(template);
 		return replaceTags(template, mediaTypeModel);
+	}
+
+	createMediaTypeModelFromMediaType(obj: any, mediaType: MediaType): MediaTypeModel {
+		if (mediaType === MediaType.Movie) {
+			return new MovieModel(obj);
+		} else if (mediaType === MediaType.Series) {
+			return new SeriesModel(obj);
+		} else if (mediaType === MediaType.Game) {
+			return new GameModel(obj);
+		} else if (mediaType === MediaType.Wiki) {
+			return new WikiModel(obj);
+		} else if (mediaType === MediaType.MusicRelease) {
+			return new MusicReleaseModel(obj);
+		}
+
+		return undefined;
 	}
 }

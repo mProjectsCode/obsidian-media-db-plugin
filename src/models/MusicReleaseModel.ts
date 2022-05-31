@@ -17,7 +17,9 @@ export class MusicReleaseModel extends MediaTypeModel {
 	artists: string[];
 	rating: number;
 
-	personalRating: number;
+	userData: {
+		personalRating: number;
+	};
 
 	constructor(obj: any = {}) {
 		super();

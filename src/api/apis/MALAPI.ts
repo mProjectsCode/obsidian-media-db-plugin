@@ -107,9 +107,11 @@ export class MALAPI extends APIModel {
 				released: true,
 				premiere: (new Date(result.aired?.from)).toLocaleDateString() ?? 'unknown',
 
-				watched: false,
-				lastWatched: '',
-				personalRating: 0,
+				userData: {
+					watched: false,
+					lastWatched: '',
+					personalRating: 0,
+				},
 			} as MovieModel);
 
 			return model;
@@ -135,9 +137,11 @@ export class MALAPI extends APIModel {
 				airedTo: (new Date(result.aired?.to)).toLocaleDateString() ?? 'unknown',
 				airing: result.airing,
 
-				watched: false,
-				lastWatched: '',
-				personalRating: 0,
+				userData: {
+					watched: false,
+					lastWatched: '',
+					personalRating: 0,
+				},
 			} as SeriesModel);
 
 			return model;

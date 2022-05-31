@@ -22,10 +22,11 @@ export class MovieModel extends MediaTypeModel {
 	released: boolean;
 	premiere: string;
 
-	watched: boolean;
-	lastWatched: string;
-	personalRating: number;
-
+	userData: {
+		watched: boolean;
+		lastWatched: string;
+		personalRating: number;
+	};
 
 	constructor(obj: any = {}) {
 		super();

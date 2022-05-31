@@ -1,5 +1,5 @@
 import {MediaType} from '../utils/MediaType';
-import {stringifyYaml} from 'obsidian';
+import {YAMLConverter} from '../utils/YAMLConverter';
 
 export abstract class MediaTypeModel {
 	type: string;
@@ -11,12 +11,20 @@ export abstract class MediaTypeModel {
 	url: string;
 	id: string;
 
+	userData: object;
+
 	abstract getMediaType(): MediaType;
 
 	abstract getTags(): string[];
 
 	toMetaData(): string {
-		return stringifyYaml({...this, tags: '#' + this.getTags().join('/')});
+		return YAMLConverter.toYaml({...this.getWithOutUserData(), ...this.userData, tags: '#' + this.getTags().join('/')});
+	}
+
+	getWithOutUserData(): object {
+		const copy = JSON.parse(JSON.stringify(this));
+		delete copy.userData;
+		return copy;
 	}
 
 }

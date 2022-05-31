@@ -132,9 +132,11 @@ export class OMDbAPI extends APIModel {
 				released: true,
 				premiere: (new Date(result.Released)).toLocaleDateString() ?? 'unknown',
 
-				watched: false,
-				lastWatched: '',
-				personalRating: 0,
+				userData: {
+					watched: false,
+					lastWatched: '',
+					personalRating: 0,
+				},
 			} as MovieModel);
 
 			return model;
@@ -160,9 +162,11 @@ export class OMDbAPI extends APIModel {
 				airedFrom: (new Date(result.Released)).toLocaleDateString() ?? 'unknown',
 				airedTo: 'unknown',
 
-				watched: false,
-				lastWatched: '',
-				personalRating: 0,
+				userData: {
+					watched: false,
+					lastWatched: '',
+					personalRating: 0,
+				},
 			} as SeriesModel);
 
 			return model;
@@ -183,8 +187,10 @@ export class OMDbAPI extends APIModel {
 				released: true,
 				releaseDate: (new Date(result.Released)).toLocaleDateString() ?? 'unknown',
 
-				played: false,
-				personalRating: 0,
+				userData: {
+					played: false,
+					personalRating: 0,
+				},
 			} as GameModel);
 
 			return model;

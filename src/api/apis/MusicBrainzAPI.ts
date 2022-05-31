@@ -90,6 +90,10 @@ export class MusicBrainzAPI extends APIModel {
 			genres: result.genres.map((g: any) => g.name),
 			subType: result['primary-type'],
 			rating: result.rating.value * 2,
+
+			userData: {
+				personalRating: 0,
+			},
 		} as MusicReleaseModel);
 
 		return model;

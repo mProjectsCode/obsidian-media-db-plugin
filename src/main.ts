@@ -1,4 +1,4 @@
-import {Notice, Plugin, TFile} from 'obsidian';
+import {FrontMatterCache, Notice, Plugin, TFile} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
@@ -130,21 +130,25 @@ export default class MediaDbPlugin extends Plugin {
 		const activeLeaf: TFile = this.app.workspace.getActiveFile();
 		if (!activeLeaf.name) return;
 
-		let metadata = this.app.metadataCache.getFileCache(activeLeaf).frontmatter;
+		let metadata: FrontMatterCache = this.app.metadataCache.getFileCache(activeLeaf).frontmatter;
 
-		if (!metadata.type || !metadata.dataSource || !metadata.id) {
+		if (!metadata?.type || !metadata?.dataSource || !metadata?.id) {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
 		}
 
-		const newMetadata = await this.apiManager.queryDetailedInfo({dataSource: metadata.dataSource, id: metadata.id} as MediaTypeModel);
+		delete metadata.position; // remove unnecessary data from the FrontMatterCache
+		let oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(metadata, metadata.type);
 
-		if (!newMetadata) {
+		let newMediaTypeModel = await this.apiManager.queryDetailedInfo({dataSource: metadata.dataSource, id: metadata.id} as MediaTypeModel);
+		if (!newMediaTypeModel) {
 			return;
 		}
 
+		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
+
 		console.log('MDB | deleting old entry');
 		await this.app.vault.delete(activeLeaf);
-		await this.createMediaDbNoteFromModel(newMetadata);
+		await this.createMediaDbNoteFromModel(newMediaTypeModel);
 	}
 
 	async loadSettings() {

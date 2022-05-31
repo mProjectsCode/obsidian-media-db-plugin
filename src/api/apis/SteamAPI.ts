@@ -1,10 +1,8 @@
 import {APIModel} from '../APIModel';
 import {MediaTypeModel} from '../../models/MediaTypeModel';
-import {MovieModel} from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
-import {SeriesModel} from '../../models/SeriesModel';
 import {GameModel} from '../../models/GameModel';
-import {contactEmail, debugLog, pluginName} from '../../utils/Utils';
+import {debugLog} from '../../utils/Utils';
 import {requestUrl} from 'obsidian';
 import {MediaType} from '../../utils/MediaType';
 
@@ -99,8 +97,10 @@ export class SteamAPI extends APIModel {
 			released: !result.release_date?.comming_soon,
 			releaseDate: (new Date(result.release_date?.date)).toLocaleDateString() ?? 'unknown',
 
-			played: false,
-			personalRating: 0,
+			userData: {
+				played: false,
+				personalRating: 0,
+			},
 		} as GameModel);
 
 		return model;

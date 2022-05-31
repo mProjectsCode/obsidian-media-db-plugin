@@ -25,10 +25,11 @@ export class SeriesModel extends MediaTypeModel {
 	airedFrom: string;
 	airedTo: string;
 
-	watched: boolean;
-	lastWatched: string;
-	personalRating: number;
-
+	userData: {
+		watched: boolean;
+		lastWatched: string;
+		personalRating: number;
+	};
 
 	constructor(obj: any = {}) {
 		super();

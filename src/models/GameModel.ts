@@ -20,8 +20,10 @@ export class GameModel extends MediaTypeModel {
 	released: boolean;
 	releaseDate: string;
 
-	played: boolean;
-	personalRating: number;
+	userData: {
+		played: boolean;
+		personalRating: number;
+	};
 
 
 	constructor(obj: any = {}) {
