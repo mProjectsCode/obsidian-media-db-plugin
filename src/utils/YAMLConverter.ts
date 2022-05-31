@@ -3,13 +3,13 @@ export class YAMLConverter {
 		let output = '';
 
 		for (const [key, value] of Object.entries(obj)) {
-			output += `${key}: ${YAMLConverter.toYamlString(value)}\n`;
+			output += `${key}: ${YAMLConverter.toYamlString(value, 0)}\n`;
 		}
 
 		return output;
 	}
 
-	private static toYamlString(value: any): string {
+	private static toYamlString(value: any, indentation: number): string {
 		if (typeof value === 'boolean') {
 			return value ? 'true' : 'false';
 		} else if (typeof value === 'number') {
@@ -21,15 +21,19 @@ export class YAMLConverter {
 
 			if (Array.isArray(value)) {
 				for (const valueElement of value) {
-					output += `\n  - ${YAMLConverter.toYamlString(valueElement)}`;
+					output += `\n${YAMLConverter.calculateSpacing(indentation)}  - ${YAMLConverter.toYamlString(valueElement, indentation + 1)}`;
 				}
 			} else {
 				for (const [objKey, objValue] of Object.entries(value)) {
-					output += `\n    ${objKey}: ${YAMLConverter.toYamlString(objValue)}`;
+					output += `\n${YAMLConverter.calculateSpacing(indentation)}    ${objKey}: ${YAMLConverter.toYamlString(objValue, indentation + 1)}`;
 				}
 			}
 
 			return output;
 		}
+	}
+
+	private static calculateSpacing(indentation: number): string {
+		return ' '.repeat(indentation * 4);
 	}
 }
