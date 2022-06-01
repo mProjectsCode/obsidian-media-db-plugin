@@ -43,7 +43,15 @@ export default class MediaDbPlugin extends Plugin {
 		this.addCommand({
 			id: 'update-media-db-note',
 			name: 'Update the open note, if it is a Media DB entry.',
-			callback: () => this.updateActiveNote(),
+			checkCallback: (checking: boolean) => {
+				if (!this.app.workspace.getActiveFile()) {
+					return false;
+				}
+				if (!checking) {
+					this.updateActiveNote()
+				}
+				return true;
+			},
 		});
 
 		// register the settings tab
@@ -88,7 +96,11 @@ export default class MediaDbPlugin extends Plugin {
 			const fileName = replaceIllegalFileNameCharactersInString(this.mediaTypeManager.getFileName(mediaTypeModel));
 			const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
 
-			await this.app.vault.delete(this.app.vault.getAbstractFileByPath(filePath));
+			const file = this.app.vault.getAbstractFileByPath(filePath);
+			if (file) {
+				await this.app.vault.delete(file);
+			}
+
 			const targetFile = await this.app.vault.create(filePath, fileContent);
 
 			// open file
@@ -127,10 +139,12 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async updateActiveNote() {
-		const activeLeaf: TFile = this.app.workspace.getActiveFile();
-		if (!activeLeaf.name) return;
+		const activeFile: TFile = this.app.workspace.getActiveFile();
+		if (!activeFile) {
+			throw new Error('MDB | there is no active note');
+		}
 
-		let metadata: FrontMatterCache = this.app.metadataCache.getFileCache(activeLeaf).frontmatter;
+		let metadata: FrontMatterCache = this.app.metadataCache.getFileCache(activeFile).frontmatter;
 
 		if (!metadata?.type || !metadata?.dataSource || !metadata?.id) {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
@@ -139,7 +153,7 @@ export default class MediaDbPlugin extends Plugin {
 		delete metadata.position; // remove unnecessary data from the FrontMatterCache
 		let oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(metadata, metadata.type);
 
-		let newMediaTypeModel = await this.apiManager.queryDetailedInfo({dataSource: metadata.dataSource, id: metadata.id} as MediaTypeModel);
+		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(metadata.id, metadata.dataSource);
 		if (!newMediaTypeModel) {
 			return;
 		}
@@ -147,7 +161,7 @@ export default class MediaDbPlugin extends Plugin {
 		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
 
 		console.log('MDB | deleting old entry');
-		await this.app.vault.delete(activeLeaf);
+		await this.app.vault.delete(activeFile);
 		await this.createMediaDbNoteFromModel(newMediaTypeModel);
 	}
 

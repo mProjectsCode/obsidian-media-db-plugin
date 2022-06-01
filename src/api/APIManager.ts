@@ -25,9 +25,13 @@ export class APIManager {
 	}
 
 	async queryDetailedInfo(item: MediaTypeModel): Promise<MediaTypeModel> {
+		return await this.queryDetailedInfoById(item.id, item.dataSource);
+	}
+
+	async queryDetailedInfoById(id: string, dataSource: string): Promise<MediaTypeModel> {
 		for (const api of this.apis) {
-			if (api.apiName === item.dataSource) {
-				return api.getById(item);
+			if (api.apiName === dataSource) {
+				return api.getById(id);
 			}
 		}
 	}

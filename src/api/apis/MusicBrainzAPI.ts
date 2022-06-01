@@ -58,14 +58,14 @@ export class MusicBrainzAPI extends APIModel {
 		return ret;
 	}
 
-	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(item.id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
+		const searchUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			headers: {
-				'User-Agent': `${pluginName}/0.1.7 (${contactEmail})`,
+				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
 			},
 		});
 

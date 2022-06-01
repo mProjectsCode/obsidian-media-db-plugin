@@ -46,10 +46,10 @@ export class WikipediaAPI extends APIModel {
 		return ret;
 	}
 
-	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=info&pageids=${item.id}&inprop=url&format=json&origin=*`;
+		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=info&pageids=${encodeURIComponent(id)}&inprop=url&format=json&origin=*`;
 		const fetchData = await fetch(searchUrl);
 
 		if (fetchData.status !== 200) {

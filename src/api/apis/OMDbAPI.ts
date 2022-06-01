@@ -88,10 +88,10 @@ export class OMDbAPI extends APIModel {
 		return ret;
 	}
 
-	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `http://www.omdbapi.com/?i=${item.id}&apikey=${this.plugin.settings.OMDbKey}`;
+		const searchUrl = `http://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${this.plugin.settings.OMDbKey}`;
 		const fetchData = await fetch(searchUrl);
 
 		if (fetchData.status === 401) {

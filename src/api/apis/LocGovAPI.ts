@@ -40,10 +40,10 @@ export class LocGovAPI extends APIModel {
 		// return ret;
 	}
 
-	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://www.loc.gov/item/${item.id}/?fo=json`;
+		const searchUrl = `https://www.loc.gov/item/${encodeURIComponent(id)}/?fo=json`;
 		const fetchData = await fetch(searchUrl);
 		if (fetchData.status !== 200) {
 			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);

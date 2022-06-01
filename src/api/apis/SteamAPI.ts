@@ -65,10 +65,10 @@ export class SteamAPI extends APIModel {
 		return ret;
 	}
 
-	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `http://store.steampowered.com/api/appdetails?appids=${item.id}`;
+		const searchUrl = `http://store.steampowered.com/api/appdetails?appids=${encodeURIComponent(id)}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -77,7 +77,17 @@ export class SteamAPI extends APIModel {
 			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
 
-		const result = (await fetchData.json)[item.id].data;
+		debugLog(await fetchData.json);
+
+		let result;
+		for (const [key, value] of Object.entries(await fetchData.json)) {
+			if (key == id) {
+				result = value.data;
+			}
+		}
+		if (!result) {
+			throw Error(`MDB | API returned invalid data.`);
+		}
 
 		debugLog(result);
 
