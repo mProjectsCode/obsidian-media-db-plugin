@@ -69,10 +69,10 @@ export class MALAPI extends APIModel {
 		return ret;
 	}
 
-	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://api.jikan.moe/v4/anime/${item.id}`;
+		const searchUrl = `https://api.jikan.moe/v4/anime/${encodeURIComponent(id)}`;
 		const fetchData = await fetch(searchUrl);
 
 		if (fetchData.status !== 200) {
@@ -107,9 +107,11 @@ export class MALAPI extends APIModel {
 				released: true,
 				premiere: (new Date(result.aired?.from)).toLocaleDateString() ?? 'unknown',
 
-				watched: false,
-				lastWatched: '',
-				personalRating: 0,
+				userData: {
+					watched: false,
+					lastWatched: '',
+					personalRating: 0,
+				},
 			} as MovieModel);
 
 			return model;
@@ -135,9 +137,11 @@ export class MALAPI extends APIModel {
 				airedTo: (new Date(result.aired?.to)).toLocaleDateString() ?? 'unknown',
 				airing: result.airing,
 
-				watched: false,
-				lastWatched: '',
-				personalRating: 0,
+				userData: {
+					watched: false,
+					lastWatched: '',
+					personalRating: 0,
+				},
 			} as SeriesModel);
 
 			return model;

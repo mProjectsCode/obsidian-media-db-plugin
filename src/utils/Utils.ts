@@ -7,7 +7,6 @@ export const mediaDbTag: string = 'mediaDB';
 export const mediaDbVersion: string = '0.1.8';
 export const debug: boolean = false;
 
-
 export function wrapAround(value: number, size: number): number {
 	return ((value % size) + size) % size;
 }

@@ -1,10 +1,11 @@
 import {MediaTypeModel} from './MediaTypeModel';
-import {stringifyYaml} from 'obsidian';
 import {mediaDbTag} from '../utils/Utils';
+import {MediaType} from '../utils/MediaType';
 
 
 export class SeriesModel extends MediaTypeModel {
 	type: string;
+	subType: string;
 	title: string;
 	englishTitle: string;
 	year: string;
@@ -24,27 +25,26 @@ export class SeriesModel extends MediaTypeModel {
 	airedFrom: string;
 	airedTo: string;
 
-	watched: boolean;
-	lastWatched: string;
-	personalRating: number;
-
+	userData: {
+		watched: boolean;
+		lastWatched: string;
+		personalRating: number;
+	};
 
 	constructor(obj: any = {}) {
 		super();
 
 		Object.assign(this, obj);
-	}
 
-	toMetaData(): string {
-		return stringifyYaml({...this, tags: '#' + this.getTags().join('/')});
-	}
-
-	getFileName(): string {
-		return this.title + ' (' + this.year + ')';
+		this.type = this.getMediaType();
 	}
 
 	getTags(): string[] {
 		return [mediaDbTag, 'tv', 'series'];
+	}
+
+	getMediaType(): MediaType {
+		return MediaType.Series;
 	}
 
 }

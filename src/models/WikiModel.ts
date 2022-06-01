@@ -1,10 +1,11 @@
 import {MediaTypeModel} from './MediaTypeModel';
-import {stringifyYaml} from 'obsidian';
 import {mediaDbTag} from '../utils/Utils';
+import {MediaType} from '../utils/MediaType';
 
 
 export class WikiModel extends MediaTypeModel {
 	type: string;
+	subType: string;
 	title: string;
 	englishTitle: string;
 	year: string;
@@ -16,23 +17,22 @@ export class WikiModel extends MediaTypeModel {
 	lastUpdated: string;
 	length: number;
 
+	userData: {};
 
 	constructor(obj: any = {}) {
 		super();
 
 		Object.assign(this, obj);
-	}
 
-	toMetaData(): string {
-		return stringifyYaml({...this, tags: '#' + this.getTags().join('/')});
-	}
-
-	getFileName(): string {
-		return this.title;
+		this.type = this.getMediaType();
 	}
 
 	getTags(): string[] {
 		return [mediaDbTag, 'wiki'];
+	}
+
+	getMediaType(): MediaType {
+		return MediaType.Wiki;
 	}
 
 }

@@ -13,7 +13,7 @@ export abstract class APIModel {
 	 */
 	abstract searchByTitle(title: string): Promise<MediaTypeModel[]>;
 
-	abstract getById(item: MediaTypeModel): Promise<MediaTypeModel>;
+	abstract getById(id: string): Promise<MediaTypeModel>;
 
 	hasType(type: string): boolean {
 		return this.types.contains(type);

@@ -1,19 +1,19 @@
 import {App, ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {APIManager} from '../api/APIManager';
 import {debugLog} from '../utils/Utils';
+import MediaDbPlugin from '../main';
 
 export class MediaDbIdSearchModal extends Modal {
 	query: string;
 	isBusy: boolean;
-	apiManager: APIManager;
+	plugin: MediaDbPlugin;
 	searchBtn: ButtonComponent;
 	selectedApi: string;
 	onSubmit: (err: Error, result?: MediaTypeModel) => void;
 
-	constructor(app: App, apiManager: APIManager, onSubmit?: (err: Error, result?: MediaTypeModel) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (err: Error, result?: MediaTypeModel) => void) {
 		super(app);
-		this.apiManager = apiManager;
+		this.plugin = plugin;
 		this.onSubmit = onSubmit;
 		this.selectedApi = '';
 	}
@@ -46,7 +46,7 @@ export class MediaDbIdSearchModal extends Modal {
 
 				console.log(`MDB | query started with id ${this.query}`);
 
-				const api = this.apiManager.getApiByName(this.selectedApi);
+				const api = this.plugin.apiManager.getApiByName(this.selectedApi);
 				if (!api) {
 					this.onSubmit(new Error('the selected api does not exist'));
 				}
@@ -83,7 +83,7 @@ export class MediaDbIdSearchModal extends Modal {
 		apiSelectorComponent.onChange((value: string) => {
 			this.selectedApi = value;
 		});
-		for (const api of this.apiManager.apis) {
+		for (const api of this.plugin.apiManager.apis) {
 			apiSelectorComponent.addOption(api.apiName, api.apiName);
 		}
 		apiSelectorWrapper.appendChild(apiSelectorComponent.selectEl);
