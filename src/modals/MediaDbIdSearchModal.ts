@@ -50,7 +50,7 @@ export class MediaDbIdSearchModal extends Modal {
 				if (!api) {
 					this.onSubmit(new Error('the selected api does not exist'));
 				}
-				const res = await api.getById({id: this.query} as MediaTypeModel); // TODO: fix jank
+				const res = await api.getById(this.query);
 				this.onSubmit(null, res);
 			} catch (e) {
 				this.onSubmit(e);

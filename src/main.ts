@@ -48,7 +48,7 @@ export default class MediaDbPlugin extends Plugin {
 					return false;
 				}
 				if (!checking) {
-					this.updateActiveNote()
+					this.updateActiveNote();
 				}
 				return true;
 			},

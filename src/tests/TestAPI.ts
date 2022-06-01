@@ -17,7 +17,7 @@ export class TestAPI extends APIModel {
 	}
 
 
-	async getById(item: MediaTypeModel): Promise<MediaTypeModel> {
+	async getById(id: string): Promise<MediaTypeModel> {
 		return undefined;
 	}
 
