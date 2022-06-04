@@ -32,7 +32,9 @@ Available variables that can be used in template tags are the same variables fro
 I also published my own templates [here](https://github.com/mProjectsCode/obsidian-media-db-templates).
 
 ### How to install
-Currently, you have to manually download the zip archive from the latest release here on GitHub.  
+**The plugin is now released, so it can be installed directly through obsidian's plugin installer.**
+
+Alternatively, you can manually download the zip archive from the latest release here on GitHub.  
 After downloading, extract the archive into the `.obsidian/plugins` folder in your vault.
 
 The folder structure should look like this:
@@ -46,7 +48,7 @@ The folder structure should look like this:
          |_ styles.css  
 ```  
 
-Once the plugin submission goes through, the plugin will also be installable directly through obsidian's plugin installer.
+
 
 ### How to use
 (pictures are coming)
