@@ -1,6 +1,6 @@
 ---
 name: API request
-about: Describe this issue template's purpose here.
+about: Suggest a new API to be added to this plugin.
 title: ''
 labels: API request
 assignees: ''
