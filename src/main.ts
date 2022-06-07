@@ -100,6 +100,11 @@ export default class MediaDbPlugin extends Plugin {
 			const fileName = replaceIllegalFileNameCharactersInString(this.mediaTypeManager.getFileName(mediaTypeModel));
 			const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
 
+			const folder = this.app.vault.getAbstractFileByPath(this.settings.folder);
+			if (!folder) {
+				await this.app.vault.createFolder(this.settings.folder.replace(/\/$/, ''));
+			}
+
 			const file = this.app.vault.getAbstractFileByPath(filePath);
 			if (file) {
 				await this.app.vault.delete(file);
