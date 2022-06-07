@@ -112,6 +112,11 @@ Now you select the result you want and the plugin will cast it's magic and creat
 ### Problems, unexpected behavior or improvement suggestions?
 You are more than welcome to open an issue on [GitHub](https://github.com/mProjectsCode/obsidian-media-db-plugin/issues).
 
+### Changelog
+#### 0.2.0
+- Added the option to rename metadata fields through property mappings
+- fixed note creation falling, when the folder set in the settings did not exist
+
 ### Contributions
 Thank you for wanting to contribute to this project.
 
