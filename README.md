@@ -31,6 +31,17 @@ Available variables that can be used in template tags are the same variables fro
 
 I also published my own templates [here](https://github.com/mProjectsCode/obsidian-media-db-templates).
 
+#### Metadata field customization
+Allows you to rename the metadata fields this plugin generates through mappings.
+
+A mapping has to follow this syntax `[origional property name] -> [new property name]`.
+Multiple mappings are separated by a new line. 
+So e.g.:
+```
+title -> name
+year -> releaseYear
+```
+
 ### How to install
 **The plugin is now released, so it can be installed directly through obsidian's plugin installer.**
 
@@ -46,8 +57,7 @@ The folder structure should look like this:
          |_ main.js  
          |_ manifest.json  
          |_ styles.css  
-```  
-
+```
 
 
 ### How to use
