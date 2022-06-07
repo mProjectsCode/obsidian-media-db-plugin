@@ -12,11 +12,14 @@ import {WikipediaAPI} from './api/apis/WikipediaAPI';
 import {MusicBrainzAPI} from './api/apis/MusicBrainzAPI';
 import {MediaTypeManager} from './utils/MediaTypeManager';
 import {SteamAPI} from './api/apis/SteamAPI';
+import {ModelPropertyMapper} from './settings/ModelPropertyMapper';
+import {YAMLConverter} from './utils/YAMLConverter';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
 	apiManager: APIManager;
 	mediaTypeManager: MediaTypeManager;
+	modelPropertyMapper: ModelPropertyMapper;
 
 	async onload() {
 		await this.loadSettings();
@@ -68,6 +71,7 @@ export default class MediaDbPlugin extends Plugin {
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager(this.settings);
+		this.modelPropertyMapper = new ModelPropertyMapper(this.settings);
 	}
 
 	async createMediaDbNote(modal: () => Promise<MediaTypeModel>): Promise<void> {
@@ -87,7 +91,7 @@ export default class MediaDbPlugin extends Plugin {
 			console.log('MDB | Creating new note...');
 			// console.log(mediaTypeModel);
 
-			let fileContent = `---\n${mediaTypeModel.toMetaData()}---\n`;
+			let fileContent = `---\n${YAMLConverter.toYaml(this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject()))}---\n`;
 
 			if (this.settings.templates) {
 				fileContent += await this.mediaTypeManager.getContent(mediaTypeModel, this.app);
@@ -95,6 +99,11 @@ export default class MediaDbPlugin extends Plugin {
 
 			const fileName = replaceIllegalFileNameCharactersInString(this.mediaTypeManager.getFileName(mediaTypeModel));
 			const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
+
+			const folder = this.app.vault.getAbstractFileByPath(this.settings.folder);
+			if (!folder) {
+				await this.app.vault.createFolder(this.settings.folder.replace(/\/$/, ''));
+			}
 
 			const file = this.app.vault.getAbstractFileByPath(filePath);
 			if (file) {
@@ -144,13 +153,17 @@ export default class MediaDbPlugin extends Plugin {
 			throw new Error('MDB | there is no active note');
 		}
 
-		let metadata: FrontMatterCache = this.app.metadataCache.getFileCache(activeFile).frontmatter;
+		let metadata: any = this.app.metadataCache.getFileCache(activeFile).frontmatter;
+		delete metadata.position; // remove unnecessary data from the FrontMatterCache
+		metadata = this.modelPropertyMapper.convertObjectBack(metadata);
+
+		console.log(metadata)
 
 		if (!metadata?.type || !metadata?.dataSource || !metadata?.id) {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
 		}
 
-		delete metadata.position; // remove unnecessary data from the FrontMatterCache
+
 		let oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(metadata, metadata.type);
 
 		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(metadata.id, metadata.dataSource);
@@ -171,6 +184,8 @@ export default class MediaDbPlugin extends Plugin {
 
 	async saveSettings() {
 		this.mediaTypeManager.updateTemplates(this.settings);
+		this.modelPropertyMapper.updateConversionRules(this.settings);
+
 		await this.saveData(this.settings);
 	}
 }

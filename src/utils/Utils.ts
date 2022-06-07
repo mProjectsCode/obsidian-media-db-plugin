@@ -4,7 +4,7 @@ import {MediaTypeModel} from '../models/MediaTypeModel';
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
 export const mediaDbTag: string = 'mediaDB';
-export const mediaDbVersion: string = '0.1.11';
+export const mediaDbVersion: string = '0.2.0';
 export const debug: boolean = false;
 
 export function wrapAround(value: number, size: number): number {
@@ -15,6 +15,10 @@ export function debugLog(o: any): void {
 	if (debug) {
 		console.log(o);
 	}
+}
+
+export function containsOnlyLettersAndUnderscores(str: string): boolean {
+	return /^[a-zA-Z_]+$/.test(str);
 }
 
 export function replaceIllegalFileNameCharactersInString(string: string): string {

@@ -16,6 +16,7 @@ export class WikiModel extends MediaTypeModel {
 	wikiUrl: string;
 	lastUpdated: string;
 	length: number;
+	article: string;
 
 	userData: {};
 
@@ -33,6 +34,13 @@ export class WikiModel extends MediaTypeModel {
 
 	getMediaType(): MediaType {
 		return MediaType.Wiki;
+	}
+
+	override getWithOutUserData(): object {
+		const copy = JSON.parse(JSON.stringify(this));
+		delete copy.userData;
+		delete copy.article;
+		return copy;
 	}
 
 }
