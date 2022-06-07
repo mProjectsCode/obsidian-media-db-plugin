@@ -81,7 +81,10 @@ export class SteamAPI extends APIModel {
 
 		let result;
 		for (const [key, value] of Object.entries(await fetchData.json)) {
-			if (key == id) {
+			// console.log(typeof key, key)
+			// console.log(typeof id, id)
+			// after some testing I found out that id is somehow a number despite that it's defined as string...
+			if (key === String(id)) {
 				result = value.data;
 			}
 		}

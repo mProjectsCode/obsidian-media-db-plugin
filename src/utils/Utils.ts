@@ -17,6 +17,10 @@ export function debugLog(o: any): void {
 	}
 }
 
+export function containsOnlyLettersAndUnderscores(str: string): boolean {
+	return /^[a-zA-Z_]+$/.test(str);
+}
+
 export function replaceIllegalFileNameCharactersInString(string: string): string {
 	return string.replace(/[\\,#%&{}/*<>$"@.?]*/g, '').replace(/:+/g, ' -');
 }

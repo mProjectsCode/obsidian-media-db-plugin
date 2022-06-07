@@ -22,6 +22,12 @@ export interface MediaDbPluginSettings {
 	wikiFileNameTemplate: string,
 	musicReleaseFileNameTemplate: string,
 
+	moviePropertyConversionRules: string,
+	seriesPropertyConversionRules: string,
+	gamePropertyConversionRules: string,
+	wikiPropertyConversionRules: string,
+	musicReleasePropertyConversionRules: string,
+
 	templates: boolean,
 }
 
@@ -41,6 +47,12 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	gameFileNameTemplate: '{{ title }} ({{ year }})',
 	wikiFileNameTemplate: '{{ title }}',
 	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
+
+	moviePropertyConversionRules: '',
+	seriesPropertyConversionRules: '',
+	gamePropertyConversionRules: '',
+	wikiPropertyConversionRules: '',
+	musicReleasePropertyConversionRules: '',
 
 	templates: true,
 };
@@ -181,7 +193,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Movie file name template')
 			.setDesc('Template for the file name used when creating a new note for a movie.')
-			.addSearch(cb => {
+			.addText(cb => {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.movieFileNameTemplate}`)
 					.setValue(this.plugin.settings.movieFileNameTemplate)
 					.onChange(data => {
@@ -193,7 +205,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Series file name template')
 			.setDesc('Template for the file name used when creating a new note for a series.')
-			.addSearch(cb => {
+			.addText(cb => {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.seriesFileNameTemplate}`)
 					.setValue(this.plugin.settings.seriesFileNameTemplate)
 					.onChange(data => {
@@ -205,7 +217,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Game file name template')
 			.setDesc('Template for the file name used when creating a new note for a game.')
-			.addSearch(cb => {
+			.addText(cb => {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.gameFileNameTemplate}`)
 					.setValue(this.plugin.settings.gameFileNameTemplate)
 					.onChange(data => {
@@ -217,7 +229,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Wiki file name template')
 			.setDesc('Template for the file name used when creating a new note for a wiki entry.')
-			.addSearch(cb => {
+			.addText(cb => {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.wikiFileNameTemplate}`)
 					.setValue(this.plugin.settings.wikiFileNameTemplate)
 					.onChange(data => {
@@ -229,11 +241,74 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Music Release file name template')
 			.setDesc('Template for the file name used when creating a new note for a music release.')
-			.addSearch(cb => {
+			.addText(cb => {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.musicReleaseFileNameTemplate}`)
 					.setValue(this.plugin.settings.musicReleaseFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.musicReleaseFileNameTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
+		// endregion
+
+		containerEl.createEl('h3', {text: 'Property Mappings'});
+		// region Property Mappings
+		new Setting(containerEl)
+			.setName('Movie model property mappings')
+			.setDesc('Mappings for the property names of a movie.')
+			.addTextArea(cb => {
+				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
+					.setValue(this.plugin.settings.moviePropertyConversionRules)
+					.onChange(data => {
+						this.plugin.settings.moviePropertyConversionRules = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Series model property mappings')
+			.setDesc('Mappings for the property names of a series.')
+			.addTextArea(cb => {
+				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
+					.setValue(this.plugin.settings.seriesPropertyConversionRules)
+					.onChange(data => {
+						this.plugin.settings.seriesPropertyConversionRules = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Game model property mappings')
+			.setDesc('Mappings for the property names of a game.')
+			.addTextArea(cb => {
+				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
+					.setValue(this.plugin.settings.gamePropertyConversionRules)
+					.onChange(data => {
+						this.plugin.settings.gamePropertyConversionRules = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Wiki model property mappings')
+			.setDesc('Mappings for the property names of a wiki entry.')
+			.addTextArea(cb => {
+				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
+					.setValue(this.plugin.settings.wikiPropertyConversionRules)
+					.onChange(data => {
+						this.plugin.settings.wikiPropertyConversionRules = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Music Release model property mappings')
+			.setDesc('Mappings for the property names of a music release.')
+			.addTextArea(cb => {
+				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
+					.setValue(this.plugin.settings.musicReleasePropertyConversionRules)
+					.onChange(data => {
+						this.plugin.settings.musicReleasePropertyConversionRules = data;
 						this.plugin.saveSettings();
 					});
 			});
