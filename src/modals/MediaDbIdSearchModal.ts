@@ -15,7 +15,7 @@ export class MediaDbIdSearchModal extends Modal {
 		super(app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
-		this.selectedApi = '';
+		this.selectedApi = plugin.apiManager.apis[0].apiName;
 	}
 
 	submitCallback(event: KeyboardEvent) {
