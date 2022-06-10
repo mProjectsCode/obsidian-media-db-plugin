@@ -7,11 +7,13 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
 	heading: string;
 	onChoose: (error: Error, result: MediaTypeModel[]) => void;
+	onCancel: () => void;
 
-	constructor(app: App, plugin: MediaDbPlugin, elements: MediaTypeModel[], onChoose: (error: Error, result: MediaTypeModel[]) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, elements: MediaTypeModel[], onChoose: (error: Error, result: MediaTypeModel[]) => void, onCancel: () => void) {
 		super(app, elements);
 		this.plugin = plugin;
 		this.onChoose = onChoose;
+		this.onCancel = onCancel;
 
 		this.title = 'Search Results';
 		this.description = 'Select one or multiple search results.';
@@ -25,8 +27,12 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	}
 
 	// Perform action on the selected suggestion.
-	submit() {
+	onSubmit() {
 		this.onChoose(null, this.selectModalElements.filter(x => x.isActive()).map(x => x.value));
 		this.close();
+	}
+
+	onClose() {
+		this.onCancel();
 	}
 }

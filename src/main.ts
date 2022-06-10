@@ -215,12 +215,21 @@ export default class MediaDbPlugin extends Plugin {
 
 				let selectedResults: MediaTypeModel[] = await new Promise((resolve, reject) => {
 					const searchResultModal = new MediaDbSearchResultModal(this.app, this, results, (err, res) => {
-						if (err) return reject(err);
+						if (err) {
+							return reject(err);
+						}
 						resolve(res);
+					}, () => {
+						resolve([]);
 					});
+
 					searchResultModal.title = `Results for \'${title}\'`;
 					searchResultModal.open();
 				});
+
+				if (selectedResults.length === 0) {
+					erroredFiles.push({filePath: file.path, error: `no search results selected`});
+				}
 
 				await this.createMediaDbNote(async () => selectedResults);
 			}
@@ -249,7 +258,7 @@ export default class MediaDbPlugin extends Plugin {
 						return reject(err2);
 					}
 					resolve(res);
-				}).open();
+				}, () => resolve([])).open();
 			}).open();
 		}));
 	}
@@ -257,7 +266,9 @@ export default class MediaDbPlugin extends Plugin {
 	async openMediaDbIdSearchModal(): Promise<MediaTypeModel> {
 		return new Promise(((resolve, reject) => {
 			new MediaDbIdSearchModal(this.app, this, (err, res) => {
-				if (err) return reject(err);
+				if (err) {
+					return reject(err);
+				}
 				resolve(res);
 			}).open();
 		}));

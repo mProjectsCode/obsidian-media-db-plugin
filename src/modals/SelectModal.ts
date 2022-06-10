@@ -22,7 +22,7 @@ export abstract class SelectModal<T> extends Modal {
 
 	abstract renderElement(value: T, el: HTMLElement): any;
 
-	abstract submit(): void;
+	abstract onSubmit(): void;
 
 	disableAllOtherElements(elementId: number) {
 		for (const selectModalElement of this.selectModalElements) {
@@ -67,6 +67,6 @@ export abstract class SelectModal<T> extends Modal {
 
 		new Setting(contentEl)
 			.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()))
-			.addButton(btn => btn.setButtonText('Ok').setCta().onClick(() => this.submit()));
+			.addButton(btn => btn.setButtonText('Ok').setCta().onClick(() => this.onSubmit()));
 	}
 }
