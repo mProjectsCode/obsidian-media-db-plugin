@@ -21,3 +21,26 @@
 small.media-db-plugin-list-text{
 	color: var(--text-muted);
 }
+
+.media-db-plugin-select-wrapper {
+	margin: 5px;
+}
+
+.media-db-plugin-select-element {
+	cursor: pointer;
+	border-left: 5px solid transparent;
+	padding: 5px;
+	margin: 5px 0 5px 0;
+	border-radius: 5px;
+	white-space: pre-wrap;
+	font-size: 16px;
+}
+
+.media-db-plugin-select-element-selected {
+	border-left: 5px solid var(--interactive-accent) !important;
+	background: var(--background-secondary-alt);
+}
+
+.media-db-plugin-select-element-hover {
+	background: var(--background-secondary-alt);
+}

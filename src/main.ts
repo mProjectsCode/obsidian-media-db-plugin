@@ -1,8 +1,8 @@
-import {FrontMatterCache, Notice, Plugin, TFile} from 'obsidian';
+import {Notice, Plugin, TFile, TFolder} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
-import {replaceIllegalFileNameCharactersInString} from './utils/Utils';
+import {dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
@@ -14,6 +14,7 @@ import {MediaTypeManager} from './utils/MediaTypeManager';
 import {SteamAPI} from './api/apis/SteamAPI';
 import {ModelPropertyMapper} from './settings/ModelPropertyMapper';
 import {YAMLConverter} from './utils/YAMLConverter';
+import {MediaDbFolderImportModal} from './modals/MediaDbFolderImportModal';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -29,6 +30,16 @@ export default class MediaDbPlugin extends Plugin {
 			this.createMediaDbNote(this.openMediaDbAdvancedSearchModal.bind(this)),
 		);
 		ribbonIconEl.addClass('obsidian-media-db-plugin-ribbon-class');
+
+		this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
+			if (file instanceof TFolder) {
+				menu.addItem(item => {
+					item.setTitle('Create Media DB entries from folder')
+						.setIcon('database')
+						.onClick(() => this.createEntriesFromFolder(file as TFolder));
+				});
+			}
+		}));
 
 		// register command to open search modal
 		this.addCommand({
@@ -74,15 +85,22 @@ export default class MediaDbPlugin extends Plugin {
 		this.modelPropertyMapper = new ModelPropertyMapper(this.settings);
 	}
 
-	async createMediaDbNote(modal: () => Promise<MediaTypeModel>): Promise<void> {
+	async createMediaDbNote(modal: () => Promise<MediaTypeModel[]>): Promise<void> {
+		let models: MediaTypeModel[] = [];
 		try {
-			let data: MediaTypeModel = await modal();
-			data = await this.apiManager.queryDetailedInfo(data);
-
-			await this.createMediaDbNoteFromModel(data);
+			models = await modal();
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
+		}
+
+		for (const model of models) {
+			try {
+				await this.createMediaDbNoteFromModel(await this.apiManager.queryDetailedInfo(model));
+			} catch (e) {
+				console.warn(e);
+				new Notice(e.toString());
+			}
 		}
 	}
 
@@ -126,27 +144,6 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
-	async openMediaDbAdvancedSearchModal(): Promise<MediaTypeModel> {
-		return new Promise(((resolve, reject) => {
-			new MediaDbAdvancedSearchModal(this.app, this, (err, results) => {
-				if (err) return reject(err);
-				new MediaDbSearchResultModal(this.app, this, results, (err2, res) => {
-					if (err2) return reject(err2);
-					resolve(res);
-				}).open();
-			}).open();
-		}));
-	}
-
-	async openMediaDbIdSearchModal(): Promise<MediaTypeModel> {
-		return new Promise(((resolve, reject) => {
-			new MediaDbIdSearchModal(this.app, this, (err, res) => {
-				if (err) return reject(err);
-				resolve(res);
-			}).open();
-		}));
-	}
-
 	async updateActiveNote() {
 		const activeFile: TFile = this.app.workspace.getActiveFile();
 		if (!activeFile) {
@@ -154,15 +151,15 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		let metadata: any = this.app.metadataCache.getFileCache(activeFile).frontmatter;
+		metadata = JSON.parse(JSON.stringify(metadata)); // deep copy
 		delete metadata.position; // remove unnecessary data from the FrontMatterCache
 		metadata = this.modelPropertyMapper.convertObjectBack(metadata);
 
-		console.log(metadata)
+		console.log(metadata);
 
 		if (!metadata?.type || !metadata?.dataSource || !metadata?.id) {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
 		}
-
 
 		let oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(metadata, metadata.type);
 
@@ -176,6 +173,94 @@ export default class MediaDbPlugin extends Plugin {
 		console.log('MDB | deleting old entry');
 		await this.app.vault.delete(activeFile);
 		await this.createMediaDbNoteFromModel(newMediaTypeModel);
+	}
+
+	async createEntriesFromFolder(folder: TFolder) {
+		const erroredFiles: { filePath: string, error: string }[] = [];
+
+		const {selectedAPI, titleFieldName} = await new Promise((resolve, reject) => {
+			new MediaDbFolderImportModal(this.app, this, ((selectedAPI, titleFieldName) => {
+				resolve({selectedAPI, titleFieldName});
+			})).open();
+		});
+
+		const selectedAPIs = {};
+		for (const api of this.apiManager.apis) {
+			// @ts-ignore
+			selectedAPIs[api.apiName] = api.apiName === selectedAPI;
+		}
+
+		for (const child of folder.children) {
+			if (child instanceof TFile) {
+				const file = child as TFile;
+				let metadata: any = this.app.metadataCache.getFileCache(file).frontmatter;
+
+				let title = metadata[titleFieldName];
+				if (!title) {
+					erroredFiles.push({filePath: file.path, error: `metadata field \'${titleFieldName}\' not found or empty`});
+					continue;
+				}
+
+				let results: MediaTypeModel[] = [];
+				try {
+					results = await this.apiManager.query(title, selectedAPIs);
+				} catch (e) {
+					erroredFiles.push({filePath: file.path, error: e.toString()});
+					continue;
+				}
+				if (!results || results.length === 0) {
+					erroredFiles.push({filePath: file.path, error: `no search results`});
+					continue;
+				}
+
+				let selectedResults: MediaTypeModel[] = await new Promise((resolve, reject) => {
+					const searchResultModal = new MediaDbSearchResultModal(this.app, this, results, (err, res) => {
+						if (err) return reject(err);
+						resolve(res);
+					});
+					searchResultModal.title = `Results for \'${title}\'`;
+					searchResultModal.open();
+				});
+
+				await this.createMediaDbNote(async () => selectedResults);
+			}
+		}
+
+		if (erroredFiles.length > 0) {
+			const title = `bulk import error report ${dateTimeToString(new Date())}`;
+			const filePath = `${this.settings.folder.replace(/\/$/, '')}/${title}.md`;
+
+			const table = [['file', 'error']].concat(erroredFiles.map(x => [x.filePath, x.error]));
+			// console.log(table)
+			let fileContent = `# ${title}\n\n${markdownTable(table)}`;
+
+			const targetFile = await this.app.vault.create(filePath, fileContent);
+		}
+	}
+
+	async openMediaDbAdvancedSearchModal(): Promise<MediaTypeModel[]> {
+		return new Promise(((resolve, reject) => {
+			new MediaDbAdvancedSearchModal(this.app, this, (err, results) => {
+				if (err) {
+					return reject(err);
+				}
+				new MediaDbSearchResultModal(this.app, this, results, (err2, res) => {
+					if (err2) {
+						return reject(err2);
+					}
+					resolve(res);
+				}).open();
+			}).open();
+		}));
+	}
+
+	async openMediaDbIdSearchModal(): Promise<MediaTypeModel> {
+		return new Promise(((resolve, reject) => {
+			new MediaDbIdSearchModal(this.app, this, (err, res) => {
+				if (err) return reject(err);
+				resolve(res);
+			}).open();
+		}));
 	}
 
 	async loadSettings() {

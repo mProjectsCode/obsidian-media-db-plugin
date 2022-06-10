@@ -5,7 +5,7 @@ export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
 export const mediaDbTag: string = 'mediaDB';
 export const mediaDbVersion: string = '0.2.1';
-export const debug: boolean = false;
+export const debug: boolean = true;
 
 export function wrapAround(value: number, size: number): number {
 	return ((value % size) + size) % size;
@@ -88,3 +88,67 @@ function traverseMetaData(path: Array<string>, mediaTypeModel: MediaTypeModel): 
 
 	return o;
 }
+
+export function markdownTable(content: string[][]): string {
+	let rows = content.length;
+	if (rows === 0) {
+		return '';
+	}
+
+	let columns = content[0].length;
+	if (columns === 0) {
+		return '';
+	}
+	for (const row of content) {
+		if (row.length !== columns) {
+			return '';
+		}
+	}
+
+	let longestStringInColumns: number[] = [];
+
+	for (let i = 0; i < columns; i++) {
+		let longestStringInColumn = 0;
+		for (const row of content) {
+			if (row[i].length > longestStringInColumn) {
+				longestStringInColumn = row[i].length;
+			}
+		}
+
+		longestStringInColumns.push(longestStringInColumn);
+	}
+
+	let table = '';
+
+	for (let i = 0; i < rows; i++) {
+		table += '|';
+		for (let j = 0; j < columns; j++) {
+			let element = content[i][j];
+			element += ' '.repeat(longestStringInColumns[j] - element.length);
+			table += ' ' + element + ' |';
+		}
+		table += '\n';
+		if (i === 0) {
+			table += '|';
+			for (let j = 0; j < columns; j++) {
+				table += ' ' + '-'.repeat(longestStringInColumns[j]) + ' |';
+			}
+			table += '\n';
+		}
+	}
+
+	return table;
+}
+
+export function dateToString(date: Date) {
+	return `${date.getMonth()}-${date.getDay()}-${date.getFullYear()}`;
+}
+
+export function timeToString(time: Date) {
+	return `${time.getHours()}-${time.getMinutes()}-${time.getSeconds()}`;
+}
+
+export function dateTimeToString(dateTime: Date) {
+	return `${dateToString(dateTime)} ${timeToString(dateTime)}`;
+}
+
