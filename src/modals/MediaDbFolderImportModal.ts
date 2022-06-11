@@ -1,14 +1,15 @@
-import {App, ButtonComponent, DropdownComponent, Modal, Setting, TextComponent} from 'obsidian';
+import {App, ButtonComponent, DropdownComponent, Modal, Setting, TextComponent, ToggleComponent} from 'obsidian';
 import MediaDbPlugin from '../main';
 
 export class MediaDbFolderImportModal extends Modal {
 	plugin: MediaDbPlugin;
-	onSubmit: (selectedAPI: string, titleFieldName: string) => void;
+	onSubmit: (selectedAPI: string, titleFieldName: string, appendContent: boolean) => void;
 	selectedApi: string;
 	searchBtn: ButtonComponent;
 	titleFieldName: string;
+	appendContent: boolean;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit: (selectedAPI: string, titleFieldName: string) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, onSubmit: (selectedAPI: string, titleFieldName: string, appendContent: boolean) => void) {
 		super(app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
@@ -16,7 +17,7 @@ export class MediaDbFolderImportModal extends Modal {
 	}
 
 	submit() {
-		this.onSubmit(this.selectedApi, this.titleFieldName);
+		this.onSubmit(this.selectedApi, this.titleFieldName, this.appendContent);
 		this.close();
 	}
 
@@ -39,13 +40,40 @@ export class MediaDbFolderImportModal extends Modal {
 		apiSelectorWrapper.appendChild(apiSelectorComponent.selectEl);
 
 
-		const placeholder = 'Title metadata field name';
+		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
+		contentEl.createEl('h3', {text: 'Append note content to Media DB entry.'});
+
+		const appendContentToggleElementWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
+		const appendContentToggleTextWrapper = appendContentToggleElementWrapper.createEl('div', {cls: 'media-db-plugin-list-text-wrapper'});
+		appendContentToggleTextWrapper.createEl('span', {
+			text: 'If this is enabled, the plugin will override meta data fields with the same name.',
+			cls: 'media-db-plugin-list-text',
+		});
+
+		const appendContentToggleComponentWrapper = appendContentToggleElementWrapper.createEl('div', {cls: 'media-db-plugin-list-toggle'});
+
+		const appendContentToggle = new ToggleComponent(appendContentToggleElementWrapper);
+		appendContentToggle.setValue(false);
+		appendContentToggle.onChange(value => this.appendContent = value);
+		appendContentToggleComponentWrapper.appendChild(appendContentToggle.toggleEl);
+
+
+		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
+		contentEl.createEl('h3', {text: 'The name of the mata data field that should be used as the title to query'});
+
+		const placeholder = 'title';
 		const titleFieldNameComponent = new TextComponent(contentEl);
 		titleFieldNameComponent.inputEl.style.width = '100%';
 		titleFieldNameComponent.setPlaceholder(placeholder);
 		titleFieldNameComponent.onChange(value => this.titleFieldName = value);
-
+		titleFieldNameComponent.inputEl.addEventListener('keydown', (ke) => {
+			if (ke.key === 'Enter') {
+				this.submit();
+			}
+		});
 		contentEl.appendChild(titleFieldNameComponent.inputEl);
+
+		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 
 		new Setting(contentEl)
 			.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()))

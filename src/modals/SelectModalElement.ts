@@ -24,7 +24,7 @@ export class SelectModalElement<T> {
 		this.element.id = this.getHTMLId();
 		this.element.on('click', '#' + this.getHTMLId(), () => {
 			this.setActive(!this.active);
-			if (!this.selectModal.allowMultiSelect || !this.selectModal.multiSelect) {
+			if (!this.selectModal.allowMultiSelect) {
 				this.selectModal.disableAllOtherElements(this.id);
 			}
 		});

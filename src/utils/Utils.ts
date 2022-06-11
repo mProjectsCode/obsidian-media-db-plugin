@@ -152,3 +152,15 @@ export function dateTimeToString(dateTime: Date) {
 	return `${dateToString(dateTime)} ${timeToString(dateTime)}`;
 }
 
+export class UserCancelError extends Error {
+	constructor(message: string) {
+		super(message);
+	}
+}
+
+export class UserSkipError extends Error {
+	constructor(message: string) {
+		super(message);
+	}
+}
+

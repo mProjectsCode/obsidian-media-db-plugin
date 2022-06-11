@@ -6,17 +6,24 @@ import {SelectModal} from './SelectModal';
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
 	heading: string;
-	onChoose: (error: Error, result: MediaTypeModel[]) => void;
+	onSubmit: (error: Error, result: MediaTypeModel[]) => void;
 	onCancel: () => void;
+	onSkip: () => void;
 
-	constructor(app: App, plugin: MediaDbPlugin, elements: MediaTypeModel[], onChoose: (error: Error, result: MediaTypeModel[]) => void, onCancel: () => void) {
+	sendCallback: boolean;
+
+	constructor(app: App, plugin: MediaDbPlugin, elements: MediaTypeModel[], skipButton: boolean, onSubmit: (error: Error, result: MediaTypeModel[]) => void, onCancel: () => void, onSkip?: () => void) {
 		super(app, elements);
 		this.plugin = plugin;
-		this.onChoose = onChoose;
+		this.onSubmit = onSubmit;
 		this.onCancel = onCancel;
+		this.onSkip = onSkip;
 
 		this.title = 'Search Results';
 		this.description = 'Select one or multiple search results.';
+		this.skipButton = skipButton;
+
+		this.sendCallback = false;
 	}
 
 	// Renders each suggestion item.
@@ -27,12 +34,21 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	}
 
 	// Perform action on the selected suggestion.
-	onSubmit() {
-		this.onChoose(null, this.selectModalElements.filter(x => x.isActive()).map(x => x.value));
+	submit() {
+		this.onSubmit(null, this.selectModalElements.filter(x => x.isActive()).map(x => x.value));
+		this.sendCallback = true;
+		this.close();
+	}
+
+	skip() {
+		this.onSkip();
+		this.sendCallback = true;
 		this.close();
 	}
 
 	onClose() {
-		this.onCancel();
+		if (!this.sendCallback) {
+			this.onCancel();
+		}
 	}
 }

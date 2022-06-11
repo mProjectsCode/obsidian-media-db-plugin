@@ -75,6 +75,8 @@ export class MediaDbIdSearchModal extends Modal {
 		contentEl.appendChild(searchComponent.inputEl);
 		searchComponent.inputEl.focus();
 
+		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
+
 		const apiSelectorWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
 		const apiSelectorTExtWrapper = apiSelectorWrapper.createEl('div', {cls: 'media-db-plugin-list-text-wrapper'});
 		apiSelectorTExtWrapper.createEl('span', {text: 'API to search', cls: 'media-db-plugin-list-text'});
@@ -87,6 +89,8 @@ export class MediaDbIdSearchModal extends Modal {
 			apiSelectorComponent.addOption(api.apiName, api.apiName);
 		}
 		apiSelectorWrapper.appendChild(apiSelectorComponent.selectEl);
+
+		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 
 		new Setting(contentEl)
 			.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()))

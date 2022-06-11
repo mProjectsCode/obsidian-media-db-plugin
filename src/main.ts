@@ -2,7 +2,7 @@ import {Notice, Plugin, TFile, TFolder} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
-import {dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString} from './utils/Utils';
+import {dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, UserCancelError, UserSkipError} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
@@ -177,10 +177,11 @@ export default class MediaDbPlugin extends Plugin {
 
 	async createEntriesFromFolder(folder: TFolder) {
 		const erroredFiles: { filePath: string, error: string }[] = [];
+		let canceled: boolean = false;
 
-		const {selectedAPI, titleFieldName} = await new Promise((resolve, reject) => {
-			new MediaDbFolderImportModal(this.app, this, ((selectedAPI, titleFieldName) => {
-				resolve({selectedAPI, titleFieldName});
+		const {selectedAPI, titleFieldName, appendContent} = await new Promise((resolve, reject) => {
+			new MediaDbFolderImportModal(this.app, this, ((selectedAPI, titleFieldName, appendContent) => {
+				resolve({selectedAPI, titleFieldName, appendContent});
 			})).open();
 		});
 
@@ -193,6 +194,11 @@ export default class MediaDbPlugin extends Plugin {
 		for (const child of folder.children) {
 			if (child instanceof TFile) {
 				const file = child as TFile;
+				if (canceled) {
+					erroredFiles.push({filePath: file.path, error: 'user canceled'});
+					continue;
+				}
+
 				let metadata: any = this.app.metadataCache.getFileCache(file).frontmatter;
 
 				let title = metadata[titleFieldName];
@@ -213,22 +219,40 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
-				let selectedResults: MediaTypeModel[] = await new Promise((resolve, reject) => {
-					const searchResultModal = new MediaDbSearchResultModal(this.app, this, results, (err, res) => {
-						if (err) {
-							return reject(err);
-						}
-						resolve(res);
-					}, () => {
-						resolve([]);
-					});
+				let selectedResults: MediaTypeModel[] = [];
+				try {
+					selectedResults = await new Promise((resolve, reject) => {
+						const searchResultModal = new MediaDbSearchResultModal(this.app, this, results, true, (err, res) => {
+							if (err) {
+								return reject(err);
+							}
+							resolve(res);
+						}, () => {
+							reject(new UserCancelError('user canceled'));
+						}, () => {
+							reject(new UserSkipError('user skipped'));
+						});
 
-					searchResultModal.title = `Results for \'${title}\'`;
-					searchResultModal.open();
-				});
+						searchResultModal.title = `Results for \'${title}\'`;
+						searchResultModal.open();
+					});
+				} catch (e) {
+					if (e instanceof UserCancelError) {
+						erroredFiles.push({filePath: file.path, error: e.message});
+						canceled = true;
+						continue;
+					} else if (e instanceof UserSkipError) {
+						erroredFiles.push({filePath: file.path, error: e.message});
+						continue;
+					} else {
+						erroredFiles.push({filePath: file.path, error: e.message});
+						continue;
+					}
+				}
 
 				if (selectedResults.length === 0) {
 					erroredFiles.push({filePath: file.path, error: `no search results selected`});
+					continue;
 				}
 
 				await this.createMediaDbNote(async () => selectedResults);
@@ -253,7 +277,7 @@ export default class MediaDbPlugin extends Plugin {
 				if (err) {
 					return reject(err);
 				}
-				new MediaDbSearchResultModal(this.app, this, results, (err2, res) => {
+				new MediaDbSearchResultModal(this.app, this, results, false, (err2, res) => {
 					if (err2) {
 						return reject(err2);
 					}

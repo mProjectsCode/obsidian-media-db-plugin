@@ -44,3 +44,7 @@ small.media-db-plugin-list-text{
 .media-db-plugin-select-element-hover {
 	background: var(--background-secondary-alt);
 }
+
+.media-db-plugin-spacer {
+	margin-bottom: 10px;
+}
