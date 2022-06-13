@@ -141,7 +141,7 @@ export function markdownTable(content: string[][]): string {
 }
 
 export function dateToString(date: Date) {
-	return `${date.getMonth()}-${date.getDay()}-${date.getFullYear()}`;
+	return `${date.getMonth() + 1}-${date.getDate()}-${date.getFullYear()}`;
 }
 
 export function timeToString(time: Date) {
