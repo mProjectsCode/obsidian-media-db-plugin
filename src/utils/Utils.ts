@@ -164,3 +164,8 @@ export class UserSkipError extends Error {
 	}
 }
 
+// js can't even implement modulo correctly...
+export function mod(n: number, m: number): number {
+	return ((n % m) + m) % m;
+}
+

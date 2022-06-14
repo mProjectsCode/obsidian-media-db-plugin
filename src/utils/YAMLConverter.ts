@@ -10,6 +10,10 @@ export class YAMLConverter {
 	}
 
 	private static toYamlString(value: any, indentation: number): string {
+		if (value == null) {
+			return 'null';
+		}
+
 		if (typeof value === 'boolean') {
 			return value ? 'true' : 'false';
 		} else if (typeof value === 'number') {

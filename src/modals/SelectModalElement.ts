@@ -9,6 +9,7 @@ export class SelectModalElement<T> {
 	activeClass: string;
 	hoverClass: string;
 	private active: boolean;
+	private highlighted: boolean;
 
 	constructor(value: T, parentElement: HTMLElement, id: number, selectModal: SelectModal<T>, active: boolean = false) {
 		this.value = value;
@@ -29,19 +30,33 @@ export class SelectModalElement<T> {
 			}
 		});
 		this.element.on('mouseenter', '#' + this.getHTMLId(), () => {
-			this.addClass(this.hoverClass);
+			this.setHighlighted(true);
 		});
 		this.element.on('mouseleave', '#' + this.getHTMLId(), () => {
-			this.removeClass(this.hoverClass);
+			this.setHighlighted(false);
 		});
-	}
-
-	isActive(): boolean {
-		return this.active;
 	}
 
 	getHTMLId(): string {
 		return `media-db-plugin-select-element-${this.id}`;
+	}
+
+	isHighlighted(): boolean {
+		return this.highlighted;
+	}
+
+	setHighlighted(value: boolean) {
+		this.highlighted = value;
+		if (this.highlighted) {
+			this.addClass(this.hoverClass);
+			this.selectModal.deHighlightAllOtherElements(this.id);
+		} else {
+			this.removeClass(this.hoverClass);
+		}
+	}
+
+	isActive(): boolean {
+		return this.active;
 	}
 
 	setActive(active: boolean): void {
