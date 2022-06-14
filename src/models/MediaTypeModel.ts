@@ -1,5 +1,4 @@
 import {MediaType} from '../utils/MediaType';
-import {YAMLConverter} from '../utils/YAMLConverter';
 
 export abstract class MediaTypeModel {
 	type: string;

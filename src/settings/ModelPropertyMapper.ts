@@ -29,7 +29,7 @@ export class ModelPropertyMapper {
 			return obj;
 		}
 
-		const conversionRules: ModelPropertyConversionRule[] = []
+		const conversionRules: ModelPropertyConversionRule[] = [];
 		for (const conversionRuleString of conversionRulesString.split('\n')) {
 			if (conversionRuleString) {
 				conversionRules.push(new ModelPropertyConversionRule(conversionRuleString));
@@ -74,7 +74,7 @@ export class ModelPropertyMapper {
 			return obj;
 		}
 
-		const conversionRules: ModelPropertyConversionRule[] = []
+		const conversionRules: ModelPropertyConversionRule[] = [];
 		for (const conversionRuleString of conversionRulesString.split('\n')) {
 			if (conversionRuleString) {
 				conversionRules.push(new ModelPropertyConversionRule(conversionRuleString));

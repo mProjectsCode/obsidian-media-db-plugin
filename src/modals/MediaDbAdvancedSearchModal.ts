@@ -81,6 +81,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		contentEl.appendChild(searchComponent.inputEl);
 		searchComponent.inputEl.focus();
 
+		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 		contentEl.createEl('h3', {text: 'APIs to search'});
 
 		const apiToggleComponents: Component[] = [];
@@ -102,6 +103,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
 		}
 
+		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 
 		new Setting(contentEl)
 			.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()))
