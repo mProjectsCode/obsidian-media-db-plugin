@@ -42,6 +42,23 @@ title -> name
 year -> releaseYear
 ```
 
+#### Bulk Import
+The plugin allows you to import your preexisting media collection and upgrade them to Media DB entries.
+
+##### Prerequisites
+The preexisting media notes must be inside a folder in your vault. 
+For the plugin to be able to query them they need one metadata field that is used as the title the piece of media is searched by.
+This can be achieved by for example using a `csv` import plugin to import an existing list from outside of obsidian.
+
+##### Importing
+To start the import process, right-click on the folder and select the `Import folder as Media DB entries` option. 
+Then specify the API to search, if the current note content and metadata should be appended to the Media DB entry and the name of the metadata field that contains the title of the piece of media.
+
+Then the plugin will go through every file in the folder and prompt you to select from the search results.
+
+##### Post import
+After all files have been imported or the import was canceled, you will find the new entries as well as an error report that contains any errors or skipped/canceled files in the folder specified in the setting of the plugin.
+
 ### How to install
 **The plugin is now released, so it can be installed directly through obsidian's plugin installer.**
 
@@ -113,6 +130,14 @@ Now you select the result you want and the plugin will cast it's magic and creat
 You are more than welcome to open an issue on [GitHub](https://github.com/mProjectsCode/obsidian-media-db-plugin/issues).
 
 ### Changelog
+#### 0.3.0
+- Added bulk import. Import a folder of media notes as Media DB entries (thanks to [PaperOrb](https://github.com/PaperOrb) on GitHub for their input and for helping me test this feature)
+- Added a custom result select modal that allows you to select multiple results at once
+- Fixed a bug where the note creation would fail when the metadata included a field with the values `null` or `undefined`
+
+#### 0.2.1
+- fixed a small bug with the initial selection of an API in the ID search modal
+
 #### 0.2.0
 - Added the option to rename metadata fields through property mappings
 - fixed note creation falling, when the folder set in the settings did not exist

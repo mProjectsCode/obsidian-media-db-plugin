@@ -34,7 +34,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
 			if (file instanceof TFolder) {
 				menu.addItem(item => {
-					item.setTitle('Create Media DB entries from folder')
+					item.setTitle('Import folder as Media DB entries')
 						.setIcon('database')
 						.onClick(() => this.createEntriesFromFolder(file as TFolder));
 				});

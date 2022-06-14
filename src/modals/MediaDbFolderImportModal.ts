@@ -24,7 +24,7 @@ export class MediaDbFolderImportModal extends Modal {
 	onOpen() {
 		const {contentEl} = this;
 
-		contentEl.createEl('h2', {text: 'Create Media DB entries from folder'});
+		contentEl.createEl('h2', {text: 'Import folder as Media DB entries'});
 
 		const apiSelectorWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
 		const apiSelectorTextWrapper = apiSelectorWrapper.createEl('div', {cls: 'media-db-plugin-list-text-wrapper'});
