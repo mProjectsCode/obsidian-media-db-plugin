@@ -1,4 +1,4 @@
-import {Notice, Plugin, TFile, TFolder} from 'obsidian';
+import {Notice, Plugin, stringifyYaml, TFile, TFolder} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
@@ -124,7 +124,7 @@ export default class MediaDbPlugin extends Plugin {
 
 			debugLog(metadata);
 
-			let fileContent = `---\n${YAMLConverter.toYaml(metadata)}---\n`;
+			let fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(metadata) : stringifyYaml(metadata)}---\n`;
 
 			if (this.settings.templates) {
 				fileContent += await this.mediaTypeManager.getContent(mediaTypeModel, this.app);
