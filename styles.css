@@ -22,8 +22,15 @@ small.media-db-plugin-list-text{
 	color: var(--text-muted);
 }
 
+.media-db-plugin-select-modal {
+	display: flex;
+	flex-direction: column;
+}
+
 .media-db-plugin-select-wrapper {
 	margin: 5px;
+	flex: 1;
+	overflow-y: auto;
 }
 
 .media-db-plugin-select-element {

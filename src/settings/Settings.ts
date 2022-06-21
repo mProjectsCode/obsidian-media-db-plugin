@@ -7,8 +7,11 @@ import {FileSuggest} from './suggesters/FileSuggest';
 
 export interface MediaDbPluginSettings {
 	folder: string,
-	sfwFilter: boolean,
 	OMDbKey: string,
+	sfwFilter: boolean,
+	useCustomYamlStringifier: boolean;
+	templates: boolean,
+
 
 	movieTemplate: string,
 	seriesTemplate: string,
@@ -28,13 +31,14 @@ export interface MediaDbPluginSettings {
 	wikiPropertyConversionRules: string,
 	musicReleasePropertyConversionRules: string,
 
-	templates: boolean,
 }
 
 export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	folder: 'Media DB',
-	sfwFilter: true,
 	OMDbKey: '',
+	sfwFilter: true,
+	useCustomYamlStringifier: true,
+	templates: true,
 
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -54,7 +58,7 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiPropertyConversionRules: '',
 	musicReleasePropertyConversionRules: '',
 
-	templates: true,
+
 };
 
 export class MediaDbSettingTab extends PluginSettingTab {
@@ -104,6 +108,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				cb.setValue(this.plugin.settings.sfwFilter)
 					.onChange(data => {
 						this.plugin.settings.sfwFilter = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('YAML formatter')
+			.setDesc('Add optional quotation marks around strings in the metadata block.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.useCustomYamlStringifier)
+					.onChange(data => {
+						this.plugin.settings.useCustomYamlStringifier = data;
 						this.plugin.saveSettings();
 					});
 			});
