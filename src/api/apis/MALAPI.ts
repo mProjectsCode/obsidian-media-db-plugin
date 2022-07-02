@@ -41,13 +41,20 @@ export class MALAPI extends APIModel {
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of data.data) {
-			const type = this.typeMappings.get(result.type.toLowerCase());
+			const type = this.typeMappings.get(result.type?.toLowerCase());
 			if (type === undefined) {
-				continue;
+				ret.push(new MovieModel({
+					subType: '',
+					title: result.title,
+					englishTitle: result.title_english ?? result.title,
+					year: result.year ?? result.aired?.prop?.from?.year ?? '',
+					dataSource: this.apiName,
+					id: result.mal_id,
+				} as MovieModel));
 			}
 			if (type === 'movie' || type === 'special') {
 				ret.push(new MovieModel({
-					type: type,
+					subType: type,
 					title: result.title,
 					englishTitle: result.title_english ?? result.title,
 					year: result.year ?? result.aired?.prop?.from?.year ?? '',
@@ -56,7 +63,7 @@ export class MALAPI extends APIModel {
 				} as MovieModel));
 			} else if (type === 'series' || type === 'ova') {
 				ret.push(new SeriesModel({
-					type: type,
+					subType: type,
 					title: result.title,
 					englishTitle: result.title_english ?? result.title,
 					year: result.year ?? result.aired?.prop?.from?.year ?? '',
@@ -83,14 +90,39 @@ export class MALAPI extends APIModel {
 		debugLog(data);
 		const result = data.data;
 
-		const type = this.typeMappings.get(result.type.toLowerCase());
+		const type = this.typeMappings.get(result.type?.toLowerCase());
 		if (type === undefined) {
-			throw Error(`${result.type.toLowerCase()} is an unsupported type.`);
+			const model = new MovieModel({
+				subType: '',
+				title: result.title,
+				englishTitle: result.title_english ?? result.title,
+				year: result.year ?? result.aired?.prop?.from?.year ?? '',
+				dataSource: this.apiName,
+				url: result.url,
+				id: result.mal_id,
+
+				genres: result.genres?.map((x: any) => x.name) ?? [],
+				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
+				duration: result.duration ?? 'unknown',
+				onlineRating: result.score ?? 0,
+				image: result.images?.jpg?.image_url ?? '',
+
+				released: true,
+				premiere: (new Date(result.aired?.from)).toLocaleDateString() ?? 'unknown',
+
+				userData: {
+					watched: false,
+					lastWatched: '',
+					personalRating: 0,
+				},
+			} as MovieModel);
+
+			return model;
 		}
 
 		if (type === 'movie' || type === 'special') {
 			const model = new MovieModel({
-				type: type,
+				subType: type,
 				title: result.title,
 				englishTitle: result.title_english ?? result.title,
 				year: result.year ?? result.aired?.prop?.from?.year ?? '',
@@ -117,7 +149,7 @@ export class MALAPI extends APIModel {
 			return model;
 		} else if (type === 'series' || type === 'ova') {
 			const model = new SeriesModel({
-				type: type,
+				subType: type,
 				title: result.title,
 				englishTitle: result.title_english ?? result.title,
 				year: result.year ?? result.aired?.prop?.from?.year ?? '',

@@ -37,7 +37,7 @@ export class MediaTypeManager {
 		return replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType()), mediaTypeModel);
 	}
 
-	async getContent(mediaTypeModel: MediaTypeModel, app: App) {
+	async getTemplate(mediaTypeModel: MediaTypeModel, app: App) {
 		const templateFileName = this.mediaTemplateMap.get(mediaTypeModel.getMediaType());
 
 		if (!templateFileName) {
