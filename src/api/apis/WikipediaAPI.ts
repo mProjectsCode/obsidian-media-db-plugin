@@ -58,7 +58,7 @@ export class WikipediaAPI extends APIModel {
 
 		const data = await fetchData.json();
 		debugLog(data);
-		const result = Object.entries(data?.query?.pages)[0][1];
+		const result: any = Object.entries(data?.query?.pages)[0][1];
 
 		const model = new WikiModel({
 			type: 'wiki',
