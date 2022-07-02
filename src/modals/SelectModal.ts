@@ -72,11 +72,13 @@ export abstract class SelectModal<T> extends Modal {
 		contentEl.createEl('h2', {text: this.title});
 		contentEl.createEl('p', {text: this.description});
 
+		contentEl.addClass('media-db-plugin-select-modal');
+
 		const elementWrapper = contentEl.createDiv({cls: 'media-db-plugin-select-wrapper'});
 
 		let i = 0;
 		for (const element of this.elements) {
-			const selectModalElement = new SelectModalElement(element, contentEl, i, this, false);
+			const selectModalElement = new SelectModalElement(element, elementWrapper, i, this, false);
 
 			this.selectModalElements.push(selectModalElement);
 
@@ -84,6 +86,8 @@ export abstract class SelectModal<T> extends Modal {
 
 			i += 1;
 		}
+
+		this.selectModalElements.first()?.element.scrollIntoView();
 
 		const bottomSetting = new Setting(contentEl);
 		bottomSetting.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()));

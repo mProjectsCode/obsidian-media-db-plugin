@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-media-db-plugin",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"description": "A plugin that can query multiple APIs for movies, series, anime, games, music and wiki articles, and import them into your vault.",
 	"main": "main.js",
 	"scripts": {

@@ -46,7 +46,7 @@ export class MediaDbFolderImportModal extends Modal {
 		const appendContentToggleElementWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
 		const appendContentToggleTextWrapper = appendContentToggleElementWrapper.createEl('div', {cls: 'media-db-plugin-list-text-wrapper'});
 		appendContentToggleTextWrapper.createEl('span', {
-			text: 'If this is enabled, the plugin will override meta data fields with the same name.',
+			text: 'If this is enabled, the plugin will override metadata fields with the same name.',
 			cls: 'media-db-plugin-list-text',
 		});
 
@@ -59,7 +59,7 @@ export class MediaDbFolderImportModal extends Modal {
 
 
 		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
-		contentEl.createEl('h3', {text: 'The name of the mata data field that should be used as the title to query'});
+		contentEl.createEl('h3', {text: 'The name of the metadata field that should be used as the title to query.'});
 
 		const placeholder = 'title';
 		const titleFieldNameComponent = new TextComponent(contentEl);

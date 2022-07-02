@@ -1,4 +1,4 @@
-import {Notice, Plugin, TFile, TFolder} from 'obsidian';
+import {Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder} from 'obsidian';
 import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
@@ -109,39 +109,80 @@ export default class MediaDbPlugin extends Plugin {
 			console.log('MDB | Creating new note...');
 			// console.log(mediaTypeModel);
 
-			let metadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
-			if (attachFile) {
-				let attachFileMetadata: any = this.app.metadataCache.getFileCache(attachFile).frontmatter;
-				if (attachFileMetadata) {
-					attachFileMetadata = JSON.parse(JSON.stringify(attachFileMetadata)); // deep copy
-					delete attachFileMetadata.position;
-				} else {
-					attachFileMetadata = {};
-				}
+			let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+			let fileContent = '';
 
-				metadata = Object.assign(attachFileMetadata, metadata);
-			}
+			({fileMetadata, fileContent} = await this.attachFile(fileMetadata, fileContent, attachFile));
+			({fileMetadata, fileContent} = await this.attachTemplate(fileMetadata, fileContent, await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app)));
 
-			debugLog(metadata);
-
-			let fileContent = `---\n${YAMLConverter.toYaml(metadata)}---\n`;
-
-			if (this.settings.templates) {
-				fileContent += await this.mediaTypeManager.getContent(mediaTypeModel, this.app);
-			}
-
-			if (attachFile) {
-				let attachFileContent: string = await this.app.vault.read(attachFile);
-				const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
-				attachFileContent = attachFileContent.replace(regExp, '');
-				fileContent += '\n\n' + attachFileContent;
-			}
+			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
 
 			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent);
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
 		}
+	}
+
+	async attachFile(fileMetadata: any, fileContent: string, fileToAttach?: TFile): Promise<{ fileMetadata: any, fileContent: string }> {
+		if (!fileToAttach) {
+			return {fileMetadata: fileMetadata, fileContent: fileContent};
+		}
+
+		let attachFileMetadata: any = this.app.metadataCache.getFileCache(fileToAttach).frontmatter;
+		if (attachFileMetadata) {
+			attachFileMetadata = JSON.parse(JSON.stringify(attachFileMetadata)); // deep copy
+			delete attachFileMetadata.position;
+		} else {
+			attachFileMetadata = {};
+		}
+		fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
+
+		let attachFileContent: string = await this.app.vault.read(fileToAttach);
+		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
+		attachFileContent = attachFileContent.replace(regExp, '');
+		fileContent += '\n' + attachFileContent;
+
+		return {fileMetadata: fileMetadata, fileContent: fileContent};
+	}
+
+	async attachTemplate(fileMetadata: any, fileContent: string, template: string): Promise<{ fileMetadata: any, fileContent: string }> {
+		if (!template) {
+			return {fileMetadata: fileMetadata, fileContent: fileContent};
+		}
+
+		let templateMetadata: any = this.getMetaDataFromFileContent(template);
+		fileMetadata = Object.assign(templateMetadata, fileMetadata);
+
+		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
+		const attachFileContent = template.replace(regExp, '');
+		fileContent += '\n' + attachFileContent;
+
+		return {fileMetadata: fileMetadata, fileContent: fileContent};
+	}
+
+	getMetaDataFromFileContent(fileContent: string): any {
+		let metadata: any;
+
+		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
+		const frontMatterRegExpResult = regExp.exec(fileContent);
+		if (!frontMatterRegExpResult) {
+			return {};
+		}
+		let frontMatter = frontMatterRegExpResult[0];
+		if (!frontMatter) {
+			return {};
+		}
+		frontMatter = frontMatter.substring(4);
+		frontMatter = frontMatter.substring(0, frontMatter.length - 3);
+
+		metadata = parseYaml(frontMatter);
+
+		if (!metadata) {
+			metadata = {};
+		}
+
+		return metadata;
 	}
 
 	async createNote(fileName: string, fileContent: string, openFile: boolean = false) {
