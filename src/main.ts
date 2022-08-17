@@ -12,6 +12,7 @@ import {WikipediaAPI} from './api/apis/WikipediaAPI';
 import {MusicBrainzAPI} from './api/apis/MusicBrainzAPI';
 import {MediaTypeManager} from './utils/MediaTypeManager';
 import {SteamAPI} from './api/apis/SteamAPI';
+import {BoardGameGeekAPI} from './api/apis/BoardGameGeekAPI';
 import {ModelPropertyMapper} from './settings/ModelPropertyMapper';
 import {YAMLConverter} from './utils/YAMLConverter';
 import {MediaDbFolderImportModal} from './modals/MediaDbFolderImportModal';
@@ -79,6 +80,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
 		this.apiManager.registerAPI(new SteamAPI(this));
+		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager(this.settings);

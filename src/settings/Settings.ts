@@ -18,18 +18,21 @@ export interface MediaDbPluginSettings {
 	gameTemplate: string,
 	wikiTemplate: string,
 	musicReleaseTemplate: string,
+	boardgameTemplate: string,
 
 	movieFileNameTemplate: string,
 	seriesFileNameTemplate: string,
 	gameFileNameTemplate: string,
 	wikiFileNameTemplate: string,
 	musicReleaseFileNameTemplate: string,
+	boardgameFileNameTemplate: string,
 
 	moviePropertyConversionRules: string,
 	seriesPropertyConversionRules: string,
 	gamePropertyConversionRules: string,
 	wikiPropertyConversionRules: string,
 	musicReleasePropertyConversionRules: string,
+	boardgamePropertyConversionRules: string,
 
 }
 
@@ -45,19 +48,21 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	gameTemplate: '',
 	wikiTemplate: '',
 	musicReleaseTemplate: '',
+	boardgameTemplate: '',
 
 	movieFileNameTemplate: '{{ title }} ({{ year }})',
 	seriesFileNameTemplate: '{{ title }} ({{ year }})',
 	gameFileNameTemplate: '{{ title }} ({{ year }})',
 	wikiFileNameTemplate: '{{ title }}',
 	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
+	boardgameFileNameTemplate: '{{ title }} ({{ year }})',
 
 	moviePropertyConversionRules: '',
 	seriesPropertyConversionRules: '',
 	gamePropertyConversionRules: '',
 	wikiPropertyConversionRules: '',
 	musicReleasePropertyConversionRules: '',
-
+	boardgamePropertyConversionRules: '',
 
 };
 
@@ -201,6 +206,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						this.plugin.saveSettings();
 					});
 			});
+
+		new Setting(containerEl)
+			.setName('Board Game template')
+			.setDesc('Template file to be used when creating a new note for a boardgame.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: boardgameTemplate.md')
+					.setValue(this.plugin.settings.boardgameTemplate)
+					.onChange(data => {
+						this.plugin.settings.boardgameTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
 		// endregion
 
 		containerEl.createEl('h3', {text: 'File Name Settings'});
@@ -264,6 +282,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						this.plugin.saveSettings();
 					});
 			});
+
+		new Setting(containerEl)
+			.setName('Board Game file name template')
+			.setDesc('Template for the file name used when creating a new note for a boardgame.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.boardgameFileNameTemplate}`)
+					.setValue(this.plugin.settings.boardgameFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.boardgameFileNameTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
 		// endregion
 
 		containerEl.createEl('h3', {text: 'Property Mappings'});
@@ -324,6 +354,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.musicReleasePropertyConversionRules)
 					.onChange(data => {
 						this.plugin.settings.musicReleasePropertyConversionRules = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Board Game model property mappings')
+			.setDesc('Mappings for the property names of a boardgame.')
+			.addTextArea(cb => {
+				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
+					.setValue(this.plugin.settings.boardgamePropertyConversionRules)
+					.onChange(data => {
+						this.plugin.settings.boardgamePropertyConversionRules = data;
 						this.plugin.saveSettings();
 					});
 			});
