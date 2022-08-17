@@ -100,7 +100,7 @@ export class SteamAPI extends APIModel {
 			englishTitle: result.name,
 			year: (new Date(result.release_date.date)).getFullYear().toString(),
 			dataSource: this.apiName,
-			url: `https://store.steampowered.com/app/${result.id}`,
+			url: `https://store.steampowered.com/app/${result.steam_appid}`,
 			id: result.steam_appid,
 
 			genres: result.genres?.map((x: any) => x.description) ?? [],
