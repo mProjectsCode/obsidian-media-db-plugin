@@ -41,14 +41,14 @@ export class BoardGameGeekAPI extends APIModel {
 		for (const boardgame of Array.from(response.querySelectorAll("boardgame"))) {
 			const id = boardgame.attributes.getNamedItem("objectid").value;
 			const title = boardgame.querySelector("name").textContent;
-			const year = boardgame.querySelector("yearpublished").textContent;
+			const year = boardgame.querySelector("yearpublished")?.textContent ?? "";
 
 			ret.push(new BoardGameModel({
 				dataSource: this.apiName,
 				id,
 				title,
 				englishTitle: title,
-				year,				
+				year,
 			} as BoardGameModel));
 		}
 
@@ -82,7 +82,7 @@ export class BoardGameGeekAPI extends APIModel {
 			type: MediaType.BoardGame,
 			title,
 			englishTitle: title,
-			year,
+			year: year === "0" ? "" : year,
 			dataSource: this.apiName,
 			url: `https://boardgamegeek.com/boardgame/${id}`,
 			id,
