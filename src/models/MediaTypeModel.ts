@@ -14,6 +14,9 @@ export abstract class MediaTypeModel {
 
 	abstract getMediaType(): MediaType;
 
+	//a string that contains enough info to disambiguate from similar media
+	abstract getSummary(): string;
+
 	abstract getTags(): string[];
 
 	toMetaDataObject(): object {

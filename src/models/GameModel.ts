@@ -42,4 +42,8 @@ export class GameModel extends MediaTypeModel {
 		return MediaType.Game;
 	}
 
+	getSummary(): string {
+		return this.englishTitle + ' (' + this.year + ')';
+	}
+
 }

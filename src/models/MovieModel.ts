@@ -44,4 +44,7 @@ export class MovieModel extends MediaTypeModel {
 		return MediaType.Movie;
 	}
 
+	getSummary(): string {
+		return this.englishTitle + ' (' + this.year + ')';
+	}
 }

@@ -43,4 +43,7 @@ export class WikiModel extends MediaTypeModel {
 		return copy;
 	}
 
+	getSummary(): string {
+		return this.title;
+	}
 }
