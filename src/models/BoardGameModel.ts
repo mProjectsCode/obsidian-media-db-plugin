@@ -4,17 +4,9 @@ import {MediaType} from '../utils/MediaType';
 
 
 export class BoardGameModel extends MediaTypeModel {
-	type: string;
-	title: string;
-	englishTitle: string;
-	year: string;
-	dataSource: string;
-	url: string;
-	id: string;
-
 	genres: string[];
 	onlineRating: number;
-	image: string;
+	image?: string;
 
 	released: boolean;
 

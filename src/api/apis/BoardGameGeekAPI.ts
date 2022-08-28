@@ -39,8 +39,8 @@ export class BoardGameGeekAPI extends APIModel {
 		let ret: MediaTypeModel[] = [];
 
 		for (const boardgame of Array.from(response.querySelectorAll("boardgame"))) {
-			const id = boardgame.attributes.getNamedItem("objectid").value;
-			const title = boardgame.querySelector("name").textContent;
+			const id = boardgame.attributes.getNamedItem("objectid")!.value;
+			const title = boardgame.querySelector("name")!.textContent!;
 			const year = boardgame.querySelector("yearpublished")?.textContent ?? "";
 
 			ret.push(new BoardGameModel({
@@ -71,12 +71,12 @@ export class BoardGameGeekAPI extends APIModel {
 		const response = new window.DOMParser().parseFromString(data, "text/xml")
 		debugLog(response);
 
-		const boardgame = response.querySelector("boardgame");
-		const title = boardgame.querySelector("name").textContent;
-		const year = boardgame.querySelector("yearpublished").textContent;
-		const image = boardgame.querySelector("image").textContent;
-		const onlineRating = Number.parseFloat(boardgame.querySelector("statistics ratings average").textContent);
-		const genres = Array.from(boardgame.querySelectorAll("boardgamecategory")).map(n => n.textContent);
+		const boardgame = response.querySelector("boardgame")!;
+		const title = boardgame.querySelector("name")!.textContent!;
+		const year = boardgame.querySelector("yearpublished")?.textContent ?? "";
+		const image = boardgame.querySelector("image")?.textContent ?? undefined;
+		const onlineRating = Number.parseFloat(boardgame.querySelector("statistics ratings average")?.textContent ?? "");
+		const genres = Array.from(boardgame.querySelectorAll("boardgamecategory")).map(n => n!.textContent!);
 
 		const model = new BoardGameModel({
 			type: MediaType.BoardGame,
