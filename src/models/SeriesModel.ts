@@ -47,4 +47,7 @@ export class SeriesModel extends MediaTypeModel {
 		return MediaType.Series;
 	}
 
+	getSummary(): string {
+		return this.title + ' (' + this.year + ')';
+	}
 }

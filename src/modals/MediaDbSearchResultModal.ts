@@ -29,7 +29,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	// Renders each suggestion item.
 	renderElement(item: MediaTypeModel, el: HTMLElement) {
 		el.createEl('div', {text: this.plugin.mediaTypeManager.getFileName(item)});
-		el.createEl('small', {text: `${item.englishTitle}\n`});
+		el.createEl('small', {text: `${item.getSummary()}\n`});
 		el.createEl('small', {text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}`});
 	}
 
