@@ -32,4 +32,8 @@ export class BoardGameModel extends MediaTypeModel {
 		return MediaType.BoardGame;
 	}
 
+	getSummary(): string {
+		return this.englishTitle + ' (' + this.year + ')';
+	}
+
 }
