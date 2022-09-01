@@ -8,6 +8,7 @@ import {SeriesModel} from '../models/SeriesModel';
 import {GameModel} from '../models/GameModel';
 import {WikiModel} from '../models/WikiModel';
 import {MusicReleaseModel} from '../models/MusicReleaseModel';
+import {BoardGameModel} from '../models/BoardGameModel';
 
 export class MediaTypeManager {
 	mediaFileNameTemplateMap: Map<MediaType, string>;
@@ -68,6 +69,8 @@ export class MediaTypeManager {
 			return new WikiModel(obj);
 		} else if (mediaType === MediaType.MusicRelease) {
 			return new MusicReleaseModel(obj);
+		} else if (mediaType === MediaType.BoardGame) {
+			return new BoardGameModel(obj);
 		}
 
 		return undefined;
