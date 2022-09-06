@@ -4,7 +4,7 @@ import {MediaTypeModel} from '../models/MediaTypeModel';
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
 export const mediaDbTag: string = 'mediaDB';
-export const mediaDbVersion: string = '0.3.1';
+export const mediaDbVersion: string = '0.3.2';
 export const debug: boolean = false;
 
 export function wrapAround(value: number, size: number): number {
