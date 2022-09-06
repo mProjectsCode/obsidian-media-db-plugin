@@ -130,6 +130,15 @@ Now you select the result you want and the plugin will cast it's magic and creat
 You are more than welcome to open an issue on [GitHub](https://github.com/mProjectsCode/obsidian-media-db-plugin/issues).
 
 ### Changelog
+
+#### 0.3.2
+- Added Board Game Geek API (documentation pending)
+- More information in the search results
+- various fixes
+
+#### 0.3.1
+- various fixes
+
 #### 0.3.0
 - Added bulk import. Import a folder of media notes as Media DB entries (thanks to [PaperOrb](https://github.com/PaperOrb) on GitHub for their input and for helping me test this feature)
 - Added a custom result select modal that allows you to select multiple results at once

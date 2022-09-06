@@ -3,22 +3,12 @@ import {mediaDbTag} from '../utils/Utils';
 import {MediaType} from '../utils/MediaType';
 
 
-export class GameModel extends MediaTypeModel {
-	type: string;
-	subType: string;
-	title: string;
-	englishTitle: string;
-	year: string;
-	dataSource: string;
-	url: string;
-	id: string;
-
+export class BoardGameModel extends MediaTypeModel {
 	genres: string[];
 	onlineRating: number;
-	image: string;
+	image?: string;
 
 	released: boolean;
-	releaseDate: string;
 
 	userData: {
 		played: boolean;
@@ -35,11 +25,11 @@ export class GameModel extends MediaTypeModel {
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'game'];
+		return [mediaDbTag, 'boardgame'];
 	}
 
 	getMediaType(): MediaType {
-		return MediaType.Game;
+		return MediaType.BoardGame;
 	}
 
 	getSummary(): string {

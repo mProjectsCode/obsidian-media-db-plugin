@@ -8,6 +8,7 @@ import {SeriesModel} from '../models/SeriesModel';
 import {GameModel} from '../models/GameModel';
 import {WikiModel} from '../models/WikiModel';
 import {MusicReleaseModel} from '../models/MusicReleaseModel';
+import {BoardGameModel} from '../models/BoardGameModel';
 
 export class MediaTypeManager {
 	mediaFileNameTemplateMap: Map<MediaType, string>;
@@ -24,6 +25,7 @@ export class MediaTypeManager {
 		this.mediaFileNameTemplateMap.set(MediaType.Game, settings.gameFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Wiki, settings.wikiFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseFileNameTemplate);
+		this.mediaFileNameTemplateMap.set(MediaType.BoardGame, settings.boardgameFileNameTemplate);
 
 		this.mediaTemplateMap = new Map<MediaType, string>();
 		this.mediaTemplateMap.set(MediaType.Movie, settings.movieTemplate);
@@ -31,6 +33,7 @@ export class MediaTypeManager {
 		this.mediaTemplateMap.set(MediaType.Game, settings.gameTemplate);
 		this.mediaTemplateMap.set(MediaType.Wiki, settings.wikiTemplate);
 		this.mediaTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseTemplate);
+		this.mediaTemplateMap.set(MediaType.BoardGame, settings.boardgameTemplate);
 	}
 
 	getFileName(mediaTypeModel: MediaTypeModel): string {
@@ -66,6 +69,8 @@ export class MediaTypeManager {
 			return new WikiModel(obj);
 		} else if (mediaType === MediaType.MusicRelease) {
 			return new MusicReleaseModel(obj);
+		} else if (mediaType === MediaType.BoardGame) {
+			return new BoardGameModel(obj);
 		}
 
 		return undefined;
