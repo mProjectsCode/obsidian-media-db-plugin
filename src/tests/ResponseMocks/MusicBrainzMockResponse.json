@@ -1,0 +1,49 @@
+{
+    "created": "2022-09-16T13:51:15.522Z",
+    "count": 921,
+    "offset": 0,
+    "release-groups": [
+        {
+            "id": "9cf08bf9-1948-4087-abe1-783210ea1fae",
+            "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+            "score": 100,
+            "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+            "count": 1,
+            "title": "Halo Halo",
+            "first-release-date": "2013-07-08",
+            "primary-type": "Album",
+            "artist-credit": [
+                {
+                    "name": "Halo Halo",
+                    "artist": {
+                        "id": "177d61ad-7e38-4bb5-a53c-8dd4e4ab9566",
+                        "name": "Halo Halo",
+                        "sort-name": "Halo Halo"
+                    }
+                }
+            ],
+            "releases": [
+                {
+                    "id": "58dd1d57-2201-472e-9e36-5d497dcedb6f",
+                    "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                    "title": "Halo Halo",
+                    "status": "Official"
+                }
+            ],
+            "tags": [
+                {
+                    "count": 1,
+                    "name": "dance"
+                },
+                {
+                    "count": 1,
+                    "name": "pop"
+                },
+                {
+                    "count": 1,
+                    "name": "punk"
+                }
+            ]
+        }
+    ]
+}
