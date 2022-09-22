@@ -39,8 +39,8 @@ export class MusicReleaseModel extends MediaTypeModel {
 
 	getSummary(): string {
 		var summary = this.title + ' (' + this.year + ')';
-		if(this.artists.length > 0)
-			summary += ' - ' + this.artists.join(', ')
+		if (this.artists.length > 0)
+			summary += ' - ' + this.artists.join(', ');
 		return summary;
 	}
 }

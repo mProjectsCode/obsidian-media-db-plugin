@@ -8,7 +8,10 @@ export const mediaDbVersion: string = '0.3.2';
 export const debug: boolean = true;
 
 export function wrapAround(value: number, size: number): number {
-	return ((value % size) + size) % size;
+	if (size <= 0) {
+		throw Error('size may not be zero or negative');
+	}
+	return mod(value, size);
 }
 
 export function debugLog(o: any): void {

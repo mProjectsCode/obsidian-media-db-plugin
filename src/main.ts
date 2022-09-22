@@ -305,7 +305,7 @@ export default class MediaDbPlugin extends Plugin {
 		const erroredFiles: { filePath: string, error: string }[] = [];
 		let canceled: boolean = false;
 
-		const {selectedAPI, titleFieldName, appendContent} = await new Promise<{selectedAPI: string, titleFieldName: string, appendContent: boolean}>((resolve, reject) => {
+		const {selectedAPI, titleFieldName, appendContent} = await new Promise<{ selectedAPI: string, titleFieldName: string, appendContent: boolean }>((resolve, reject) => {
 			new MediaDbFolderImportModal(this.app, this, ((selectedAPI: string, titleFieldName: string, appendContent: boolean) => {
 				resolve({selectedAPI, titleFieldName, appendContent});
 			})).open();
@@ -402,7 +402,7 @@ export default class MediaDbPlugin extends Plugin {
 				if (err) {
 					return reject(err);
 				}
-				resolve(res)
+				resolve(res);
 			}).open();
 		});
 	}
@@ -413,7 +413,7 @@ export default class MediaDbPlugin extends Plugin {
 				if (err) {
 					return reject(err);
 				}
-				resolve(res)
+				resolve(res);
 			}).open();
 		});
 	}
@@ -426,7 +426,7 @@ export default class MediaDbPlugin extends Plugin {
 				}
 				resolve(res);
 			}, () => {
-				resolve([])
+				resolve([]);
 			}).open();
 		});
 	}

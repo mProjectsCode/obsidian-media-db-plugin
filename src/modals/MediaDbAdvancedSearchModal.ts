@@ -8,10 +8,10 @@ export class MediaDbAdvancedSearchModal extends Modal {
 	isBusy: boolean;
 	plugin: MediaDbPlugin;
 	searchBtn: ButtonComponent;
-	selectedApis: {name: string, selected: boolean}[];
-	onSubmit: (res: {query: string, apis: string[]}, err?: Error) => void;
+	selectedApis: { name: string, selected: boolean }[];
+	onSubmit: (res: { query: string, apis: string[] }, err?: Error) => void;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (res: {query: string, apis: string[]}, err?: Error) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (res: { query: string, apis: string[] }, err?: Error) => void) {
 		super(app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;

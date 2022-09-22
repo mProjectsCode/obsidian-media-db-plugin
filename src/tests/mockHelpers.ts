@@ -1,14 +1,14 @@
-import { GameModel } from "../models/GameModel";
-import { MovieModel } from '../models/MovieModel';
-import { MusicReleaseModel } from "../models/MusicReleaseModel";
-import { WikiModel } from '../models/WikiModel';
-import { MediaType } from "../utils/MediaType";
-import { apiMock } from "./ParameterizedAPI.test";
-import MALMockMovie from "./ResponseMocks/MALMockMovie.json";
-import MusicBrainzResponseMock from "./ResponseMocks/MusicBrainzMockResponse.json";
-import OMDBMockMovie from "./ResponseMocks/OMDBMockResponse.json";
-import SteamAPIResponseMock from "./ResponseMocks/SteamAPIMockResponse.json";
-import WikipediaMockResponse from "./ResponseMocks/WikipediaMockResponse.json";
+import {GameModel} from '../models/GameModel';
+import {MovieModel} from '../models/MovieModel';
+import {MusicReleaseModel} from '../models/MusicReleaseModel';
+import {WikiModel} from '../models/WikiModel';
+import {MediaType} from '../utils/MediaType';
+import {apiMock} from './ParameterizedAPI.test';
+import MALMockMovie from './ResponseMocks/MALMockMovie.json';
+import MusicBrainzResponseMock from './ResponseMocks/MusicBrainzMockResponse.json';
+import OMDBMockMovie from './ResponseMocks/OMDBMockResponse.json';
+import SteamAPIResponseMock from './ResponseMocks/SteamAPIMockResponse.json';
+import WikipediaMockResponse from './ResponseMocks/WikipediaMockResponse.json';
 
 export function setWikipediaResponseMock() {
 	let ret = [];
@@ -55,33 +55,31 @@ export function setMALResponseMock() {
 export function setSteamResponseMock() {
 	let ret = [];
 	let steamResponse = SteamAPIResponseMock.applist.apps[0];
-	ret.push(
-		new GameModel({
-			type: MediaType.Game,
-			title: steamResponse.name,
-			englishTitle: steamResponse.name,
-			year: '',
-			dataSource: apiMock.apiName,
-			id: steamResponse.appid,
-		})
-	)
+	ret.push(new GameModel({
+		type: MediaType.Game,
+		title: steamResponse.name,
+		englishTitle: steamResponse.name,
+		year: '',
+		dataSource: apiMock.apiName,
+		id: steamResponse.appid,
+	}));
 	return ret;
 }
 
 export function setMusicBrainzResponseMock() {
 	let ret = [];
-	let result = MusicBrainzResponseMock["release-groups"][0];
-			ret.push(new MusicReleaseModel({
-				type: 'musicRelease',
-				title: result.title,
-				englishTitle: result.title,
-				year: (new Date(result['first-release-date'])).getFullYear().toString(),
-				dataSource: apiMock.apiName,
-				url: '',
-				id: result.id,
+	let result = MusicBrainzResponseMock['release-groups'][0];
+	ret.push(new MusicReleaseModel({
+		type: 'musicRelease',
+		title: result.title,
+		englishTitle: result.title,
+		year: (new Date(result['first-release-date'])).getFullYear().toString(),
+		dataSource: apiMock.apiName,
+		url: '',
+		id: result.id,
 
-				artists: result['artist-credit'].map((a: any) => a.name),
-				subType: result['primary-type'],
-			} as MusicReleaseModel));
+		artists: result['artist-credit'].map((a: any) => a.name),
+		subType: result['primary-type'],
+	} as MusicReleaseModel));
 	return ret;
 }

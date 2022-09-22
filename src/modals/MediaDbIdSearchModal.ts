@@ -9,9 +9,9 @@ export class MediaDbIdSearchModal extends Modal {
 	plugin: MediaDbPlugin;
 	searchBtn: ButtonComponent;
 	selectedApi: string;
-	onSubmit: (res: {query: string, api: string}, err?: Error) => void;
+	onSubmit: (res: { query: string, api: string }, err?: Error) => void;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (res: {query: string, api: string}, err?: Error) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (res: { query: string, api: string }, err?: Error) => void) {
 		super(app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
