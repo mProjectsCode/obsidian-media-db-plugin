@@ -1,4 +1,4 @@
-import {App, ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent} from 'obsidian';
+import {ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import {debugLog} from '../utils/Utils';
 import MediaDbPlugin from '../main';
@@ -9,16 +9,24 @@ export class MediaDbIdSearchModal extends Modal {
 	plugin: MediaDbPlugin;
 	searchBtn: ButtonComponent;
 	selectedApi: string;
-	onSubmit: (res: { query: string, api: string }, err?: Error) => void;
+	submitCallback?: (res: { query: string, api: string }, err?: Error) => void;
+	closeCallback?: (err?: Error) => void;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (res: { query: string, api: string }, err?: Error) => void) {
-		super(app);
+	constructor(plugin: MediaDbPlugin) {
+		super(plugin.app);
 		this.plugin = plugin;
-		this.onSubmit = onSubmit;
 		this.selectedApi = plugin.apiManager.apis[0].apiName;
 	}
 
-	submitCallback(event: KeyboardEvent) {
+	setSubmitCallback(submitCallback: (res: { query: string, api: string }, err?: Error) => void): void {
+		this.submitCallback = submitCallback;
+	}
+
+	setCloseCallback(closeCallback: (err?: Error) => void): void {
+		this.closeCallback = closeCallback;
+	}
+
+	keyPressCallback(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
 			this.search();
 		}
@@ -39,17 +47,11 @@ export class MediaDbIdSearchModal extends Modal {
 		}
 
 		if (!this.isBusy) {
-			try {
-				this.isBusy = true;
-				this.searchBtn.setDisabled(false);
-				this.searchBtn.setButtonText('Searching...');
+			this.isBusy = true;
+			this.searchBtn.setDisabled(false);
+			this.searchBtn.setButtonText('Searching...');
 
-				this.onSubmit({query: this.query, api: this.selectedApi});
-			} catch (e) {
-				this.onSubmit(null, e);
-			} finally {
-				this.close();
-			}
+			this.submitCallback({query: this.query, api: this.selectedApi});
 		}
 	}
 
@@ -63,7 +65,7 @@ export class MediaDbIdSearchModal extends Modal {
 		searchComponent.inputEl.style.width = '100%';
 		searchComponent.setPlaceholder(placeholder);
 		searchComponent.onChange(value => (this.query = value));
-		searchComponent.inputEl.addEventListener('keydown', this.submitCallback.bind(this));
+		searchComponent.inputEl.addEventListener('keydown', this.keyPressCallback.bind(this));
 
 		contentEl.appendChild(searchComponent.inputEl);
 		searchComponent.inputEl.focus();
@@ -98,9 +100,9 @@ export class MediaDbIdSearchModal extends Modal {
 	}
 
 	onClose() {
+		this.closeCallback();
 		const {contentEl} = this;
 		contentEl.empty();
 	}
-
 
 }

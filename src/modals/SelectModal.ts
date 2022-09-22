@@ -1,4 +1,4 @@
-import {App, Modal, Setting} from 'obsidian';
+import {App, ButtonComponent, Modal, Setting} from 'obsidian';
 import {SelectModalElement} from './SelectModalElement';
 import {mod} from '../utils/Utils';
 
@@ -7,7 +7,10 @@ export abstract class SelectModal<T> extends Modal {
 
 	title: string;
 	description: string;
-	skipButton: boolean;
+	addSkipButton: boolean;
+	cancelButton?: ButtonComponent;
+	skipButton?: ButtonComponent;
+	submitButton?: ButtonComponent;
 
 	elements: T[];
 	selectModalElements: SelectModalElement<T>[];
@@ -19,7 +22,10 @@ export abstract class SelectModal<T> extends Modal {
 
 		this.title = '';
 		this.description = '';
-		this.skipButton = false;
+		this.addSkipButton = false;
+		this.cancelButton = undefined;
+		this.skipButton = undefined;
+		this.submitButton = undefined;
 
 		this.elements = elements;
 		this.selectModalElements = [];
@@ -89,12 +95,12 @@ export abstract class SelectModal<T> extends Modal {
 
 		this.selectModalElements.first()?.element.scrollIntoView();
 
-		const bottomSetting = new Setting(contentEl);
-		bottomSetting.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()));
-		if (this.skipButton) {
-			bottomSetting.addButton(btn => btn.setButtonText('Skip').onClick(() => this.skip()));
+		const bottomSettingRow = new Setting(contentEl);
+		bottomSettingRow.addButton(btn => this.cancelButton = btn.setButtonText('Cancel').onClick(() => this.close()));
+		if (this.addSkipButton) {
+			bottomSettingRow.addButton(btn => this.skipButton = btn.setButtonText('Skip').onClick(() => this.skip()));
 		}
-		bottomSetting.addButton(btn => btn.setButtonText('Ok').setCta().onClick(() => this.submit()));
+		bottomSettingRow.addButton(btn => this.submitButton = btn.setButtonText('Ok').setCta().onClick(() => this.submit()));
 	}
 
 	activateHighlighted() {

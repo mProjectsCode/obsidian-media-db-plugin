@@ -1,4 +1,3 @@
-import {App} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
 import {SelectModal} from './SelectModal';
@@ -6,24 +5,36 @@ import {SelectModal} from './SelectModal';
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
 	heading: string;
-	onSubmit: (res: MediaTypeModel[], err?: Error) => void;
-	onCancel: () => void;
-	onSkip: () => void;
+	busy: boolean;
+	submitCallback: (res: MediaTypeModel[]) => void;
+	closeCallback: (err?: Error) => void;
+	skipCallback: () => void;
 
 	sendCallback: boolean;
 
-	constructor(app: App, plugin: MediaDbPlugin, elements: MediaTypeModel[], skipButton: boolean, onSubmit: (res: MediaTypeModel[], err?: Error) => void, onCancel: () => void, onSkip?: () => void) {
-		super(app, elements);
+	constructor(plugin: MediaDbPlugin, elements: MediaTypeModel[], skipButton: boolean) {
+		super(plugin.app, elements);
 		this.plugin = plugin;
-		this.onSubmit = onSubmit;
-		this.onCancel = onCancel;
-		this.onSkip = onSkip;
 
 		this.title = 'Search Results';
 		this.description = 'Select one or multiple search results.';
-		this.skipButton = skipButton;
+		this.addSkipButton = skipButton;
+
+		this.busy = false;
 
 		this.sendCallback = false;
+	}
+
+	setSubmitCallback(submitCallback: (res: MediaTypeModel[]) => void): void {
+		this.submitCallback = submitCallback;
+	}
+
+	setCloseCallback(closeCallback: (err?: Error) => void): void {
+		this.closeCallback = closeCallback;
+	}
+
+	setSkipCallback(skipCallback: () => void): void {
+		this.skipCallback = skipCallback;
 	}
 
 	// Renders each suggestion item.
@@ -35,20 +46,19 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 	// Perform action on the selected suggestion.
 	submit() {
-		this.onSubmit(this.selectModalElements.filter(x => x.isActive()).map(x => x.value));
-		this.sendCallback = true;
-		this.close();
+		if (!this.busy) {
+			this.busy = true;
+			this.submitButton.setButtonText('Creating entry...');
+			this.submitCallback(this.selectModalElements.filter(x => x.isActive()).map(x => x.value));
+		}
 	}
 
 	skip() {
-		this.onSkip();
-		this.sendCallback = true;
-		this.close();
+		this.skipButton.setButtonText('Skipping...');
+		this.skipCallback();
 	}
 
 	onClose() {
-		if (!this.sendCallback) {
-			this.onCancel();
-		}
+		this.closeCallback();
 	}
 }

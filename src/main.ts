@@ -95,38 +95,72 @@ export default class MediaDbPlugin extends Plugin {
 
 	async createEntryWithAdvancedSearchModal() {
 		let results: MediaTypeModel[] = [];
+
+		const {advancedSearchOptions, advancedSearchModal} = await this.openMediaDbAdvancedSearchModal();
+		if (!advancedSearchOptions) {
+			advancedSearchModal.close();
+			return;
+		}
+
+		let apiSearchResults: MediaTypeModel[] = undefined;
 		try {
-			const {query, apis} = await this.openMediaDbAdvancedSearchModal();
-
-			new Notice('MediaDB Searching...');
-
-			const apiSearchResults = await this.apiManager.query(query, apis);
-			const selectResults = await this.openMediaDbSelectModal(apiSearchResults, false);
-			results = await this.queryDetails(selectResults);
+			apiSearchResults = await this.apiManager.query(advancedSearchOptions.query, advancedSearchOptions.apis);
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
+			advancedSearchModal.close();
+			return;
 		}
 
+		advancedSearchModal.close();
+
+		const {selectRes, selectModal} = await this.openMediaDbSelectModal(apiSearchResults, false);
+		if (!selectRes) {
+			selectModal.close();
+			return;
+		}
+
+		try {
+			results = await this.queryDetails(selectRes);
+		} catch (e) {
+			console.warn(e);
+			new Notice(e.toString());
+			selectModal.close();
+			return;
+		}
+
+		selectModal.close();
+
 		debugLog(results);
-		await this.createMediaDbNotes(results);
+		if (results) {
+			await this.createMediaDbNotes(results);
+		}
 	}
 
 	async createEntryWithIdSearchModal() {
 		let result: MediaTypeModel = undefined;
+
+		const {idSearchOptions, idSearchModal} = await this.openMediaDbIdSearchModal();
+		if (!idSearchOptions) {
+			idSearchModal.close();
+			return;
+		}
+
 		try {
-			const {query, api} = await this.openMediaDbIdSearchModal();
-
-			new Notice('MediaDB Searching...');
-
-			result = await this.apiManager.queryDetailedInfoById(query, api);
+			result = await this.apiManager.queryDetailedInfoById(idSearchOptions.query, idSearchOptions.api);
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
+			idSearchModal.close();
+			return;
 		}
 
+		idSearchModal.close();
+
 		debugLog(result);
-		await this.createMediaDbNoteFromModel(result);
+		if (result) {
+			await this.createMediaDbNoteFromModel(result);
+		}
 	}
 
 	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<void> {
@@ -340,23 +374,23 @@ export default class MediaDbPlugin extends Plugin {
 				}
 
 				let selectedResults: MediaTypeModel[] = [];
+				const modal = new MediaDbSearchResultModal(this, results, true);
 				try {
 					selectedResults = await new Promise((resolve, reject) => {
-						const searchResultModal = new MediaDbSearchResultModal(this.app, this, results, true, (res, err) => {
+						modal.title = `Results for \'${title}\'`;
+						modal.setSubmitCallback(res => resolve(res));
+						modal.setSkipCallback(() => reject(new UserCancelError('user skipped')));
+						modal.setCloseCallback(err => {
 							if (err) {
-								return reject(err);
+								reject(err);
 							}
-							resolve(res);
-						}, () => {
 							reject(new UserCancelError('user canceled'));
-						}, () => {
-							reject(new UserSkipError('user skipped'));
 						});
 
-						searchResultModal.title = `Results for \'${title}\'`;
-						searchResultModal.open();
+						modal.open();
 					});
 				} catch (e) {
+					modal.close();
 					if (e instanceof UserCancelError) {
 						erroredFiles.push({filePath: file.path, error: e.message});
 						canceled = true;
@@ -377,6 +411,8 @@ export default class MediaDbPlugin extends Plugin {
 
 				const detailedResults = await this.queryDetails(selectedResults);
 				await this.createMediaDbNotes(detailedResults, appendContent ? file : null);
+
+				modal.close();
 			}
 		}
 
@@ -396,39 +432,53 @@ export default class MediaDbPlugin extends Plugin {
 		const targetFile = await this.app.vault.create(filePath, fileContent);
 	}
 
-	async openMediaDbAdvancedSearchModal(): Promise<{ query: string, apis: string[] }> {
-		return await new Promise((resolve, reject) => {
-			new MediaDbAdvancedSearchModal(this.app, this, (res, err) => {
+	async openMediaDbAdvancedSearchModal(): Promise<{ advancedSearchOptions: { query: string, apis: string[] }, advancedSearchModal: MediaDbAdvancedSearchModal }> {
+		const modal = new MediaDbAdvancedSearchModal(this);
+		const res: { query: string, apis: string[] } = await new Promise((resolve, reject) => {
+			modal.setSubmitCallback(res => resolve(res));
+			modal.setCloseCallback(err => {
 				if (err) {
-					return reject(err);
+					reject(err);
 				}
-				resolve(res);
-			}).open();
+				resolve(undefined);
+			});
+
+			modal.open();
 		});
+		return {advancedSearchOptions: res, advancedSearchModal: modal};
 	}
 
-	async openMediaDbIdSearchModal(): Promise<{ query: string, api: string }> {
-		return await new Promise((resolve, reject) => {
-			new MediaDbIdSearchModal(this.app, this, (res, err) => {
+	async openMediaDbIdSearchModal(): Promise<{ idSearchOptions: { query: string, api: string }, idSearchModal: MediaDbIdSearchModal }> {
+		const modal = new MediaDbIdSearchModal(this);
+		const res: { query: string, api: string } = await new Promise((resolve, reject) => {
+			modal.setSubmitCallback(res => resolve(res));
+			modal.setCloseCallback(err => {
 				if (err) {
-					return reject(err);
+					reject(err);
 				}
-				resolve(res);
-			}).open();
+				resolve(undefined);
+			});
+
+			modal.open();
 		});
+		return {idSearchOptions: res, idSearchModal: modal};
 	}
 
-	async openMediaDbSelectModal(resultsToDisplay: MediaTypeModel[], skipButton: boolean = false): Promise<MediaTypeModel[]> {
-		return await new Promise((resolve, reject) => {
-			new MediaDbSearchResultModal(this.app, this, resultsToDisplay, skipButton, (res, err) => {
+	async openMediaDbSelectModal(resultsToDisplay: MediaTypeModel[], skipButton: boolean = false): Promise<{ selectRes: MediaTypeModel[], selectModal: MediaDbSearchResultModal }> {
+		const modal = new MediaDbSearchResultModal(this, resultsToDisplay, skipButton);
+		const res: MediaTypeModel[] = await new Promise((resolve, reject) => {
+			modal.setSubmitCallback(res => resolve(res));
+			modal.setSkipCallback(() => resolve([]));
+			modal.setCloseCallback(err => {
 				if (err) {
-					return reject(err);
+					reject(err);
 				}
-				resolve(res);
-			}, () => {
-				resolve([]);
-			}).open();
+				resolve(undefined);
+			});
+
+			modal.open();
 		});
+		return {selectRes: res, selectModal: modal};
 	}
 
 	async loadSettings() {
