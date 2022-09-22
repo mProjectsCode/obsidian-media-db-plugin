@@ -58,6 +58,12 @@ export class MediaTypeManager {
 		return replaceTags(template, mediaTypeModel);
 	}
 
+	/**
+	 * Takes an object and a MediaType and turns the object into an instance of a MediaTypeModel corresponding to the MediaType passed in.
+	 *
+	 * @param obj
+	 * @param mediaType
+	 */
 	createMediaTypeModelFromMediaType(obj: any, mediaType: MediaType): MediaTypeModel {
 		if (mediaType === MediaType.Movie) {
 			return new MovieModel(obj);

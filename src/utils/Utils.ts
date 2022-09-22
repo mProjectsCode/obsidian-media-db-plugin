@@ -5,7 +5,7 @@ export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
 export const mediaDbTag: string = 'mediaDB';
 export const mediaDbVersion: string = '0.3.2';
-export const debug: boolean = false;
+export const debug: boolean = true;
 
 export function wrapAround(value: number, size: number): number {
 	return ((value % size) + size) % size;
