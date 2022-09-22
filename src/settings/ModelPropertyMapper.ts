@@ -19,17 +19,25 @@ export class ModelPropertyMapper {
 		this.conversionRulesMap.set(MediaType.BoardGame, settings.boardgamePropertyConversionRules);
 	}
 
+	/**
+	 * Converts an object using the conversion rules for its type.
+	 * Returns an unaltered object if object.type is null or undefined or if there are no conversion rules for the type.
+	 *
+	 * @param obj
+	 */
 	convertObject(obj: object): object {
 		if (!obj.hasOwnProperty('type')) {
 			return obj;
 		}
 
 		// @ts-ignore
+		// get conversion rules from settings corresponding to the object type
 		const conversionRulesString: string = this.conversionRulesMap.get(obj['type']);
 		if (!conversionRulesString) {
 			return obj;
 		}
 
+		// parse the conversion rules
 		const conversionRules: ModelPropertyConversionRule[] = [];
 		for (const conversionRuleString of conversionRulesString.split('\n')) {
 			if (conversionRuleString) {
@@ -39,8 +47,8 @@ export class ModelPropertyMapper {
 
 		const newObj: object = {};
 
-
 		for (const [key, value] of Object.entries(obj)) {
+			// property 'type' can not be remapped
 			if (key === 'type') {
 				// @ts-ignore
 				newObj[key] = value;
@@ -51,8 +59,11 @@ export class ModelPropertyMapper {
 			for (const conversionRule of conversionRules) {
 				if (conversionRule.property === key) {
 					hasConversionRule = true;
-					// @ts-ignore
-					newObj[conversionRule.newProperty] = value;
+					// if the conversion rule maps to 'x', then that means it should be ignored
+					if (conversionRule.newProperty.toLowerCase() !== 'x') {
+						// @ts-ignore
+						newObj[conversionRule.newProperty] = value;
+					}
 				}
 			}
 			if (!hasConversionRule) {
@@ -64,18 +75,26 @@ export class ModelPropertyMapper {
 		return newObj;
 	}
 
+	/**
+	 * Converts an object back using the conversion rules for its type.
+	 * Returns an unaltered object if object.type is null or undefined or if there are no conversion rules for the type.
+	 *
+	 * @param obj
+	 */
 	convertObjectBack(obj: object): object {
 		if (!obj.hasOwnProperty('type')) {
 			return obj;
 		}
 
 		// @ts-ignore
+		// get conversion rules from settings corresponding to the object type
 		const conversionRulesString: string = this.conversionRulesMap.get(obj['type']);
 		if (!conversionRulesString) {
 			return obj;
 		}
 
 		const conversionRules: ModelPropertyConversionRule[] = [];
+		// parse the conversion rules
 		for (const conversionRuleString of conversionRulesString.split('\n')) {
 			if (conversionRuleString) {
 				conversionRules.push(new ModelPropertyConversionRule(conversionRuleString));
@@ -85,6 +104,7 @@ export class ModelPropertyMapper {
 		const originalObj: object = {};
 
 		for (const [key, value] of Object.entries(obj)) {
+			// property 'type' can not be remapped
 			if (key === 'type') {
 				// @ts-ignore
 				originalObj[key] = value;

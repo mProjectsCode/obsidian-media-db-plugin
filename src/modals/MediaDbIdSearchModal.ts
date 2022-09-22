@@ -9,9 +9,9 @@ export class MediaDbIdSearchModal extends Modal {
 	plugin: MediaDbPlugin;
 	searchBtn: ButtonComponent;
 	selectedApi: string;
-	onSubmit: (err: Error, result?: MediaTypeModel) => void;
+	onSubmit: (res: {query: string, api: string}, err?: Error) => void;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (err: Error, result?: MediaTypeModel) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (res: {query: string, api: string}, err?: Error) => void) {
 		super(app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
@@ -44,16 +44,9 @@ export class MediaDbIdSearchModal extends Modal {
 				this.searchBtn.setDisabled(false);
 				this.searchBtn.setButtonText('Searching...');
 
-				console.log(`MDB | query started with id ${this.query}`);
-
-				const api = this.plugin.apiManager.getApiByName(this.selectedApi);
-				if (!api) {
-					this.onSubmit(new Error('the selected api does not exist'));
-				}
-				const res = await api.getById(this.query);
-				this.onSubmit(null, res);
+				this.onSubmit({query: this.query, api: this.selectedApi});
 			} catch (e) {
-				this.onSubmit(e);
+				this.onSubmit(null, e);
 			} finally {
 				this.close();
 			}

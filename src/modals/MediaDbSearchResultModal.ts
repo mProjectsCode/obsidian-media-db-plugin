@@ -6,13 +6,13 @@ import {SelectModal} from './SelectModal';
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
 	heading: string;
-	onSubmit: (error: Error, result: MediaTypeModel[]) => void;
+	onSubmit: (res: MediaTypeModel[], err?: Error) => void;
 	onCancel: () => void;
 	onSkip: () => void;
 
 	sendCallback: boolean;
 
-	constructor(app: App, plugin: MediaDbPlugin, elements: MediaTypeModel[], skipButton: boolean, onSubmit: (error: Error, result: MediaTypeModel[]) => void, onCancel: () => void, onSkip?: () => void) {
+	constructor(app: App, plugin: MediaDbPlugin, elements: MediaTypeModel[], skipButton: boolean, onSubmit: (res: MediaTypeModel[], err?: Error) => void, onCancel: () => void, onSkip?: () => void) {
 		super(app, elements);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
@@ -35,7 +35,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 	// Perform action on the selected suggestion.
 	submit() {
-		this.onSubmit(null, this.selectModalElements.filter(x => x.isActive()).map(x => x.value));
+		this.onSubmit(this.selectModalElements.filter(x => x.isActive()).map(x => x.value));
 		this.sendCallback = true;
 		this.close();
 	}

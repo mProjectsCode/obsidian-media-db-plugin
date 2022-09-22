@@ -9,13 +9,13 @@ export class APIManager {
 		this.apis = [];
 	}
 
-	async query(query: string, apisToQuery: any): Promise<MediaTypeModel[]> {
+	async query(query: string, apisToQuery: string[]): Promise<MediaTypeModel[]> {
 		debugLog(`MDB | api manager queried with "${query}"`);
 
 		let res: MediaTypeModel[] = [];
 
 		for (const api of this.apis) {
-			if (Object.keys(apisToQuery).contains(api.apiName) && apisToQuery[api.apiName]) {
+			if (apisToQuery.contains(api.apiName)) {
 				const apiRes = await api.searchByTitle(query);
 				res = res.concat(apiRes);
 			}
@@ -28,9 +28,9 @@ export class APIManager {
 		return await this.queryDetailedInfoById(item.id, item.dataSource);
 	}
 
-	async queryDetailedInfoById(id: string, dataSource: string): Promise<MediaTypeModel> {
+	async queryDetailedInfoById(id: string, apiName: string): Promise<MediaTypeModel> {
 		for (const api of this.apis) {
-			if (api.apiName === dataSource) {
+			if (api.apiName === apiName) {
 				return api.getById(id);
 			}
 		}

@@ -8,16 +8,16 @@ export class MediaDbAdvancedSearchModal extends Modal {
 	isBusy: boolean;
 	plugin: MediaDbPlugin;
 	searchBtn: ButtonComponent;
-	selectedApis: any;
-	onSubmit: (err: Error, result?: MediaTypeModel[]) => void;
+	selectedApis: {name: string, selected: boolean}[];
+	onSubmit: (res: {query: string, apis: string[]}, err?: Error) => void;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (err: Error, result?: MediaTypeModel[]) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (res: {query: string, apis: string[]}, err?: Error) => void) {
 		super(app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
 		this.selectedApis = [];
 		for (const api of this.plugin.apiManager.apis) {
-			this.selectedApis[api.apiName] = false;
+			this.selectedApis.push({name: api.apiName, selected: false});
 		}
 	}
 
@@ -36,14 +36,9 @@ export class MediaDbAdvancedSearchModal extends Modal {
 			return;
 		}
 
-		let selectedAPICount = 0;
-		for (const api in this.selectedApis) {
-			if (this.selectedApis[api]) {
-				selectedAPICount += 1;
-			}
-		}
+		const apis: string[] = this.selectedApis.filter(x => x.selected).map(x => x.name);
 
-		if (selectedAPICount === 0) {
+		if (apis.length === 0) {
 			new Notice('MDB | No API selected');
 			return;
 		}
@@ -54,12 +49,9 @@ export class MediaDbAdvancedSearchModal extends Modal {
 				this.searchBtn.setDisabled(false);
 				this.searchBtn.setButtonText('Searching...');
 
-				console.log(`MDB | query started with title ${this.query}`);
-
-				const res = await this.plugin.apiManager.query(this.query, this.selectedApis);
-				this.onSubmit(null, res);
+				this.onSubmit({query: this.query, apis: apis});
 			} catch (e) {
-				this.onSubmit(e);
+				this.onSubmit(null, e);
 			} finally {
 				this.close();
 			}
@@ -96,9 +88,9 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
 			apiToggleComponent.setTooltip(api.apiName);
-			apiToggleComponent.setValue(this.selectedApis[api.apiName]);
+			apiToggleComponent.setValue(this.selectedApis.find(x => x.name === api.apiName).selected);
 			apiToggleComponent.onChange((value) => {
-				this.selectedApis[api.apiName] = value;
+				this.selectedApis.find(x => x.name === api.apiName).selected = value;
 			});
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
 		}
