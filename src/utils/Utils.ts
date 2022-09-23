@@ -172,3 +172,7 @@ export function mod(n: number, m: number): number {
 	return ((n % m) + m) % m;
 }
 
+export function capitalizeFirstLetter(string: string): string {
+	return string.charAt(0).toUpperCase() + string.slice(1);
+}
+

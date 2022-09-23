@@ -10,6 +10,8 @@ import {WikiModel} from '../models/WikiModel';
 import {MusicReleaseModel} from '../models/MusicReleaseModel';
 import {BoardGameModel} from '../models/BoardGameModel';
 
+export const MEDIA_TYPES = [MediaType.Movie, MediaType.Series, MediaType.Game, MediaType.Wiki, MediaType.MusicRelease, MediaType.BoardGame];
+
 export class MediaTypeManager {
 	mediaFileNameTemplateMap: Map<MediaType, string>;
 	mediaTemplateMap: Map<MediaType, string>;

@@ -3,6 +3,9 @@ import {App, PluginSettingTab, Setting} from 'obsidian';
 import MediaDbPlugin from '../main';
 import {FolderSuggest} from './suggesters/FolderSuggest';
 import {FileSuggest} from './suggesters/FileSuggest';
+import PropertyBindingsComponent from './PropertyBindingsComponent.svelte';
+import {PropertyMapping, PropertyMappingModel, PropertyMappingOption} from './PropertyMapping';
+import {MediaType} from '../utils/MediaType';
 
 
 export interface MediaDbPluginSettings {
@@ -34,6 +37,8 @@ export interface MediaDbPluginSettings {
 	musicReleasePropertyConversionRules: string,
 	boardgamePropertyConversionRules: string,
 
+	propertyMappings: PropertyMappingModel[],
+
 }
 
 export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
@@ -63,6 +68,60 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiPropertyConversionRules: '',
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
+
+	propertyMappings: [
+		{
+			type: MediaType.Movie,
+			properties: [
+				new PropertyMapping('type', '', PropertyMappingOption.None, true),
+				new PropertyMapping('subType', '', PropertyMappingOption.None),
+				new PropertyMapping('title', '', PropertyMappingOption.None),
+				new PropertyMapping('englishTitle', '', PropertyMappingOption.None),
+				new PropertyMapping('year', '', PropertyMappingOption.None),
+				new PropertyMapping('dataSource', '', PropertyMappingOption.None, true),
+				new PropertyMapping('url', '', PropertyMappingOption.None),
+				new PropertyMapping('id', '', PropertyMappingOption.None, true),
+
+				new PropertyMapping('genres', '', PropertyMappingOption.None),
+				new PropertyMapping('producer', '', PropertyMappingOption.None),
+				new PropertyMapping('duration', '', PropertyMappingOption.None),
+				new PropertyMapping('onlineRating', '', PropertyMappingOption.None),
+				new PropertyMapping('image', '', PropertyMappingOption.None),
+				new PropertyMapping('released', '', PropertyMappingOption.None),
+				new PropertyMapping('premiere', '', PropertyMappingOption.None),
+				new PropertyMapping('watched', '', PropertyMappingOption.None),
+				new PropertyMapping('lastWatched', '', PropertyMappingOption.None),
+				new PropertyMapping('personalRating', '', PropertyMappingOption.None),
+			],
+		},
+		{
+			type: MediaType.Series,
+			properties: [
+				new PropertyMapping('type', '', PropertyMappingOption.None, true),
+				new PropertyMapping('subType', '', PropertyMappingOption.None),
+				new PropertyMapping('title', '', PropertyMappingOption.None),
+				new PropertyMapping('englishTitle', '', PropertyMappingOption.None),
+				new PropertyMapping('year', '', PropertyMappingOption.None),
+				new PropertyMapping('dataSource', '', PropertyMappingOption.None, true),
+				new PropertyMapping('url', '', PropertyMappingOption.None),
+				new PropertyMapping('id', '', PropertyMappingOption.None, true),
+
+				new PropertyMapping('genres', '', PropertyMappingOption.None),
+				new PropertyMapping('studios', '', PropertyMappingOption.None),
+				new PropertyMapping('episodes', '', PropertyMappingOption.None),
+				new PropertyMapping('duration', '', PropertyMappingOption.None),
+				new PropertyMapping('onlineRating', '', PropertyMappingOption.None),
+				new PropertyMapping('image', '', PropertyMappingOption.None),
+				new PropertyMapping('released', '', PropertyMappingOption.None),
+				new PropertyMapping('airing', '', PropertyMappingOption.None),
+				new PropertyMapping('airedFrom', '', PropertyMappingOption.None),
+				new PropertyMapping('airedTo', '', PropertyMappingOption.None),
+				new PropertyMapping('watched', '', PropertyMappingOption.None),
+				new PropertyMapping('lastWatched', '', PropertyMappingOption.None),
+				new PropertyMapping('personalRating', '', PropertyMappingOption.None),
+			],
+		},
+	],
 
 };
 
@@ -298,6 +357,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		containerEl.createEl('h3', {text: 'Property Mappings'});
 		// region Property Mappings
+		/*
 		new Setting(containerEl)
 			.setName('Movie model property mappings')
 			.setDesc('Mappings for the property names of a movie.')
@@ -369,7 +429,22 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						this.plugin.saveSettings();
 					});
 			});
+
+		 */
 		// endregion
+
+		console.log(this.plugin.settings.propertyMappings);
+
+		new PropertyBindingsComponent({
+			target: this.containerEl,
+			props: {
+				models: this.plugin.settings.propertyMappings,
+				save: (models: PropertyMappingModel[]) => {
+					this.plugin.settings.propertyMappings = models;
+					this.plugin.saveSettings();
+				},
+			},
+		});
 
 	}
 

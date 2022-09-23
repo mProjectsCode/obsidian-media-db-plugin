@@ -13,7 +13,7 @@ import {MusicBrainzAPI} from './api/apis/MusicBrainzAPI';
 import {MediaTypeManager} from './utils/MediaTypeManager';
 import {SteamAPI} from './api/apis/SteamAPI';
 import {BoardGameGeekAPI} from './api/apis/BoardGameGeekAPI';
-import {ModelPropertyMapper} from './settings/ModelPropertyMapper';
+import {PropertyMapper} from './settings/PropertyMapper';
 import {YAMLConverter} from './utils/YAMLConverter';
 import {MediaDbFolderImportModal} from './modals/MediaDbFolderImportModal';
 
@@ -21,7 +21,7 @@ export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
 	apiManager: APIManager;
 	mediaTypeManager: MediaTypeManager;
-	modelPropertyMapper: ModelPropertyMapper;
+	modelPropertyMapper: PropertyMapper;
 
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
 
@@ -29,6 +29,9 @@ export default class MediaDbPlugin extends Plugin {
 		await this.loadSettings();
 		// register the settings tab
 		this.addSettingTab(new MediaDbSettingTab(this.app, this));
+
+		// TESTING
+		this.settings.propertyMappings = DEFAULT_SETTINGS.propertyMappings;
 
 
 		this.apiManager = new APIManager();
@@ -42,7 +45,7 @@ export default class MediaDbPlugin extends Plugin {
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager(this.settings);
-		this.modelPropertyMapper = new ModelPropertyMapper(this.settings);
+		this.modelPropertyMapper = new PropertyMapper(this);
 
 
 		// add icon to the left ribbon
@@ -188,7 +191,7 @@ export default class MediaDbPlugin extends Plugin {
 
 			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, attachFile);
 
-			console.log("Inside createMediaDbNote", fileContent)
+			console.log('Inside createMediaDbNote', fileContent);
 			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent);
 		} catch (e) {
 			console.warn(e);
@@ -200,9 +203,9 @@ export default class MediaDbPlugin extends Plugin {
 		let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
 		let fileContent = '';
 
-		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, attachFile));
-		console.log("Inside createYAML", attachFile);
-		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app)));
+		({fileMetadata, fileContent} = await this.attachFile(fileMetadata, fileContent, attachFile));
+		console.log('Inside createYAML', attachFile);
+		({fileMetadata, fileContent} = await this.attachTemplate(fileMetadata, fileContent, await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app)));
 
 		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---` + fileContent;
 		return fileContent;
@@ -226,7 +229,7 @@ export default class MediaDbPlugin extends Plugin {
 		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
 		attachFileContent = attachFileContent.replace(regExp, '');
 		fileContent += attachFileContent;
-		console.log("Inside attachfile", fileContent)
+		console.log('Inside attachfile', fileContent);
 
 		return {fileMetadata: fileMetadata, fileContent: fileContent};
 	}
@@ -488,12 +491,13 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async loadSettings() {
+		console.log(DEFAULT_SETTINGS);
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
 	async saveSettings() {
 		this.mediaTypeManager.updateTemplates(this.settings);
-		this.modelPropertyMapper.updateConversionRules(this.settings);
+		//this.modelPropertyMapper.updateConversionRules(this.settings);
 
 		await this.saveData(this.settings);
 	}
