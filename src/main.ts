@@ -185,21 +185,27 @@ export default class MediaDbPlugin extends Plugin {
 	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, attachFile?: TFile): Promise<void> {
 		try {
 			console.log('MDB | Creating new note...');
-			// console.log(mediaTypeModel);
 
-			let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
-			let fileContent = '';
+			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, attachFile);
 
-			({fileMetadata, fileContent} = await this.attachFile(fileMetadata, fileContent, attachFile));
-			({fileMetadata, fileContent} = await this.attachTemplate(fileMetadata, fileContent, await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app)));
-
-			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
-
+			console.log("Inside createMediaDbNote", fileContent)
 			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent);
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
 		}
+	}
+
+	private async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, attachFile: TFile) {
+		let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		let fileContent = '';
+
+		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, attachFile));
+		console.log("Inside createYAML", attachFile);
+		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app)));
+
+		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---` + fileContent;
+		return fileContent;
 	}
 
 	async attachFile(fileMetadata: any, fileContent: string, fileToAttach?: TFile): Promise<{ fileMetadata: any, fileContent: string }> {
@@ -219,7 +225,8 @@ export default class MediaDbPlugin extends Plugin {
 		let attachFileContent: string = await this.app.vault.read(fileToAttach);
 		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
 		attachFileContent = attachFileContent.replace(regExp, '');
-		fileContent += '\n' + attachFileContent;
+		fileContent += attachFileContent;
+		console.log("Inside attachfile", fileContent)
 
 		return {fileMetadata: fileMetadata, fileContent: fileContent};
 	}
@@ -234,7 +241,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
 		const attachFileContent = template.replace(regExp, '');
-		fileContent += '\n' + attachFileContent;
+		fileContent += attachFileContent;
 
 		return {fileMetadata: fileMetadata, fileContent: fileContent};
 	}
@@ -331,8 +338,7 @@ export default class MediaDbPlugin extends Plugin {
 		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
 
 		console.log('MDB | deleting old entry');
-		await this.app.vault.delete(activeFile);
-		await this.createMediaDbNoteFromModel(newMediaTypeModel);
+		await this.createMediaDbNoteFromModel(newMediaTypeModel, activeFile);
 	}
 
 	async createEntriesFromFolder(folder: TFolder) {
@@ -347,7 +353,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		for (const child of folder.children) {
 			if (child instanceof TFile) {
-				const file = child as TFile;
+				const file: TFile = child;
 				if (canceled) {
 					erroredFiles.push({filePath: file.path, error: 'user canceled'});
 					continue;
@@ -426,7 +432,7 @@ export default class MediaDbPlugin extends Plugin {
 		const filePath = `${this.settings.folder.replace(/\/$/, '')}/${title}.md`;
 
 		const table = [['file', 'error']].concat(erroredFiles.map(x => [x.filePath, x.error]));
-		// console.log(table)
+
 		let fileContent = `# ${title}\n\n${markdownTable(table)}`;
 
 		const targetFile = await this.app.vault.create(filePath, fileContent);
