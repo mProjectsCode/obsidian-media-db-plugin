@@ -23,6 +23,12 @@ export class WikiModel extends MediaTypeModel {
 	constructor(obj: any = {}) {
 		super();
 
+		this.wikiUrl = undefined;
+		this.lastUpdated = undefined;
+		this.length = undefined;
+		this.article = undefined;
+		this.userData = {};
+
 		Object.assign(this, obj);
 
 		this.type = this.getMediaType();
@@ -37,7 +43,7 @@ export class WikiModel extends MediaTypeModel {
 	}
 
 	override getWithOutUserData(): object {
-		const copy = JSON.parse(JSON.stringify(this));
+		const copy = Object.assign({}, this);
 		delete copy.userData;
 		delete copy.article;
 		return copy;

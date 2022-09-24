@@ -2,12 +2,12 @@ import {containsOnlyLettersAndUnderscores} from '../utils/Utils';
 import {MediaType} from '../utils/MediaType';
 
 export enum PropertyMappingOption {
-	None = 'none',
+	Default = 'default',
 	Map = 'remap',
 	Remove = 'remove',
 }
 
-export const propertyMappingOptions = [PropertyMappingOption.None, PropertyMappingOption.Map, PropertyMappingOption.Remove];
+export const propertyMappingOptions = [PropertyMappingOption.Default, PropertyMappingOption.Map, PropertyMappingOption.Remove];
 
 export interface PropertyMappingModel {
 	type: MediaType,
@@ -62,7 +62,7 @@ export class PropertyMapping {
 	}
 
 	toString(): string {
-		if (this.mapping === PropertyMappingOption.None) {
+		if (this.mapping === PropertyMappingOption.Default) {
 			return this.property;
 		} else if (this.mapping === PropertyMappingOption.Map) {
 			return `${this.property} -> ${this.newProperty}`;

@@ -1,11 +1,12 @@
-import {App, PluginSettingTab, Setting} from 'obsidian';
+import {App, Notice, PluginSettingTab, Setting} from 'obsidian';
 
 import MediaDbPlugin from '../main';
 import {FolderSuggest} from './suggesters/FolderSuggest';
 import {FileSuggest} from './suggesters/FileSuggest';
-import PropertyBindingsComponent from './PropertyBindingsComponent.svelte';
+import PropertyMappingModelsComponent from './PropertyMappingModelsComponent.svelte';
 import {PropertyMapping, PropertyMappingModel, PropertyMappingOption} from './PropertyMapping';
-import {MediaType} from '../utils/MediaType';
+import {MEDIA_TYPES} from '../utils/MediaTypeManager';
+import {MediaTypeModel} from '../models/MediaTypeModel';
 
 
 export interface MediaDbPluginSettings {
@@ -37,7 +38,7 @@ export interface MediaDbPluginSettings {
 	musicReleasePropertyConversionRules: string,
 	boardgamePropertyConversionRules: string,
 
-	propertyMappings: PropertyMappingModel[],
+	propertyMappingModels: PropertyMappingModel[],
 
 }
 
@@ -69,61 +70,95 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
 
-	propertyMappings: [
+	propertyMappingModels: [
+		/*
 		{
 			type: MediaType.Movie,
 			properties: [
-				new PropertyMapping('type', '', PropertyMappingOption.None, true),
-				new PropertyMapping('subType', '', PropertyMappingOption.None),
-				new PropertyMapping('title', '', PropertyMappingOption.None),
-				new PropertyMapping('englishTitle', '', PropertyMappingOption.None),
-				new PropertyMapping('year', '', PropertyMappingOption.None),
-				new PropertyMapping('dataSource', '', PropertyMappingOption.None, true),
-				new PropertyMapping('url', '', PropertyMappingOption.None),
-				new PropertyMapping('id', '', PropertyMappingOption.None, true),
+				new PropertyMapping('type', '', PropertyMappingOption.Default, true),
+				new PropertyMapping('subType', '', PropertyMappingOption.Default),
+				new PropertyMapping('title', '', PropertyMappingOption.Default),
+				new PropertyMapping('englishTitle', '', PropertyMappingOption.Default),
+				new PropertyMapping('year', '', PropertyMappingOption.Default),
+				new PropertyMapping('dataSource', '', PropertyMappingOption.Default, true),
+				new PropertyMapping('url', '', PropertyMappingOption.Default),
+				new PropertyMapping('id', '', PropertyMappingOption.Default, true),
 
-				new PropertyMapping('genres', '', PropertyMappingOption.None),
-				new PropertyMapping('producer', '', PropertyMappingOption.None),
-				new PropertyMapping('duration', '', PropertyMappingOption.None),
-				new PropertyMapping('onlineRating', '', PropertyMappingOption.None),
-				new PropertyMapping('image', '', PropertyMappingOption.None),
-				new PropertyMapping('released', '', PropertyMappingOption.None),
-				new PropertyMapping('premiere', '', PropertyMappingOption.None),
-				new PropertyMapping('watched', '', PropertyMappingOption.None),
-				new PropertyMapping('lastWatched', '', PropertyMappingOption.None),
-				new PropertyMapping('personalRating', '', PropertyMappingOption.None),
+				new PropertyMapping('genres', '', PropertyMappingOption.Default),
+				new PropertyMapping('producer', '', PropertyMappingOption.Default),
+				new PropertyMapping('duration', '', PropertyMappingOption.Default),
+				new PropertyMapping('onlineRating', '', PropertyMappingOption.Default),
+				new PropertyMapping('image', '', PropertyMappingOption.Default),
+				new PropertyMapping('released', '', PropertyMappingOption.Default),
+				new PropertyMapping('premiere', '', PropertyMappingOption.Default),
+				new PropertyMapping('watched', '', PropertyMappingOption.Default),
+				new PropertyMapping('lastWatched', '', PropertyMappingOption.Default),
+				new PropertyMapping('personalRating', '', PropertyMappingOption.Default),
 			],
 		},
 		{
 			type: MediaType.Series,
 			properties: [
-				new PropertyMapping('type', '', PropertyMappingOption.None, true),
-				new PropertyMapping('subType', '', PropertyMappingOption.None),
-				new PropertyMapping('title', '', PropertyMappingOption.None),
-				new PropertyMapping('englishTitle', '', PropertyMappingOption.None),
-				new PropertyMapping('year', '', PropertyMappingOption.None),
-				new PropertyMapping('dataSource', '', PropertyMappingOption.None, true),
-				new PropertyMapping('url', '', PropertyMappingOption.None),
-				new PropertyMapping('id', '', PropertyMappingOption.None, true),
+				new PropertyMapping('type', '', PropertyMappingOption.Default, true),
+				new PropertyMapping('subType', '', PropertyMappingOption.Default),
+				new PropertyMapping('title', '', PropertyMappingOption.Default),
+				new PropertyMapping('englishTitle', '', PropertyMappingOption.Default),
+				new PropertyMapping('year', '', PropertyMappingOption.Default),
+				new PropertyMapping('dataSource', '', PropertyMappingOption.Default, true),
+				new PropertyMapping('url', '', PropertyMappingOption.Default),
+				new PropertyMapping('id', '', PropertyMappingOption.Default, true),
 
-				new PropertyMapping('genres', '', PropertyMappingOption.None),
-				new PropertyMapping('studios', '', PropertyMappingOption.None),
-				new PropertyMapping('episodes', '', PropertyMappingOption.None),
-				new PropertyMapping('duration', '', PropertyMappingOption.None),
-				new PropertyMapping('onlineRating', '', PropertyMappingOption.None),
-				new PropertyMapping('image', '', PropertyMappingOption.None),
-				new PropertyMapping('released', '', PropertyMappingOption.None),
-				new PropertyMapping('airing', '', PropertyMappingOption.None),
-				new PropertyMapping('airedFrom', '', PropertyMappingOption.None),
-				new PropertyMapping('airedTo', '', PropertyMappingOption.None),
-				new PropertyMapping('watched', '', PropertyMappingOption.None),
-				new PropertyMapping('lastWatched', '', PropertyMappingOption.None),
-				new PropertyMapping('personalRating', '', PropertyMappingOption.None),
+				new PropertyMapping('genres', '', PropertyMappingOption.Default),
+				new PropertyMapping('studios', '', PropertyMappingOption.Default),
+				new PropertyMapping('episodes', '', PropertyMappingOption.Default),
+				new PropertyMapping('duration', '', PropertyMappingOption.Default),
+				new PropertyMapping('onlineRating', '', PropertyMappingOption.Default),
+				new PropertyMapping('image', '', PropertyMappingOption.Default),
+				new PropertyMapping('released', '', PropertyMappingOption.Default),
+				new PropertyMapping('airing', '', PropertyMappingOption.Default),
+				new PropertyMapping('airedFrom', '', PropertyMappingOption.Default),
+				new PropertyMapping('airedTo', '', PropertyMappingOption.Default),
+				new PropertyMapping('watched', '', PropertyMappingOption.Default),
+				new PropertyMapping('lastWatched', '', PropertyMappingOption.Default),
+				new PropertyMapping('personalRating', '', PropertyMappingOption.Default),
 			],
 		},
+
+		 */
 	],
 
 };
+
+export const lockedPropertyMappings: string[] = ['type', 'id', 'dataSource'];
+
+export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings {
+	let defaultSettings = DEFAULT_SETTINGS;
+
+	// construct property mapping defaults
+	const propertyMappingModels: PropertyMappingModel[] = [];
+	for (const mediaType of MEDIA_TYPES) {
+		const model: MediaTypeModel = plugin.mediaTypeManager.createMediaTypeModelFromMediaType({}, mediaType);
+		const metadataObj = model.toMetaDataObject();
+		// console.log(metadataObj);
+		// console.log(model);
+
+		const propertyMappingModel: PropertyMappingModel = {
+			type: mediaType,
+			properties: [],
+		};
+
+		for (const key of Object.keys(metadataObj)) {
+			propertyMappingModel.properties.push(
+				new PropertyMapping(key, '', PropertyMappingOption.Default, lockedPropertyMappings.contains(key)),
+			);
+		}
+
+		propertyMappingModels.push(propertyMappingModel);
+	}
+
+	defaultSettings.propertyMappingModels = propertyMappingModels;
+	return defaultSettings;
+}
 
 export class MediaDbSettingTab extends PluginSettingTab {
 	plugin: MediaDbPlugin;
@@ -433,14 +468,38 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		 */
 		// endregion
 
-		console.log(this.plugin.settings.propertyMappings);
+		console.log(this.plugin.settings.propertyMappingModels);
+		// console.log(getDefaultSettings(this.plugin));
 
-		new PropertyBindingsComponent({
+		let propertyMappingExplanation = containerEl.createEl('div');
+		propertyMappingExplanation.innerHTML = `<p>Allow you to remap the metadata fields of newly created media db entries.</p>
+		<p>
+			The different options are:
+			<lu>
+				<li>"default": does no remapping and keeps the metadata field as it is</li>
+				<li>"remap": renames the metadata field to what ever you specify</li>
+				<li>"remove": removes the metadata field entirely</li>
+			</lu>
+		</p>`;
+
+
+		new PropertyMappingModelsComponent({
 			target: this.containerEl,
 			props: {
-				models: this.plugin.settings.propertyMappings,
-				save: (models: PropertyMappingModel[]) => {
-					this.plugin.settings.propertyMappings = models;
+				models: JSON.parse(JSON.stringify(this.plugin.settings.propertyMappingModels)),
+				save: (model: PropertyMappingModel) => {
+					let propertyMappingModels: PropertyMappingModel[] = [];
+
+					for (const model2 of this.plugin.settings.propertyMappingModels) {
+						if (model2.type === model.type) {
+							propertyMappingModels.push(model);
+						} else {
+							propertyMappingModels.push(model2);
+						}
+					}
+
+					this.plugin.settings.propertyMappingModels = propertyMappingModels;
+					new Notice(`MDB: Property Mappings for ${model.type} saved successfully.`);
 					this.plugin.saveSettings();
 				},
 			},

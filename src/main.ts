@@ -1,5 +1,5 @@
 import {Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder} from 'obsidian';
-import {DEFAULT_SETTINGS, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
+import {getDefaultSettings, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
 import {dateTimeToString, debugLog, markdownTable, replaceIllegalFileNameCharactersInString, UserCancelError, UserSkipError} from './utils/Utils';
@@ -16,6 +16,7 @@ import {BoardGameGeekAPI} from './api/apis/BoardGameGeekAPI';
 import {PropertyMapper} from './settings/PropertyMapper';
 import {YAMLConverter} from './utils/YAMLConverter';
 import {MediaDbFolderImportModal} from './modals/MediaDbFolderImportModal';
+import {PropertyMapping, PropertyMappingModel} from './settings/PropertyMapping';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -26,14 +27,6 @@ export default class MediaDbPlugin extends Plugin {
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
 
 	async onload() {
-		await this.loadSettings();
-		// register the settings tab
-		this.addSettingTab(new MediaDbSettingTab(this.app, this));
-
-		// TESTING
-		this.settings.propertyMappings = DEFAULT_SETTINGS.propertyMappings;
-
-
 		this.apiManager = new APIManager();
 		// register APIs
 		this.apiManager.registerAPI(new OMDbAPI(this));
@@ -44,8 +37,17 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
-		this.mediaTypeManager = new MediaTypeManager(this.settings);
+		this.mediaTypeManager = new MediaTypeManager();
 		this.modelPropertyMapper = new PropertyMapper(this);
+
+		await this.loadSettings();
+		// register the settings tab
+		this.addSettingTab(new MediaDbSettingTab(this.app, this));
+
+		// TESTING
+		// this.settings.propertyMappingModels = getDefaultSettings(this).propertyMappingModels;
+
+		this.mediaTypeManager.updateTemplates(this.settings);
 
 
 		// add icon to the left ribbon
@@ -491,8 +493,37 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		console.log(DEFAULT_SETTINGS);
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		// console.log(DEFAULT_SETTINGS);
+		const diskSettings: MediaDbPluginSettings = await this.loadData();
+		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
+		const loadedSettings: MediaDbPluginSettings = Object.assign({}, defaultSettings, diskSettings);
+
+		// migrate the settings loaded from the disk to match the structure of the default settings
+		let newPropertyMappings: PropertyMappingModel[] = [];
+		for (const defaultPropertyMappingModel of defaultSettings.propertyMappingModels) {
+			let newPropertyMappingModel: PropertyMappingModel = loadedSettings.propertyMappingModels.find(x => x.type === defaultPropertyMappingModel.type);
+			if (newPropertyMappingModel === undefined) { // if the propertyMappingModel exists in the default settings but not the loaded settings, add it
+				newPropertyMappings.push(defaultPropertyMappingModel);
+			} else { // if the propertyMappingModel also exists in the loaded settings, add it from there
+				let newProperties: PropertyMapping[] = [];
+
+				for (const defaultProperty of defaultPropertyMappingModel.properties) {
+					let newProperty = newPropertyMappingModel.properties.find(x => x.property === defaultProperty.property);
+					if (newProperty === undefined) {
+						newProperties.push(defaultProperty);
+					} else {
+						newProperties.push(newProperty);
+					}
+				}
+
+				newPropertyMappingModel.properties = newProperties;
+
+				newPropertyMappings.push(newPropertyMappingModel);
+			}
+		}
+		loadedSettings.propertyMappingModels = newPropertyMappings;
+
+		this.settings = loadedSettings;
 	}
 
 	async saveSettings() {

@@ -34,6 +34,22 @@ export class SeriesModel extends MediaTypeModel {
 	constructor(obj: any = {}) {
 		super();
 
+		this.genres = undefined;
+		this.studios = undefined;
+		this.episodes = undefined;
+		this.duration = undefined;
+		this.onlineRating = undefined;
+		this.image = undefined;
+		this.released = undefined;
+		this.airing = undefined;
+		this.airedFrom = undefined;
+		this.airedTo = undefined;
+		this.userData = {
+			watched: undefined,
+			lastWatched: undefined,
+			personalRating: undefined,
+		};
+
 		Object.assign(this, obj);
 
 		this.type = this.getMediaType();

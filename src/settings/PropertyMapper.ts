@@ -26,7 +26,7 @@ export class PropertyMapper {
 		}
 
 		// @ts-ignore
-		const propertyMappings = this.plugin.settings.propertyMappings.find(x => x.type === obj.type).properties;
+		const propertyMappings = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type).properties;
 
 		const newObj: object = {};
 
@@ -38,7 +38,7 @@ export class PropertyMapper {
 						newObj[propertyMapping.newProperty] = value;
 					} else if (propertyMapping.mapping === PropertyMappingOption.Remove) {
 
-					} else if (propertyMapping.mapping === PropertyMappingOption.None) {
+					} else if (propertyMapping.mapping === PropertyMappingOption.Default) {
 						// @ts-ignore
 						newObj[key] = value;
 					}
@@ -67,7 +67,7 @@ export class PropertyMapper {
 		}
 
 		// @ts-ignore
-		const propertyMappings = this.plugin.settings.propertyMappings.find(x => x.type === obj.type).properties;
+		const propertyMappings = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type).properties;
 
 		const originalObj: object = {};
 

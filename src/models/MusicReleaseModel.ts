@@ -24,6 +24,13 @@ export class MusicReleaseModel extends MediaTypeModel {
 	constructor(obj: any = {}) {
 		super();
 
+		this.genres = undefined;
+		this.artists = undefined;
+		this.rating = undefined;
+		this.userData = {
+			personalRating: undefined,
+		};
+
 		Object.assign(this, obj);
 
 		this.type = this.getMediaType();
