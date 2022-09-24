@@ -193,7 +193,6 @@ export default class MediaDbPlugin extends Plugin {
 
 			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, attachFile);
 
-			console.log('Inside createMediaDbNote', fileContent);
 			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent);
 		} catch (e) {
 			console.warn(e);
@@ -206,7 +205,6 @@ export default class MediaDbPlugin extends Plugin {
 		let fileContent = '';
 
 		({fileMetadata, fileContent} = await this.attachFile(fileMetadata, fileContent, attachFile));
-		console.log('Inside createYAML', attachFile);
 		({fileMetadata, fileContent} = await this.attachTemplate(fileMetadata, fileContent, await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app)));
 
 		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---` + fileContent;
@@ -231,7 +229,6 @@ export default class MediaDbPlugin extends Plugin {
 		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
 		attachFileContent = attachFileContent.replace(regExp, '');
 		fileContent += attachFileContent;
-		console.log('Inside attachfile', fileContent);
 
 		return {fileMetadata: fileMetadata, fileContent: fileContent};
 	}
