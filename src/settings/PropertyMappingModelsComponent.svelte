@@ -49,9 +49,14 @@
 		margin: 0;
 	}
 
-	.media-db-plugin-property-binding-to {
+	.media-db-plugin-property-mapping-to {
 		display:     flex;
 		align-items: center;
+	}
+
+	.media-db-plugin-property-mapping-validation {
+		color:         var(--text-error);
+		margin-bottom: 5px;
 	}
 </style>
 
@@ -81,18 +86,25 @@
 
 							{#if property.mapping === PropertyMappingOption.Map}
 								<Icon iconName="arrow-right"/>
-								<div class="media-db-plugin-property-binding-to">
+								<div class="media-db-plugin-property-mapping-to">
 									<input type="text" spellcheck="false" bind:value="{property.newProperty}">
 								</div>
 							{/if}
 						{/if}
 					</div>
-				{ /each   }
+				{ /each    }
 			</div>
-			<button class="mod-cta media-db-plugin-property-mappings-save-button" on:click={() => save(model)}>Save
+			{ #if !model.validate().res }
+				<div class="media-db-plugin-property-mapping-validation">
+					{model.validate().err?.message}
+				</div>
+			{/if}
+			<button
+				class="media-db-plugin-property-mappings-save-button {model.validate().res ? 'mod-cta' : 'mod-muted'}"
+				on:click={() => { if(model.validate().res) save(model) }}>Save
 			</button>
 		</div>
-	{ /each   }
+	{ /each    }
 
 	<pre>{JSON.stringify(models, null, 4)}</pre>
 

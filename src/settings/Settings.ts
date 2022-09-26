@@ -142,10 +142,7 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 		// console.log(metadataObj);
 		// console.log(model);
 
-		const propertyMappingModel: PropertyMappingModel = {
-			type: mediaType,
-			properties: [],
-		};
+		const propertyMappingModel: PropertyMappingModel = new PropertyMappingModel(mediaType);
 
 		for (const key of Object.keys(metadataObj)) {
 			propertyMappingModel.properties.push(
@@ -486,7 +483,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		new PropertyMappingModelsComponent({
 			target: this.containerEl,
 			props: {
-				models: JSON.parse(JSON.stringify(this.plugin.settings.propertyMappingModels)),
+				models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),
 				save: (model: PropertyMappingModel) => {
 					let propertyMappingModels: PropertyMappingModel[] = [];
 

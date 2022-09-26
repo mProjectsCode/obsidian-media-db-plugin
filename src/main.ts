@@ -507,15 +507,15 @@ export default class MediaDbPlugin extends Plugin {
 				for (const defaultProperty of defaultPropertyMappingModel.properties) {
 					let newProperty = newPropertyMappingModel.properties.find(x => x.property === defaultProperty.property);
 					if (newProperty === undefined) {
+						// default property is an instance
 						newProperties.push(defaultProperty);
 					} else {
-						newProperties.push(newProperty);
+						// newProperty is just an object and take locked status from default property
+						newProperties.push(new PropertyMapping(newProperty.property, newProperty.newProperty, newProperty.mapping, defaultProperty.locked));
 					}
 				}
 
-				newPropertyMappingModel.properties = newProperties;
-
-				newPropertyMappings.push(newPropertyMappingModel);
+				newPropertyMappings.push(new PropertyMappingModel(newPropertyMappingModel.type, newProperties));
 			}
 		}
 		loadedSettings.propertyMappingModels = newPropertyMappings;
