@@ -14,6 +14,10 @@ export function wrapAround(value: number, size: number): number {
 	return mod(value, size);
 }
 
+/**
+ * @deprecated use console.debug instead
+ * @param o
+ */
 export function debugLog(o: any): void {
 	if (debug) {
 		console.log(o);

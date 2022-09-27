@@ -2,7 +2,7 @@ import {Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder} from 'obsidian
 import {getDefaultSettings, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
-import {dateTimeToString, debugLog, markdownTable, replaceIllegalFileNameCharactersInString, UserCancelError, UserSkipError} from './utils/Utils';
+import {dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, UserCancelError, UserSkipError} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
@@ -44,11 +44,7 @@ export default class MediaDbPlugin extends Plugin {
 		// register the settings tab
 		this.addSettingTab(new MediaDbSettingTab(this.app, this));
 
-		// TESTING
-		// this.settings.propertyMappingModels = getDefaultSettings(this).propertyMappingModels;
-
 		this.mediaTypeManager.updateTemplates(this.settings);
-
 
 		// add icon to the left ribbon
 		const ribbonIconEl = this.addRibbonIcon('database', 'Add new Media DB entry', (evt: MouseEvent) =>
@@ -136,7 +132,6 @@ export default class MediaDbPlugin extends Plugin {
 
 		selectModal.close();
 
-		debugLog(results);
 		if (results) {
 			await this.createMediaDbNotes(results);
 		}
@@ -162,7 +157,6 @@ export default class MediaDbPlugin extends Plugin {
 
 		idSearchModal.close();
 
-		debugLog(result);
 		if (result) {
 			await this.createMediaDbNoteFromModel(result);
 		}
@@ -189,7 +183,7 @@ export default class MediaDbPlugin extends Plugin {
 
 	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, attachFile?: TFile): Promise<void> {
 		try {
-			console.log('MDB | Creating new note...');
+			console.debug('MDB | creating new note');
 
 			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, attachFile);
 
@@ -216,13 +210,7 @@ export default class MediaDbPlugin extends Plugin {
 			return {fileMetadata: fileMetadata, fileContent: fileContent};
 		}
 
-		let attachFileMetadata: any = this.app.metadataCache.getFileCache(fileToAttach).frontmatter;
-		if (attachFileMetadata) {
-			attachFileMetadata = JSON.parse(JSON.stringify(attachFileMetadata)); // deep copy
-			delete attachFileMetadata.position;
-		} else {
-			attachFileMetadata = {};
-		}
+		let attachFileMetadata: any = this.getMetadataFromFileCache(fileToAttach);
 		fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
 
 		let attachFileContent: string = await this.app.vault.read(fileToAttach);
@@ -241,7 +229,7 @@ export default class MediaDbPlugin extends Plugin {
 		let templateMetadata: any = this.getMetaDataFromFileContent(template);
 		fileMetadata = Object.assign(templateMetadata, fileMetadata);
 
-		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
+		const regExp = new RegExp(this.frontMatterRexExpPattern);
 		const attachFileContent = template.replace(regExp, '');
 		fileContent += attachFileContent;
 
@@ -251,7 +239,7 @@ export default class MediaDbPlugin extends Plugin {
 	getMetaDataFromFileContent(fileContent: string): any {
 		let metadata: any;
 
-		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
+		const regExp = new RegExp(this.frontMatterRexExpPattern);
 		const frontMatterRegExpResult = regExp.exec(fileContent);
 		if (!frontMatterRegExpResult) {
 			return {};
@@ -269,6 +257,19 @@ export default class MediaDbPlugin extends Plugin {
 			metadata = {};
 		}
 
+		console.debug(`MDB | metadata read from file content`, metadata);
+
+		return metadata;
+	}
+
+	getMetadataFromFileCache(file: TFile) {
+		let metadata: any = this.app.metadataCache.getFileCache(file).frontmatter;
+		if (metadata) {
+			metadata = Object.assign({}, metadata); // copy
+			delete metadata.position;
+		} else {
+			metadata = {};
+		}
 		return metadata;
 	}
 
@@ -297,12 +298,13 @@ export default class MediaDbPlugin extends Plugin {
 
 		// create the file
 		const targetFile = await this.app.vault.create(filePath, fileContent);
+		console.debug(`MDB | created new file at ${filePath}`);
 
 		// open newly crated file
 		if (openFile) {
 			const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 			if (!activeLeaf) {
-				console.warn('MDB | no active leaf, not opening media db note');
+				console.warn('MDB | no active leaf, not opening newly created note');
 				return;
 			}
 			await activeLeaf.openFile(targetFile, {state: {mode: 'source'}});
@@ -319,12 +321,10 @@ export default class MediaDbPlugin extends Plugin {
 			throw new Error('MDB | there is no active note');
 		}
 
-		let metadata: any = this.app.metadataCache.getFileCache(activeFile).frontmatter;
-		metadata = JSON.parse(JSON.stringify(metadata)); // deep copy
-		delete metadata.position; // remove unnecessary data from the FrontMatterCache
+		let metadata: any = this.getMetadataFromFileCache(activeFile);
 		metadata = this.modelPropertyMapper.convertObjectBack(metadata);
 
-		debugLog(metadata);
+		console.debug(`MDB | read metadata`, metadata);
 
 		if (!metadata?.type || !metadata?.dataSource || !metadata?.id) {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
@@ -339,7 +339,8 @@ export default class MediaDbPlugin extends Plugin {
 
 		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
 
-		console.log('MDB | deleting old entry');
+		// deletion not happening anymore why is this log statement still here
+		console.debug('MDB | deleting old entry');
 		await this.createMediaDbNoteFromModel(newMediaTypeModel, activeFile);
 	}
 
@@ -361,7 +362,7 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
-				let metadata: any = this.app.metadataCache.getFileCache(file).frontmatter;
+				let metadata: any = this.getMetadataFromFileCache(file);
 
 				let title = metadata[titleFieldName];
 				if (!title) {
@@ -525,7 +526,6 @@ export default class MediaDbPlugin extends Plugin {
 
 	async saveSettings() {
 		this.mediaTypeManager.updateTemplates(this.settings);
-		//this.modelPropertyMapper.updateConversionRules(this.settings);
 
 		await this.saveData(this.settings);
 	}

@@ -19,6 +19,8 @@ export class PropertyMappingModel {
 	}
 
 	validate(): { res: boolean, err?: Error } {
+		console.debug(`MDB | validated property mappings for ${this.type}`);
+
 		// check properties
 		for (const property of this.properties) {
 			const propertyValidation = property.validate();
@@ -89,28 +91,6 @@ export class PropertyMapping {
 		this.newProperty = newProperty;
 		this.mapping = mapping;
 		this.locked = locked ?? false;
-
-		/*
-		const conversionRuleParts = conversionRule.split('->');
-		if (conversionRuleParts.length !== 2) {
-			throw Error(`Conversion rule "${conversionRule}" may only have exactly one "->"`);
-		}
-
-		let property = conversionRuleParts[0].trim();
-		let newProperty = conversionRuleParts[1].trim();
-
-		if (!property || !containsOnlyLettersAndUnderscores(property)) {
-			throw Error(`Error in conversion rule "${conversionRule}": property may not be empty and only contain letters and underscores.`);
-		}
-
-		if (!newProperty || !containsOnlyLettersAndUnderscores(newProperty)) {
-			throw Error(`Error in conversion rule "${conversionRule}": new property may not be empty and only contain letters and underscores.`);
-		}
-
-		this.property = property;
-		this.newProperty = newProperty;
-
-		 */
 	}
 
 	validate(): { res: boolean, err?: Error } {

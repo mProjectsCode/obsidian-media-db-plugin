@@ -1,6 +1,5 @@
-import {ButtonComponent, Component, Modal, Notice, Setting, TextComponent, ToggleComponent} from 'obsidian';
+import {ButtonComponent, Modal, Notice, Setting, TextComponent, ToggleComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {debugLog} from '../utils/Utils';
 import MediaDbPlugin from '../main';
 
 export class MediaDbAdvancedSearchModal extends Modal {
@@ -36,9 +35,6 @@ export class MediaDbAdvancedSearchModal extends Modal {
 	}
 
 	async search(): Promise<MediaTypeModel[]> {
-
-		debugLog(this.selectedApis);
-
 		if (!this.query || this.query.length < 3) {
 			new Notice('MDB | Query to short');
 			return;
@@ -78,7 +74,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 		contentEl.createEl('h3', {text: 'APIs to search'});
 
-		const apiToggleComponents: Component[] = [];
+		// const apiToggleComponents: Component[] = [];
 		for (const api of this.plugin.apiManager.apis) {
 			const apiToggleListElementWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
 

@@ -1,6 +1,5 @@
 import {ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {debugLog} from '../utils/Utils';
 import MediaDbPlugin from '../main';
 
 export class MediaDbIdSearchModal extends Modal {
@@ -33,9 +32,6 @@ export class MediaDbIdSearchModal extends Modal {
 	}
 
 	async search(): Promise<MediaTypeModel> {
-
-		debugLog(this.selectedApi);
-
 		if (!this.query) {
 			new Notice('MDB | no Id entered');
 			return;

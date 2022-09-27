@@ -42,7 +42,7 @@ export interface MediaDbPluginSettings {
 
 }
 
-export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
+const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	folder: 'Media DB',
 	OMDbKey: '',
 	sfwFilter: true,
@@ -70,63 +70,7 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
 
-	propertyMappingModels: [
-		/*
-		{
-			type: MediaType.Movie,
-			properties: [
-				new PropertyMapping('type', '', PropertyMappingOption.Default, true),
-				new PropertyMapping('subType', '', PropertyMappingOption.Default),
-				new PropertyMapping('title', '', PropertyMappingOption.Default),
-				new PropertyMapping('englishTitle', '', PropertyMappingOption.Default),
-				new PropertyMapping('year', '', PropertyMappingOption.Default),
-				new PropertyMapping('dataSource', '', PropertyMappingOption.Default, true),
-				new PropertyMapping('url', '', PropertyMappingOption.Default),
-				new PropertyMapping('id', '', PropertyMappingOption.Default, true),
-
-				new PropertyMapping('genres', '', PropertyMappingOption.Default),
-				new PropertyMapping('producer', '', PropertyMappingOption.Default),
-				new PropertyMapping('duration', '', PropertyMappingOption.Default),
-				new PropertyMapping('onlineRating', '', PropertyMappingOption.Default),
-				new PropertyMapping('image', '', PropertyMappingOption.Default),
-				new PropertyMapping('released', '', PropertyMappingOption.Default),
-				new PropertyMapping('premiere', '', PropertyMappingOption.Default),
-				new PropertyMapping('watched', '', PropertyMappingOption.Default),
-				new PropertyMapping('lastWatched', '', PropertyMappingOption.Default),
-				new PropertyMapping('personalRating', '', PropertyMappingOption.Default),
-			],
-		},
-		{
-			type: MediaType.Series,
-			properties: [
-				new PropertyMapping('type', '', PropertyMappingOption.Default, true),
-				new PropertyMapping('subType', '', PropertyMappingOption.Default),
-				new PropertyMapping('title', '', PropertyMappingOption.Default),
-				new PropertyMapping('englishTitle', '', PropertyMappingOption.Default),
-				new PropertyMapping('year', '', PropertyMappingOption.Default),
-				new PropertyMapping('dataSource', '', PropertyMappingOption.Default, true),
-				new PropertyMapping('url', '', PropertyMappingOption.Default),
-				new PropertyMapping('id', '', PropertyMappingOption.Default, true),
-
-				new PropertyMapping('genres', '', PropertyMappingOption.Default),
-				new PropertyMapping('studios', '', PropertyMappingOption.Default),
-				new PropertyMapping('episodes', '', PropertyMappingOption.Default),
-				new PropertyMapping('duration', '', PropertyMappingOption.Default),
-				new PropertyMapping('onlineRating', '', PropertyMappingOption.Default),
-				new PropertyMapping('image', '', PropertyMappingOption.Default),
-				new PropertyMapping('released', '', PropertyMappingOption.Default),
-				new PropertyMapping('airing', '', PropertyMappingOption.Default),
-				new PropertyMapping('airedFrom', '', PropertyMappingOption.Default),
-				new PropertyMapping('airedTo', '', PropertyMappingOption.Default),
-				new PropertyMapping('watched', '', PropertyMappingOption.Default),
-				new PropertyMapping('lastWatched', '', PropertyMappingOption.Default),
-				new PropertyMapping('personalRating', '', PropertyMappingOption.Default),
-			],
-		},
-
-		 */
-	],
-
+	propertyMappingModels: [],
 };
 
 export const lockedPropertyMappings: string[] = ['type', 'id', 'dataSource'];
@@ -387,89 +331,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 		// endregion
 
-		containerEl.createEl('h3', {text: 'Property Mappings'});
 		// region Property Mappings
-		/*
-		new Setting(containerEl)
-			.setName('Movie model property mappings')
-			.setDesc('Mappings for the property names of a movie.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.moviePropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.moviePropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
 
-		new Setting(containerEl)
-			.setName('Series model property mappings')
-			.setDesc('Mappings for the property names of a series.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.seriesPropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.seriesPropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName('Game model property mappings')
-			.setDesc('Mappings for the property names of a game.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.gamePropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.gamePropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName('Wiki model property mappings')
-			.setDesc('Mappings for the property names of a wiki entry.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.wikiPropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.wikiPropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName('Music Release model property mappings')
-			.setDesc('Mappings for the property names of a music release.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.musicReleasePropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.musicReleasePropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName('Board Game model property mappings')
-			.setDesc('Mappings for the property names of a boardgame.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.boardgamePropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.boardgamePropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
-
-		 */
-		// endregion
-
-		console.log(this.plugin.settings.propertyMappingModels);
-		// console.log(getDefaultSettings(this.plugin));
+		containerEl.createEl('h3', {text: 'Property Mappings'});
 
 		let propertyMappingExplanation = containerEl.createEl('div');
-		propertyMappingExplanation.innerHTML = `<p>Allow you to remap the metadata fields of newly created media db entries.</p>
+		propertyMappingExplanation.innerHTML = `
+		<p>Allow you to remap the metadata fields of newly created media db entries.</p>
 		<p>
 			The different options are:
 			<lu>
@@ -477,6 +345,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				<li>"remap": renames the metadata field to what ever you specify</li>
 				<li>"remove": removes the metadata field entirely</li>
 			</lu>
+		</p>
+		<p>
+			Don't forget to save your changes using the save button for each individual category.
 		</p>`;
 
 
@@ -501,6 +372,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				},
 			},
 		});
+
+		// endregion
 
 	}
 

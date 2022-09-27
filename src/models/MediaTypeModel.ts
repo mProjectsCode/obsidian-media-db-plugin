@@ -13,7 +13,7 @@ export abstract class MediaTypeModel {
 	userData: object;
 
 
-	constructor() {
+	protected constructor() {
 		this.type = undefined;
 		this.subType = undefined;
 		this.title = undefined;
