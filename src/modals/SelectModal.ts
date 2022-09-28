@@ -16,9 +16,9 @@ export abstract class SelectModal<T> extends Modal {
 	selectModalElements: SelectModalElement<T>[];
 
 
-	protected constructor(app: App, elements: T[]) {
+	protected constructor(app: App, elements: T[], allowMultiSelect: boolean = true) {
 		super(app);
-		this.allowMultiSelect = true;
+		this.allowMultiSelect = allowMultiSelect;
 
 		this.title = '';
 		this.description = '';

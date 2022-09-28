@@ -1,4 +1,4 @@
-import {Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder} from 'obsidian';
+import {MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder} from 'obsidian';
 import {getDefaultSettings, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
@@ -88,6 +88,78 @@ export default class MediaDbPlugin extends Plugin {
 				return true;
 			},
 		});
+		// register link insert command
+		this.addCommand({
+			id: 'add-media-db-link',
+			name: 'Add a link.',
+			checkCallback: (checking: boolean) => {
+				if (!this.app.workspace.getActiveFile()) {
+					return false;
+				}
+				if (!checking) {
+					this.createLinkWithSearchModal();
+				}
+				return true;
+			},
+		});
+	}
+
+	/**
+	 * first very simple approach
+	 * - replace the detail query
+	 * - maybe custom link syntax
+	 */
+	async createLinkWithSearchModal() {
+		let results: MediaTypeModel[] = [];
+
+		const {advancedSearchOptions, advancedSearchModal} = await this.openMediaDbAdvancedSearchModal();
+		if (!advancedSearchOptions) {
+			advancedSearchModal.close();
+			return;
+		}
+
+		let apiSearchResults: MediaTypeModel[] = undefined;
+		try {
+			apiSearchResults = await this.apiManager.query(advancedSearchOptions.query, advancedSearchOptions.apis);
+		} catch (e) {
+			console.warn(e);
+			new Notice(e.toString());
+			advancedSearchModal.close();
+			return;
+		}
+
+		advancedSearchModal.close();
+
+		const {selectRes, selectModal} = await this.openMediaDbSelectModal(apiSearchResults, false, false);
+		if (!selectRes) {
+			selectModal.close();
+			return;
+		}
+
+		// TODO: let's try to not query details for this
+		try {
+			results = await this.queryDetails(selectRes);
+		} catch (e) {
+			console.warn(e);
+			new Notice(e.toString());
+			selectModal.close();
+			return;
+		}
+
+		selectModal.close();
+
+		if (!results || results.length < 1) {
+			return;
+		}
+
+		const link = `[${results[0].title}](${results[0].url})`
+
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+		// Make sure the user is editing a Markdown file.
+		if (view) {
+			view.editor.replaceRange(link, view.editor.getCursor());
+		}
 	}
 
 	async createEntryWithSearchModal() {
@@ -473,8 +545,8 @@ export default class MediaDbPlugin extends Plugin {
 		return {idSearchOptions: res, idSearchModal: modal};
 	}
 
-	async openMediaDbSelectModal(resultsToDisplay: MediaTypeModel[], skipButton: boolean = false): Promise<{ selectRes: MediaTypeModel[], selectModal: MediaDbSearchResultModal }> {
-		const modal = new MediaDbSearchResultModal(this, resultsToDisplay, skipButton);
+	async openMediaDbSelectModal(resultsToDisplay: MediaTypeModel[], skipButton: boolean = false, allowMultiSelect: boolean = true): Promise<{ selectRes: MediaTypeModel[], selectModal: MediaDbSearchResultModal }> {
+		const modal = new MediaDbSearchResultModal(this, resultsToDisplay, skipButton, allowMultiSelect);
 		const res: MediaTypeModel[] = await new Promise((resolve, reject) => {
 			modal.setSubmitCallback(res => resolve(res));
 			modal.setSkipCallback(() => resolve([]));

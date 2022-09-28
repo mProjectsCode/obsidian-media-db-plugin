@@ -12,8 +12,8 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 	sendCallback: boolean;
 
-	constructor(plugin: MediaDbPlugin, elements: MediaTypeModel[], skipButton: boolean) {
-		super(plugin.app, elements);
+	constructor(plugin: MediaDbPlugin, elements: MediaTypeModel[], skipButton: boolean, allowMultiSelect: boolean = true) {
+		super(plugin.app, elements, allowMultiSelect);
 		this.plugin = plugin;
 
 		this.title = 'Search Results';
