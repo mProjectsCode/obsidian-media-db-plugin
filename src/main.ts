@@ -106,8 +106,9 @@ export default class MediaDbPlugin extends Plugin {
 
 	/**
 	 * first very simple approach
-	 * - replace the detail query
-	 * - maybe custom link syntax
+	 * TODO:
+	 *  - replace the detail query
+	 *  - maybe custom link syntax
 	 */
 	async createLinkWithSearchModal() {
 		let results: MediaTypeModel[] = [];
@@ -166,6 +167,9 @@ export default class MediaDbPlugin extends Plugin {
 
 	}
 
+	/**
+	 * TODO: further refactor: extract it into own method, pass the action (api query) as lambda as well as an options object
+	 */
 	async createEntryWithAdvancedSearchModal() {
 		let results: MediaTypeModel[] = [];
 
