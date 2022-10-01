@@ -4,10 +4,8 @@ import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
 import {dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, UserCancelError, UserSkipError} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
-import {MediaDbAdvancedSearchModal} from './modals/MediaDbAdvancedSearchModal';
 import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
 import {MALAPI} from './api/apis/MALAPI';
-import {MediaDbIdSearchModal} from './modals/MediaDbIdSearchModal';
 import {WikipediaAPI} from './api/apis/WikipediaAPI';
 import {MusicBrainzAPI} from './api/apis/MusicBrainzAPI';
 import {MediaTypeManager} from './utils/MediaTypeManager';
@@ -17,12 +15,14 @@ import {PropertyMapper} from './settings/PropertyMapper';
 import {YAMLConverter} from './utils/YAMLConverter';
 import {MediaDbFolderImportModal} from './modals/MediaDbFolderImportModal';
 import {PropertyMapping, PropertyMappingModel} from './settings/PropertyMapping';
+import {ModalHelper} from './utils/ModalHelper';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
 	apiManager: APIManager;
 	mediaTypeManager: MediaTypeManager;
 	modelPropertyMapper: PropertyMapper;
+	modalHelper: ModalHelper;
 
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
 
@@ -39,6 +39,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.mediaTypeManager = new MediaTypeManager();
 		this.modelPropertyMapper = new PropertyMapper(this);
+		this.modalHelper = new ModalHelper(this);
 
 		await this.loadSettings();
 		// register the settings tab
@@ -91,7 +92,7 @@ export default class MediaDbPlugin extends Plugin {
 		// register link insert command
 		this.addCommand({
 			id: 'add-media-db-link',
-			name: 'Add a link.',
+			name: 'Insert link',
 			checkCallback: (checking: boolean) => {
 				if (!this.app.workspace.getActiveFile()) {
 					return false;
@@ -111,49 +112,24 @@ export default class MediaDbPlugin extends Plugin {
 	 *  - maybe custom link syntax
 	 */
 	async createLinkWithSearchModal() {
-		let results: MediaTypeModel[] = [];
 
-		const {advancedSearchOptions, advancedSearchModal} = await this.openMediaDbAdvancedSearchModal();
-		if (!advancedSearchOptions) {
-			advancedSearchModal.close();
+		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal(async (advancedSearchOptions) => {
+			return await this.apiManager.query(advancedSearchOptions.query, advancedSearchOptions.apis);
+		});
+
+		if (!apiSearchResults) {
 			return;
 		}
 
-		let apiSearchResults: MediaTypeModel[] = undefined;
-		try {
-			apiSearchResults = await this.apiManager.query(advancedSearchOptions.query, advancedSearchOptions.apis);
-		} catch (e) {
-			console.warn(e);
-			new Notice(e.toString());
-			advancedSearchModal.close();
+		const selectResults: MediaTypeModel[] = await this.modalHelper.openSelectModal(apiSearchResults, async (selectedMediaTypeModels) => {
+			return await this.queryDetails(selectedMediaTypeModels);
+		});
+
+		if (!selectResults || selectResults.length < 1) {
 			return;
 		}
 
-		advancedSearchModal.close();
-
-		const {selectRes, selectModal} = await this.openMediaDbSelectModal(apiSearchResults, false, false);
-		if (!selectRes) {
-			selectModal.close();
-			return;
-		}
-
-		// TODO: let's try to not query details for this
-		try {
-			results = await this.queryDetails(selectRes);
-		} catch (e) {
-			console.warn(e);
-			new Notice(e.toString());
-			selectModal.close();
-			return;
-		}
-
-		selectModal.close();
-
-		if (!results || results.length < 1) {
-			return;
-		}
-
-		const link = `[${results[0].title}](${results[0].url})`
+		const link = `[${selectResults[0].title}](${selectResults[0].url})`
 
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 
@@ -171,71 +147,35 @@ export default class MediaDbPlugin extends Plugin {
 	 * TODO: further refactor: extract it into own method, pass the action (api query) as lambda as well as an options object
 	 */
 	async createEntryWithAdvancedSearchModal() {
-		let results: MediaTypeModel[] = [];
+		const apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal(async (advancedSearchOptions) => {
+			return await this.apiManager.query(advancedSearchOptions.query, advancedSearchOptions.apis);
+		});
 
-		const {advancedSearchOptions, advancedSearchModal} = await this.openMediaDbAdvancedSearchModal();
-		if (!advancedSearchOptions) {
-			advancedSearchModal.close();
+		if (!apiSearchResults) {
 			return;
 		}
 
-		let apiSearchResults: MediaTypeModel[] = undefined;
-		try {
-			apiSearchResults = await this.apiManager.query(advancedSearchOptions.query, advancedSearchOptions.apis);
-		} catch (e) {
-			console.warn(e);
-			new Notice(e.toString());
-			advancedSearchModal.close();
+		const selectResults: MediaTypeModel[] = await this.modalHelper.openSelectModal(apiSearchResults, async (selectedMediaTypeModels) => {
+			return await this.queryDetails(selectedMediaTypeModels);
+		});
+
+		if (!selectResults) {
 			return;
 		}
 
-		advancedSearchModal.close();
-
-		const {selectRes, selectModal} = await this.openMediaDbSelectModal(apiSearchResults, false);
-		if (!selectRes) {
-			selectModal.close();
-			return;
-		}
-
-		try {
-			results = await this.queryDetails(selectRes);
-		} catch (e) {
-			console.warn(e);
-			new Notice(e.toString());
-			selectModal.close();
-			return;
-		}
-
-		selectModal.close();
-
-		if (results) {
-			await this.createMediaDbNotes(results);
-		}
+		await this.createMediaDbNotes(selectResults);
 	}
 
 	async createEntryWithIdSearchModal() {
-		let result: MediaTypeModel = undefined;
+		const idSearchResult: MediaTypeModel = await this.modalHelper.openIdSearchModal(async (idSearchOptions) => {
+			return await this.apiManager.queryDetailedInfoById(idSearchOptions.query, idSearchOptions.api);
+		})
 
-		const {idSearchOptions, idSearchModal} = await this.openMediaDbIdSearchModal();
-		if (!idSearchOptions) {
-			idSearchModal.close();
+		if (!idSearchResult) {
 			return;
 		}
 
-		try {
-			result = await this.apiManager.queryDetailedInfoById(idSearchOptions.query, idSearchOptions.api);
-		} catch (e) {
-			console.warn(e);
-			new Notice(e.toString());
-			idSearchModal.close();
-			return;
-		}
-
-		idSearchModal.close();
-
-		if (result) {
-			await this.createMediaDbNoteFromModel(result);
-		}
+		await this.createMediaDbNoteFromModel(idSearchResult);
 	}
 
 	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<void> {
@@ -515,55 +455,6 @@ export default class MediaDbPlugin extends Plugin {
 		let fileContent = `# ${title}\n\n${markdownTable(table)}`;
 
 		const targetFile = await this.app.vault.create(filePath, fileContent);
-	}
-
-	async openMediaDbAdvancedSearchModal(): Promise<{ advancedSearchOptions: { query: string, apis: string[] }, advancedSearchModal: MediaDbAdvancedSearchModal }> {
-		const modal = new MediaDbAdvancedSearchModal(this);
-		const res: { query: string, apis: string[] } = await new Promise((resolve, reject) => {
-			modal.setSubmitCallback(res => resolve(res));
-			modal.setCloseCallback(err => {
-				if (err) {
-					reject(err);
-				}
-				resolve(undefined);
-			});
-
-			modal.open();
-		});
-		return {advancedSearchOptions: res, advancedSearchModal: modal};
-	}
-
-	async openMediaDbIdSearchModal(): Promise<{ idSearchOptions: { query: string, api: string }, idSearchModal: MediaDbIdSearchModal }> {
-		const modal = new MediaDbIdSearchModal(this);
-		const res: { query: string, api: string } = await new Promise((resolve, reject) => {
-			modal.setSubmitCallback(res => resolve(res));
-			modal.setCloseCallback(err => {
-				if (err) {
-					reject(err);
-				}
-				resolve(undefined);
-			});
-
-			modal.open();
-		});
-		return {idSearchOptions: res, idSearchModal: modal};
-	}
-
-	async openMediaDbSelectModal(resultsToDisplay: MediaTypeModel[], skipButton: boolean = false, allowMultiSelect: boolean = true): Promise<{ selectRes: MediaTypeModel[], selectModal: MediaDbSearchResultModal }> {
-		const modal = new MediaDbSearchResultModal(this, resultsToDisplay, skipButton, allowMultiSelect);
-		const res: MediaTypeModel[] = await new Promise((resolve, reject) => {
-			modal.setSubmitCallback(res => resolve(res));
-			modal.setSkipCallback(() => resolve([]));
-			modal.setCloseCallback(err => {
-				if (err) {
-					reject(err);
-				}
-				resolve(undefined);
-			});
-
-			modal.open();
-		});
-		return {selectRes: res, selectModal: modal};
 	}
 
 	async loadSettings() {

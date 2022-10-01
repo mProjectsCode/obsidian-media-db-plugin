@@ -79,17 +79,16 @@ export class BoardGameGeekAPI extends APIModel {
 		const genres = Array.from(boardgame.querySelectorAll('boardgamecategory')).map(n => n!.textContent!);
 
 		const model = new BoardGameModel({
-			type: MediaType.BoardGame,
 			title,
 			englishTitle: title,
 			year: year === '0' ? '' : year,
 			dataSource: this.apiName,
 			url: `https://boardgamegeek.com/boardgame/${id}`,
-			id,
+			id: id,
 
-			genres,
-			onlineRating,
-			image,
+			genres: genres,
+			onlineRating: onlineRating,
+			image: image,
 			released: true,
 
 			userData: {
