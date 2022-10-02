@@ -12,6 +12,8 @@ export abstract class SelectModal<T> extends Modal {
 	skipButton?: ButtonComponent;
 	submitButton?: ButtonComponent;
 
+	elementWrapper?: HTMLDivElement;
+
 	elements: T[];
 	selectModalElements: SelectModalElement<T>[];
 
@@ -27,17 +29,27 @@ export abstract class SelectModal<T> extends Modal {
 		this.skipButton = undefined;
 		this.submitButton = undefined;
 
+		this.elementWrapper = undefined;
+
 		this.elements = elements;
 		this.selectModalElements = [];
 
-		this.scope.register([], 'ArrowUp', () => {
+		this.scope.register([], 'ArrowUp', (evt) => {
 			this.highlightUp();
+			evt.preventDefault();
 		});
-		this.scope.register([], 'ArrowDown', () => {
+		this.scope.register([], 'ArrowDown', (evt) => {
 			this.highlightDown();
+			evt.preventDefault();
 		});
 		this.scope.register([], 'ArrowRight', () => {
 			this.activateHighlighted();
+		});
+		this.scope.register([], ' ', (evt) => {
+			if (this.elementWrapper && this.elementWrapper === document.activeElement) {
+				this.activateHighlighted();
+				evt.preventDefault();
+			}
 		});
 		this.scope.register([], 'Enter', () => this.submit());
 	}
@@ -67,24 +79,17 @@ export abstract class SelectModal<T> extends Modal {
 	async onOpen() {
 		const {contentEl} = this;
 
-		/*
-		contentEl.id = 'media-db-plugin-modal'
-
-		contentEl.on('keydown', '#' + contentEl.id, (ev, delegateTarget) => {
-			console.log(ev.key);
-		});
-		*/
-
 		contentEl.createEl('h2', {text: this.title});
 		contentEl.createEl('p', {text: this.description});
 
 		contentEl.addClass('media-db-plugin-select-modal');
 
-		const elementWrapper = contentEl.createDiv({cls: 'media-db-plugin-select-wrapper'});
+		this.elementWrapper = contentEl.createDiv({cls: 'media-db-plugin-select-wrapper'});
+		this.elementWrapper.tabIndex = 0;
 
 		let i = 0;
 		for (const element of this.elements) {
-			const selectModalElement = new SelectModalElement(element, elementWrapper, i, this, false);
+			const selectModalElement = new SelectModalElement(element, this.elementWrapper, i, this, false);
 
 			this.selectModalElements.push(selectModalElement);
 
@@ -96,11 +101,27 @@ export abstract class SelectModal<T> extends Modal {
 		this.selectModalElements.first()?.element.scrollIntoView();
 
 		const bottomSettingRow = new Setting(contentEl);
-		bottomSettingRow.addButton(btn => this.cancelButton = btn.setButtonText('Cancel').onClick(() => this.close()));
+		bottomSettingRow.addButton(btn => {
+			btn.setButtonText('Cancel');
+			btn.onClick(() => this.close());
+			btn.buttonEl.addClass('media-db-plugin-button');
+			this.cancelButton = btn;
+		});
 		if (this.addSkipButton) {
-			bottomSettingRow.addButton(btn => this.skipButton = btn.setButtonText('Skip').onClick(() => this.skip()));
+			bottomSettingRow.addButton(btn => {
+				btn.setButtonText('Skip');
+				btn.onClick(() => this.skip());
+				btn.buttonEl.addClass('media-db-plugin-button');
+				this.skipButton = btn;
+			});
 		}
-		bottomSettingRow.addButton(btn => this.submitButton = btn.setButtonText('Ok').setCta().onClick(() => this.submit()));
+		bottomSettingRow.addButton(btn => {
+			btn.setButtonText('Ok');
+			btn.setCta();
+			btn.onClick(() => this.submit());
+			btn.buttonEl.addClass('media-db-plugin-button');
+			this.submitButton = btn;
+		});
 	}
 
 	activateHighlighted() {

@@ -84,14 +84,19 @@ export class MediaDbIdSearchModal extends Modal {
 		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 
 		new Setting(contentEl)
-			.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()))
 			.addButton(btn => {
-				return (this.searchBtn = btn
-					.setButtonText('Ok')
-					.setCta()
-					.onClick(() => {
-						this.search();
-					}));
+				btn.setButtonText('Cancel');
+				btn.onClick(() => this.close());
+				btn.buttonEl.addClass('media-db-plugin-button');
+			})
+			.addButton(btn => {
+				btn.setButtonText('Ok');
+				btn.setCta();
+				btn.onClick(() => {
+					this.search();
+				});
+				btn.buttonEl.addClass('media-db-plugin-button');
+				this.searchBtn = btn;
 			});
 	}
 

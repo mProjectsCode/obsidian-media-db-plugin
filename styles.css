@@ -105,4 +105,8 @@ small.media-db-plugin-list-text{
 	margin-bottom: 5px;
 }
 
+.media-db-plugin-button:focus {
+	outline: 1px solid white;
+}
+
 /* endregion */
