@@ -78,13 +78,26 @@ export default class MediaDbPlugin extends Plugin {
 		// register command to update the open note
 		this.addCommand({
 			id: 'update-media-db-note',
-			name: 'Update the open note, if it is a Media DB entry.',
+			name: 'Update open note (this will recreate the note)',
 			checkCallback: (checking: boolean) => {
 				if (!this.app.workspace.getActiveFile()) {
 					return false;
 				}
 				if (!checking) {
-					this.updateActiveNote();
+					this.updateActiveNote(false);
+				}
+				return true;
+			},
+		});
+		this.addCommand({
+			id: 'update-media-db-note-metadata',
+			name: 'Update metadata',
+			checkCallback: (checking: boolean) => {
+				if (!this.app.workspace.getActiveFile()) {
+					return false;
+				}
+				if (!checking) {
+					this.updateActiveNote(true);
 				}
 				return true;
 			},
@@ -175,12 +188,12 @@ export default class MediaDbPlugin extends Plugin {
 			return;
 		}
 
-		await this.createMediaDbNoteFromModel(idSearchResult);
+		await this.createMediaDbNoteFromModel(idSearchResult, {attachTemplate: true, openNote: true});
 	}
 
 	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<void> {
 		for (const model of models) {
-			await this.createMediaDbNoteFromModel(model, attachFile);
+			await this.createMediaDbNoteFromModel(model, {attachTemplate: true, attachFile: attachFile});
 		}
 	}
 
@@ -197,27 +210,27 @@ export default class MediaDbPlugin extends Plugin {
 		return detailModels;
 	}
 
-	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, attachFile?: TFile): Promise<void> {
+	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: {attachTemplate?: boolean, attachFile?: TFile, openNote?: boolean}): Promise<void> {
 		try {
 			console.debug('MDB | creating new note');
 
-			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, attachFile);
+			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, {attachTemplate: options.attachTemplate, attachFile: options.attachFile});
 
-			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent);
+			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options.openNote);
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
 		}
 	}
 
-	private async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, attachFile: TFile) {
+	private async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: {attachTemplate?: boolean, attachFile?: TFile}) {
 		let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
 		let fileContent = '';
 
-		({fileMetadata, fileContent} = await this.attachFile(fileMetadata, fileContent, attachFile));
-		({fileMetadata, fileContent} = await this.attachTemplate(fileMetadata, fileContent, await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app)));
+		({fileMetadata, fileContent} = await this.attachFile(fileMetadata, fileContent, options.attachFile));
+		({fileMetadata, fileContent} = await this.attachTemplate(fileMetadata, fileContent, options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : ''));
 
-		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---` + fileContent;
+		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
 		return fileContent;
 	}
 
@@ -230,8 +243,9 @@ export default class MediaDbPlugin extends Plugin {
 		fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
 
 		let attachFileContent: string = await this.app.vault.read(fileToAttach);
-		const regExp = new RegExp('^(---)\\n[\\s\\S]*\\n---');
+		const regExp = new RegExp(this.frontMatterRexExpPattern);
 		attachFileContent = attachFileContent.replace(regExp, '');
+		attachFileContent = attachFileContent.startsWith('\n') ? attachFileContent.substring(1) : attachFileContent;
 		fileContent += attachFileContent;
 
 		return {fileMetadata: fileMetadata, fileContent: fileContent};
@@ -331,7 +345,7 @@ export default class MediaDbPlugin extends Plugin {
 	 * Update the active note by querying the API again.
 	 * Tries to read the type, id and dataSource of the active note. If successful it will query the api, delete the old note and create a new one.
 	 */
-	async updateActiveNote() {
+	async updateActiveNote(onlyMetadata: boolean = false) {
 		const activeFile: TFile = this.app.workspace.getActiveFile();
 		if (!activeFile) {
 			throw new Error('MDB | there is no active note');
@@ -357,7 +371,12 @@ export default class MediaDbPlugin extends Plugin {
 
 		// deletion not happening anymore why is this log statement still here
 		console.debug('MDB | deleting old entry');
-		await this.createMediaDbNoteFromModel(newMediaTypeModel, activeFile);
+		if (onlyMetadata) {
+			await this.createMediaDbNoteFromModel(newMediaTypeModel, {attachFile: activeFile, openNote: true});
+		} else {
+			await this.createMediaDbNoteFromModel(newMediaTypeModel, {attachTemplate: true, openNote: true});
+		}
+
 	}
 
 	async createEntriesFromFolder(folder: TFolder) {
