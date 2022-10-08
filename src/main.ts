@@ -176,6 +176,12 @@ export default class MediaDbPlugin extends Plugin {
 			return;
 		}
 
+		const proceed: boolean = await this.modalHelper.openPreviewModal(selectResults, async (result) => {
+			return true;
+		})
+		if (!proceed)
+			return;
+
 		await this.createMediaDbNotes(selectResults);
 	}
 
