@@ -4,6 +4,7 @@ import {MediaTypeModel} from '../models/MediaTypeModel';
 import {MediaDbSearchResultModal} from '../modals/MediaDbSearchResultModal';
 import {Notice} from 'obsidian';
 import MediaDbPlugin from '../main';
+import { MediaDbPreviewModal } from 'src/modals/MediaDbPreviewModal';
 
 interface AdvancedSearchOptions {
 	query: string,
