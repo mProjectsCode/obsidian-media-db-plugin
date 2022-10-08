@@ -131,5 +131,42 @@ export class ModalHelper {
 			return;
 		}
 	}
+
+	async createPreviewModal(mediaTypeModel: MediaTypeModel[]): Promise<{ result: boolean, previewModal: MediaDbPreviewModal }> {
+		//todo: handle attachFile for existing files
+		const modal = new MediaDbPreviewModal(this.plugin, mediaTypeModel, { attachTemplate: true, attachFile: false });
+		const booleanResult: boolean = await new Promise((resolve, reject) => {
+			modal.setSubmitCallback(res => resolve(res));
+			modal.setCloseCallback(err => {
+				if (err) {
+					reject(err);
+				}
+				resolve(undefined);
+			});
+
+			modal.open();
+		});
+		return { result: booleanResult, previewModal: modal };
+	}
+
+	async openPreviewModal(mediaModels: MediaTypeModel[], submitCallback: (result: boolean) => Promise<boolean>): Promise<boolean> {
+		const { result, previewModal } = await this.createPreviewModal(mediaModels);
+		if (!result) {
+			previewModal.close();
+			return;
+		}
+
+		try {
+			let callbackRes: boolean;
+			callbackRes = await submitCallback(result);
+			previewModal.close();
+			return callbackRes;
+		} catch (e) {
+			console.warn(e);
+			new Notice(e.toString());
+			previewModal.close();
+			return;
+		}
+	}
 }
 
