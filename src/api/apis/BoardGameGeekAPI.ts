@@ -4,7 +4,6 @@ import MediaDbPlugin from '../../main';
 import {BoardGameModel} from 'src/models/BoardGameModel';
 import {debugLog} from '../../utils/Utils';
 import {requestUrl} from 'obsidian';
-import {MediaType} from '../../utils/MediaType';
 
 export class BoardGameGeekAPI extends APIModel {
 	plugin: MediaDbPlugin;

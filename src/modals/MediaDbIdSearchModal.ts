@@ -1,23 +1,32 @@
 import {ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
+import {ID_SEARCH_MODAL_DEFAULT_OPTIONS, IdSearchModalData, IdSearchModalOptions} from '../utils/ModalHelper';
 
 export class MediaDbIdSearchModal extends Modal {
+	plugin: MediaDbPlugin;
+
 	query: string;
 	isBusy: boolean;
-	plugin: MediaDbPlugin;
-	searchBtn: ButtonComponent;
+	title: string;
 	selectedApi: string;
-	submitCallback?: (res: { query: string, api: string }, err?: Error) => void;
+
+	searchBtn: ButtonComponent;
+
+	submitCallback?: (res: IdSearchModalData, err?: Error) => void;
 	closeCallback?: (err?: Error) => void;
 
-	constructor(plugin: MediaDbPlugin) {
+
+	constructor(plugin: MediaDbPlugin, idSearchModalOptions: IdSearchModalOptions) {
+		idSearchModalOptions = Object.assign({}, ID_SEARCH_MODAL_DEFAULT_OPTIONS, idSearchModalOptions);
 		super(plugin.app);
+
 		this.plugin = plugin;
-		this.selectedApi = plugin.apiManager.apis[0].apiName;
+		this.title = idSearchModalOptions.modalTitle;
+		this.selectedApi = idSearchModalOptions.preselectedAPI || plugin.apiManager.apis[0].apiName;
 	}
 
-	setSubmitCallback(submitCallback: (res: { query: string, api: string }, err?: Error) => void): void {
+	setSubmitCallback(submitCallback: (res: IdSearchModalData, err?: Error) => void): void {
 		this.submitCallback = submitCallback;
 	}
 
@@ -54,7 +63,7 @@ export class MediaDbIdSearchModal extends Modal {
 	onOpen() {
 		const {contentEl} = this;
 
-		contentEl.createEl('h2', {text: 'Search media db by id'});
+		contentEl.createEl('h2', {text: this.title});
 
 		const placeholder = 'Search by id';
 		const searchComponent = new TextComponent(contentEl);
