@@ -58,7 +58,7 @@ export default class MediaDbPlugin extends Plugin {
 				menu.addItem(item => {
 					item.setTitle('Import folder as Media DB entries')
 						.setIcon('database')
-						.onClick(() => this.createEntriesFromFolder(file as TFolder));
+						.onClick(() => this.createEntriesFromFolder(file));
 				});
 			}
 		}));
@@ -165,33 +165,44 @@ export default class MediaDbPlugin extends Plugin {
 		});
 
 		if (!apiSearchResults) {
+			// TODO: add new notice saying no results found?
 			return;
 		}
 
-		const selectResults: MediaTypeModel[] = await this.modalHelper.openSelectModal(apiSearchResults, async (selectedMediaTypeModels) => {
-			return await this.queryDetails(selectedMediaTypeModels);
-		});
+		let selectResults: MediaTypeModel[];
+		let proceed: boolean;
 
-		if (!selectResults) {
-			return;
+		while (!proceed) {
+			selectResults = await this.modalHelper.openSelectModal(apiSearchResults, async (selectedMediaTypeModels) => {
+				return await this.queryDetails(selectedMediaTypeModels);
+			});
+			if (!selectResults) {
+				return;
+			}
+
+			proceed = await this.modalHelper.openPreviewModal(selectResults, async () => {
+				return true;
+			})
 		}
-
-		const proceed: boolean = await this.modalHelper.openPreviewModal(selectResults, async (result) => {
-			return true;
-		})
-		if (!proceed)
-			return;
 
 		await this.createMediaDbNotes(selectResults);
 	}
 
-	async createEntryWithIdSearchModal() {
-		const idSearchResult: MediaTypeModel = await this.modalHelper.openIdSearchModal(async (idSearchOptions) => {
-			return await this.apiManager.queryDetailedInfoById(idSearchOptions.query, idSearchOptions.api);
-		})
+	async createEntryWithIdSearchModal(): Promise<void> {
+		let idSearchResult: MediaTypeModel;
+		let proceed: boolean;
 
-		if (!idSearchResult) {
-			return;
+		while (!proceed) {
+			idSearchResult = await this.modalHelper.openIdSearchModal(async (idSearchOptions) => {
+				return await this.apiManager.queryDetailedInfoById(idSearchOptions.query, idSearchOptions.api);
+			})
+			if (!idSearchResult) {
+				return;
+			}
+
+			proceed = await this.modalHelper.openPreviewModal([idSearchResult], async () => {
+				return true;
+			})
 		}
 
 		await this.createMediaDbNoteFromModel(idSearchResult, {attachTemplate: true, openNote: true});
