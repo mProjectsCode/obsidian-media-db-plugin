@@ -2,7 +2,7 @@ import {MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder} 
 import {getDefaultSettings, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
-import {dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString} from './utils/Utils';
+import {CreateNoteOptions, dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MALAPI} from './api/apis/MALAPI';
 import {WikipediaAPI} from './api/apis/WikipediaAPI';
@@ -179,9 +179,9 @@ export default class MediaDbPlugin extends Plugin {
 				return;
 			}
 
-			proceed = await this.modalHelper.openPreviewModal(selectResults, async () => {
-				return true;
-			})
+			proceed = await this.modalHelper.openPreviewModal({elements: selectResults}, async (previewModalData) => {
+				return previewModalData.confirmed;
+			});
 		}
 
 		await this.createMediaDbNotes(selectResults);
@@ -194,14 +194,14 @@ export default class MediaDbPlugin extends Plugin {
 		while (!proceed) {
 			idSearchResult = await this.modalHelper.openIdSearchModal({}, async (idSearchModalData) => {
 				return await this.apiManager.queryDetailedInfoById(idSearchModalData.query, idSearchModalData.api);
-			})
+			});
 			if (!idSearchResult) {
 				return;
 			}
 
-			proceed = await this.modalHelper.openPreviewModal([idSearchResult], async () => {
-				return true;
-			})
+			proceed = await this.modalHelper.openPreviewModal({elements: [idSearchResult]}, async (previewModalData) => {
+				return previewModalData.confirmed;
+			});
 		}
 
 		await this.createMediaDbNoteFromModel(idSearchResult, {attachTemplate: true, openNote: true});
@@ -226,11 +226,11 @@ export default class MediaDbPlugin extends Plugin {
 		return detailModels;
 	}
 
-	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: { attachTemplate?: boolean, attachFile?: TFile, openNote?: boolean }): Promise<void> {
+	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
 		try {
 			console.debug('MDB | creating new note');
 
-			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, {attachTemplate: options.attachTemplate, attachFile: options.attachFile});
+			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, options);
 
 			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options.openNote);
 		} catch (e) {
@@ -239,15 +239,13 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
-	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: {attachTemplate?: boolean, attachFile?: TFile}) {
+	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions) {
 		let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
 		let fileContent = '';
+		const template = options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : '';
 
 		({fileMetadata, fileContent} = await this.attachFile(fileMetadata, fileContent, options.attachFile));
-		({
-			fileMetadata,
-			fileContent,
-		} = await this.attachTemplate(fileMetadata, fileContent, options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : ''));
+		({fileMetadata, fileContent} = await this.attachTemplate(fileMetadata, fileContent, template));
 
 		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
 		return fileContent;

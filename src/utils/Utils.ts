@@ -1,4 +1,5 @@
 import {MediaTypeModel} from '../models/MediaTypeModel';
+import {TFile} from 'obsidian';
 
 
 export const pluginName: string = 'obsidian-media-db-plugin';
@@ -159,12 +160,18 @@ export function dateTimeToString(dateTime: Date) {
 	return `${dateToString(dateTime)} ${timeToString(dateTime)}`;
 }
 
+/**
+ * @deprecated
+ */
 export class UserCancelError extends Error {
 	constructor(message: string) {
 		super(message);
 	}
 }
 
+/**
+ * @deprecated
+ */
 export class UserSkipError extends Error {
 	constructor(message: string) {
 		super(message);
@@ -193,4 +200,15 @@ export class PropertyMappingNameConflictError extends Error {
 	constructor(message: string) {
 		super(message);
 	}
+}
+
+/**
+ * - attachTemplate: whether to attach the template (DEFAULT: false)
+ * - attachFie: a file to attach (DEFAULT: undefined)
+ * - openNote: whether to open the note after creation (DEFAULT: false)
+ */
+export interface CreateNoteOptions {
+	attachTemplate?: boolean,
+	attachFile?: TFile,
+	openNote?: boolean,
 }
