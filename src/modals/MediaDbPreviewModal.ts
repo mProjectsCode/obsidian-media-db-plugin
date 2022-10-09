@@ -7,7 +7,6 @@ export class MediaDbPreviewModal extends Modal {
     options: { attachTemplate: boolean, attachFile: TFile};
     submitCallback: (res: boolean) => void;
     closeCallback: (err?: Error) => void;
-    skipCallback: () => void;
     plugin: MediaDbPlugin;
     searchBtn: any;
     cancelButton: any;
@@ -44,14 +43,14 @@ export class MediaDbPreviewModal extends Modal {
         const bottomSettingRow = new Setting(contentEl);
         bottomSettingRow.addButton(btn => {
             btn.setButtonText('Cancel');
-            btn.onClick(() => this.close());
+            btn.onClick(() => this.closeCallback());
             btn.buttonEl.addClass('media-db-plugin-button');
             this.cancelButton = btn;
         });
         bottomSettingRow.addButton(btn => {
             btn.setButtonText('Ok');
             btn.setCta();
-            btn.onClick(() => this.submit());
+            btn.onClick(() => this.submitCallback(true));
             btn.buttonEl.addClass('media-db-plugin-button');
             this.submitButton = btn;
         })
