@@ -172,8 +172,8 @@ export default class MediaDbPlugin extends Plugin {
 		let proceed: boolean;
 
 		while (!proceed) {
-			selectResults = await this.modalHelper.openSelectModal(apiSearchResults, async (selectedMediaTypeModels) => {
-				return await this.queryDetails(selectedMediaTypeModels);
+			selectResults = await this.modalHelper.openSelectModal({elements: apiSearchResults}, async (selectModalData) => {
+				return await this.queryDetails(selectModalData.selected);
 			});
 			if (!selectResults) {
 				return;
@@ -192,8 +192,8 @@ export default class MediaDbPlugin extends Plugin {
 		let proceed: boolean;
 
 		while (!proceed) {
-			idSearchResult = await this.modalHelper.openIdSearchModal(async (idSearchOptions) => {
-				return await this.apiManager.queryDetailedInfoById(idSearchOptions.query, idSearchOptions.api);
+			idSearchResult = await this.modalHelper.openIdSearchModal({}, async (idSearchModalData) => {
+				return await this.apiManager.queryDetailedInfoById(idSearchModalData.query, idSearchModalData.api);
 			})
 			if (!idSearchResult) {
 				return;
