@@ -2,9 +2,8 @@ import {MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder} 
 import {getDefaultSettings, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
-import {dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, UserCancelError, UserSkipError} from './utils/Utils';
+import {dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
-import {MediaDbSearchResultModal} from './modals/MediaDbSearchResultModal';
 import {MALAPI} from './api/apis/MALAPI';
 import {WikipediaAPI} from './api/apis/WikipediaAPI';
 import {MusicBrainzAPI} from './api/apis/MusicBrainzAPI';
@@ -15,7 +14,7 @@ import {PropertyMapper} from './settings/PropertyMapper';
 import {YAMLConverter} from './utils/YAMLConverter';
 import {MediaDbFolderImportModal} from './modals/MediaDbFolderImportModal';
 import {PropertyMapping, PropertyMappingModel} from './settings/PropertyMapping';
-import {ModalHelper} from './utils/ModalHelper';
+import {ModalHelper, ModalResultCode} from './utils/ModalHelper';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -126,23 +125,23 @@ export default class MediaDbPlugin extends Plugin {
 	 */
 	async createLinkWithSearchModal() {
 
-		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal(async (advancedSearchOptions) => {
-			return await this.apiManager.query(advancedSearchOptions.query, advancedSearchOptions.apis);
+		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal({}, async (advancedSearchModalData) => {
+			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
 		});
 
 		if (!apiSearchResults) {
 			return;
 		}
 
-		const selectResults: MediaTypeModel[] = await this.modalHelper.openSelectModal(apiSearchResults, async (selectedMediaTypeModels) => {
-			return await this.queryDetails(selectedMediaTypeModels);
+		const selectResults: MediaTypeModel[] = await this.modalHelper.openSelectModal({elements: apiSearchResults, multiSelect: false}, async (selectModalData) => {
+			return await this.queryDetails(selectModalData.selected);
 		});
 
 		if (!selectResults || selectResults.length < 1) {
 			return;
 		}
 
-		const link = `[${selectResults[0].title}](${selectResults[0].url})`
+		const link = `[${selectResults[0].title}](${selectResults[0].url})`;
 
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 
@@ -160,8 +159,8 @@ export default class MediaDbPlugin extends Plugin {
 	 * TODO: further refactor: extract it into own method, pass the action (api query) as lambda as well as an options object
 	 */
 	async createEntryWithAdvancedSearchModal() {
-		const apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal(async (advancedSearchOptions) => {
-			return await this.apiManager.query(advancedSearchOptions.query, advancedSearchOptions.apis);
+		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal({}, async (advancedSearchModalData) => {
+			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
 		});
 
 		if (!apiSearchResults) {
@@ -227,7 +226,7 @@ export default class MediaDbPlugin extends Plugin {
 		return detailModels;
 	}
 
-	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: {attachTemplate?: boolean, attachFile?: TFile, openNote?: boolean}): Promise<void> {
+	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: { attachTemplate?: boolean, attachFile?: TFile, openNote?: boolean }): Promise<void> {
 		try {
 			console.debug('MDB | creating new note');
 
@@ -245,7 +244,10 @@ export default class MediaDbPlugin extends Plugin {
 		let fileContent = '';
 
 		({fileMetadata, fileContent} = await this.attachFile(fileMetadata, fileContent, options.attachFile));
-		({fileMetadata, fileContent} = await this.attachTemplate(fileMetadata, fileContent, options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : ''));
+		({
+			fileMetadata,
+			fileContent,
+		} = await this.attachTemplate(fileMetadata, fileContent, options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : ''));
 
 		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
 		return fileContent;
@@ -434,46 +436,36 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
-				let selectedResults: MediaTypeModel[] = [];
-				const modal = new MediaDbSearchResultModal(this, results, true);
-				try {
-					selectedResults = await new Promise((resolve, reject) => {
-						modal.title = `Results for \'${title}\'`;
-						modal.setSubmitCallback(res => resolve(res));
-						modal.setSkipCallback(() => reject(new UserCancelError('user skipped')));
-						modal.setCloseCallback(err => {
-							if (err) {
-								reject(err);
-							}
-							reject(new UserCancelError('user canceled'));
-						});
+				let {selectModalResult, selectModal} = await this.modalHelper.createSelectModal({elements: results, skipButton: true, modalTitle: `Results for \'${title}\'`});
 
-						modal.open();
-					});
-				} catch (e) {
-					modal.close();
-					if (e instanceof UserCancelError) {
-						erroredFiles.push({filePath: file.path, error: e.message});
-						canceled = true;
-						continue;
-					} else if (e instanceof UserSkipError) {
-						erroredFiles.push({filePath: file.path, error: e.message});
-						continue;
-					} else {
-						erroredFiles.push({filePath: file.path, error: e.message});
-						continue;
-					}
+				if (selectModalResult.code === ModalResultCode.ERROR) {
+					erroredFiles.push({filePath: file.path, error: selectModalResult.error.message});
+					selectModal.close();
+					continue;
 				}
 
-				if (selectedResults.length === 0) {
+				if (selectModalResult.code === ModalResultCode.CLOSE) {
+					erroredFiles.push({filePath: file.path, error: 'user canceled'});
+					selectModal.close();
+					canceled = true;
+					continue;
+				}
+
+				if (selectModalResult.code === ModalResultCode.SKIP) {
+					erroredFiles.push({filePath: file.path, error: 'user skipped'});
+					selectModal.close();
+					continue;
+				}
+
+				if (selectModalResult.data.selected.length === 0) {
 					erroredFiles.push({filePath: file.path, error: `no search results selected`});
 					continue;
 				}
 
-				const detailedResults = await this.queryDetails(selectedResults);
+				const detailedResults = await this.queryDetails(selectModalResult.data.selected);
 				await this.createMediaDbNotes(detailedResults, appendContent ? file : null);
 
-				modal.close();
+				selectModal.close();
 			}
 		}
 

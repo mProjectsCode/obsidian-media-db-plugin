@@ -1,26 +1,37 @@
 import {ButtonComponent, Modal, Notice, Setting, TextComponent, ToggleComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
+import {ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS, AdvancedSearchModalData, AdvancedSearchModalOptions} from '../utils/ModalHelper';
 
 export class MediaDbAdvancedSearchModal extends Modal {
+	plugin: MediaDbPlugin;
+
 	query: string;
 	isBusy: boolean;
-	plugin: MediaDbPlugin;
-	searchBtn: ButtonComponent;
+	title: string;
 	selectedApis: { name: string, selected: boolean }[];
-	submitCallback?: (res: { query: string, apis: string[] }) => void;
+
+	searchBtn: ButtonComponent;
+
+	submitCallback?: (res: AdvancedSearchModalData) => void;
 	closeCallback?: (err?: Error) => void;
 
-	constructor(plugin: MediaDbPlugin) {
+
+	constructor(plugin: MediaDbPlugin, advancedSearchModalOptions: AdvancedSearchModalOptions) {
+		advancedSearchModalOptions = Object.assign({}, ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS, advancedSearchModalOptions);
 		super(plugin.app);
+
 		this.plugin = plugin;
 		this.selectedApis = [];
+		this.title = advancedSearchModalOptions.modalTitle;
+		this.query = advancedSearchModalOptions.prefilledSearchString;
+
 		for (const api of this.plugin.apiManager.apis) {
-			this.selectedApis.push({name: api.apiName, selected: false});
+			this.selectedApis.push({name: api.apiName, selected: advancedSearchModalOptions.preselectedAPIs.contains(api.apiName)});
 		}
 	}
 
-	setSubmitCallback(submitCallback: (res: { query: string, apis: string[] }) => void): void {
+	setSubmitCallback(submitCallback: (res: AdvancedSearchModalData) => void): void {
 		this.submitCallback = submitCallback;
 	}
 
@@ -59,12 +70,13 @@ export class MediaDbAdvancedSearchModal extends Modal {
 	onOpen() {
 		const {contentEl} = this;
 
-		contentEl.createEl('h2', {text: 'Search media db'});
+		contentEl.createEl('h2', {text: this.title});
 
 		const placeholder = 'Search by title';
 		const searchComponent = new TextComponent(contentEl);
 		searchComponent.inputEl.style.width = '100%';
 		searchComponent.setPlaceholder(placeholder);
+		searchComponent.setValue(this.query);
 		searchComponent.onChange(value => (this.query = value));
 		searchComponent.inputEl.addEventListener('keydown', this.keyPressCallback.bind(this));
 
