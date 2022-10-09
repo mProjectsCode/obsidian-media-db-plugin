@@ -229,7 +229,7 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
-	private async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: {attachTemplate?: boolean, attachFile?: TFile}) {
+	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: {attachTemplate?: boolean, attachFile?: TFile}) {
 		let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
 		let fileContent = '';
 
