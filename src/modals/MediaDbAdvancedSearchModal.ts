@@ -47,7 +47,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 	async search(): Promise<MediaTypeModel[]> {
 		if (!this.query || this.query.length < 3) {
-			new Notice('MDB | Query to short');
+			new Notice('MDB | Query too short');
 			return;
 		}
 
