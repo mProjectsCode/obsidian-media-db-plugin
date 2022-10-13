@@ -53,6 +53,16 @@ small.media-db-plugin-list-text{
 	background: var(--background-secondary-alt);
 }
 
+.media-db-plugin-preview-modal {
+	display: flex;
+	flex-direction: column;
+}
+
+.media-db-plugin-preview-wrapper {
+	flex: 1;
+	overflow-y: auto;
+}
+
 .media-db-plugin-spacer {
 	margin-bottom: 10px;
 }

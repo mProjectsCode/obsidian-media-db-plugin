@@ -2,7 +2,7 @@ import {MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder} 
 import {getDefaultSettings, MediaDbPluginSettings, MediaDbSettingTab} from './settings/Settings';
 import {APIManager} from './api/APIManager';
 import {MediaTypeModel} from './models/MediaTypeModel';
-import {dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString} from './utils/Utils';
+import {CreateNoteOptions, dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString} from './utils/Utils';
 import {OMDbAPI} from './api/apis/OMDbAPI';
 import {MALAPI} from './api/apis/MALAPI';
 import {WikipediaAPI} from './api/apis/WikipediaAPI';
@@ -57,7 +57,7 @@ export default class MediaDbPlugin extends Plugin {
 				menu.addItem(item => {
 					item.setTitle('Import folder as Media DB entries')
 						.setIcon('database')
-						.onClick(() => this.createEntriesFromFolder(file as TFolder));
+						.onClick(() => this.createEntriesFromFolder(file));
 				});
 			}
 		}));
@@ -164,27 +164,44 @@ export default class MediaDbPlugin extends Plugin {
 		});
 
 		if (!apiSearchResults) {
+			// TODO: add new notice saying no results found?
 			return;
 		}
 
-		const selectResults: MediaTypeModel[] = await this.modalHelper.openSelectModal({elements: apiSearchResults}, async (selectModalData) => {
-			return await this.queryDetails(selectModalData.selected);
-		});
+		let selectResults: MediaTypeModel[];
+		let proceed: boolean;
 
-		if (!selectResults) {
-			return;
+		while (!proceed) {
+			selectResults = await this.modalHelper.openSelectModal({elements: apiSearchResults}, async (selectModalData) => {
+				return await this.queryDetails(selectModalData.selected);
+			});
+			if (!selectResults) {
+				return;
+			}
+
+			proceed = await this.modalHelper.openPreviewModal({elements: selectResults}, async (previewModalData) => {
+				return previewModalData.confirmed;
+			});
 		}
 
 		await this.createMediaDbNotes(selectResults);
 	}
 
-	async createEntryWithIdSearchModal() {
-		const idSearchResult: MediaTypeModel = await this.modalHelper.openIdSearchModal({}, async (idSearchModalData) => {
-			return await this.apiManager.queryDetailedInfoById(idSearchModalData.query, idSearchModalData.api);
-		});
+	async createEntryWithIdSearchModal(): Promise<void> {
+		let idSearchResult: MediaTypeModel;
+		let proceed: boolean;
 
-		if (!idSearchResult) {
-			return;
+		while (!proceed) {
+			idSearchResult = await this.modalHelper.openIdSearchModal({}, async (idSearchModalData) => {
+				return await this.apiManager.queryDetailedInfoById(idSearchModalData.query, idSearchModalData.api);
+			});
+			if (!idSearchResult) {
+				return;
+			}
+
+			proceed = await this.modalHelper.openPreviewModal({elements: [idSearchResult]}, async (previewModalData) => {
+				return previewModalData.confirmed;
+			});
 		}
 
 		await this.createMediaDbNoteFromModel(idSearchResult, {attachTemplate: true, openNote: true});
@@ -209,11 +226,11 @@ export default class MediaDbPlugin extends Plugin {
 		return detailModels;
 	}
 
-	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: { attachTemplate?: boolean, attachFile?: TFile, openNote?: boolean }): Promise<void> {
+	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
 		try {
 			console.debug('MDB | creating new note');
 
-			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, {attachTemplate: options.attachTemplate, attachFile: options.attachFile});
+			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, options);
 
 			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options.openNote);
 		} catch (e) {
@@ -222,15 +239,13 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
-	private async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: { attachTemplate?: boolean, attachFile?: TFile }) {
+	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions) {
 		let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
 		let fileContent = '';
+		const template = options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : '';
 
 		({fileMetadata, fileContent} = await this.attachFile(fileMetadata, fileContent, options.attachFile));
-		({
-			fileMetadata,
-			fileContent,
-		} = await this.attachTemplate(fileMetadata, fileContent, options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : ''));
+		({fileMetadata, fileContent} = await this.attachTemplate(fileMetadata, fileContent, template));
 
 		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
 		return fileContent;

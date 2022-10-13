@@ -4,6 +4,8 @@ import {MediaTypeModel} from '../models/MediaTypeModel';
 import {MediaDbSearchResultModal} from '../modals/MediaDbSearchResultModal';
 import {Notice} from 'obsidian';
 import MediaDbPlugin from '../main';
+import {MediaDbPreviewModal} from 'src/modals/MediaDbPreviewModal';
+import {CreateNoteOptions} from './Utils';
 
 
 export enum ModalResultCode {
@@ -47,9 +49,20 @@ export interface SelectModalResult {
 }
 
 /**
+ * Object containing the data {@link ModalHelper.createPreviewModal} returns.
+ * On {@link ModalResultCode.SUCCESS} this contains {@link PreviewModalData}.
+ * On {@link ModalResultCode.ERROR} this contains a reference to that error.
+ */
+export interface PreviewModalResult {
+	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR,
+	data?: PreviewModalData,
+	error?: Error,
+}
+
+/**
  * The data the advanced search modal returns.
- * query: the query string
- * apis: the selected APIs
+ * - query: the query string
+ * - apis: the selected APIs
  */
 export interface AdvancedSearchModalData {
 	query: string,
@@ -58,8 +71,8 @@ export interface AdvancedSearchModalData {
 
 /**
  * The data the id search modal returns.
- * query: the query string
- * apis: the selected APIs
+ * - query: the query string
+ * - apis: the selected APIs
  */
 export interface IdSearchModalData {
 	query: string,
@@ -68,17 +81,25 @@ export interface IdSearchModalData {
 
 /**
  * The data the select modal returns.
- * selected: the selected items
+ * - selected: the selected items
  */
 export interface SelectModalData {
 	selected: MediaTypeModel[],
 }
 
 /**
+ * The data the preview modal returns.
+ * - confirmed: whether the selected element has been confirmed
+ */
+export interface PreviewModalData {
+	confirmed: boolean,
+}
+
+/**
  * Options for the advanced search modal.
- * modalTitle: the title of the modal
- * preselectedAPIs: a list of preselected APIs
- * prefilledSearchString: prefilled query
+ * - modalTitle: the title of the modal
+ * - preselectedAPIs: a list of preselected APIs
+ * - prefilledSearchString: prefilled query
  */
 export interface AdvancedSearchModalOptions {
 	modalTitle?: string,
@@ -88,9 +109,9 @@ export interface AdvancedSearchModalOptions {
 
 /**
  * Options for the id search modal.
- * modalTitle: the title of the modal
- * preselectedAPIs: a list of preselected APIs
- * prefilledSearchString: prefilled query
+ * - modalTitle: the title of the modal
+ * - preselectedAPIs: a list of preselected APIs
+ * - prefilledSearchString: prefilled query
  */
 export interface IdSearchModalOptions {
 	modalTitle?: string,
@@ -100,16 +121,27 @@ export interface IdSearchModalOptions {
 
 /**
  * Options for the select modal.
- * modalTitle: the title of the modal
- * elements: the elements the user can select from
- * multiSelect: whether to allow multiselect
- * skipButton: whether to add a skip button to the modal
+ * - modalTitle: the title of the modal
+ * - elements: the elements the user can select from
+ * - multiSelect: whether to allow multiselect
+ * - skipButton: whether to add a skip button to the modal
  */
 export interface SelectModalOptions {
 	modalTitle?: string,
 	elements?: MediaTypeModel[],
 	multiSelect?: boolean,
 	skipButton?: boolean,
+}
+
+/**
+ * Options for the preview modal.
+ * - modalTitle: the title of the modal
+ * - elements: the elements to preview
+ */
+export interface PreviewModalOptions {
+	modalTitle?: string,
+	elements?: MediaTypeModel[],
+	createNoteOptions?: CreateNoteOptions,
 }
 
 export const ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS: AdvancedSearchModalOptions = {
@@ -129,6 +161,12 @@ export const SELECT_MODAL_OPTIONS_DEFAULT: SelectModalOptions = {
 	elements: [],
 	multiSelect: true,
 	skipButton: false,
+};
+
+export const PREVIEW_MODAL_DEFAULT_OPTIONS: PreviewModalOptions = {
+	modalTitle: 'Media DB Preview',
+	elements: [],
+	createNoteOptions: {attachTemplate: true},
 };
 
 /**
@@ -327,6 +365,52 @@ export class ModalHelper {
 			console.warn(e);
 			new Notice(e.toString());
 			selectModal.close();
+			return;
+		}
+	}
+
+	async createPreviewModal(previewModalOptions: PreviewModalOptions): Promise<{ previewModalResult: PreviewModalResult, previewModal: MediaDbPreviewModal }> {
+		//todo: handle attachFile for existing files
+		const modal = new MediaDbPreviewModal(this.plugin, previewModalOptions);
+		const res: PreviewModalResult = await new Promise((resolve, reject) => {
+			modal.setSubmitCallback(res => resolve({code: ModalResultCode.SUCCESS, data: res}));
+			modal.setCloseCallback(err => {
+				if (err) {
+					resolve({code: ModalResultCode.ERROR, error: err});
+				}
+				resolve({code: ModalResultCode.CLOSE});
+			});
+
+			modal.open();
+		});
+		return {previewModalResult: res, previewModal: modal};
+	}
+
+	async openPreviewModal(previewModalOptions: PreviewModalOptions, submitCallback: (previewModalData: PreviewModalData) => Promise<boolean>): Promise<boolean> {
+		const {previewModalResult, previewModal} = await this.createPreviewModal(previewModalOptions);
+
+		if (previewModalResult.code === ModalResultCode.ERROR) {
+			// there was an error in the modal itself
+			console.warn(previewModalResult.error);
+			new Notice(previewModalResult.error.toString());
+			previewModal.close();
+			return undefined;
+		}
+
+		if (previewModalResult.code === ModalResultCode.CLOSE) {
+			// modal is already being closed
+			return undefined;
+		}
+
+		try {
+			let callbackRes: boolean;
+			callbackRes = await submitCallback(previewModalResult.data);
+			previewModal.close();
+			return callbackRes;
+		} catch (e) {
+			console.warn(e);
+			new Notice(e.toString());
+			previewModal.close();
 			return;
 		}
 	}
