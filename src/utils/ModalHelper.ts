@@ -398,7 +398,7 @@ export class ModalHelper {
 		}
 
 		if (previewModalResult.code === ModalResultCode.CLOSE) {
-			// modal is already being closed
+			previewModal.close();
 			return undefined;
 		}
 
