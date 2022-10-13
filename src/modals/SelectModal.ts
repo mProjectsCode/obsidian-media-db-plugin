@@ -77,9 +77,9 @@ export abstract class SelectModal<T> extends Modal {
 	}
 
 	async onOpen() {
-		const {contentEl} = this;
+		const {contentEl, titleEl} = this;
 
-		contentEl.createEl('h2', {text: this.title});
+		titleEl.createEl('h2', {text: this.title});
 		contentEl.createEl('p', {text: this.description});
 
 		contentEl.addClass('media-db-plugin-select-modal');

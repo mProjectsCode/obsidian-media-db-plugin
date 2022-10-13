@@ -23,11 +23,12 @@ small.media-db-plugin-list-text{
 }
 
 .media-db-plugin-select-modal {
-	display: flex;
-	flex-direction: column;
+	display: contents;
 }
 
 .media-db-plugin-select-wrapper {
+	display: flex;
+	flex-direction: column;
 	margin: 5px;
 	flex: 1;
 	overflow-y: auto;
