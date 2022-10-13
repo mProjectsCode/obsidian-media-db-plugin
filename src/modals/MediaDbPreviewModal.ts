@@ -75,4 +75,8 @@ export class MediaDbPreviewModal extends Modal {
 	onOpen(): void {
 		this.preview();
 	}
+	
+	onClose(): void {
+		this.closeCallback();
+	}
 }

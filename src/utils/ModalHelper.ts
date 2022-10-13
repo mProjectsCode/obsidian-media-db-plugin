@@ -398,7 +398,6 @@ export class ModalHelper {
 		}
 
 		if (previewModalResult.code === ModalResultCode.CLOSE) {
-			previewModal.close();
 			return undefined;
 		}
 
