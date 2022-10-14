@@ -30,7 +30,6 @@ small.media-db-plugin-list-text{
 	display: flex;
 	flex-direction: column;
 	margin: 5px;
-	flex: 1;
 	overflow-y: auto;
 }
 
@@ -54,12 +53,12 @@ small.media-db-plugin-list-text{
 }
 
 .media-db-plugin-preview-modal {
-	display: flex;
-	flex-direction: column;
+	display: contents;
 }
 
 .media-db-plugin-preview-wrapper {
-	flex: 1;
+	display: flex;
+	flex-direction: column;
 	overflow-y: auto;
 }
 
@@ -117,7 +116,7 @@ small.media-db-plugin-list-text{
 }
 
 .media-db-plugin-button:focus {
-	outline: 1px solid white;
+	/*outline: 1px solid white;*/
 }
 
 /* endregion */
