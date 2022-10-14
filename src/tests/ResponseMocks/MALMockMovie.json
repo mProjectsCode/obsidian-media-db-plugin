@@ -1,0 +1,30 @@
+{
+	"data": [
+		{
+			"mal_id": 2890,
+			"url": "https://myanimelist.net/anime/2890/Gake_no_Ue_no_Ponyo",
+			"title": "Gake no Ue no Ponyo",
+			"title_english": "Ponyo",
+			"type": "Movie",
+			"source": "Original",
+			"episodes": 1,
+			"aired": {
+				"from": "2008-07-19T00:00:00+00:00",
+				"to": null,
+				"prop": {
+					"from": {
+						"day": 19,
+						"month": 7,
+						"year": 2008
+					},
+					"to": {
+						"day": null,
+						"month": null,
+						"year": null
+					}
+				},
+				"string": "Jul 19, 2008"
+			}
+		}
+	]
+}

@@ -1,8 +1,12 @@
-import {App, PluginSettingTab, Setting} from 'obsidian';
+import {App, Notice, PluginSettingTab, Setting} from 'obsidian';
 
 import MediaDbPlugin from '../main';
 import {FolderSuggest} from './suggesters/FolderSuggest';
 import {FileSuggest} from './suggesters/FileSuggest';
+import PropertyMappingModelsComponent from './PropertyMappingModelsComponent.svelte';
+import {PropertyMapping, PropertyMappingModel, PropertyMappingOption} from './PropertyMapping';
+import {MEDIA_TYPES} from '../utils/MediaTypeManager';
+import {MediaTypeModel} from '../models/MediaTypeModel';
 
 
 export interface MediaDbPluginSettings {
@@ -34,9 +38,11 @@ export interface MediaDbPluginSettings {
 	musicReleasePropertyConversionRules: string,
 	boardgamePropertyConversionRules: string,
 
+	propertyMappingModels: PropertyMappingModel[],
+
 }
 
-export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
+const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	folder: 'Media DB',
 	OMDbKey: '',
 	sfwFilter: true,
@@ -64,7 +70,36 @@ export const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
 
+	propertyMappingModels: [],
 };
+
+export const lockedPropertyMappings: string[] = ['type', 'id', 'dataSource'];
+
+export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings {
+	let defaultSettings = DEFAULT_SETTINGS;
+
+	// construct property mapping defaults
+	const propertyMappingModels: PropertyMappingModel[] = [];
+	for (const mediaType of MEDIA_TYPES) {
+		const model: MediaTypeModel = plugin.mediaTypeManager.createMediaTypeModelFromMediaType({}, mediaType);
+		const metadataObj = model.toMetaDataObject();
+		// console.log(metadataObj);
+		// console.log(model);
+
+		const propertyMappingModel: PropertyMappingModel = new PropertyMappingModel(mediaType);
+
+		for (const key of Object.keys(metadataObj)) {
+			propertyMappingModel.properties.push(
+				new PropertyMapping(key, '', PropertyMappingOption.Default, lockedPropertyMappings.contains(key)),
+			);
+		}
+
+		propertyMappingModels.push(propertyMappingModel);
+	}
+
+	defaultSettings.propertyMappingModels = propertyMappingModels;
+	return defaultSettings;
+}
 
 export class MediaDbSettingTab extends PluginSettingTab {
 	plugin: MediaDbPlugin;
@@ -296,79 +331,48 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 		// endregion
 
-		containerEl.createEl('h3', {text: 'Property Mappings'});
 		// region Property Mappings
-		new Setting(containerEl)
-			.setName('Movie model property mappings')
-			.setDesc('Mappings for the property names of a movie.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.moviePropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.moviePropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
 
-		new Setting(containerEl)
-			.setName('Series model property mappings')
-			.setDesc('Mappings for the property names of a series.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.seriesPropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.seriesPropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
+		containerEl.createEl('h3', {text: 'Property Mappings'});
 
-		new Setting(containerEl)
-			.setName('Game model property mappings')
-			.setDesc('Mappings for the property names of a game.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.gamePropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.gamePropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
+		let propertyMappingExplanation = containerEl.createEl('div');
+		propertyMappingExplanation.innerHTML = `
+		<p>Allow you to remap the metadata fields of newly created media db entries.</p>
+		<p>
+			The different options are:
+			<lu>
+				<li>"default": does no remapping and keeps the metadata field as it is</li>
+				<li>"remap": renames the metadata field to what ever you specify</li>
+				<li>"remove": removes the metadata field entirely</li>
+			</lu>
+		</p>
+		<p>
+			Don't forget to save your changes using the save button for each individual category.
+		</p>`;
 
-		new Setting(containerEl)
-			.setName('Wiki model property mappings')
-			.setDesc('Mappings for the property names of a wiki entry.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.wikiPropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.wikiPropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
 
-		new Setting(containerEl)
-			.setName('Music Release model property mappings')
-			.setDesc('Mappings for the property names of a music release.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.musicReleasePropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.musicReleasePropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
+		new PropertyMappingModelsComponent({
+			target: this.containerEl,
+			props: {
+				models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),
+				save: (model: PropertyMappingModel) => {
+					let propertyMappingModels: PropertyMappingModel[] = [];
 
-		new Setting(containerEl)
-			.setName('Board Game model property mappings')
-			.setDesc('Mappings for the property names of a boardgame.')
-			.addTextArea(cb => {
-				cb.setPlaceholder(`Example: \ntitle -> name\nyear -> releaseYear`)
-					.setValue(this.plugin.settings.boardgamePropertyConversionRules)
-					.onChange(data => {
-						this.plugin.settings.boardgamePropertyConversionRules = data;
-						this.plugin.saveSettings();
-					});
-			});
+					for (const model2 of this.plugin.settings.propertyMappingModels) {
+						if (model2.type === model.type) {
+							propertyMappingModels.push(model);
+						} else {
+							propertyMappingModels.push(model2);
+						}
+					}
+
+					this.plugin.settings.propertyMappingModels = propertyMappingModels;
+					new Notice(`MDB: Property Mappings for ${model.type} saved successfully.`);
+					this.plugin.saveSettings();
+				},
+			},
+		});
+
 		// endregion
 
 	}

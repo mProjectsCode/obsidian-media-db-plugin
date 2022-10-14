@@ -1,6 +1,5 @@
 import {APIModel} from './APIModel';
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {debugLog} from '../utils/Utils';
 
 export class APIManager {
 	apis: APIModel[];
@@ -10,7 +9,7 @@ export class APIManager {
 	}
 
 	async query(query: string, apisToQuery: string[]): Promise<MediaTypeModel[]> {
-		debugLog(`MDB | api manager queried with "${query}"`);
+		console.debug(`MDB | api manager queried with "${query}"`);
 
 		let res: MediaTypeModel[] = [];
 

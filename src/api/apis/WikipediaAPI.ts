@@ -66,6 +66,7 @@ export class WikipediaAPI extends APIModel {
 			englishTitle: result.title,
 			year: '',
 			dataSource: this.apiName,
+			url: result.fullurl,
 			id: result.pageid,
 
 			wikiUrl: result.fullurl,

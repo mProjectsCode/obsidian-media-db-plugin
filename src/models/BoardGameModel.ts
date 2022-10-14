@@ -19,6 +19,15 @@ export class BoardGameModel extends MediaTypeModel {
 	constructor(obj: any = {}) {
 		super();
 
+		this.genres = undefined;
+		this.onlineRating = undefined;
+		this.image = undefined;
+		this.released = undefined;
+		this.userData = {
+			played: undefined,
+			personalRating: undefined,
+		};
+
 		Object.assign(this, obj);
 
 		this.type = this.getMediaType();

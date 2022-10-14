@@ -1,33 +1,46 @@
-import {App, ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent} from 'obsidian';
+import {ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {debugLog} from '../utils/Utils';
 import MediaDbPlugin from '../main';
+import {ID_SEARCH_MODAL_DEFAULT_OPTIONS, IdSearchModalData, IdSearchModalOptions} from '../utils/ModalHelper';
 
 export class MediaDbIdSearchModal extends Modal {
+	plugin: MediaDbPlugin;
+
 	query: string;
 	isBusy: boolean;
-	plugin: MediaDbPlugin;
-	searchBtn: ButtonComponent;
+	title: string;
 	selectedApi: string;
-	onSubmit: (res: {query: string, api: string}, err?: Error) => void;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (res: {query: string, api: string}, err?: Error) => void) {
-		super(app);
+	searchBtn: ButtonComponent;
+
+	submitCallback?: (res: IdSearchModalData, err?: Error) => void;
+	closeCallback?: (err?: Error) => void;
+
+
+	constructor(plugin: MediaDbPlugin, idSearchModalOptions: IdSearchModalOptions) {
+		idSearchModalOptions = Object.assign({}, ID_SEARCH_MODAL_DEFAULT_OPTIONS, idSearchModalOptions);
+		super(plugin.app);
+
 		this.plugin = plugin;
-		this.onSubmit = onSubmit;
-		this.selectedApi = plugin.apiManager.apis[0].apiName;
+		this.title = idSearchModalOptions.modalTitle;
+		this.selectedApi = idSearchModalOptions.preselectedAPI || plugin.apiManager.apis[0].apiName;
 	}
 
-	submitCallback(event: KeyboardEvent) {
+	setSubmitCallback(submitCallback: (res: IdSearchModalData, err?: Error) => void): void {
+		this.submitCallback = submitCallback;
+	}
+
+	setCloseCallback(closeCallback: (err?: Error) => void): void {
+		this.closeCallback = closeCallback;
+	}
+
+	keyPressCallback(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
 			this.search();
 		}
 	}
 
 	async search(): Promise<MediaTypeModel> {
-
-		debugLog(this.selectedApi);
-
 		if (!this.query) {
 			new Notice('MDB | no Id entered');
 			return;
@@ -39,31 +52,25 @@ export class MediaDbIdSearchModal extends Modal {
 		}
 
 		if (!this.isBusy) {
-			try {
-				this.isBusy = true;
-				this.searchBtn.setDisabled(false);
-				this.searchBtn.setButtonText('Searching...');
+			this.isBusy = true;
+			this.searchBtn.setDisabled(false);
+			this.searchBtn.setButtonText('Searching...');
 
-				this.onSubmit({query: this.query, api: this.selectedApi});
-			} catch (e) {
-				this.onSubmit(null, e);
-			} finally {
-				this.close();
-			}
+			this.submitCallback({query: this.query, api: this.selectedApi});
 		}
 	}
 
 	onOpen() {
 		const {contentEl} = this;
 
-		contentEl.createEl('h2', {text: 'Search media db by id'});
+		contentEl.createEl('h2', {text: this.title});
 
 		const placeholder = 'Search by id';
 		const searchComponent = new TextComponent(contentEl);
 		searchComponent.inputEl.style.width = '100%';
 		searchComponent.setPlaceholder(placeholder);
 		searchComponent.onChange(value => (this.query = value));
-		searchComponent.inputEl.addEventListener('keydown', this.submitCallback.bind(this));
+		searchComponent.inputEl.addEventListener('keydown', this.keyPressCallback.bind(this));
 
 		contentEl.appendChild(searchComponent.inputEl);
 		searchComponent.inputEl.focus();
@@ -86,21 +93,26 @@ export class MediaDbIdSearchModal extends Modal {
 		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 
 		new Setting(contentEl)
-			.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()))
 			.addButton(btn => {
-				return (this.searchBtn = btn
-					.setButtonText('Ok')
-					.setCta()
-					.onClick(() => {
-						this.search();
-					}));
+				btn.setButtonText('Cancel');
+				btn.onClick(() => this.close());
+				btn.buttonEl.addClass('media-db-plugin-button');
+			})
+			.addButton(btn => {
+				btn.setButtonText('Ok');
+				btn.setCta();
+				btn.onClick(() => {
+					this.search();
+				});
+				btn.buttonEl.addClass('media-db-plugin-button');
+				this.searchBtn = btn;
 			});
 	}
 
 	onClose() {
+		this.closeCallback();
 		const {contentEl} = this;
 		contentEl.empty();
 	}
-
 
 }

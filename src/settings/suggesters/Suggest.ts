@@ -80,7 +80,7 @@ export class Suggest<T> {
 	}
 
 	setSelectedItem(selectedIndex: number, scrollIntoView: boolean) {
-		const normalizedIndex = wrapAround(selectedIndex, this.suggestions.length);
+		const normalizedIndex = this.suggestions.length > 0 ? wrapAround(selectedIndex, this.suggestions.length) : 0;
 		const prevSelectedSuggestion = this.suggestions[this.selectedItem];
 		const selectedSuggestion = this.suggestions[normalizedIndex];
 

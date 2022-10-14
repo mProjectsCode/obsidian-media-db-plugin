@@ -1,38 +1,53 @@
-import {App, ButtonComponent, Component, Modal, Notice, Setting, TextComponent, ToggleComponent} from 'obsidian';
+import {ButtonComponent, Modal, Notice, Setting, TextComponent, ToggleComponent} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {debugLog} from '../utils/Utils';
 import MediaDbPlugin from '../main';
+import {ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS, AdvancedSearchModalData, AdvancedSearchModalOptions} from '../utils/ModalHelper';
 
 export class MediaDbAdvancedSearchModal extends Modal {
+	plugin: MediaDbPlugin;
+
 	query: string;
 	isBusy: boolean;
-	plugin: MediaDbPlugin;
-	searchBtn: ButtonComponent;
-	selectedApis: {name: string, selected: boolean}[];
-	onSubmit: (res: {query: string, apis: string[]}, err?: Error) => void;
+	title: string;
+	selectedApis: { name: string, selected: boolean }[];
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit?: (res: {query: string, apis: string[]}, err?: Error) => void) {
-		super(app);
+	searchBtn: ButtonComponent;
+
+	submitCallback?: (res: AdvancedSearchModalData) => void;
+	closeCallback?: (err?: Error) => void;
+
+
+	constructor(plugin: MediaDbPlugin, advancedSearchModalOptions: AdvancedSearchModalOptions) {
+		advancedSearchModalOptions = Object.assign({}, ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS, advancedSearchModalOptions);
+		super(plugin.app);
+
 		this.plugin = plugin;
-		this.onSubmit = onSubmit;
 		this.selectedApis = [];
+		this.title = advancedSearchModalOptions.modalTitle;
+		this.query = advancedSearchModalOptions.prefilledSearchString;
+
 		for (const api of this.plugin.apiManager.apis) {
-			this.selectedApis.push({name: api.apiName, selected: false});
+			this.selectedApis.push({name: api.apiName, selected: advancedSearchModalOptions.preselectedAPIs.contains(api.apiName)});
 		}
 	}
 
-	submitCallback(event: KeyboardEvent) {
+	setSubmitCallback(submitCallback: (res: AdvancedSearchModalData) => void): void {
+		this.submitCallback = submitCallback;
+	}
+
+	setCloseCallback(closeCallback: (err?: Error) => void): void {
+		this.closeCallback = closeCallback;
+	}
+
+	keyPressCallback(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
 			this.search();
 		}
 	}
 
 	async search(): Promise<MediaTypeModel[]> {
-
-		debugLog(this.selectedApis);
-
 		if (!this.query || this.query.length < 3) {
-			new Notice('MDB | Query to short');
+			new Notice('MDB | Query too short');
 			return;
 		}
 
@@ -44,31 +59,26 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		}
 
 		if (!this.isBusy) {
-			try {
-				this.isBusy = true;
-				this.searchBtn.setDisabled(false);
-				this.searchBtn.setButtonText('Searching...');
+			this.isBusy = true;
+			this.searchBtn.setDisabled(false);
+			this.searchBtn.setButtonText('Searching...');
 
-				this.onSubmit({query: this.query, apis: apis});
-			} catch (e) {
-				this.onSubmit(null, e);
-			} finally {
-				this.close();
-			}
+			this.submitCallback({query: this.query, apis: apis});
 		}
 	}
 
 	onOpen() {
 		const {contentEl} = this;
 
-		contentEl.createEl('h2', {text: 'Search media db'});
+		contentEl.createEl('h2', {text: this.title});
 
 		const placeholder = 'Search by title';
 		const searchComponent = new TextComponent(contentEl);
 		searchComponent.inputEl.style.width = '100%';
 		searchComponent.setPlaceholder(placeholder);
+		searchComponent.setValue(this.query);
 		searchComponent.onChange(value => (this.query = value));
-		searchComponent.inputEl.addEventListener('keydown', this.submitCallback.bind(this));
+		searchComponent.inputEl.addEventListener('keydown', this.keyPressCallback.bind(this));
 
 		contentEl.appendChild(searchComponent.inputEl);
 		searchComponent.inputEl.focus();
@@ -76,7 +86,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 		contentEl.createEl('h3', {text: 'APIs to search'});
 
-		const apiToggleComponents: Component[] = [];
+		// const apiToggleComponents: Component[] = [];
 		for (const api of this.plugin.apiManager.apis) {
 			const apiToggleListElementWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
 
@@ -98,21 +108,26 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 
 		new Setting(contentEl)
-			.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()))
 			.addButton(btn => {
-				return (this.searchBtn = btn
-					.setButtonText('Ok')
-					.setCta()
-					.onClick(() => {
-						this.search();
-					}));
+				btn.setButtonText('Cancel');
+				btn.onClick(() => this.close());
+				btn.buttonEl.addClass('media-db-plugin-button');
+			})
+			.addButton(btn => {
+				btn.setButtonText('Ok');
+				btn.setCta();
+				btn.onClick(() => {
+					this.search();
+				});
+				btn.buttonEl.addClass('media-db-plugin-button');
+				this.searchBtn = btn;
 			});
 	}
 
 	onClose() {
+		this.closeCallback();
 		const {contentEl} = this;
 		contentEl.empty();
 	}
-
 
 }

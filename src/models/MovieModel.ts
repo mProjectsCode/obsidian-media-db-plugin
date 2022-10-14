@@ -4,15 +4,6 @@ import {MediaType} from '../utils/MediaType';
 
 
 export class MovieModel extends MediaTypeModel {
-	type: string;
-	subType: string;
-	title: string;
-	englishTitle: string;
-	year: string;
-	dataSource: string;
-	url: string;
-	id: string;
-
 	genres: string[];
 	producer: string;
 	duration: string;
@@ -30,6 +21,19 @@ export class MovieModel extends MediaTypeModel {
 
 	constructor(obj: any = {}) {
 		super();
+
+		this.genres = undefined;
+		this.producer = undefined;
+		this.duration = undefined;
+		this.onlineRating = undefined;
+		this.image = undefined;
+		this.released = undefined;
+		this.premiere = undefined;
+		this.userData = {
+			watched: undefined,
+			lastWatched: undefined,
+			personalRating: undefined,
+		};
 
 		Object.assign(this, obj);
 

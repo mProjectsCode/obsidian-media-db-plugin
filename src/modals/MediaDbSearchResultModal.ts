@@ -1,29 +1,43 @@
-import {App} from 'obsidian';
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
 import {SelectModal} from './SelectModal';
+import {SELECT_MODAL_OPTIONS_DEFAULT, SelectModalData, SelectModalOptions} from '../utils/ModalHelper';
 
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
-	heading: string;
-	onSubmit: (res: MediaTypeModel[], err?: Error) => void;
-	onCancel: () => void;
-	onSkip: () => void;
 
+	busy: boolean;
 	sendCallback: boolean;
 
-	constructor(app: App, plugin: MediaDbPlugin, elements: MediaTypeModel[], skipButton: boolean, onSubmit: (res: MediaTypeModel[], err?: Error) => void, onCancel: () => void, onSkip?: () => void) {
-		super(app, elements);
-		this.plugin = plugin;
-		this.onSubmit = onSubmit;
-		this.onCancel = onCancel;
-		this.onSkip = onSkip;
+	submitCallback: (res: SelectModalData) => void;
+	closeCallback: (err?: Error) => void;
+	skipCallback: () => void;
 
-		this.title = 'Search Results';
+
+	constructor(plugin: MediaDbPlugin, selectModalOptions: SelectModalOptions) {
+		selectModalOptions = Object.assign({}, SELECT_MODAL_OPTIONS_DEFAULT, selectModalOptions);
+		super(plugin.app, selectModalOptions.elements, selectModalOptions.multiSelect);
+		this.plugin = plugin;
+
+		this.title = selectModalOptions.modalTitle;
 		this.description = 'Select one or multiple search results.';
-		this.skipButton = skipButton;
+		this.addSkipButton = selectModalOptions.skipButton;
+
+		this.busy = false;
 
 		this.sendCallback = false;
+	}
+
+	setSubmitCallback(submitCallback: (res: SelectModalData) => void): void {
+		this.submitCallback = submitCallback;
+	}
+
+	setCloseCallback(closeCallback: (err?: Error) => void): void {
+		this.closeCallback = closeCallback;
+	}
+
+	setSkipCallback(skipCallback: () => void): void {
+		this.skipCallback = skipCallback;
 	}
 
 	// Renders each suggestion item.
@@ -35,20 +49,20 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 	// Perform action on the selected suggestion.
 	submit() {
-		this.onSubmit(this.selectModalElements.filter(x => x.isActive()).map(x => x.value));
-		this.sendCallback = true;
-		this.close();
+		if (!this.busy) {
+			this.busy = true;
+			this.submitButton.setButtonText('Creating entry...');
+			this.submitCallback({selected: this.selectModalElements.filter(x => x.isActive()).map(x => x.value)});
+		}
 	}
 
 	skip() {
-		this.onSkip();
-		this.sendCallback = true;
-		this.close();
+		this.skipButton.setButtonText('Skipping...');
+		this.skipCallback();
 	}
 
 	onClose() {
-		if (!this.sendCallback) {
-			this.onCancel();
-		}
+		console.log('close');
+		this.closeCallback();
 	}
 }

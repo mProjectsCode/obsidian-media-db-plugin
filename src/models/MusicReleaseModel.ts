@@ -24,6 +24,13 @@ export class MusicReleaseModel extends MediaTypeModel {
 	constructor(obj: any = {}) {
 		super();
 
+		this.genres = undefined;
+		this.artists = undefined;
+		this.rating = undefined;
+		this.userData = {
+			personalRating: undefined,
+		};
+
 		Object.assign(this, obj);
 
 		this.type = this.getMediaType();
@@ -38,9 +45,9 @@ export class MusicReleaseModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		var summary = this.title + ' (' + this.year + ')';
-		if(this.artists.length > 0)
-			summary += ' - ' + this.artists.join(', ')
+		let summary = this.title + ' (' + this.year + ')';
+		if (this.artists.length > 0)
+			summary += ' - ' + this.artists.join(', ');
 		return summary;
 	}
 }
