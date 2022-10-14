@@ -76,8 +76,20 @@ export class MediaDbFolderImportModal extends Modal {
 		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
 
 		new Setting(contentEl)
-			.addButton(btn => btn.setButtonText('Cancel').onClick(() => this.close()))
-			.addButton(btn => btn.setButtonText('Ok').setCta().onClick(() => this.submit()));
+			.addButton(btn => {
+				btn.setButtonText('Cancel');
+				btn.onClick(() => this.close());
+				btn.buttonEl.addClass('media-db-plugin-button');
+			})
+			.addButton(btn => {
+				btn.setButtonText('Ok');
+				btn.setCta();
+				btn.onClick(() => {
+					this.submit();
+				});
+				btn.buttonEl.addClass('media-db-plugin-button');
+				this.searchBtn = btn;
+			});
 	}
 
 	onClose() {

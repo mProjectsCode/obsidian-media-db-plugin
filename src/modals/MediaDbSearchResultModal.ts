@@ -1,31 +1,34 @@
 import {MediaTypeModel} from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
 import {SelectModal} from './SelectModal';
+import {SELECT_MODAL_OPTIONS_DEFAULT, SelectModalData, SelectModalOptions} from '../utils/ModalHelper';
 
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
-	heading: string;
+
 	busy: boolean;
-	submitCallback: (res: MediaTypeModel[]) => void;
+	sendCallback: boolean;
+
+	submitCallback: (res: SelectModalData) => void;
 	closeCallback: (err?: Error) => void;
 	skipCallback: () => void;
 
-	sendCallback: boolean;
 
-	constructor(plugin: MediaDbPlugin, elements: MediaTypeModel[], skipButton: boolean) {
-		super(plugin.app, elements);
+	constructor(plugin: MediaDbPlugin, selectModalOptions: SelectModalOptions) {
+		selectModalOptions = Object.assign({}, SELECT_MODAL_OPTIONS_DEFAULT, selectModalOptions);
+		super(plugin.app, selectModalOptions.elements, selectModalOptions.multiSelect);
 		this.plugin = plugin;
 
-		this.title = 'Search Results';
+		this.title = selectModalOptions.modalTitle;
 		this.description = 'Select one or multiple search results.';
-		this.addSkipButton = skipButton;
+		this.addSkipButton = selectModalOptions.skipButton;
 
 		this.busy = false;
 
 		this.sendCallback = false;
 	}
 
-	setSubmitCallback(submitCallback: (res: MediaTypeModel[]) => void): void {
+	setSubmitCallback(submitCallback: (res: SelectModalData) => void): void {
 		this.submitCallback = submitCallback;
 	}
 
@@ -49,7 +52,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		if (!this.busy) {
 			this.busy = true;
 			this.submitButton.setButtonText('Creating entry...');
-			this.submitCallback(this.selectModalElements.filter(x => x.isActive()).map(x => x.value));
+			this.submitCallback({selected: this.selectModalElements.filter(x => x.isActive()).map(x => x.value)});
 		}
 	}
 
@@ -59,6 +62,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	}
 
 	onClose() {
+		console.log('close');
 		this.closeCallback();
 	}
 }

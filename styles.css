@@ -23,13 +23,13 @@ small.media-db-plugin-list-text{
 }
 
 .media-db-plugin-select-modal {
-	display: flex;
-	flex-direction: column;
+	display: contents;
 }
 
 .media-db-plugin-select-wrapper {
+	display: flex;
+	flex-direction: column;
 	margin: 5px;
-	flex: 1;
 	overflow-y: auto;
 }
 
@@ -50,6 +50,16 @@ small.media-db-plugin-list-text{
 
 .media-db-plugin-select-element-hover {
 	background: var(--background-secondary-alt);
+}
+
+.media-db-plugin-preview-modal {
+	display: contents;
+}
+
+.media-db-plugin-preview-wrapper {
+	display: flex;
+	flex-direction: column;
+	overflow-y: auto;
 }
 
 .media-db-plugin-spacer {
@@ -103,6 +113,10 @@ small.media-db-plugin-list-text{
 .media-db-plugin-property-mapping-validation {
 	color:         var(--text-error);
 	margin-bottom: 5px;
+}
+
+.media-db-plugin-button:focus {
+	/*outline: 1px solid white;*/
 }
 
 /* endregion */
