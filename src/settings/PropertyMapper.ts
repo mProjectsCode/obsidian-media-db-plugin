@@ -22,16 +22,13 @@ export class PropertyMapper {
 			return obj;
 		}
 
-		console.log('test2');
 		// @ts-ignore
-		console.log(obj.type);
+		// console.log(obj.type);
 
 		// @ts-ignore
 		if (MEDIA_TYPES.filter(x => x.toString() == obj.type).length < 1) {
 			return obj;
 		}
-
-		console.log('test3');
 
 		// @ts-ignore
 		const propertyMappings = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type).properties;

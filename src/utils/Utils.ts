@@ -212,3 +212,9 @@ export interface CreateNoteOptions {
 	attachFile?: TFile,
 	openNote?: boolean,
 }
+
+export function migrateObject<T extends object>(object: T, oldData: any, defaultData: T): void {
+	for (const key in object) {
+		object[key] = oldData.hasOwnProperty(key) ? oldData[key] : defaultData[key];
+	}
+}

@@ -1,5 +1,5 @@
 import {MediaTypeModel} from './MediaTypeModel';
-import {mediaDbTag} from '../utils/Utils';
+import {mediaDbTag, migrateObject} from '../utils/Utils';
 import {MediaType} from '../utils/MediaType';
 
 
@@ -50,7 +50,11 @@ export class SeriesModel extends MediaTypeModel {
 			personalRating: undefined,
 		};
 
-		Object.assign(this, obj);
+		migrateObject(this, obj, this);
+
+		if(!obj.hasOwnProperty('userData')) {
+			migrateObject(this.userData, obj, this.userData);
+		}
 
 		this.type = this.getMediaType();
 	}

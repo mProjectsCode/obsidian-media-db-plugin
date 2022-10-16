@@ -377,7 +377,11 @@ export default class MediaDbPlugin extends Plugin {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
 		}
 
+
+
 		let oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(metadata, metadata.type);
+
+		// console.debug(oldMediaTypeModel);
 
 		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(metadata.id, metadata.dataSource);
 		if (!newMediaTypeModel) {
@@ -385,6 +389,8 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
+
+		// console.debug(newMediaTypeModel);
 
 		// deletion not happening anymore why is this log statement still here
 		console.debug('MDB | deleting old entry');
