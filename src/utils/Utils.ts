@@ -1,11 +1,11 @@
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {TFile} from 'obsidian';
+import {TFile, TFolder} from 'obsidian';
 
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
 export const mediaDbTag: string = 'mediaDB';
-export const mediaDbVersion: string = '0.4.0';
+export const mediaDbVersion: string = '0.4.1';
 export const debug: boolean = true;
 
 export function wrapAround(value: number, size: number): number {
@@ -211,4 +211,11 @@ export interface CreateNoteOptions {
 	attachTemplate?: boolean,
 	attachFile?: TFile,
 	openNote?: boolean,
+	folder?: TFolder,
+}
+
+export function migrateObject<T extends object>(object: T, oldData: any, defaultData: T): void {
+	for (const key in object) {
+		object[key] = oldData.hasOwnProperty(key) ? oldData[key] : defaultData[key];
+	}
 }

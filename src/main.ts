@@ -232,7 +232,7 @@ export default class MediaDbPlugin extends Plugin {
 
 			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, options);
 
-			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options.openNote);
+			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
@@ -325,17 +325,17 @@ export default class MediaDbPlugin extends Plugin {
 	 *
 	 * @param fileName
 	 * @param fileContent
-	 * @param openFile
+	 * @param options
 	 */
-	async createNote(fileName: string, fileContent: string, openFile: boolean = false) {
-		fileName = replaceIllegalFileNameCharactersInString(fileName);
-		const filePath = `${this.settings.folder.replace(/\/$/, '')}/${fileName}.md`;
-
-		// find and possibly create the folder set in settings
-		const folder = this.app.vault.getAbstractFileByPath(this.settings.folder);
+	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions) {
+		// find and possibly create the folder set in settings or passed in folder
+		const folder = options.folder ?? this.app.vault.getAbstractFileByPath(this.settings.folder);
 		if (!folder) {
-			await this.app.vault.createFolder(this.settings.folder.replace(/\/$/, ''));
+			await this.app.vault.createFolder(folder.path);
 		}
+
+		fileName = replaceIllegalFileNameCharactersInString(fileName);
+		const filePath = `${folder.path}/${fileName}.md`;
 
 		// find and delete file with the same name
 		const file = this.app.vault.getAbstractFileByPath(filePath);
@@ -348,7 +348,7 @@ export default class MediaDbPlugin extends Plugin {
 		console.debug(`MDB | created new file at ${filePath}`);
 
 		// open newly crated file
-		if (openFile) {
+		if (options.openNote) {
 			const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 			if (!activeLeaf) {
 				console.warn('MDB | no active leaf, not opening newly created note');
@@ -378,6 +378,7 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		let oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(metadata, metadata.type);
+		// console.debug(oldMediaTypeModel);
 
 		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(metadata.id, metadata.dataSource);
 		if (!newMediaTypeModel) {
@@ -385,13 +386,14 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
+		// console.debug(newMediaTypeModel);
 
 		// deletion not happening anymore why is this log statement still here
 		console.debug('MDB | deleting old entry');
 		if (onlyMetadata) {
-			await this.createMediaDbNoteFromModel(newMediaTypeModel, {attachFile: activeFile, openNote: true});
+			await this.createMediaDbNoteFromModel(newMediaTypeModel, {attachFile: activeFile, folder: activeFile.parent, openNote: true});
 		} else {
-			await this.createMediaDbNoteFromModel(newMediaTypeModel, {attachTemplate: true, openNote: true});
+			await this.createMediaDbNoteFromModel(newMediaTypeModel, {attachTemplate: true, folder: activeFile.parent, openNote: true});
 		}
 
 	}
