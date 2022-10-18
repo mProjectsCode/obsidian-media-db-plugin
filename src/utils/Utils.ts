@@ -1,5 +1,5 @@
 import {MediaTypeModel} from '../models/MediaTypeModel';
-import {TFile} from 'obsidian';
+import {TFile, TFolder} from 'obsidian';
 
 
 export const pluginName: string = 'obsidian-media-db-plugin';
@@ -211,6 +211,7 @@ export interface CreateNoteOptions {
 	attachTemplate?: boolean,
 	attachFile?: TFile,
 	openNote?: boolean,
+	folder?: TFolder,
 }
 
 export function migrateObject<T extends object>(object: T, oldData: any, defaultData: T): void {

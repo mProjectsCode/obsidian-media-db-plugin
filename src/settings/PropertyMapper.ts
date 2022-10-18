@@ -16,8 +16,6 @@ export class PropertyMapper {
 	 * @param obj
 	 */
 	convertObject(obj: object): object {
-		console.log('test1');
-
 		if (!obj.hasOwnProperty('type')) {
 			return obj;
 		}
