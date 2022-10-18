@@ -25,8 +25,7 @@
 		{ #each model.properties as property }
 			<div class="media-db-plugin-property-mapping-element">
 				<div class="media-db-plugin-property-mapping-element-property-name-wrapper">
-						<pre
-							class="media-db-plugin-property-mapping-element-property-name"><code>{property.property}</code></pre>
+					<pre class="media-db-plugin-property-mapping-element-property-name"><code>{property.property}</code></pre>
 				</div>
 				{ #if property.locked }
 					<div class="media-db-plugin-property-binding-text">
@@ -46,16 +45,16 @@
 						<div class="media-db-plugin-property-mapping-to">
 							<input type="text" spellcheck="false" bind:value="{property.newProperty}">
 						</div>
-					{ /if    }
-				{ /if    }
+					{ /if }
+				{ /if }
 			</div>
-		{ /each    }
+		{ /each }
 	</div>
 	{ #if !validationResult?.res }
 		<div class="media-db-plugin-property-mapping-validation">
 			{validationResult?.err?.message}
 		</div>
-	{ /if    }
+	{ /if }
 	<button
 		class="media-db-plugin-property-mappings-save-button {validationResult?.res ? 'mod-cta' : 'mod-muted'}"
 		on:click={() => { if(model.validate().res) save(model) }}>Save

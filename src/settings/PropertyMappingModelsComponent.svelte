@@ -13,7 +13,7 @@
 <div class="setting-item" style="display: flex; gap: 10px; flex-direction: column; align-items: stretch;">
 	{ #each models as model }
 		<PropertyMappingModelComponent model={model} save={save}></PropertyMappingModelComponent>
-	{ /each    }
+	{ /each }
 
 	<!--
 		<pre>{JSON.stringify(models, null, 4)}</pre>

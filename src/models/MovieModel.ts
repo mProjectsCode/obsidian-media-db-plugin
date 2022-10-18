@@ -37,7 +37,7 @@ export class MovieModel extends MediaTypeModel {
 
 		migrateObject(this, obj, this);
 
-		if(!obj.hasOwnProperty('userData')) {
+		if (!obj.hasOwnProperty('userData')) {
 			migrateObject(this.userData, obj, this.userData);
 		}
 
