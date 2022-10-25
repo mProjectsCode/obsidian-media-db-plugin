@@ -1,8 +1,8 @@
-import {APIModel} from '../APIModel';
-import {MediaTypeModel} from '../../models/MediaTypeModel';
+import { APIModel } from '../APIModel';
+import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
-import {WikiModel} from '../../models/WikiModel';
-import {debugLog} from '../../utils/Utils';
+import { WikiModel } from '../../models/WikiModel';
+import { debugLog } from '../../utils/Utils';
 
 export class WikipediaAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -33,14 +33,16 @@ export class WikipediaAPI extends APIModel {
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of data.query.search) {
-			ret.push(new WikiModel({
-				type: 'wiki',
-				title: result.title,
-				englishTitle: result.title,
-				year: '',
-				dataSource: this.apiName,
-				id: result.pageid,
-			} as WikiModel));
+			ret.push(
+				new WikiModel({
+					type: 'wiki',
+					title: result.title,
+					englishTitle: result.title,
+					year: '',
+					dataSource: this.apiName,
+					id: result.pageid,
+				} as WikiModel)
+			);
 		}
 
 		return ret;
@@ -70,7 +72,7 @@ export class WikipediaAPI extends APIModel {
 			id: result.pageid,
 
 			wikiUrl: result.fullurl,
-			lastUpdated: (new Date(result.touched)).toLocaleDateString() ?? 'unknown',
+			lastUpdated: new Date(result.touched).toLocaleDateString() ?? 'unknown',
 			length: result.length,
 
 			userData: {},

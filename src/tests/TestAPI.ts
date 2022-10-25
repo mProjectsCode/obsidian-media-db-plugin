@@ -1,10 +1,9 @@
-import {APIModel} from '../api/APIModel';
-import {MediaTypeModel} from '../models/MediaTypeModel';
+import { APIModel } from '../api/APIModel';
+import { MediaTypeModel } from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
 
 export class TestAPI extends APIModel {
 	plugin: MediaDbPlugin;
-
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -15,7 +14,6 @@ export class TestAPI extends APIModel {
 		this.apiUrl = '';
 		this.types = [];
 	}
-
 
 	async getById(id: string): Promise<MediaTypeModel> {
 		return undefined;

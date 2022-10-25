@@ -1,10 +1,10 @@
-import {APIModel} from '../APIModel';
-import {MediaTypeModel} from '../../models/MediaTypeModel';
-import {MovieModel} from '../../models/MovieModel';
+import { APIModel } from '../APIModel';
+import { MediaTypeModel } from '../../models/MediaTypeModel';
+import { MovieModel } from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
-import {SeriesModel} from '../../models/SeriesModel';
-import {GameModel} from '../../models/GameModel';
-import {debugLog} from '../../utils/Utils';
+import { SeriesModel } from '../../models/SeriesModel';
+import { GameModel } from '../../models/GameModel';
+import { debugLog } from '../../utils/Utils';
 
 export class OMDbAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -56,32 +56,38 @@ export class OMDbAPI extends APIModel {
 				continue;
 			}
 			if (type === 'movie') {
-				ret.push(new MovieModel({
-					type: type,
-					title: result.Title,
-					englishTitle: result.Title,
-					year: result.Year,
-					dataSource: this.apiName,
-					id: result.imdbID,
-				} as MovieModel));
+				ret.push(
+					new MovieModel({
+						type: type,
+						title: result.Title,
+						englishTitle: result.Title,
+						year: result.Year,
+						dataSource: this.apiName,
+						id: result.imdbID,
+					} as MovieModel)
+				);
 			} else if (type === 'series') {
-				ret.push(new SeriesModel({
-					type: type,
-					title: result.Title,
-					englishTitle: result.Title,
-					year: result.Year,
-					dataSource: this.apiName,
-					id: result.imdbID,
-				} as SeriesModel));
+				ret.push(
+					new SeriesModel({
+						type: type,
+						title: result.Title,
+						englishTitle: result.Title,
+						year: result.Year,
+						dataSource: this.apiName,
+						id: result.imdbID,
+					} as SeriesModel)
+				);
 			} else if (type === 'game') {
-				ret.push(new GameModel({
-					type: type,
-					title: result.Title,
-					englishTitle: result.Title,
-					year: result.Year,
-					dataSource: this.apiName,
-					id: result.imdbID,
-				} as GameModel));
+				ret.push(
+					new GameModel({
+						type: type,
+						title: result.Title,
+						englishTitle: result.Title,
+						year: result.Year,
+						dataSource: this.apiName,
+						id: result.imdbID,
+					} as GameModel)
+				);
 			}
 		}
 
@@ -130,7 +136,7 @@ export class OMDbAPI extends APIModel {
 				image: result.Poster ?? '',
 
 				released: true,
-				premiere: (new Date(result.Released)).toLocaleDateString() ?? 'unknown',
+				premiere: new Date(result.Released).toLocaleDateString() ?? 'unknown',
 
 				userData: {
 					watched: false,
@@ -159,7 +165,7 @@ export class OMDbAPI extends APIModel {
 
 				released: true,
 				airing: false,
-				airedFrom: (new Date(result.Released)).toLocaleDateString() ?? 'unknown',
+				airedFrom: new Date(result.Released).toLocaleDateString() ?? 'unknown',
 				airedTo: 'unknown',
 
 				userData: {
@@ -185,7 +191,7 @@ export class OMDbAPI extends APIModel {
 				image: result.Poster ?? '',
 
 				released: true,
-				releaseDate: (new Date(result.Released)).toLocaleDateString() ?? 'unknown',
+				releaseDate: new Date(result.Released).toLocaleDateString() ?? 'unknown',
 
 				userData: {
 					played: false,

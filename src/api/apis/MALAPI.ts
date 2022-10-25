@@ -1,9 +1,9 @@
-import {APIModel} from '../APIModel';
-import {MediaTypeModel} from '../../models/MediaTypeModel';
-import {MovieModel} from '../../models/MovieModel';
+import { APIModel } from '../APIModel';
+import { MediaTypeModel } from '../../models/MediaTypeModel';
+import { MovieModel } from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
-import {SeriesModel} from '../../models/SeriesModel';
-import {debugLog} from '../../utils/Utils';
+import { SeriesModel } from '../../models/SeriesModel';
+import { debugLog } from '../../utils/Utils';
 
 export class MALAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -43,33 +43,39 @@ export class MALAPI extends APIModel {
 		for (const result of data.data) {
 			const type = this.typeMappings.get(result.type?.toLowerCase());
 			if (type === undefined) {
-				ret.push(new MovieModel({
-					subType: '',
-					title: result.title,
-					englishTitle: result.title_english ?? result.title,
-					year: result.year ?? result.aired?.prop?.from?.year ?? '',
-					dataSource: this.apiName,
-					id: result.mal_id,
-				} as MovieModel));
+				ret.push(
+					new MovieModel({
+						subType: '',
+						title: result.title,
+						englishTitle: result.title_english ?? result.title,
+						year: result.year ?? result.aired?.prop?.from?.year ?? '',
+						dataSource: this.apiName,
+						id: result.mal_id,
+					} as MovieModel)
+				);
 			}
 			if (type === 'movie' || type === 'special') {
-				ret.push(new MovieModel({
-					subType: type,
-					title: result.title,
-					englishTitle: result.title_english ?? result.title,
-					year: result.year ?? result.aired?.prop?.from?.year ?? '',
-					dataSource: this.apiName,
-					id: result.mal_id,
-				} as MovieModel));
+				ret.push(
+					new MovieModel({
+						subType: type,
+						title: result.title,
+						englishTitle: result.title_english ?? result.title,
+						year: result.year ?? result.aired?.prop?.from?.year ?? '',
+						dataSource: this.apiName,
+						id: result.mal_id,
+					} as MovieModel)
+				);
 			} else if (type === 'series' || type === 'ova') {
-				ret.push(new SeriesModel({
-					subType: type,
-					title: result.title,
-					englishTitle: result.title_english ?? result.title,
-					year: result.year ?? result.aired?.prop?.from?.year ?? '',
-					dataSource: this.apiName,
-					id: result.mal_id,
-				} as SeriesModel));
+				ret.push(
+					new SeriesModel({
+						subType: type,
+						title: result.title,
+						englishTitle: result.title_english ?? result.title,
+						year: result.year ?? result.aired?.prop?.from?.year ?? '',
+						dataSource: this.apiName,
+						id: result.mal_id,
+					} as SeriesModel)
+				);
 			}
 		}
 
@@ -108,7 +114,7 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				premiere: (new Date(result.aired?.from)).toLocaleDateString() ?? 'unknown',
+				premiere: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
 
 				userData: {
 					watched: false,
@@ -137,7 +143,7 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				premiere: (new Date(result.aired?.from)).toLocaleDateString() ?? 'unknown',
+				premiere: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
 
 				userData: {
 					watched: false,
@@ -165,8 +171,8 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				airedFrom: (new Date(result.aired?.from)).toLocaleDateString() ?? 'unknown',
-				airedTo: (new Date(result.aired?.to)).toLocaleDateString() ?? 'unknown',
+				airedFrom: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
+				airedTo: new Date(result.aired?.to).toLocaleDateString() ?? 'unknown',
 				airing: result.airing,
 
 				userData: {

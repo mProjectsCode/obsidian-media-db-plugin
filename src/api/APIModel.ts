@@ -1,4 +1,4 @@
-import {MediaTypeModel} from '../models/MediaTypeModel';
+import { MediaTypeModel } from '../models/MediaTypeModel';
 
 export abstract class APIModel {
 	apiName: string;

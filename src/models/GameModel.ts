@@ -1,7 +1,6 @@
-import {MediaTypeModel} from './MediaTypeModel';
-import {mediaDbTag, migrateObject} from '../utils/Utils';
-import {MediaType} from '../utils/MediaType';
-
+import { MediaTypeModel } from './MediaTypeModel';
+import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { MediaType } from '../utils/MediaType';
 
 export class GameModel extends MediaTypeModel {
 	genres: string[];
@@ -15,7 +14,6 @@ export class GameModel extends MediaTypeModel {
 		played: boolean;
 		personalRating: number;
 	};
-
 
 	constructor(obj: any = {}) {
 		super();
@@ -50,5 +48,4 @@ export class GameModel extends MediaTypeModel {
 	getSummary(): string {
 		return this.englishTitle + ' (' + this.year + ')';
 	}
-
 }

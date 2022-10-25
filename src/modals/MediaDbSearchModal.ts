@@ -1,5 +1,5 @@
-import {ButtonComponent, Modal, Notice, Setting, TextComponent, ToggleComponent} from 'obsidian';
-import {MediaTypeModel} from '../models/MediaTypeModel';
+import { ButtonComponent, Modal, Notice, Setting, TextComponent, ToggleComponent } from 'obsidian';
+import { MediaTypeModel } from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
 import {
 	ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS,
@@ -9,8 +9,8 @@ import {
 	SearchModalData,
 	SearchModalOptions,
 } from '../utils/ModalHelper';
-import {MEDIA_TYPES} from '../utils/MediaTypeManager';
-import {unCamelCase} from '../utils/Utils';
+import { MEDIA_TYPES } from '../utils/MediaTypeManager';
+import { unCamelCase } from '../utils/Utils';
 
 export class MediaDbSearchModal extends Modal {
 	plugin: MediaDbPlugin;
@@ -18,13 +18,12 @@ export class MediaDbSearchModal extends Modal {
 	query: string;
 	isBusy: boolean;
 	title: string;
-	selectedTypes: { name: string, selected: boolean }[];
+	selectedTypes: { name: string; selected: boolean }[];
 
 	searchBtn: ButtonComponent;
 
 	submitCallback?: (res: SearchModalData) => void;
 	closeCallback?: (err?: Error) => void;
-
 
 	constructor(plugin: MediaDbPlugin, searchModalOptions: SearchModalOptions) {
 		searchModalOptions = Object.assign({}, SEARCH_MODAL_DEFAULT_OPTIONS, searchModalOptions);
@@ -36,7 +35,7 @@ export class MediaDbSearchModal extends Modal {
 		this.query = searchModalOptions.prefilledSearchString;
 
 		for (const mediaType of MEDIA_TYPES) {
-			this.selectedTypes.push({name: mediaType, selected: searchModalOptions.preselectedTypes.contains(mediaType)});
+			this.selectedTypes.push({ name: mediaType, selected: searchModalOptions.preselectedTypes.contains(mediaType) });
 		}
 	}
 
@@ -72,14 +71,14 @@ export class MediaDbSearchModal extends Modal {
 			this.searchBtn.setDisabled(false);
 			this.searchBtn.setButtonText('Searching...');
 
-			this.submitCallback({query: this.query, types: types});
+			this.submitCallback({ query: this.query, types: types });
 		}
 	}
 
 	onOpen() {
-		const {contentEl} = this;
+		const { contentEl } = this;
 
-		contentEl.createEl('h2', {text: this.title});
+		contentEl.createEl('h2', { text: this.title });
 
 		const placeholder = 'Search by title';
 		const searchComponent = new TextComponent(contentEl);
@@ -92,27 +91,27 @@ export class MediaDbSearchModal extends Modal {
 		contentEl.appendChild(searchComponent.inputEl);
 		searchComponent.inputEl.focus();
 
-		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
-		contentEl.createEl('h3', {text: 'APIs to search'});
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
+		contentEl.createEl('h3', { text: 'APIs to search' });
 
 		for (const mediaType of MEDIA_TYPES) {
-			const apiToggleListElementWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
+			const apiToggleListElementWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
 
-			const apiToggleTextWrapper = apiToggleListElementWrapper.createEl('div', {cls: 'media-db-plugin-list-text-wrapper'});
-			apiToggleTextWrapper.createEl('span', {text: unCamelCase(mediaType), cls: 'media-db-plugin-list-text'});
+			const apiToggleTextWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
+			apiToggleTextWrapper.createEl('span', { text: unCamelCase(mediaType), cls: 'media-db-plugin-list-text' });
 
-			const apiToggleComponentWrapper = apiToggleListElementWrapper.createEl('div', {cls: 'media-db-plugin-list-toggle'});
+			const apiToggleComponentWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-toggle' });
 
 			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
 			apiToggleComponent.setTooltip(unCamelCase(mediaType));
 			apiToggleComponent.setValue(this.selectedTypes.find(x => x.name === mediaType).selected);
-			apiToggleComponent.onChange((value) => {
+			apiToggleComponent.onChange(value => {
 				this.selectedTypes.find(x => x.name === mediaType).selected = value;
 			});
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
 		}
 
-		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
 		new Setting(contentEl)
 			.addButton(btn => {
@@ -133,8 +132,7 @@ export class MediaDbSearchModal extends Modal {
 
 	onClose() {
 		this.closeCallback();
-		const {contentEl} = this;
+		const { contentEl } = this;
 		contentEl.empty();
 	}
-
 }

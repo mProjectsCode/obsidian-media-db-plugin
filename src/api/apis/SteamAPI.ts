@@ -1,10 +1,10 @@
-import {APIModel} from '../APIModel';
-import {MediaTypeModel} from '../../models/MediaTypeModel';
+import { APIModel } from '../APIModel';
+import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
-import {GameModel} from '../../models/GameModel';
-import {debugLog} from '../../utils/Utils';
-import {requestUrl} from 'obsidian';
-import {MediaType} from '../../utils/MediaType';
+import { GameModel } from '../../models/GameModel';
+import { debugLog } from '../../utils/Utils';
+import { requestUrl } from 'obsidian';
+import { MediaType } from '../../utils/MediaType';
 
 export class SteamAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -52,14 +52,16 @@ export class SteamAPI extends APIModel {
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of filteredData) {
-			ret.push(new GameModel({
-				type: MediaType.Game,
-				title: result.name,
-				englishTitle: result.name,
-				year: '',
-				dataSource: this.apiName,
-				id: result.appid,
-			} as GameModel));
+			ret.push(
+				new GameModel({
+					type: MediaType.Game,
+					title: result.name,
+					englishTitle: result.name,
+					year: '',
+					dataSource: this.apiName,
+					id: result.appid,
+				} as GameModel)
+			);
 		}
 
 		return ret;
@@ -98,7 +100,7 @@ export class SteamAPI extends APIModel {
 			type: MediaType.Game,
 			title: result.name,
 			englishTitle: result.name,
-			year: (new Date(result.release_date.date)).getFullYear().toString(),
+			year: new Date(result.release_date.date).getFullYear().toString(),
 			dataSource: this.apiName,
 			url: `https://store.steampowered.com/app/${result.steam_appid}`,
 			id: result.steam_appid,
@@ -108,7 +110,7 @@ export class SteamAPI extends APIModel {
 			image: result.header_image ?? '',
 
 			released: !result.release_date?.comming_soon,
-			releaseDate: (new Date(result.release_date?.date)).toLocaleDateString() ?? 'unknown',
+			releaseDate: new Date(result.release_date?.date).toLocaleDateString() ?? 'unknown',
 
 			userData: {
 				played: false,
@@ -117,6 +119,5 @@ export class SteamAPI extends APIModel {
 		} as GameModel);
 
 		return model;
-
 	}
 }

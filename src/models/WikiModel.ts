@@ -1,7 +1,6 @@
-import {MediaTypeModel} from './MediaTypeModel';
-import {mediaDbTag, migrateObject} from '../utils/Utils';
-import {MediaType} from '../utils/MediaType';
-
+import { MediaTypeModel } from './MediaTypeModel';
+import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { MediaType } from '../utils/MediaType';
 
 export class WikiModel extends MediaTypeModel {
 	type: string;

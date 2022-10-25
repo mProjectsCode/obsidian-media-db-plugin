@@ -6,19 +6,17 @@
 }
 
 .media-db-plugin-list-toggle {
-
 }
 
 .media-db-plugin-list-text-wrapper {
 	flex: 1;
 }
 
-
 .media-db-plugin-list-text {
 	display: block;
 }
 
-small.media-db-plugin-list-text{
+small.media-db-plugin-list-text {
 	color: var(--text-muted);
 }
 
@@ -68,33 +66,33 @@ small.media-db-plugin-list-text{
 
 /* region property mappings */
 .media-db-plugin-property-mappings-model-container {
-	border:        1px solid var(--background-modifier-border);
+	border: 1px solid var(--background-modifier-border);
 	border-radius: 5px;
-	padding:       10px;
-	width:         100%;
+	padding: 10px;
+	width: 100%;
 }
 
 .media-db-plugin-property-mappings-container {
-	margin:         10px 0;
-	display:        flex;
+	margin: 10px 0;
+	display: flex;
 	flex-direction: column;
-	gap:            5px;
+	gap: 5px;
 }
 
 .media-db-plugin-property-mapping-element {
-	display:        flex;
+	display: flex;
 	flex-direction: row;
-	gap:            10px;
+	gap: 10px;
 }
 
 .media-db-plugin-property-mapping-element-property-name-wrapper {
-	min-width:     160px;
-	background:    var(--background-modifier-form-field);
-	padding:       2px 5px;
+	min-width: 160px;
+	background: var(--background-modifier-form-field);
+	padding: 2px 5px;
 	border-radius: 5px;
 
-	display:       flex;
-	align-items:   center;
+	display: flex;
+	align-items: center;
 }
 
 .media-db-plugin-property-mapping-element-property-name {
@@ -106,12 +104,12 @@ small.media-db-plugin-list-text{
 }
 
 .media-db-plugin-property-mapping-to {
-	display:     flex;
+	display: flex;
 	align-items: center;
 }
 
 .media-db-plugin-property-mapping-validation {
-	color:         var(--text-error);
+	color: var(--text-error);
 	margin-bottom: 5px;
 }
 

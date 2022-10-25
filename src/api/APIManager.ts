@@ -1,5 +1,5 @@
-import {APIModel} from './APIModel';
-import {MediaTypeModel} from '../models/MediaTypeModel';
+import { APIModel } from './APIModel';
+import { MediaTypeModel } from '../models/MediaTypeModel';
 
 export class APIManager {
 	apis: APIModel[];

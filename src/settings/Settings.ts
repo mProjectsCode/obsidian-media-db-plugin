@@ -1,45 +1,42 @@
-import {App, Notice, PluginSettingTab, Setting} from 'obsidian';
+import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
 
 import MediaDbPlugin from '../main';
-import {FolderSuggest} from './suggesters/FolderSuggest';
-import {FileSuggest} from './suggesters/FileSuggest';
+import { FolderSuggest } from './suggesters/FolderSuggest';
+import { FileSuggest } from './suggesters/FileSuggest';
 import PropertyMappingModelsComponent from './PropertyMappingModelsComponent.svelte';
-import {PropertyMapping, PropertyMappingModel, PropertyMappingOption} from './PropertyMapping';
-import {MEDIA_TYPES} from '../utils/MediaTypeManager';
-import {MediaTypeModel} from '../models/MediaTypeModel';
-
+import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './PropertyMapping';
+import { MEDIA_TYPES } from '../utils/MediaTypeManager';
+import { MediaTypeModel } from '../models/MediaTypeModel';
 
 export interface MediaDbPluginSettings {
-	folder: string,
-	OMDbKey: string,
-	sfwFilter: boolean,
+	folder: string;
+	OMDbKey: string;
+	sfwFilter: boolean;
 	useCustomYamlStringifier: boolean;
-	templates: boolean,
+	templates: boolean;
 
+	movieTemplate: string;
+	seriesTemplate: string;
+	gameTemplate: string;
+	wikiTemplate: string;
+	musicReleaseTemplate: string;
+	boardgameTemplate: string;
 
-	movieTemplate: string,
-	seriesTemplate: string,
-	gameTemplate: string,
-	wikiTemplate: string,
-	musicReleaseTemplate: string,
-	boardgameTemplate: string,
+	movieFileNameTemplate: string;
+	seriesFileNameTemplate: string;
+	gameFileNameTemplate: string;
+	wikiFileNameTemplate: string;
+	musicReleaseFileNameTemplate: string;
+	boardgameFileNameTemplate: string;
 
-	movieFileNameTemplate: string,
-	seriesFileNameTemplate: string,
-	gameFileNameTemplate: string,
-	wikiFileNameTemplate: string,
-	musicReleaseFileNameTemplate: string,
-	boardgameFileNameTemplate: string,
+	moviePropertyConversionRules: string;
+	seriesPropertyConversionRules: string;
+	gamePropertyConversionRules: string;
+	wikiPropertyConversionRules: string;
+	musicReleasePropertyConversionRules: string;
+	boardgamePropertyConversionRules: string;
 
-	moviePropertyConversionRules: string,
-	seriesPropertyConversionRules: string,
-	gamePropertyConversionRules: string,
-	wikiPropertyConversionRules: string,
-	musicReleasePropertyConversionRules: string,
-	boardgamePropertyConversionRules: string,
-
-	propertyMappingModels: PropertyMappingModel[],
-
+	propertyMappingModels: PropertyMappingModel[];
 }
 
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
@@ -89,9 +86,7 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 		const propertyMappingModel: PropertyMappingModel = new PropertyMappingModel(mediaType);
 
 		for (const key of Object.keys(metadataObj)) {
-			propertyMappingModel.properties.push(
-				new PropertyMapping(key, '', PropertyMappingOption.Default, lockedPropertyMappings.contains(key)),
-			);
+			propertyMappingModel.properties.push(new PropertyMapping(key, '', PropertyMappingOption.Default, lockedPropertyMappings.contains(key)));
 		}
 
 		propertyMappingModels.push(propertyMappingModel);
@@ -110,11 +105,11 @@ export class MediaDbSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Media DB Plugin Settings'});
+		containerEl.createEl('h2', { text: 'Media DB Plugin Settings' });
 
 		new Setting(containerEl)
 			.setName('New file location')
@@ -145,37 +140,33 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('SFW filter')
 			.setDesc('Only shows SFW results for APIs that offer filtering.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.sfwFilter)
-					.onChange(data => {
-						this.plugin.settings.sfwFilter = data;
-						this.plugin.saveSettings();
-					});
+				cb.setValue(this.plugin.settings.sfwFilter).onChange(data => {
+					this.plugin.settings.sfwFilter = data;
+					this.plugin.saveSettings();
+				});
 			});
 
 		new Setting(containerEl)
 			.setName('YAML formatter')
 			.setDesc('Add optional quotation marks around strings in the metadata block.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.useCustomYamlStringifier)
-					.onChange(data => {
-						this.plugin.settings.useCustomYamlStringifier = data;
-						this.plugin.saveSettings();
-					});
+				cb.setValue(this.plugin.settings.useCustomYamlStringifier).onChange(data => {
+					this.plugin.settings.useCustomYamlStringifier = data;
+					this.plugin.saveSettings();
+				});
 			});
 
 		new Setting(containerEl)
 			.setName('Resolve {{ tags }} in templates')
 			.setDesc('Whether to resolve {{ tags }} in templates. The spaces inside the curly braces are important.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.templates)
-					.onChange(data => {
-						this.plugin.settings.templates = data;
-						this.plugin.saveSettings();
-					});
+				cb.setValue(this.plugin.settings.templates).onChange(data => {
+					this.plugin.settings.templates = data;
+					this.plugin.saveSettings();
+				});
 			});
 
-
-		containerEl.createEl('h3', {text: 'Template Settings'});
+		containerEl.createEl('h3', { text: 'Template Settings' });
 		// region templates
 		new Setting(containerEl)
 			.setName('Movie template')
@@ -256,7 +247,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 		// endregion
 
-		containerEl.createEl('h3', {text: 'File Name Settings'});
+		containerEl.createEl('h3', { text: 'File Name Settings' });
 		// region file name templates
 		new Setting(containerEl)
 			.setName('Movie file name template')
@@ -333,7 +324,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		// region Property Mappings
 
-		containerEl.createEl('h3', {text: 'Property Mappings'});
+		containerEl.createEl('h3', { text: 'Property Mappings' });
 
 		let propertyMappingExplanation = containerEl.createEl('div');
 		propertyMappingExplanation.innerHTML = `
@@ -349,7 +340,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		<p>
 			Don't forget to save your changes using the save button for each individual category.
 		</p>`;
-
 
 		new PropertyMappingModelsComponent({
 			target: this.containerEl,
@@ -374,7 +364,5 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		});
 
 		// endregion
-
 	}
-
 }

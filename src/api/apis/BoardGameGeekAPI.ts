@@ -1,9 +1,9 @@
-import {APIModel} from '../APIModel';
-import {MediaTypeModel} from '../../models/MediaTypeModel';
+import { APIModel } from '../APIModel';
+import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
-import {BoardGameModel} from 'src/models/BoardGameModel';
-import {debugLog} from '../../utils/Utils';
-import {requestUrl} from 'obsidian';
+import { BoardGameModel } from 'src/models/BoardGameModel';
+import { debugLog } from '../../utils/Utils';
+import { requestUrl } from 'obsidian';
 
 export class BoardGameGeekAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -42,13 +42,15 @@ export class BoardGameGeekAPI extends APIModel {
 			const title = boardgame.querySelector('name')!.textContent!;
 			const year = boardgame.querySelector('yearpublished')?.textContent ?? '';
 
-			ret.push(new BoardGameModel({
-				dataSource: this.apiName,
-				id,
-				title,
-				englishTitle: title,
-				year,
-			} as BoardGameModel));
+			ret.push(
+				new BoardGameModel({
+					dataSource: this.apiName,
+					id,
+					title,
+					englishTitle: title,
+					year,
+				} as BoardGameModel)
+			);
 		}
 
 		return ret;
@@ -97,6 +99,5 @@ export class BoardGameGeekAPI extends APIModel {
 		} as BoardGameModel);
 
 		return model;
-
 	}
 }

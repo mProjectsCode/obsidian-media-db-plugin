@@ -1,14 +1,14 @@
-import {MediaDbPluginSettings} from '../settings/Settings';
-import {MediaType} from './MediaType';
-import {MediaTypeModel} from '../models/MediaTypeModel';
-import {replaceTags} from './Utils';
-import {App, TFile} from 'obsidian';
-import {MovieModel} from '../models/MovieModel';
-import {SeriesModel} from '../models/SeriesModel';
-import {GameModel} from '../models/GameModel';
-import {WikiModel} from '../models/WikiModel';
-import {MusicReleaseModel} from '../models/MusicReleaseModel';
-import {BoardGameModel} from '../models/BoardGameModel';
+import { MediaDbPluginSettings } from '../settings/Settings';
+import { MediaType } from './MediaType';
+import { MediaTypeModel } from '../models/MediaTypeModel';
+import { replaceTags } from './Utils';
+import { App, TFile } from 'obsidian';
+import { MovieModel } from '../models/MovieModel';
+import { SeriesModel } from '../models/SeriesModel';
+import { GameModel } from '../models/GameModel';
+import { WikiModel } from '../models/WikiModel';
+import { MusicReleaseModel } from '../models/MusicReleaseModel';
+import { BoardGameModel } from '../models/BoardGameModel';
 
 export const MEDIA_TYPES: MediaType[] = [MediaType.Movie, MediaType.Series, MediaType.Game, MediaType.Wiki, MediaType.MusicRelease, MediaType.BoardGame];
 
@@ -16,8 +16,7 @@ export class MediaTypeManager {
 	mediaFileNameTemplateMap: Map<MediaType, string>;
 	mediaTemplateMap: Map<MediaType, string>;
 
-	constructor() {
-	}
+	constructor() {}
 
 	updateTemplates(settings: MediaDbPluginSettings) {
 		this.mediaFileNameTemplateMap = new Map<MediaType, string>();
@@ -48,7 +47,10 @@ export class MediaTypeManager {
 			return '';
 		}
 
-		const templateFile: TFile = app.vault.getFiles().filter((f: TFile) => f.name === templateFileName).first();
+		const templateFile: TFile = app.vault
+			.getFiles()
+			.filter((f: TFile) => f.name === templateFileName)
+			.first();
 
 		if (!templateFile) {
 			return '';

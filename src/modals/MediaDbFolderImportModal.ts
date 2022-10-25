@@ -1,4 +1,4 @@
-import {App, ButtonComponent, DropdownComponent, Modal, Setting, TextComponent, ToggleComponent} from 'obsidian';
+import { App, ButtonComponent, DropdownComponent, Modal, Setting, TextComponent, ToggleComponent } from 'obsidian';
 import MediaDbPlugin from '../main';
 
 export class MediaDbFolderImportModal extends Modal {
@@ -22,13 +22,13 @@ export class MediaDbFolderImportModal extends Modal {
 	}
 
 	onOpen() {
-		const {contentEl} = this;
+		const { contentEl } = this;
 
-		contentEl.createEl('h2', {text: 'Import folder as Media DB entries'});
+		contentEl.createEl('h2', { text: 'Import folder as Media DB entries' });
 
-		const apiSelectorWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
-		const apiSelectorTextWrapper = apiSelectorWrapper.createEl('div', {cls: 'media-db-plugin-list-text-wrapper'});
-		apiSelectorTextWrapper.createEl('span', {text: 'API to search', cls: 'media-db-plugin-list-text'});
+		const apiSelectorWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
+		const apiSelectorTextWrapper = apiSelectorWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
+		apiSelectorTextWrapper.createEl('span', { text: 'API to search', cls: 'media-db-plugin-list-text' });
 
 		const apiSelectorComponent = new DropdownComponent(apiSelectorWrapper);
 		apiSelectorComponent.onChange((value: string) => {
@@ -39,41 +39,39 @@ export class MediaDbFolderImportModal extends Modal {
 		}
 		apiSelectorWrapper.appendChild(apiSelectorComponent.selectEl);
 
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
+		contentEl.createEl('h3', { text: 'Append note content to Media DB entry.' });
 
-		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
-		contentEl.createEl('h3', {text: 'Append note content to Media DB entry.'});
-
-		const appendContentToggleElementWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
-		const appendContentToggleTextWrapper = appendContentToggleElementWrapper.createEl('div', {cls: 'media-db-plugin-list-text-wrapper'});
+		const appendContentToggleElementWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
+		const appendContentToggleTextWrapper = appendContentToggleElementWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
 		appendContentToggleTextWrapper.createEl('span', {
 			text: 'If this is enabled, the plugin will override metadata fields with the same name.',
 			cls: 'media-db-plugin-list-text',
 		});
 
-		const appendContentToggleComponentWrapper = appendContentToggleElementWrapper.createEl('div', {cls: 'media-db-plugin-list-toggle'});
+		const appendContentToggleComponentWrapper = appendContentToggleElementWrapper.createEl('div', { cls: 'media-db-plugin-list-toggle' });
 
 		const appendContentToggle = new ToggleComponent(appendContentToggleElementWrapper);
 		appendContentToggle.setValue(false);
-		appendContentToggle.onChange(value => this.appendContent = value);
+		appendContentToggle.onChange(value => (this.appendContent = value));
 		appendContentToggleComponentWrapper.appendChild(appendContentToggle.toggleEl);
 
-
-		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
-		contentEl.createEl('h3', {text: 'The name of the metadata field that should be used as the title to query.'});
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
+		contentEl.createEl('h3', { text: 'The name of the metadata field that should be used as the title to query.' });
 
 		const placeholder = 'title';
 		const titleFieldNameComponent = new TextComponent(contentEl);
 		titleFieldNameComponent.inputEl.style.width = '100%';
 		titleFieldNameComponent.setPlaceholder(placeholder);
-		titleFieldNameComponent.onChange(value => this.titleFieldName = value);
-		titleFieldNameComponent.inputEl.addEventListener('keydown', (ke) => {
+		titleFieldNameComponent.onChange(value => (this.titleFieldName = value));
+		titleFieldNameComponent.inputEl.addEventListener('keydown', ke => {
 			if (ke.key === 'Enter') {
 				this.submit();
 			}
 		});
 		contentEl.appendChild(titleFieldNameComponent.inputEl);
 
-		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
 		new Setting(contentEl)
 			.addButton(btn => {
@@ -93,7 +91,7 @@ export class MediaDbFolderImportModal extends Modal {
 	}
 
 	onClose() {
-		const {contentEl} = this;
+		const { contentEl } = this;
 		contentEl.empty();
 	}
 }

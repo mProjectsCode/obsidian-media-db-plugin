@@ -1,13 +1,12 @@
-import {MediaDbAdvancedSearchModal} from '../modals/MediaDbAdvancedSearchModal';
-import {MediaDbIdSearchModal} from '../modals/MediaDbIdSearchModal';
-import {MediaTypeModel} from '../models/MediaTypeModel';
-import {MediaDbSearchResultModal} from '../modals/MediaDbSearchResultModal';
-import {Notice} from 'obsidian';
+import { MediaDbAdvancedSearchModal } from '../modals/MediaDbAdvancedSearchModal';
+import { MediaDbIdSearchModal } from '../modals/MediaDbIdSearchModal';
+import { MediaTypeModel } from '../models/MediaTypeModel';
+import { MediaDbSearchResultModal } from '../modals/MediaDbSearchResultModal';
+import { Notice } from 'obsidian';
 import MediaDbPlugin from '../main';
-import {MediaDbPreviewModal} from 'src/modals/MediaDbPreviewModal';
-import {CreateNoteOptions} from './Utils';
-import {MediaDbSearchModal} from '../modals/MediaDbSearchModal';
-
+import { MediaDbPreviewModal } from 'src/modals/MediaDbPreviewModal';
+import { CreateNoteOptions } from './Utils';
+import { MediaDbSearchModal } from '../modals/MediaDbSearchModal';
 
 export enum ModalResultCode {
 	SUCCESS,
@@ -22,9 +21,9 @@ export enum ModalResultCode {
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
 export interface SearchModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR,
-	data?: SearchModalData,
-	error?: Error,
+	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR;
+	data?: SearchModalData;
+	error?: Error;
 }
 
 /**
@@ -33,9 +32,9 @@ export interface SearchModalResult {
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
 export interface AdvancedSearchModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR,
-	data?: AdvancedSearchModalData,
-	error?: Error,
+	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR;
+	data?: AdvancedSearchModalData;
+	error?: Error;
 }
 
 /**
@@ -44,9 +43,9 @@ export interface AdvancedSearchModalResult {
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
 export interface IdSearchModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR,
-	data?: IdSearchModalData,
-	error?: Error,
+	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR;
+	data?: IdSearchModalData;
+	error?: Error;
 }
 
 /**
@@ -55,9 +54,9 @@ export interface IdSearchModalResult {
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
 export interface SelectModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.SKIP | ModalResultCode.ERROR,
-	data?: SelectModalData,
-	error?: Error,
+	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.SKIP | ModalResultCode.ERROR;
+	data?: SelectModalData;
+	error?: Error;
 }
 
 /**
@@ -66,9 +65,9 @@ export interface SelectModalResult {
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
 export interface PreviewModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR,
-	data?: PreviewModalData,
-	error?: Error,
+	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR;
+	data?: PreviewModalData;
+	error?: Error;
 }
 
 /**
@@ -77,8 +76,8 @@ export interface PreviewModalResult {
  * - types: the selected APIs
  */
 export interface SearchModalData {
-	query: string,
-	types: string[],
+	query: string;
+	types: string[];
 }
 
 /**
@@ -87,8 +86,8 @@ export interface SearchModalData {
  * - apis: the selected APIs
  */
 export interface AdvancedSearchModalData {
-	query: string,
-	apis: string[],
+	query: string;
+	apis: string[];
 }
 
 /**
@@ -97,8 +96,8 @@ export interface AdvancedSearchModalData {
  * - apis: the selected APIs
  */
 export interface IdSearchModalData {
-	query: string,
-	api: string,
+	query: string;
+	api: string;
 }
 
 /**
@@ -106,7 +105,7 @@ export interface IdSearchModalData {
  * - selected: the selected items
  */
 export interface SelectModalData {
-	selected: MediaTypeModel[],
+	selected: MediaTypeModel[];
 }
 
 /**
@@ -114,7 +113,7 @@ export interface SelectModalData {
  * - confirmed: whether the selected element has been confirmed
  */
 export interface PreviewModalData {
-	confirmed: boolean,
+	confirmed: boolean;
 }
 
 /**
@@ -124,9 +123,9 @@ export interface PreviewModalData {
  * - prefilledSearchString: prefilled query
  */
 export interface SearchModalOptions {
-	modalTitle?: string,
-	preselectedTypes?: string[],
-	prefilledSearchString?: string,
+	modalTitle?: string;
+	preselectedTypes?: string[];
+	prefilledSearchString?: string;
 }
 
 /**
@@ -136,9 +135,9 @@ export interface SearchModalOptions {
  * - prefilledSearchString: prefilled query
  */
 export interface AdvancedSearchModalOptions {
-	modalTitle?: string,
-	preselectedAPIs?: string[],
-	prefilledSearchString?: string,
+	modalTitle?: string;
+	preselectedAPIs?: string[];
+	prefilledSearchString?: string;
 }
 
 /**
@@ -148,9 +147,9 @@ export interface AdvancedSearchModalOptions {
  * - prefilledSearchString: prefilled query
  */
 export interface IdSearchModalOptions {
-	modalTitle?: string,
-	preselectedAPI?: string,
-	prefilledSearchString?: string,
+	modalTitle?: string;
+	preselectedAPI?: string;
+	prefilledSearchString?: string;
 }
 
 /**
@@ -161,10 +160,10 @@ export interface IdSearchModalOptions {
  * - skipButton: whether to add a skip button to the modal
  */
 export interface SelectModalOptions {
-	modalTitle?: string,
-	elements?: MediaTypeModel[],
-	multiSelect?: boolean,
-	skipButton?: boolean,
+	modalTitle?: string;
+	elements?: MediaTypeModel[];
+	multiSelect?: boolean;
+	skipButton?: boolean;
 }
 
 /**
@@ -173,9 +172,9 @@ export interface SelectModalOptions {
  * - elements: the elements to preview
  */
 export interface PreviewModalOptions {
-	modalTitle?: string,
-	elements?: MediaTypeModel[],
-	createNoteOptions?: CreateNoteOptions,
+	modalTitle?: string;
+	elements?: MediaTypeModel[];
+	createNoteOptions?: CreateNoteOptions;
 }
 
 export const SEARCH_MODAL_DEFAULT_OPTIONS: SearchModalOptions = {
@@ -206,7 +205,7 @@ export const SELECT_MODAL_OPTIONS_DEFAULT: SelectModalOptions = {
 export const PREVIEW_MODAL_DEFAULT_OPTIONS: PreviewModalOptions = {
 	modalTitle: 'Media DB Preview',
 	elements: [],
-	createNoteOptions: {attachTemplate: true},
+	createNoteOptions: { attachTemplate: true },
 };
 
 /**
@@ -214,7 +213,6 @@ export const PREVIEW_MODAL_DEFAULT_OPTIONS: PreviewModalOptions = {
  */
 export class ModalHelper {
 	plugin: MediaDbPlugin;
-
 
 	constructor(plugin: MediaDbPlugin) {
 		this.plugin = plugin;
@@ -228,20 +226,20 @@ export class ModalHelper {
 	 * @param searchModalOptions the options for the modal, see {@link SEARCH_MODAL_DEFAULT_OPTIONS}
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
-	async createSearchModal(searchModalOptions: SearchModalOptions): Promise<{ searchModalResult: SearchModalResult, searchModal: MediaDbSearchModal }> {
+	async createSearchModal(searchModalOptions: SearchModalOptions): Promise<{ searchModalResult: SearchModalResult; searchModal: MediaDbSearchModal }> {
 		const modal = new MediaDbSearchModal(this.plugin, searchModalOptions);
 		const res: SearchModalResult = await new Promise((resolve, reject) => {
-			modal.setSubmitCallback(res => resolve({code: ModalResultCode.SUCCESS, data: res}));
+			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setCloseCallback(err => {
 				if (err) {
-					resolve({code: ModalResultCode.ERROR, error: err});
+					resolve({ code: ModalResultCode.ERROR, error: err });
 				}
-				resolve({code: ModalResultCode.CLOSE});
+				resolve({ code: ModalResultCode.CLOSE });
 			});
 
 			modal.open();
 		});
-		return {searchModalResult: res, searchModal: modal};
+		return { searchModalResult: res, searchModal: modal };
 	}
 
 	/**
@@ -253,8 +251,8 @@ export class ModalHelper {
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
 	async openSearchModal(searchModalOptions: SearchModalOptions, submitCallback: (searchModalData: SearchModalData) => Promise<MediaTypeModel[]>): Promise<MediaTypeModel[]> {
-		const {searchModalResult, searchModal} = await this.createSearchModal(searchModalOptions);
-		console.debug(`MDB | searchModal closed with code ${searchModalResult.code}`)
+		const { searchModalResult, searchModal } = await this.createSearchModal(searchModalOptions);
+		console.debug(`MDB | searchModal closed with code ${searchModalResult.code}`);
 
 		if (searchModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -290,20 +288,22 @@ export class ModalHelper {
 	 * @param advancedSearchModalOptions the options for the modal, see {@link ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS}
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
-	async createAdvancedSearchModal(advancedSearchModalOptions: AdvancedSearchModalOptions): Promise<{ advancedSearchModalResult: AdvancedSearchModalResult, advancedSearchModal: MediaDbAdvancedSearchModal }> {
+	async createAdvancedSearchModal(
+		advancedSearchModalOptions: AdvancedSearchModalOptions
+	): Promise<{ advancedSearchModalResult: AdvancedSearchModalResult; advancedSearchModal: MediaDbAdvancedSearchModal }> {
 		const modal = new MediaDbAdvancedSearchModal(this.plugin, advancedSearchModalOptions);
 		const res: AdvancedSearchModalResult = await new Promise((resolve, reject) => {
-			modal.setSubmitCallback(res => resolve({code: ModalResultCode.SUCCESS, data: res}));
+			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setCloseCallback(err => {
 				if (err) {
-					resolve({code: ModalResultCode.ERROR, error: err});
+					resolve({ code: ModalResultCode.ERROR, error: err });
 				}
-				resolve({code: ModalResultCode.CLOSE});
+				resolve({ code: ModalResultCode.CLOSE });
 			});
 
 			modal.open();
 		});
-		return {advancedSearchModalResult: res, advancedSearchModal: modal};
+		return { advancedSearchModalResult: res, advancedSearchModal: modal };
 	}
 
 	/**
@@ -314,9 +314,12 @@ export class ModalHelper {
 	 * @param submitCallback the callback that gets executed after the modal has been submitted, but after it has been closed
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
-	async openAdvancedSearchModal(advancedSearchModalOptions: AdvancedSearchModalOptions, submitCallback: (advancedSearchModalData: AdvancedSearchModalData) => Promise<MediaTypeModel[]>): Promise<MediaTypeModel[]> {
-		const {advancedSearchModalResult, advancedSearchModal} = await this.createAdvancedSearchModal(advancedSearchModalOptions);
-		console.debug(`MDB | advencedSearchModal closed with code ${advancedSearchModalResult.code}`)
+	async openAdvancedSearchModal(
+		advancedSearchModalOptions: AdvancedSearchModalOptions,
+		submitCallback: (advancedSearchModalData: AdvancedSearchModalData) => Promise<MediaTypeModel[]>
+	): Promise<MediaTypeModel[]> {
+		const { advancedSearchModalResult, advancedSearchModal } = await this.createAdvancedSearchModal(advancedSearchModalOptions);
+		console.debug(`MDB | advencedSearchModal closed with code ${advancedSearchModalResult.code}`);
 
 		if (advancedSearchModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -352,20 +355,20 @@ export class ModalHelper {
 	 * @param idSearchModalOptions the options for the modal, see {@link ID_SEARCH_MODAL_DEFAULT_OPTIONS}
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
-	async createIdSearchModal(idSearchModalOptions: IdSearchModalOptions): Promise<{ idSearchModalResult: IdSearchModalResult, idSearchModal: MediaDbIdSearchModal }> {
+	async createIdSearchModal(idSearchModalOptions: IdSearchModalOptions): Promise<{ idSearchModalResult: IdSearchModalResult; idSearchModal: MediaDbIdSearchModal }> {
 		const modal = new MediaDbIdSearchModal(this.plugin, idSearchModalOptions);
 		const res: IdSearchModalResult = await new Promise((resolve, reject) => {
-			modal.setSubmitCallback(res => resolve({code: ModalResultCode.SUCCESS, data: res}));
+			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setCloseCallback(err => {
 				if (err) {
-					resolve({code: ModalResultCode.ERROR, error: err});
+					resolve({ code: ModalResultCode.ERROR, error: err });
 				}
-				resolve({code: ModalResultCode.CLOSE});
+				resolve({ code: ModalResultCode.CLOSE });
 			});
 
 			modal.open();
 		});
-		return {idSearchModalResult: res, idSearchModal: modal};
+		return { idSearchModalResult: res, idSearchModal: modal };
 	}
 
 	/**
@@ -376,9 +379,12 @@ export class ModalHelper {
 	 * @param submitCallback the callback that gets executed after the modal has been submitted, but after it has been closed
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
-	async openIdSearchModal(idSearchModalOptions: IdSearchModalOptions, submitCallback: (idSearchModalData: IdSearchModalData) => Promise<MediaTypeModel>): Promise<MediaTypeModel> {
-		const {idSearchModalResult, idSearchModal} = await this.createIdSearchModal(idSearchModalOptions);
-		console.debug(`MDB | idSearchModal closed with code ${idSearchModalResult.code}`)
+	async openIdSearchModal(
+		idSearchModalOptions: IdSearchModalOptions,
+		submitCallback: (idSearchModalData: IdSearchModalData) => Promise<MediaTypeModel>
+	): Promise<MediaTypeModel> {
+		const { idSearchModalResult, idSearchModal } = await this.createIdSearchModal(idSearchModalOptions);
+		console.debug(`MDB | idSearchModal closed with code ${idSearchModalResult.code}`);
 
 		if (idSearchModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -414,21 +420,21 @@ export class ModalHelper {
 	 * @param selectModalOptions the options for the modal, see {@link SELECT_MODAL_OPTIONS_DEFAULT}
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
-	async createSelectModal(selectModalOptions: SelectModalOptions): Promise<{ selectModalResult: SelectModalResult, selectModal: MediaDbSearchResultModal }> {
+	async createSelectModal(selectModalOptions: SelectModalOptions): Promise<{ selectModalResult: SelectModalResult; selectModal: MediaDbSearchResultModal }> {
 		const modal = new MediaDbSearchResultModal(this.plugin, selectModalOptions);
 		const res: SelectModalResult = await new Promise((resolve, reject) => {
-			modal.setSubmitCallback(res => resolve({code: ModalResultCode.SUCCESS, data: res}));
-			modal.setSkipCallback(() => resolve({code: ModalResultCode.SKIP}));
+			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
+			modal.setSkipCallback(() => resolve({ code: ModalResultCode.SKIP }));
 			modal.setCloseCallback(err => {
 				if (err) {
-					resolve({code: ModalResultCode.ERROR, error: err});
+					resolve({ code: ModalResultCode.ERROR, error: err });
 				}
-				resolve({code: ModalResultCode.CLOSE});
+				resolve({ code: ModalResultCode.CLOSE });
 			});
 
 			modal.open();
 		});
-		return {selectModalResult: res, selectModal: modal};
+		return { selectModalResult: res, selectModal: modal };
 	}
 
 	/**
@@ -440,8 +446,8 @@ export class ModalHelper {
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
 	async openSelectModal(selectModalOptions: SelectModalOptions, submitCallback: (selectModalData: SelectModalData) => Promise<MediaTypeModel[]>): Promise<MediaTypeModel[]> {
-		const {selectModalResult, selectModal} = await this.createSelectModal(selectModalOptions);
-		console.debug(`MDB | selectModal closed with code ${selectModalResult.code}`)
+		const { selectModalResult, selectModal } = await this.createSelectModal(selectModalOptions);
+		console.debug(`MDB | selectModal closed with code ${selectModalResult.code}`);
 
 		if (selectModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -474,26 +480,26 @@ export class ModalHelper {
 		}
 	}
 
-	async createPreviewModal(previewModalOptions: PreviewModalOptions): Promise<{ previewModalResult: PreviewModalResult, previewModal: MediaDbPreviewModal }> {
+	async createPreviewModal(previewModalOptions: PreviewModalOptions): Promise<{ previewModalResult: PreviewModalResult; previewModal: MediaDbPreviewModal }> {
 		//todo: handle attachFile for existing files
 		const modal = new MediaDbPreviewModal(this.plugin, previewModalOptions);
 		const res: PreviewModalResult = await new Promise((resolve, reject) => {
-			modal.setSubmitCallback(res => resolve({code: ModalResultCode.SUCCESS, data: res}));
+			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setCloseCallback(err => {
 				if (err) {
-					resolve({code: ModalResultCode.ERROR, error: err});
+					resolve({ code: ModalResultCode.ERROR, error: err });
 				}
-				resolve({code: ModalResultCode.CLOSE});
+				resolve({ code: ModalResultCode.CLOSE });
 			});
 
 			modal.open();
 		});
-		return {previewModalResult: res, previewModal: modal};
+		return { previewModalResult: res, previewModal: modal };
 	}
 
 	async openPreviewModal(previewModalOptions: PreviewModalOptions, submitCallback: (previewModalData: PreviewModalData) => Promise<boolean>): Promise<boolean> {
-		const {previewModalResult, previewModal} = await this.createPreviewModal(previewModalOptions);
-		console.debug(`MDB | previewModal closed with code ${previewModalResult.code}`)
+		const { previewModalResult, previewModal } = await this.createPreviewModal(previewModalOptions);
+		console.debug(`MDB | previewModal closed with code ${previewModalResult.code}`);
 
 		if (previewModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -521,4 +527,3 @@ export class ModalHelper {
 		}
 	}
 }
-

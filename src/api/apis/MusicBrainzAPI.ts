@@ -1,9 +1,9 @@
-import {APIModel} from '../APIModel';
-import {MediaTypeModel} from '../../models/MediaTypeModel';
+import { APIModel } from '../APIModel';
+import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
-import {requestUrl} from 'obsidian';
-import {MusicReleaseModel} from '../../models/MusicReleaseModel';
-import {contactEmail, debugLog, mediaDbVersion, pluginName} from '../../utils/Utils';
+import { requestUrl } from 'obsidian';
+import { MusicReleaseModel } from '../../models/MusicReleaseModel';
+import { contactEmail, debugLog, mediaDbVersion, pluginName } from '../../utils/Utils';
 
 export class MusicBrainzAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -41,18 +41,20 @@ export class MusicBrainzAPI extends APIModel {
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of data['release-groups']) {
-			ret.push(new MusicReleaseModel({
-				type: 'musicRelease',
-				title: result.title,
-				englishTitle: result.title,
-				year: (new Date(result['first-release-date'])).getFullYear().toString(),
-				dataSource: this.apiName,
-				url: '',
-				id: result.id,
+			ret.push(
+				new MusicReleaseModel({
+					type: 'musicRelease',
+					title: result.title,
+					englishTitle: result.title,
+					year: new Date(result['first-release-date']).getFullYear().toString(),
+					dataSource: this.apiName,
+					url: '',
+					id: result.id,
 
-				artists: result['artist-credit'].map((a: any) => a.name),
-				subType: result['primary-type'],
-			} as MusicReleaseModel));
+					artists: result['artist-credit'].map((a: any) => a.name),
+					subType: result['primary-type'],
+				} as MusicReleaseModel)
+			);
 		}
 
 		return ret;
@@ -81,7 +83,7 @@ export class MusicBrainzAPI extends APIModel {
 			type: 'musicRelease',
 			title: result.title,
 			englishTitle: result.title,
-			year: (new Date(result['first-release-date'])).getFullYear().toString(),
+			year: new Date(result['first-release-date']).getFullYear().toString(),
 			dataSource: this.apiName,
 			url: '',
 			id: result.id,

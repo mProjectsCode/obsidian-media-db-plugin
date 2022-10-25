@@ -1,7 +1,7 @@
-import {ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent} from 'obsidian';
-import {MediaTypeModel} from '../models/MediaTypeModel';
+import { ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent } from 'obsidian';
+import { MediaTypeModel } from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
-import {ID_SEARCH_MODAL_DEFAULT_OPTIONS, IdSearchModalData, IdSearchModalOptions} from '../utils/ModalHelper';
+import { ID_SEARCH_MODAL_DEFAULT_OPTIONS, IdSearchModalData, IdSearchModalOptions } from '../utils/ModalHelper';
 
 export class MediaDbIdSearchModal extends Modal {
 	plugin: MediaDbPlugin;
@@ -15,7 +15,6 @@ export class MediaDbIdSearchModal extends Modal {
 
 	submitCallback?: (res: IdSearchModalData, err?: Error) => void;
 	closeCallback?: (err?: Error) => void;
-
 
 	constructor(plugin: MediaDbPlugin, idSearchModalOptions: IdSearchModalOptions) {
 		idSearchModalOptions = Object.assign({}, ID_SEARCH_MODAL_DEFAULT_OPTIONS, idSearchModalOptions);
@@ -56,14 +55,14 @@ export class MediaDbIdSearchModal extends Modal {
 			this.searchBtn.setDisabled(false);
 			this.searchBtn.setButtonText('Searching...');
 
-			this.submitCallback({query: this.query, api: this.selectedApi});
+			this.submitCallback({ query: this.query, api: this.selectedApi });
 		}
 	}
 
 	onOpen() {
-		const {contentEl} = this;
+		const { contentEl } = this;
 
-		contentEl.createEl('h2', {text: this.title});
+		contentEl.createEl('h2', { text: this.title });
 
 		const placeholder = 'Search by id';
 		const searchComponent = new TextComponent(contentEl);
@@ -75,11 +74,11 @@ export class MediaDbIdSearchModal extends Modal {
 		contentEl.appendChild(searchComponent.inputEl);
 		searchComponent.inputEl.focus();
 
-		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
-		const apiSelectorWrapper = contentEl.createEl('div', {cls: 'media-db-plugin-list-wrapper'});
-		const apiSelectorTExtWrapper = apiSelectorWrapper.createEl('div', {cls: 'media-db-plugin-list-text-wrapper'});
-		apiSelectorTExtWrapper.createEl('span', {text: 'API to search', cls: 'media-db-plugin-list-text'});
+		const apiSelectorWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
+		const apiSelectorTExtWrapper = apiSelectorWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
+		apiSelectorTExtWrapper.createEl('span', { text: 'API to search', cls: 'media-db-plugin-list-text' });
 
 		const apiSelectorComponent = new DropdownComponent(apiSelectorWrapper);
 		apiSelectorComponent.onChange((value: string) => {
@@ -90,7 +89,7 @@ export class MediaDbIdSearchModal extends Modal {
 		}
 		apiSelectorWrapper.appendChild(apiSelectorComponent.selectEl);
 
-		contentEl.createDiv({cls: 'media-db-plugin-spacer'});
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
 		new Setting(contentEl)
 			.addButton(btn => {
@@ -111,8 +110,7 @@ export class MediaDbIdSearchModal extends Modal {
 
 	onClose() {
 		this.closeCallback();
-		const {contentEl} = this;
+		const { contentEl } = this;
 		contentEl.empty();
 	}
-
 }

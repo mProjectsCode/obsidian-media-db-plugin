@@ -1,4 +1,4 @@
-import {SelectModal} from './SelectModal';
+import { SelectModal } from './SelectModal';
 
 export class SelectModalElement<T> {
 	selectModal: SelectModal<T>;
@@ -21,7 +21,7 @@ export class SelectModalElement<T> {
 		this.activeClass = 'media-db-plugin-select-element-selected';
 		this.hoverClass = 'media-db-plugin-select-element-hover';
 
-		this.element = parentElement.createDiv({cls: this.cssClass});
+		this.element = parentElement.createDiv({ cls: this.cssClass });
 		this.element.id = this.getHTMLId();
 		this.element.on('click', '#' + this.getHTMLId(), () => {
 			this.setActive(!this.active);
@@ -83,5 +83,4 @@ export class SelectModalElement<T> {
 			this.element.removeClass(cssClass);
 		}
 	}
-
 }
