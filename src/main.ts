@@ -2,19 +2,19 @@ import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder 
 import { getDefaultSettings, MediaDbPluginSettings, MediaDbSettingTab } from './settings/Settings';
 import { APIManager } from './api/APIManager';
 import { MediaTypeModel } from './models/MediaTypeModel';
-import { CreateNoteOptions, dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString } from './utils/Utils';
+import { CreateNoteOptions, dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, unCamelCase } from './utils/Utils';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { MALAPI } from './api/apis/MALAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
-import { MediaTypeManager } from './utils/MediaTypeManager';
+import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { YAMLConverter } from './utils/YAMLConverter';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
-import { ModalHelper, ModalResultCode } from './utils/ModalHelper';
+import { ModalHelper, ModalResultCode, SearchModalOptions } from './utils/ModalHelper';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -68,6 +68,13 @@ export default class MediaDbPlugin extends Plugin {
 			name: 'Create Media DB entry',
 			callback: () => this.createEntryWithSearchModal(),
 		});
+		for (const mediaType of MEDIA_TYPES) {
+			this.addCommand({
+				id: `open-media-db-search-modal-with-${mediaType}`,
+				name: `Create Media DB entry (${unCamelCase(mediaType)})`,
+				callback: () => this.createEntryWithSearchModal({ preselectedTypes: [mediaType] }),
+			});
+		}
 		this.addCommand({
 			id: 'open-media-db-advanced-search-modal',
 			name: 'Create Media DB entry (advanced search)',
@@ -155,9 +162,9 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
-	async createEntryWithSearchModal() {
+	async createEntryWithSearchModal(searchModalOptions?: SearchModalOptions) {
 		let types: string[] = [];
-		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openSearchModal({}, async searchModalData => {
+		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openSearchModal(searchModalOptions ?? {}, async searchModalData => {
 			types = searchModalData.types;
 			const apis = this.apiManager.apis.filter(x => x.hasTypeOverlap(searchModalData.types)).map(x => x.apiName);
 			return await this.apiManager.query(searchModalData.query, apis);
