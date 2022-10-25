@@ -6,6 +6,7 @@ import {Notice} from 'obsidian';
 import MediaDbPlugin from '../main';
 import {MediaDbPreviewModal} from 'src/modals/MediaDbPreviewModal';
 import {CreateNoteOptions} from './Utils';
+import {MediaDbSearchModal} from '../modals/MediaDbSearchModal';
 
 
 export enum ModalResultCode {
@@ -13,6 +14,17 @@ export enum ModalResultCode {
 	SKIP,
 	CLOSE,
 	ERROR,
+}
+
+/**
+ * Object containing the data {@link ModalHelper.createSearchModal} returns.
+ * On {@link ModalResultCode.SUCCESS} this contains {@link SearchModalData}.
+ * On {@link ModalResultCode.ERROR} this contains a reference to that error.
+ */
+export interface SearchModalResult {
+	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR,
+	data?: SearchModalData,
+	error?: Error,
 }
 
 /**
@@ -60,6 +72,16 @@ export interface PreviewModalResult {
 }
 
 /**
+ * The data the search modal returns.
+ * - query: the query string
+ * - types: the selected APIs
+ */
+export interface SearchModalData {
+	query: string,
+	types: string[],
+}
+
+/**
  * The data the advanced search modal returns.
  * - query: the query string
  * - apis: the selected APIs
@@ -93,6 +115,18 @@ export interface SelectModalData {
  */
 export interface PreviewModalData {
 	confirmed: boolean,
+}
+
+/**
+ * Options for the search modal.
+ * - modalTitle: the title of the modal
+ * - preselectedTypes: a list of preselected Types
+ * - prefilledSearchString: prefilled query
+ */
+export interface SearchModalOptions {
+	modalTitle?: string,
+	preselectedTypes?: string[],
+	prefilledSearchString?: string,
 }
 
 /**
@@ -144,6 +178,12 @@ export interface PreviewModalOptions {
 	createNoteOptions?: CreateNoteOptions,
 }
 
+export const SEARCH_MODAL_DEFAULT_OPTIONS: SearchModalOptions = {
+	modalTitle: 'Media DB Search',
+	preselectedTypes: [],
+	prefilledSearchString: '',
+};
+
 export const ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS: AdvancedSearchModalOptions = {
 	modalTitle: 'Media DB Advanced Search',
 	preselectedAPIs: [],
@@ -181,6 +221,68 @@ export class ModalHelper {
 	}
 
 	/**
+	 * Creates an {@link MediaDbSearchModal}, then sets callbacks and awaits them,
+	 * returning either the user input once submitted or nothing once closed.
+	 * The modal needs ot be manually closed by calling `close()` on the modal reference.
+	 *
+	 * @param searchModalOptions the options for the modal, see {@link SEARCH_MODAL_DEFAULT_OPTIONS}
+	 * @returns the user input or nothing and a reference to the modal.
+	 */
+	async createSearchModal(searchModalOptions: SearchModalOptions): Promise<{ searchModalResult: SearchModalResult, searchModal: MediaDbSearchModal }> {
+		const modal = new MediaDbSearchModal(this.plugin, searchModalOptions);
+		const res: SearchModalResult = await new Promise((resolve, reject) => {
+			modal.setSubmitCallback(res => resolve({code: ModalResultCode.SUCCESS, data: res}));
+			modal.setCloseCallback(err => {
+				if (err) {
+					resolve({code: ModalResultCode.ERROR, error: err});
+				}
+				resolve({code: ModalResultCode.CLOSE});
+			});
+
+			modal.open();
+		});
+		return {searchModalResult: res, searchModal: modal};
+	}
+
+	/**
+	 * Opens an {@link MediaDbSearchModal} and awaits its result,
+	 * then executes the `submitCallback` returning the callbacks result and closing the modal.
+	 *
+	 * @param searchModalOptions the options for the modal, see {@link SEARCH_MODAL_DEFAULT_OPTIONS}
+	 * @param submitCallback the callback that gets executed after the modal has been submitted, but after it has been closed
+	 * @returns the user input or nothing and a reference to the modal.
+	 */
+	async openSearchModal(searchModalOptions: SearchModalOptions, submitCallback: (searchModalData: SearchModalData) => Promise<MediaTypeModel[]>): Promise<MediaTypeModel[]> {
+		const {searchModalResult, searchModal} = await this.createSearchModal(searchModalOptions);
+		console.debug(`MDB | searchModal closed with code ${searchModalResult.code}`)
+
+		if (searchModalResult.code === ModalResultCode.ERROR) {
+			// there was an error in the modal itself
+			console.warn(searchModalResult.error);
+			new Notice(searchModalResult.error.toString());
+			searchModal.close();
+			return undefined;
+		}
+
+		if (searchModalResult.code === ModalResultCode.CLOSE) {
+			// modal is already being closed
+			return undefined;
+		}
+
+		try {
+			let callbackRes: MediaTypeModel[];
+			callbackRes = await submitCallback(searchModalResult.data);
+			searchModal.close();
+			return callbackRes;
+		} catch (e) {
+			console.warn(e);
+			new Notice(e.toString());
+			searchModal.close();
+			return undefined;
+		}
+	}
+
+	/**
 	 * Creates an {@link MediaDbAdvancedSearchModal}, then sets callbacks and awaits them,
 	 * returning either the user input once submitted or nothing once closed.
 	 * The modal needs ot be manually closed by calling `close()` on the modal reference.
@@ -214,6 +316,7 @@ export class ModalHelper {
 	 */
 	async openAdvancedSearchModal(advancedSearchModalOptions: AdvancedSearchModalOptions, submitCallback: (advancedSearchModalData: AdvancedSearchModalData) => Promise<MediaTypeModel[]>): Promise<MediaTypeModel[]> {
 		const {advancedSearchModalResult, advancedSearchModal} = await this.createAdvancedSearchModal(advancedSearchModalOptions);
+		console.debug(`MDB | advencedSearchModal closed with code ${advancedSearchModalResult.code}`)
 
 		if (advancedSearchModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -275,6 +378,7 @@ export class ModalHelper {
 	 */
 	async openIdSearchModal(idSearchModalOptions: IdSearchModalOptions, submitCallback: (idSearchModalData: IdSearchModalData) => Promise<MediaTypeModel>): Promise<MediaTypeModel> {
 		const {idSearchModalResult, idSearchModal} = await this.createIdSearchModal(idSearchModalOptions);
+		console.debug(`MDB | idSearchModal closed with code ${idSearchModalResult.code}`)
 
 		if (idSearchModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -337,6 +441,7 @@ export class ModalHelper {
 	 */
 	async openSelectModal(selectModalOptions: SelectModalOptions, submitCallback: (selectModalData: SelectModalData) => Promise<MediaTypeModel[]>): Promise<MediaTypeModel[]> {
 		const {selectModalResult, selectModal} = await this.createSelectModal(selectModalOptions);
+		console.debug(`MDB | selectModal closed with code ${selectModalResult.code}`)
 
 		if (selectModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -388,6 +493,7 @@ export class ModalHelper {
 
 	async openPreviewModal(previewModalOptions: PreviewModalOptions, submitCallback: (previewModalData: PreviewModalData) => Promise<boolean>): Promise<boolean> {
 		const {previewModalResult, previewModal} = await this.createPreviewModal(previewModalOptions);
+		console.debug(`MDB | previewModal closed with code ${previewModalResult.code}`)
 
 		if (previewModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself

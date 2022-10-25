@@ -59,7 +59,7 @@ export class MediaDbPreviewModal extends Modal {
 		const bottomSettingRow = new Setting(contentEl);
 		bottomSettingRow.addButton(btn => {
 			btn.setButtonText('Cancel');
-			btn.onClick(() => this.closeCallback());
+			btn.onClick(() => this.close());
 			btn.buttonEl.addClass('media-db-plugin-button');
 			this.cancelButton = btn;
 		});

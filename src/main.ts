@@ -65,13 +65,18 @@ export default class MediaDbPlugin extends Plugin {
 		// register command to open search modal
 		this.addCommand({
 			id: 'open-media-db-search-modal',
-			name: 'Add new Media DB entry',
+			name: 'Create Media DB entry',
+			callback: () => this.createEntryWithSearchModal(),
+		});
+		this.addCommand({
+			id: 'open-media-db-advanced-search-modal',
+			name: 'Create Media DB entry (advanced search)',
 			callback: () => this.createEntryWithAdvancedSearchModal(),
 		});
 		// register command to open id search modal
 		this.addCommand({
 			id: 'open-media-db-id-search-modal',
-			name: 'Add new Media DB entry by id',
+			name: 'Create Media DB entry by id',
 			callback: () => this.createEntryWithIdSearchModal(),
 		});
 		// register command to update the open note
@@ -152,12 +157,40 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async createEntryWithSearchModal() {
+		let types: string[] = [];
+		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openSearchModal({}, async (searchModalData) => {
+			types = searchModalData.types;
+			const apis = this.apiManager.apis.filter(x => x.hasTypeOverlap(searchModalData.types)).map(x => x.apiName);
+			return await this.apiManager.query(searchModalData.query, apis);
+		});
 
+		if (!apiSearchResults) {
+			// TODO: add new notice saying no results found?
+			return;
+		}
+
+		// filter the results
+		apiSearchResults = apiSearchResults.filter(x => types.contains(x.type));
+
+		let selectResults: MediaTypeModel[];
+		let proceed: boolean;
+
+		while (!proceed) {
+			selectResults = await this.modalHelper.openSelectModal({elements: apiSearchResults}, async (selectModalData) => {
+				return await this.queryDetails(selectModalData.selected);
+			});
+			if (!selectResults) {
+				return;
+			}
+
+			proceed = await this.modalHelper.openPreviewModal({elements: selectResults}, async (previewModalData) => {
+				return previewModalData.confirmed;
+			});
+		}
+
+		await this.createMediaDbNotes(selectResults);
 	}
 
-	/**
-	 * TODO: further refactor: extract it into own method, pass the action (api query) as lambda as well as an options object
-	 */
 	async createEntryWithAdvancedSearchModal() {
 		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal({}, async (advancedSearchModalData) => {
 			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
