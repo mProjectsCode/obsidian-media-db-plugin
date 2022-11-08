@@ -370,7 +370,7 @@ export default class MediaDbPlugin extends Plugin {
 		// find and possibly create the folder set in settings or passed in folder
 		const folder = options.folder ?? this.app.vault.getAbstractFileByPath(this.settings.folder);
 		if (!folder) {
-			await this.app.vault.createFolder(folder.path);
+			await this.app.vault.createFolder(this.settings.folder);
 		}
 
 		fileName = replaceIllegalFileNameCharactersInString(fileName);
