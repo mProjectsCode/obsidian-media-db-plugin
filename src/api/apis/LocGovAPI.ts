@@ -25,14 +25,14 @@ export class LocGovAPI extends APIModel {
 
 		const searchUrl = `https://www.loc.gov/search/?q=${encodeURIComponent(title)}&fo=json&c=20`;
 		const fetchData = await fetch(searchUrl);
-		debugLog(fetchData);
+		console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
 			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
 
 		const data = await fetchData.json();
-		debugLog(data);
+		console.debug(data);
 		let ret: MediaTypeModel[] = [];
 
 		throw new Error('MDB | Under construction, API implementation not finished');
@@ -50,7 +50,7 @@ export class LocGovAPI extends APIModel {
 		}
 
 		const data = await fetchData.json();
-		debugLog(data);
+		console.debug(data);
 		const result = data.data;
 
 		const type = this.typeMappings.get(result.type.toLowerCase());

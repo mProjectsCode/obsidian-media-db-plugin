@@ -45,6 +45,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.addSettingTab(new MediaDbSettingTab(this.app, this));
 
 		this.mediaTypeManager.updateTemplates(this.settings);
+		this.mediaTypeManager.updateFolders(this.settings);
 
 		// add icon to the left ribbon
 		const ribbonIconEl = this.addRibbonIcon('database', 'Add new Media DB entry', (evt: MouseEvent) => this.createEntryWithAdvancedSearchModal());
@@ -271,6 +272,10 @@ export default class MediaDbPlugin extends Plugin {
 
 			let fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, options);
 
+			if (!options.folder) {
+				options.folder = await this.mediaTypeManager.getFolder(mediaTypeModel, this.app);
+			}
+
 			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
 		} catch (e) {
 			console.warn(e);
@@ -368,10 +373,7 @@ export default class MediaDbPlugin extends Plugin {
 	 */
 	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions) {
 		// find and possibly create the folder set in settings or passed in folder
-		const folder = options.folder ?? this.app.vault.getAbstractFileByPath(this.settings.folder);
-		if (!folder) {
-			await this.app.vault.createFolder(this.settings.folder);
-		}
+		const folder = options.folder ?? this.app.vault.getAbstractFileByPath('/');
 
 		fileName = replaceIllegalFileNameCharactersInString(fileName);
 		const filePath = `${folder.path}/${fileName}.md`;
@@ -513,8 +515,8 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async createErroredFilesReport(erroredFiles: { filePath: string; error: string }[]): Promise<void> {
-		const title = `bulk import error report ${dateTimeToString(new Date())}`;
-		const filePath = `${this.settings.folder.replace(/\/$/, '')}/${title}.md`;
+		const title = `MDB - bulk import error report ${dateTimeToString(new Date())}`;
+		const filePath = `${title}.md`;
 
 		const table = [['file', 'error']].concat(erroredFiles.map(x => [x.filePath, x.error]));
 
@@ -561,6 +563,7 @@ export default class MediaDbPlugin extends Plugin {
 
 	async saveSettings() {
 		this.mediaTypeManager.updateTemplates(this.settings);
+		this.mediaTypeManager.updateFolders(this.settings);
 
 		await this.saveData(this.settings);
 	}

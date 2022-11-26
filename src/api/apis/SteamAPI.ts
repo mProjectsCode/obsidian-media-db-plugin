@@ -2,7 +2,6 @@ import { APIModel } from '../APIModel';
 import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
-import { debugLog } from '../../utils/Utils';
 import { requestUrl } from 'obsidian';
 import { MediaType } from '../../utils/MediaType';
 
@@ -17,7 +16,7 @@ export class SteamAPI extends APIModel {
 		this.apiName = 'SteamAPI';
 		this.apiDescription = 'A free API for all Steam games.';
 		this.apiUrl = 'http://www.steampowered.com/';
-		this.types = ['games'];
+		this.types = [MediaType.Game];
 		this.typeMappings = new Map<string, string>();
 		this.typeMappings.set('game', 'game');
 	}
@@ -36,7 +35,7 @@ export class SteamAPI extends APIModel {
 
 		const data = await fetchData.json;
 
-		debugLog(data);
+		console.debug(data);
 
 		let filteredData = [];
 
@@ -79,7 +78,7 @@ export class SteamAPI extends APIModel {
 			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
 
-		debugLog(await fetchData.json);
+		console.debug(await fetchData.json);
 
 		let result: any;
 		for (const [key, value] of Object.entries(await fetchData.json)) {
@@ -94,7 +93,7 @@ export class SteamAPI extends APIModel {
 			throw Error(`MDB | API returned invalid data.`);
 		}
 
-		debugLog(result);
+		console.debug(result);
 
 		const model = new GameModel({
 			type: MediaType.Game,

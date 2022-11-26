@@ -5,6 +5,11 @@ import { MediaType } from '../utils/MediaType';
 export class BoardGameModel extends MediaTypeModel {
 	genres: string[];
 	onlineRating: number;
+	complexityRating: number;
+	minPlayers: number;
+	maxPlayers: number;
+	playtime: string;
+	publishers: string[];
 	image?: string;
 
 	released: boolean;
@@ -19,8 +24,15 @@ export class BoardGameModel extends MediaTypeModel {
 
 		this.genres = undefined;
 		this.onlineRating = undefined;
+		this.minPlayers = undefined;
+		this.maxPlayers = undefined;
+		this.playtime = undefined;
+		this.publishers = undefined;
+		this.complexityRating = undefined;
 		this.image = undefined;
+
 		this.released = undefined;
+
 		this.userData = {
 			played: undefined,
 			personalRating: undefined,

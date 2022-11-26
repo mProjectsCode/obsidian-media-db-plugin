@@ -202,6 +202,7 @@ export class PropertyMappingNameConflictError extends Error {
  * - attachTemplate: whether to attach the template (DEFAULT: false)
  * - attachFie: a file to attach (DEFAULT: undefined)
  * - openNote: whether to open the note after creation (DEFAULT: false)
+ * - folder: folder to put the note in
  */
 export interface CreateNoteOptions {
 	attachTemplate?: boolean;

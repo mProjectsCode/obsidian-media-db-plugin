@@ -7,9 +7,11 @@ export class MovieModel extends MediaTypeModel {
 	producer: string;
 	duration: string;
 	onlineRating: number;
+	actors: string[];
 	image: string;
 
 	released: boolean;
+	streamingServices: string[];
 	premiere: string;
 
 	userData: {
@@ -25,9 +27,13 @@ export class MovieModel extends MediaTypeModel {
 		this.producer = undefined;
 		this.duration = undefined;
 		this.onlineRating = undefined;
+		this.actors = undefined;
 		this.image = undefined;
+
 		this.released = undefined;
+		this.streamingServices = undefined;
 		this.premiere = undefined;
+
 		this.userData = {
 			watched: undefined,
 			lastWatched: undefined,

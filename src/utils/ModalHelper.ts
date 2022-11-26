@@ -7,6 +7,7 @@ import MediaDbPlugin from '../main';
 import { MediaDbPreviewModal } from 'src/modals/MediaDbPreviewModal';
 import { CreateNoteOptions } from './Utils';
 import { MediaDbSearchModal } from '../modals/MediaDbSearchModal';
+import { MediaType } from './MediaType';
 
 export enum ModalResultCode {
 	SUCCESS,
@@ -77,7 +78,7 @@ export interface PreviewModalResult {
  */
 export interface SearchModalData {
 	query: string;
-	types: string[];
+	types: MediaType[];
 }
 
 /**
@@ -124,7 +125,7 @@ export interface PreviewModalData {
  */
 export interface SearchModalOptions {
 	modalTitle?: string;
-	preselectedTypes?: string[];
+	preselectedTypes?: MediaType[];
 	prefilledSearchString?: string;
 }
 

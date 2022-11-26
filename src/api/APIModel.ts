@@ -1,10 +1,11 @@
 import { MediaTypeModel } from '../models/MediaTypeModel';
+import { MediaType } from '../utils/MediaType';
 
 export abstract class APIModel {
 	apiName: string;
 	apiUrl: string;
 	apiDescription: string;
-	types: string[];
+	types: MediaType[];
 
 	/**
 	 * This function should query the api and return a list of matches. The matches should be caped at 20.
@@ -15,12 +16,11 @@ export abstract class APIModel {
 
 	abstract getById(id: string): Promise<MediaTypeModel>;
 
-	hasType(type: string): boolean {
+	hasType(type: MediaType): boolean {
 		return this.types.contains(type);
 	}
 
-	// for future use (https://github.com/mProjectsCode/obsidian-media-db-plugin/issues/5)
-	hasTypeOverlap(types: string[]): boolean {
+	hasTypeOverlap(types: MediaType[]): boolean {
 		for (const type of types) {
 			if (this.hasType(type)) {
 				return true;

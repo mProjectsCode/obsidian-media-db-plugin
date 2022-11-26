@@ -4,7 +4,7 @@ import { MovieModel } from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
 import { SeriesModel } from '../../models/SeriesModel';
 import { GameModel } from '../../models/GameModel';
-import { debugLog } from '../../utils/Utils';
+import { MediaType } from '../../utils/MediaType';
 
 export class OMDbAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -17,7 +17,7 @@ export class OMDbAPI extends APIModel {
 		this.apiName = 'OMDbAPI';
 		this.apiDescription = 'A free API for Movies, Series and Games.';
 		this.apiUrl = 'http://www.omdbapi.com/';
-		this.types = ['movie', 'series'];
+		this.types = [MediaType.Movie, MediaType.Series, MediaType.Game];
 		this.typeMappings = new Map<string, string>();
 		this.typeMappings.set('movie', 'movie');
 		this.typeMappings.set('series', 'series');
@@ -46,7 +46,7 @@ export class OMDbAPI extends APIModel {
 			return [];
 		}
 
-		debugLog(data.Search);
+		console.debug(data.Search);
 
 		let ret: MediaTypeModel[] = [];
 
@@ -108,7 +108,7 @@ export class OMDbAPI extends APIModel {
 		}
 
 		const result = await fetchData.json();
-		debugLog(result);
+		console.debug(result);
 
 		if (result.Response === 'False') {
 			throw Error(`MDB | Received error from ${this.apiName}: ${result.Error}`);
@@ -133,9 +133,11 @@ export class OMDbAPI extends APIModel {
 				producer: result.Director ?? 'unknown',
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
+				actors: result.Actors?.split(', ') ?? [],
 				image: result.Poster ?? '',
 
 				released: true,
+				streamingServices: [],
 				premiere: new Date(result.Released).toLocaleDateString() ?? 'unknown',
 
 				userData: {
@@ -161,9 +163,11 @@ export class OMDbAPI extends APIModel {
 				episodes: 0,
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
+				actors: result.Actors?.split(', ') ?? [],
 				image: result.Poster ?? '',
 
 				released: true,
+				streamingServices: [],
 				airing: false,
 				airedFrom: new Date(result.Released).toLocaleDateString() ?? 'unknown',
 				airedTo: 'unknown',

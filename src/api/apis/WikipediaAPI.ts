@@ -2,7 +2,7 @@ import { APIModel } from '../APIModel';
 import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 import { WikiModel } from '../../models/WikiModel';
-import { debugLog } from '../../utils/Utils';
+import { MediaType } from '../../utils/MediaType';
 
 export class WikipediaAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -14,7 +14,7 @@ export class WikipediaAPI extends APIModel {
 		this.apiName = 'Wikipedia API';
 		this.apiDescription = 'The API behind Wikipedia';
 		this.apiUrl = 'https://www.wikipedia.com';
-		this.types = ['wiki'];
+		this.types = [MediaType.Wiki];
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
@@ -22,14 +22,14 @@ export class WikipediaAPI extends APIModel {
 
 		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&srlimit=20&utf8=&format=json&origin=*`;
 		const fetchData = await fetch(searchUrl);
-		debugLog(fetchData);
+		console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
 			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
 
 		const data = await fetchData.json();
-		debugLog(data);
+		console.debug(data);
 		let ret: MediaTypeModel[] = [];
 
 		for (const result of data.query.search) {
@@ -59,7 +59,7 @@ export class WikipediaAPI extends APIModel {
 		}
 
 		const data = await fetchData.json();
-		debugLog(data);
+		console.debug(data);
 		const result: any = Object.entries(data?.query?.pages)[0][1];
 
 		const model = new WikiModel({
