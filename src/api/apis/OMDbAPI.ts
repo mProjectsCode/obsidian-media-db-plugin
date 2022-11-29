@@ -48,7 +48,7 @@ export class OMDbAPI extends APIModel {
 
 		console.debug(data.Search);
 
-		let ret: MediaTypeModel[] = [];
+		const ret: MediaTypeModel[] = [];
 
 		for (const result of data.Search) {
 			const type = this.typeMappings.get(result.Type.toLowerCase());

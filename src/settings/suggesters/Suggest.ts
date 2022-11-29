@@ -53,7 +53,7 @@ export class Suggest<T> {
 		this.setSelectedItem(item, false);
 	}
 
-	setSuggestions(values: T[]) {
+	setSuggestions(values: T[]): void {
 		this.containerEl.empty();
 		const suggestionEls: HTMLDivElement[] = [];
 
@@ -68,14 +68,14 @@ export class Suggest<T> {
 		this.setSelectedItem(0, false);
 	}
 
-	useSelectedItem(event: MouseEvent | KeyboardEvent) {
+	useSelectedItem(event: MouseEvent | KeyboardEvent): void {
 		const currentValue = this.values[this.selectedItem];
 		if (currentValue) {
 			this.owner.selectSuggestion(currentValue, event);
 		}
 	}
 
-	setSelectedItem(selectedIndex: number, scrollIntoView: boolean) {
+	setSelectedItem(selectedIndex: number, scrollIntoView: boolean): void {
 		const normalizedIndex = this.suggestions.length > 0 ? wrapAround(selectedIndex, this.suggestions.length) : 0;
 		const prevSelectedSuggestion = this.suggestions[this.selectedItem];
 		const selectedSuggestion = this.suggestions[normalizedIndex];
@@ -141,7 +141,7 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
 				{
 					name: 'sameWidth',
 					enabled: true,
-					fn: ({ state, instance }) => {
+					fn: ({ state, instance }): void => {
 						// Note: positioning needs to be calculated twice -
 						// first pass - positioning it according to the width of the popper
 						// second pass - position it with the width bound to the reference element

@@ -33,7 +33,7 @@ export class MediaDbIdSearchModal extends Modal {
 		this.closeCallback = closeCallback;
 	}
 
-	keyPressCallback(event: KeyboardEvent) {
+	keyPressCallback(event: KeyboardEvent): void {
 		if (event.key === 'Enter') {
 			this.search();
 		}
@@ -59,7 +59,7 @@ export class MediaDbIdSearchModal extends Modal {
 		}
 	}
 
-	onOpen() {
+	onOpen(): void {
 		const { contentEl } = this;
 
 		contentEl.createEl('h2', { text: this.title });
@@ -108,7 +108,7 @@ export class MediaDbIdSearchModal extends Modal {
 			});
 	}
 
-	onClose() {
+	onClose(): void {
 		this.closeCallback();
 		const { contentEl } = this;
 		contentEl.empty();

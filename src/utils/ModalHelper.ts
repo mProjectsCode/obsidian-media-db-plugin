@@ -229,7 +229,7 @@ export class ModalHelper {
 	 */
 	async createSearchModal(searchModalOptions: SearchModalOptions): Promise<{ searchModalResult: SearchModalResult; searchModal: MediaDbSearchModal }> {
 		const modal = new MediaDbSearchModal(this.plugin, searchModalOptions);
-		const res: SearchModalResult = await new Promise((resolve, reject) => {
+		const res: SearchModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setCloseCallback(err => {
 				if (err) {
@@ -269,8 +269,7 @@ export class ModalHelper {
 		}
 
 		try {
-			let callbackRes: MediaTypeModel[];
-			callbackRes = await submitCallback(searchModalResult.data);
+			const callbackRes: MediaTypeModel[] = await submitCallback(searchModalResult.data);
 			searchModal.close();
 			return callbackRes;
 		} catch (e) {
@@ -293,7 +292,7 @@ export class ModalHelper {
 		advancedSearchModalOptions: AdvancedSearchModalOptions
 	): Promise<{ advancedSearchModalResult: AdvancedSearchModalResult; advancedSearchModal: MediaDbAdvancedSearchModal }> {
 		const modal = new MediaDbAdvancedSearchModal(this.plugin, advancedSearchModalOptions);
-		const res: AdvancedSearchModalResult = await new Promise((resolve, reject) => {
+		const res: AdvancedSearchModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setCloseCallback(err => {
 				if (err) {
@@ -336,8 +335,7 @@ export class ModalHelper {
 		}
 
 		try {
-			let callbackRes: MediaTypeModel[];
-			callbackRes = await submitCallback(advancedSearchModalResult.data);
+			const callbackRes: MediaTypeModel[] = await submitCallback(advancedSearchModalResult.data);
 			advancedSearchModal.close();
 			return callbackRes;
 		} catch (e) {
@@ -358,7 +356,7 @@ export class ModalHelper {
 	 */
 	async createIdSearchModal(idSearchModalOptions: IdSearchModalOptions): Promise<{ idSearchModalResult: IdSearchModalResult; idSearchModal: MediaDbIdSearchModal }> {
 		const modal = new MediaDbIdSearchModal(this.plugin, idSearchModalOptions);
-		const res: IdSearchModalResult = await new Promise((resolve, reject) => {
+		const res: IdSearchModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setCloseCallback(err => {
 				if (err) {
@@ -401,8 +399,7 @@ export class ModalHelper {
 		}
 
 		try {
-			let callbackRes: MediaTypeModel;
-			callbackRes = await submitCallback(idSearchModalResult.data);
+			const callbackRes: MediaTypeModel = await submitCallback(idSearchModalResult.data);
 			idSearchModal.close();
 			return callbackRes;
 		} catch (e) {
@@ -423,7 +420,7 @@ export class ModalHelper {
 	 */
 	async createSelectModal(selectModalOptions: SelectModalOptions): Promise<{ selectModalResult: SelectModalResult; selectModal: MediaDbSearchResultModal }> {
 		const modal = new MediaDbSearchResultModal(this.plugin, selectModalOptions);
-		const res: SelectModalResult = await new Promise((resolve, reject) => {
+		const res: SelectModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setSkipCallback(() => resolve({ code: ModalResultCode.SKIP }));
 			modal.setCloseCallback(err => {
@@ -469,8 +466,7 @@ export class ModalHelper {
 		}
 
 		try {
-			let callbackRes: MediaTypeModel[];
-			callbackRes = await submitCallback(selectModalResult.data);
+			const callbackRes: MediaTypeModel[] = await submitCallback(selectModalResult.data);
 			selectModal.close();
 			return callbackRes;
 		} catch (e) {
@@ -484,7 +480,7 @@ export class ModalHelper {
 	async createPreviewModal(previewModalOptions: PreviewModalOptions): Promise<{ previewModalResult: PreviewModalResult; previewModal: MediaDbPreviewModal }> {
 		//todo: handle attachFile for existing files
 		const modal = new MediaDbPreviewModal(this.plugin, previewModalOptions);
-		const res: PreviewModalResult = await new Promise((resolve, reject) => {
+		const res: PreviewModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setCloseCallback(err => {
 				if (err) {
@@ -516,8 +512,7 @@ export class ModalHelper {
 		}
 
 		try {
-			let callbackRes: boolean;
-			callbackRes = await submitCallback(previewModalResult.data);
+			const callbackRes: boolean = await submitCallback(previewModalResult.data);
 			previewModal.close();
 			return callbackRes;
 		} catch (e) {

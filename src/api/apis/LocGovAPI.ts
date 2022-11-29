@@ -1,7 +1,6 @@
 import { APIModel } from '../APIModel';
 import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
-import { debugLog } from '../../utils/Utils';
 
 // WIP
 export class LocGovAPI extends APIModel {

@@ -9,7 +9,6 @@ import { GameModel } from '../models/GameModel';
 import { WikiModel } from '../models/WikiModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { BoardGameModel } from '../models/BoardGameModel';
-import { awaitExpression } from '@babel/types';
 
 export const MEDIA_TYPES: MediaType[] = [MediaType.Movie, MediaType.Series, MediaType.Game, MediaType.Wiki, MediaType.MusicRelease, MediaType.BoardGame];
 
@@ -20,7 +19,7 @@ export class MediaTypeManager {
 
 	constructor() {}
 
-	updateTemplates(settings: MediaDbPluginSettings) {
+	updateTemplates(settings: MediaDbPluginSettings): void {
 		this.mediaFileNameTemplateMap = new Map<MediaType, string>();
 		this.mediaFileNameTemplateMap.set(MediaType.Movie, settings.movieFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Series, settings.seriesFileNameTemplate);
@@ -38,7 +37,7 @@ export class MediaTypeManager {
 		this.mediaTemplateMap.set(MediaType.BoardGame, settings.boardgameTemplate);
 	}
 
-	updateFolders(settings: MediaDbPluginSettings) {
+	updateFolders(settings: MediaDbPluginSettings): void {
 		this.mediaFolderMap = new Map<MediaType, string>();
 		this.mediaFolderMap.set(MediaType.Movie, settings.movieFolder);
 		this.mediaFolderMap.set(MediaType.Series, settings.seriesFolder);
@@ -52,7 +51,7 @@ export class MediaTypeManager {
 		return replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType()), mediaTypeModel);
 	}
 
-	async getTemplate(mediaTypeModel: MediaTypeModel, app: App) {
+	async getTemplate(mediaTypeModel: MediaTypeModel, app: App): Promise<string> {
 		const templateFileName = this.mediaTemplateMap.get(mediaTypeModel.getMediaType());
 
 		if (!templateFileName) {
@@ -84,7 +83,7 @@ export class MediaTypeManager {
 		if (!(await app.vault.adapter.exists(folderPath))) {
 			await app.vault.createFolder(folderPath);
 		}
-		let folder: TAbstractFile = app.vault.getAbstractFileByPath(folderPath);
+		const folder: TAbstractFile = app.vault.getAbstractFileByPath(folderPath);
 
 		if (!(folder instanceof TFolder)) {
 			throw Error(`Expected ${folder} to be instance of TFolder`);

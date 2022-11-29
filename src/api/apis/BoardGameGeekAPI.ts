@@ -35,7 +35,7 @@ export class BoardGameGeekAPI extends APIModel {
 
 		console.debug(response);
 
-		let ret: MediaTypeModel[] = [];
+		const ret: MediaTypeModel[] = [];
 
 		for (const boardgame of Array.from(response.querySelectorAll('boardgame'))) {
 			const id = boardgame.attributes.getNamedItem('objectid')!.value;

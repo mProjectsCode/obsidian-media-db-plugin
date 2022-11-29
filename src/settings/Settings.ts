@@ -85,7 +85,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 export const lockedPropertyMappings: string[] = ['type', 'id', 'dataSource'];
 
 export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings {
-	let defaultSettings = DEFAULT_SETTINGS;
+	const defaultSettings = DEFAULT_SETTINGS;
 
 	// construct property mapping defaults
 	const propertyMappingModels: PropertyMappingModel[] = [];
@@ -406,7 +406,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		containerEl.createEl('h3', { text: 'Property Mappings' });
 
-		let propertyMappingExplanation = containerEl.createEl('div');
+		const propertyMappingExplanation = containerEl.createEl('div');
 		propertyMappingExplanation.innerHTML = `
 		<p>Allow you to remap the metadata fields of newly created media db entries.</p>
 		<p>
@@ -425,8 +425,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			target: this.containerEl,
 			props: {
 				models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),
-				save: (model: PropertyMappingModel) => {
-					let propertyMappingModels: PropertyMappingModel[] = [];
+				save: (model: PropertyMappingModel): void => {
+					const propertyMappingModels: PropertyMappingModel[] = [];
 
 					for (const model2 of this.plugin.settings.propertyMappingModels) {
 						if (model2.type === model.type) {

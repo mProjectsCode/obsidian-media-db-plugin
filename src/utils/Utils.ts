@@ -14,16 +14,6 @@ export function wrapAround(value: number, size: number): number {
 	return mod(value, size);
 }
 
-/**
- * @deprecated use console.debug instead
- * @param o
- */
-export function debugLog(o: any): void {
-	if (debug) {
-		console.log(o);
-	}
-}
-
 export function containsOnlyLettersAndUnderscores(str: string): boolean {
 	return /^[a-zA-Z_]+$/.test(str);
 }
@@ -33,9 +23,7 @@ export function replaceIllegalFileNameCharactersInString(string: string): string
 }
 
 export function replaceTags(template: string, mediaTypeModel: MediaTypeModel): string {
-	const resolvedTemplate = template.replace(new RegExp('{{.*?}}', 'g'), (match: string) => replaceTag(match, mediaTypeModel));
-
-	return resolvedTemplate;
+	return template.replace(new RegExp('{{.*?}}', 'g'), (match: string) => replaceTag(match, mediaTypeModel));
 }
 
 function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
@@ -44,11 +32,11 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
 	tag = tag.substring(0, tag.length - 2);
 	tag = tag.trim();
 
-	let parts = tag.split(':');
+	const parts = tag.split(':');
 	if (parts.length === 1) {
-		let path = parts[0].split('.');
+		const path = parts[0].split('.');
 
-		let obj = traverseMetaData(path, mediaTypeModel);
+		const obj = traverseMetaData(path, mediaTypeModel);
 
 		if (obj === undefined) {
 			return '{{ INVALID TEMPLATE TAG - object undefined }}';
@@ -56,11 +44,11 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
 
 		return obj;
 	} else if (parts.length === 2) {
-		let operator = parts[0];
+		const operator = parts[0];
 
-		let path = parts[1].split('.');
+		const path = parts[1].split('.');
 
-		let obj = traverseMetaData(path, mediaTypeModel);
+		const obj = traverseMetaData(path, mediaTypeModel);
 
 		if (obj === undefined) {
 			return '{{ INVALID TEMPLATE TAG - object undefined }}';
@@ -87,7 +75,7 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
 function traverseMetaData(path: Array<string>, mediaTypeModel: MediaTypeModel): any {
 	let o: any = mediaTypeModel;
 
-	for (let part of path) {
+	for (const part of path) {
 		if (o !== undefined) {
 			o = o[part];
 		}
@@ -97,12 +85,12 @@ function traverseMetaData(path: Array<string>, mediaTypeModel: MediaTypeModel): 
 }
 
 export function markdownTable(content: string[][]): string {
-	let rows = content.length;
+	const rows = content.length;
 	if (rows === 0) {
 		return '';
 	}
 
-	let columns = content[0].length;
+	const columns = content[0].length;
 	if (columns === 0) {
 		return '';
 	}
@@ -112,7 +100,7 @@ export function markdownTable(content: string[][]): string {
 		}
 	}
 
-	let longestStringInColumns: number[] = [];
+	const longestStringInColumns: number[] = [];
 
 	for (let i = 0; i < columns; i++) {
 		let longestStringInColumn = 0;
@@ -147,34 +135,16 @@ export function markdownTable(content: string[][]): string {
 	return table;
 }
 
-export function dateToString(date: Date) {
+export function dateToString(date: Date): string {
 	return `${date.getMonth() + 1}-${date.getDate()}-${date.getFullYear()}`;
 }
 
-export function timeToString(time: Date) {
+export function timeToString(time: Date): string {
 	return `${time.getHours()}-${time.getMinutes()}-${time.getSeconds()}`;
 }
 
-export function dateTimeToString(dateTime: Date) {
+export function dateTimeToString(dateTime: Date): string {
 	return `${dateToString(dateTime)} ${timeToString(dateTime)}`;
-}
-
-/**
- * @deprecated
- */
-export class UserCancelError extends Error {
-	constructor(message: string) {
-		super(message);
-	}
-}
-
-/**
- * @deprecated
- */
-export class UserSkipError extends Error {
-	constructor(message: string) {
-		super(message);
-	}
 }
 
 // js can't even implement modulo correctly...

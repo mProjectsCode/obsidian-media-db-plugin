@@ -37,14 +37,14 @@ export class MediaDbPreviewModal extends Modal {
 	}
 
 	async preview(): Promise<void> {
-		let { contentEl } = this;
+		const { contentEl } = this;
 		contentEl.addClass('media-db-plugin-preview-modal');
 
 		contentEl.createEl('h2', { text: this.title });
 
 		const previewWrapper = contentEl.createDiv({ cls: 'media-db-plugin-preview-wrapper' });
 
-		for (let result of this.elements) {
+		for (const result of this.elements) {
 			previewWrapper.createEl('h3', { text: result.englishTitle });
 			const fileDiv = previewWrapper.createDiv();
 

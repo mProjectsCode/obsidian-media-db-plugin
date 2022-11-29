@@ -30,7 +30,7 @@ export class WikipediaAPI extends APIModel {
 
 		const data = await fetchData.json();
 		console.debug(data);
-		let ret: MediaTypeModel[] = [];
+		const ret: MediaTypeModel[] = [];
 
 		for (const result of data.query.search) {
 			ret.push(

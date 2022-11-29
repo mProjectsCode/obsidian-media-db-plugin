@@ -38,7 +38,7 @@ export class MALAPI extends APIModel {
 
 		console.debug(data);
 
-		let ret: MediaTypeModel[] = [];
+		const ret: MediaTypeModel[] = [];
 
 		for (const result of data.data) {
 			const type = this.typeMappings.get(result.type?.toLowerCase());

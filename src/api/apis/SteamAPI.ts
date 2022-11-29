@@ -37,7 +37,7 @@ export class SteamAPI extends APIModel {
 
 		console.debug(data);
 
-		let filteredData = [];
+		const filteredData = [];
 
 		for (const app of data.applist.apps) {
 			if (app.name.toLowerCase().includes(title.toLowerCase())) {
@@ -48,7 +48,7 @@ export class SteamAPI extends APIModel {
 			}
 		}
 
-		let ret: MediaTypeModel[] = [];
+		const ret: MediaTypeModel[] = [];
 
 		for (const result of filteredData) {
 			ret.push(
@@ -69,7 +69,7 @@ export class SteamAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `http://store.steampowered.com/api/appdetails?appids=${encodeURIComponent(id)}`;
+		const searchUrl = `http://store.steampowered.com/api/appdetails?appids=${encodeURIComponent(id)}&l=en`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
