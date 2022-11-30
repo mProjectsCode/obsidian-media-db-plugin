@@ -48,7 +48,7 @@ export class BoardGameModel extends MediaTypeModel {
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'boardgame'];
+		return ['boardgame'];
 	}
 
 	getMediaType(): MediaType {

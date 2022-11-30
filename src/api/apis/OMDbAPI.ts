@@ -138,7 +138,7 @@ export class OMDbAPI extends APIModel {
 
 				released: true,
 				streamingServices: [],
-				premiere: new Date(result.Released).toLocaleDateString() ?? 'unknown',
+				premiere: new Date(result.Released).toLocaleDateString('en-CA') ?? 'unknown',
 
 				userData: {
 					watched: false,
@@ -169,7 +169,7 @@ export class OMDbAPI extends APIModel {
 				released: true,
 				streamingServices: [],
 				airing: false,
-				airedFrom: new Date(result.Released).toLocaleDateString() ?? 'unknown',
+				airedFrom: new Date(result.Released).toLocaleDateString('en-CA') ?? 'unknown',
 				airedTo: 'unknown',
 
 				userData: {
@@ -195,7 +195,9 @@ export class OMDbAPI extends APIModel {
 				image: result.Poster ?? '',
 
 				released: true,
-				releaseDate: new Date(result.Released).toLocaleDateString() ?? 'unknown',
+				releaseDate: new Date(result.Released).toLocaleDateString('en-CA') ?? 'unknown',
+
+				achievementCount: 0,
 
 				userData: {
 					played: false,

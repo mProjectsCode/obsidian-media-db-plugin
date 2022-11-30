@@ -109,7 +109,9 @@ export class SteamAPI extends APIModel {
 			image: result.header_image ?? '',
 
 			released: !result.release_date?.comming_soon,
-			releaseDate: new Date(result.release_date?.date).toLocaleDateString() ?? 'unknown',
+			releaseDate: new Date(result.release_date?.date).toLocaleDateString('en-CA') ?? 'unknown',
+
+			achievementCount: result.achievements?.total ?? 0,
 
 			userData: {
 				played: false,

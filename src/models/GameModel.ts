@@ -10,6 +10,8 @@ export class GameModel extends MediaTypeModel {
 	released: boolean;
 	releaseDate: string;
 
+	achievementCount: number;
+
 	userData: {
 		played: boolean;
 		personalRating: number;
@@ -23,6 +25,7 @@ export class GameModel extends MediaTypeModel {
 		this.image = undefined;
 		this.released = undefined;
 		this.releaseDate = undefined;
+		this.achievementCount = undefined;
 		this.userData = {
 			played: undefined,
 			personalRating: undefined,
@@ -38,7 +41,7 @@ export class GameModel extends MediaTypeModel {
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'game'];
+		return ['game'];
 	}
 
 	getMediaType(): MediaType {

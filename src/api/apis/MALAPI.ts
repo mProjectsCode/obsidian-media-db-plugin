@@ -115,7 +115,7 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				premiere: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
+				premiere: new Date(result.aired?.from).toLocaleDateString('en-CA') ?? 'unknown',
 				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
 				userData: {
@@ -146,7 +146,7 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				premiere: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
+				premiere: new Date(result.aired?.from).toLocaleDateString('en-CA') ?? 'unknown',
 				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
 				userData: {
@@ -176,8 +176,8 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				airedFrom: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
-				airedTo: new Date(result.aired?.to).toLocaleDateString() ?? 'unknown',
+				airedFrom: new Date(result.aired?.from).toLocaleDateString('en-CA') ?? 'unknown',
+				airedTo: new Date(result.aired?.to).toLocaleDateString('en-CA') ?? 'unknown',
 				airing: result.airing,
 
 				userData: {

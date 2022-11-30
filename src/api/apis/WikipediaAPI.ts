@@ -72,7 +72,7 @@ export class WikipediaAPI extends APIModel {
 			id: result.pageid,
 
 			wikiUrl: result.fullurl,
-			lastUpdated: new Date(result.touched).toLocaleDateString() ?? 'unknown',
+			lastUpdated: new Date(result.touched).toLocaleDateString('en-CA') ?? 'unknown',
 			length: result.length,
 
 			userData: {},
