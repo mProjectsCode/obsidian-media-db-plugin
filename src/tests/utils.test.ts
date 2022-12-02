@@ -1,4 +1,4 @@
-import {containsOnlyLettersAndUnderscores, replaceIllegalFileNameCharactersInString, wrapAround} from '../utils/Utils';
+import { containsOnlyLettersAndUnderscores, replaceIllegalFileNameCharactersInString, wrapAround } from '../utils/Utils';
 
 test('If wrapAround wraps correctly', () => {
 	expect(wrapAround(100, 5)).toBe(0);

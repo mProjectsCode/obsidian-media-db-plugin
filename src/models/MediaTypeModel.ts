@@ -1,4 +1,4 @@
-import {MediaType} from '../utils/MediaType';
+import { MediaType } from '../utils/MediaType';
 
 export abstract class MediaTypeModel {
 	type: string;
@@ -11,7 +11,6 @@ export abstract class MediaTypeModel {
 	id: string;
 
 	userData: object;
-
 
 	protected constructor() {
 		this.type = undefined;
@@ -33,7 +32,7 @@ export abstract class MediaTypeModel {
 	abstract getTags(): string[];
 
 	toMetaDataObject(): object {
-		return {...this.getWithOutUserData(), ...this.userData, tags: this.getTags().join('/')};
+		return { ...this.getWithOutUserData(), ...this.userData, tags: this.getTags().join('/') };
 	}
 
 	getWithOutUserData(): object {
@@ -41,5 +40,4 @@ export abstract class MediaTypeModel {
 		delete copy.userData;
 		return copy;
 	}
-
 }

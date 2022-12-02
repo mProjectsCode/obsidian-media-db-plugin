@@ -1,5 +1,5 @@
-import {containsOnlyLettersAndUnderscores, PropertyMappingNameConflictError, PropertyMappingValidationError} from '../utils/Utils';
-import {MediaType} from '../utils/MediaType';
+import { containsOnlyLettersAndUnderscores, PropertyMappingNameConflictError, PropertyMappingValidationError } from '../utils/Utils';
+import { MediaType } from '../utils/MediaType';
 
 export enum PropertyMappingOption {
 	Default = 'default',
@@ -18,7 +18,7 @@ export class PropertyMappingModel {
 		this.properties = properties ?? [];
 	}
 
-	validate(): { res: boolean, err?: Error } {
+	validate(): { res: boolean; err?: Error } {
 		console.debug(`MDB | validated property mappings for ${this.type}`);
 
 		// check properties
@@ -43,7 +43,9 @@ export class PropertyMappingModel {
 				// two or more properties are mapped to the same property
 				return {
 					res: false,
-					err: new PropertyMappingNameConflictError(`Multiple remapped properties (${propertiesWithSameTarget.map(x => x.toString()).toString()}) may not share the same name.`),
+					err: new PropertyMappingNameConflictError(
+						`Multiple remapped properties (${propertiesWithSameTarget.map(x => x.toString()).toString()}) may not share the same name.`
+					),
 				};
 			}
 		}
@@ -93,7 +95,7 @@ export class PropertyMapping {
 		this.locked = locked ?? false;
 	}
 
-	validate(): { res: boolean, err?: Error } {
+	validate(): { res: boolean; err?: Error } {
 		// locked property may only be default
 		if (this.locked) {
 			if (this.mapping === PropertyMappingOption.Remove) {
@@ -111,10 +113,10 @@ export class PropertyMapping {
 		}
 
 		if (this.mapping === PropertyMappingOption.Default) {
-			return {res: true};
+			return { res: true };
 		}
 		if (this.mapping === PropertyMappingOption.Remove) {
-			return {res: true};
+			return { res: true };
 		}
 
 		if (!this.property || !containsOnlyLettersAndUnderscores(this.property)) {

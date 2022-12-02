@@ -1,6 +1,6 @@
-import {App, ButtonComponent, Modal, Setting} from 'obsidian';
-import {SelectModalElement} from './SelectModalElement';
-import {mod} from '../utils/Utils';
+import { App, ButtonComponent, Modal, Setting } from 'obsidian';
+import { SelectModalElement } from './SelectModalElement';
+import { mod } from '../utils/Utils';
 
 export abstract class SelectModal<T> extends Modal {
 	allowMultiSelect: boolean;
@@ -16,7 +16,6 @@ export abstract class SelectModal<T> extends Modal {
 
 	elements: T[];
 	selectModalElements: SelectModalElement<T>[];
-
 
 	protected constructor(app: App, elements: T[], allowMultiSelect: boolean = true) {
 		super(app);
@@ -34,18 +33,18 @@ export abstract class SelectModal<T> extends Modal {
 		this.elements = elements;
 		this.selectModalElements = [];
 
-		this.scope.register([], 'ArrowUp', (evt) => {
+		this.scope.register([], 'ArrowUp', evt => {
 			this.highlightUp();
 			evt.preventDefault();
 		});
-		this.scope.register([], 'ArrowDown', (evt) => {
+		this.scope.register([], 'ArrowDown', evt => {
 			this.highlightDown();
 			evt.preventDefault();
 		});
 		this.scope.register([], 'ArrowRight', () => {
 			this.activateHighlighted();
 		});
-		this.scope.register([], ' ', (evt) => {
+		this.scope.register([], ' ', evt => {
 			if (this.elementWrapper && this.elementWrapper === document.activeElement) {
 				this.activateHighlighted();
 				evt.preventDefault();
@@ -60,7 +59,7 @@ export abstract class SelectModal<T> extends Modal {
 
 	abstract skip(): void;
 
-	disableAllOtherElements(elementId: number) {
+	disableAllOtherElements(elementId: number): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.id !== elementId) {
 				selectModalElement.setActive(false);
@@ -68,7 +67,7 @@ export abstract class SelectModal<T> extends Modal {
 		}
 	}
 
-	deHighlightAllOtherElements(elementId: number) {
+	deHighlightAllOtherElements(elementId: number): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.id !== elementId) {
 				selectModalElement.setHighlighted(false);
@@ -76,14 +75,14 @@ export abstract class SelectModal<T> extends Modal {
 		}
 	}
 
-	async onOpen() {
-		const {contentEl, titleEl} = this;
+	async onOpen(): Promise<void> {
+		const { contentEl, titleEl } = this;
 
-		titleEl.createEl('h2', {text: this.title});
+		titleEl.createEl('h2', { text: this.title });
 		contentEl.addClass('media-db-plugin-select-modal');
-		contentEl.createEl('p', {text: this.description});
+		contentEl.createEl('p', { text: this.description });
 
-		this.elementWrapper = contentEl.createDiv({cls: 'media-db-plugin-select-wrapper'});
+		this.elementWrapper = contentEl.createDiv({ cls: 'media-db-plugin-select-wrapper' });
 		this.elementWrapper.tabIndex = 0;
 
 		let i = 0;
@@ -123,7 +122,7 @@ export abstract class SelectModal<T> extends Modal {
 		});
 	}
 
-	activateHighlighted() {
+	activateHighlighted(): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.isHighlighted()) {
 				selectModalElement.setActive(!selectModalElement.isActive());
@@ -134,7 +133,7 @@ export abstract class SelectModal<T> extends Modal {
 		}
 	}
 
-	highlightUp() {
+	highlightUp(): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.isHighlighted()) {
 				this.getPreviousSelectModalElement(selectModalElement).setHighlighted(true);
@@ -146,7 +145,7 @@ export abstract class SelectModal<T> extends Modal {
 		this.selectModalElements.last().setHighlighted(true);
 	}
 
-	highlightDown() {
+	highlightDown(): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.isHighlighted()) {
 				this.getNextSelectModalElement(selectModalElement).setHighlighted(true);
@@ -171,5 +170,4 @@ export abstract class SelectModal<T> extends Modal {
 
 		return this.selectModalElements.filter(x => x.id === nextId).first();
 	}
-
 }

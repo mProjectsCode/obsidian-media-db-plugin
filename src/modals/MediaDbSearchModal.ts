@@ -1,36 +1,39 @@
 import { ButtonComponent, Modal, Notice, Setting, TextComponent, ToggleComponent } from 'obsidian';
 import { MediaTypeModel } from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
-import { ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS, AdvancedSearchModalData, AdvancedSearchModalOptions } from '../utils/ModalHelper';
+import { SEARCH_MODAL_DEFAULT_OPTIONS, SearchModalData, SearchModalOptions } from '../utils/ModalHelper';
+import { MEDIA_TYPES } from '../utils/MediaTypeManager';
+import { unCamelCase } from '../utils/Utils';
+import { MediaType } from '../utils/MediaType';
 
-export class MediaDbAdvancedSearchModal extends Modal {
+export class MediaDbSearchModal extends Modal {
 	plugin: MediaDbPlugin;
 
 	query: string;
 	isBusy: boolean;
 	title: string;
-	selectedApis: { name: string; selected: boolean }[];
+	selectedTypes: { name: MediaType; selected: boolean }[];
 
 	searchBtn: ButtonComponent;
 
-	submitCallback?: (res: AdvancedSearchModalData) => void;
+	submitCallback?: (res: SearchModalData) => void;
 	closeCallback?: (err?: Error) => void;
 
-	constructor(plugin: MediaDbPlugin, advancedSearchModalOptions: AdvancedSearchModalOptions) {
-		advancedSearchModalOptions = Object.assign({}, ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS, advancedSearchModalOptions);
+	constructor(plugin: MediaDbPlugin, searchModalOptions: SearchModalOptions) {
+		searchModalOptions = Object.assign({}, SEARCH_MODAL_DEFAULT_OPTIONS, searchModalOptions);
 		super(plugin.app);
 
 		this.plugin = plugin;
-		this.selectedApis = [];
-		this.title = advancedSearchModalOptions.modalTitle;
-		this.query = advancedSearchModalOptions.prefilledSearchString;
+		this.selectedTypes = [];
+		this.title = searchModalOptions.modalTitle;
+		this.query = searchModalOptions.prefilledSearchString;
 
-		for (const api of this.plugin.apiManager.apis) {
-			this.selectedApis.push({ name: api.apiName, selected: advancedSearchModalOptions.preselectedAPIs.contains(api.apiName) });
+		for (const mediaType of MEDIA_TYPES) {
+			this.selectedTypes.push({ name: mediaType, selected: searchModalOptions.preselectedTypes.contains(mediaType) });
 		}
 	}
 
-	setSubmitCallback(submitCallback: (res: AdvancedSearchModalData) => void): void {
+	setSubmitCallback(submitCallback: (res: SearchModalData) => void): void {
 		this.submitCallback = submitCallback;
 	}
 
@@ -50,10 +53,10 @@ export class MediaDbAdvancedSearchModal extends Modal {
 			return;
 		}
 
-		const apis: string[] = this.selectedApis.filter(x => x.selected).map(x => x.name);
+		const types: MediaType[] = this.selectedTypes.filter(x => x.selected).map(x => x.name);
 
-		if (apis.length === 0) {
-			new Notice('MDB | No API selected');
+		if (types.length === 0) {
+			new Notice('MDB | No Type selected');
 			return;
 		}
 
@@ -62,7 +65,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 			this.searchBtn.setDisabled(false);
 			this.searchBtn.setButtonText('Searching...');
 
-			this.submitCallback({ query: this.query, apis: apis });
+			this.submitCallback({ query: this.query, types: types });
 		}
 	}
 
@@ -85,21 +88,19 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 		contentEl.createEl('h3', { text: 'APIs to search' });
 
-		// const apiToggleComponents: Component[] = [];
-		for (const api of this.plugin.apiManager.apis) {
+		for (const mediaType of MEDIA_TYPES) {
 			const apiToggleListElementWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
 
 			const apiToggleTextWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
-			apiToggleTextWrapper.createEl('span', { text: api.apiName, cls: 'media-db-plugin-list-text' });
-			apiToggleTextWrapper.createEl('small', { text: api.apiDescription, cls: 'media-db-plugin-list-text' });
+			apiToggleTextWrapper.createEl('span', { text: unCamelCase(mediaType), cls: 'media-db-plugin-list-text' });
 
 			const apiToggleComponentWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-toggle' });
 
 			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
-			apiToggleComponent.setTooltip(api.apiName);
-			apiToggleComponent.setValue(this.selectedApis.find(x => x.name === api.apiName).selected);
+			apiToggleComponent.setTooltip(unCamelCase(mediaType));
+			apiToggleComponent.setValue(this.selectedTypes.find(x => x.name === mediaType).selected);
 			apiToggleComponent.onChange(value => {
-				this.selectedApis.find(x => x.name === api.apiName).selected = value;
+				this.selectedTypes.find(x => x.name === mediaType).selected = value;
 			});
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
 		}

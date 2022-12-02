@@ -1,5 +1,5 @@
-import {PropertyMappingOption} from './PropertyMapping';
-import {MEDIA_TYPES} from '../utils/MediaTypeManager';
+import { PropertyMappingOption } from './PropertyMapping';
+import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import MediaDbPlugin from '../main';
 
 export class PropertyMapper {
@@ -40,7 +40,7 @@ export class PropertyMapper {
 						// @ts-ignore
 						newObj[propertyMapping.newProperty] = value;
 					} else if (propertyMapping.mapping === PropertyMappingOption.Remove) {
-
+						// do nothing
 					} else if (propertyMapping.mapping === PropertyMappingOption.Default) {
 						// @ts-ignore
 						newObj[key] = value;

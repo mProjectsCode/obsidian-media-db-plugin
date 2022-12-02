@@ -1,7 +1,7 @@
-import {MediaTypeModel} from '../models/MediaTypeModel';
+import { MediaTypeModel } from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
-import {SelectModal} from './SelectModal';
-import {SELECT_MODAL_OPTIONS_DEFAULT, SelectModalData, SelectModalOptions} from '../utils/ModalHelper';
+import { SelectModal } from './SelectModal';
+import { SELECT_MODAL_OPTIONS_DEFAULT, SelectModalData, SelectModalOptions } from '../utils/ModalHelper';
 
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
@@ -12,7 +12,6 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	submitCallback: (res: SelectModalData) => void;
 	closeCallback: (err?: Error) => void;
 	skipCallback: () => void;
-
 
 	constructor(plugin: MediaDbPlugin, selectModalOptions: SelectModalOptions) {
 		selectModalOptions = Object.assign({}, SELECT_MODAL_OPTIONS_DEFAULT, selectModalOptions);
@@ -41,27 +40,27 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	}
 
 	// Renders each suggestion item.
-	renderElement(item: MediaTypeModel, el: HTMLElement) {
-		el.createEl('div', {text: this.plugin.mediaTypeManager.getFileName(item)});
-		el.createEl('small', {text: `${item.getSummary()}\n`});
-		el.createEl('small', {text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}`});
+	renderElement(item: MediaTypeModel, el: HTMLElement): void {
+		el.createEl('div', { text: this.plugin.mediaTypeManager.getFileName(item) });
+		el.createEl('small', { text: `${item.getSummary()}\n` });
+		el.createEl('small', { text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}` });
 	}
 
 	// Perform action on the selected suggestion.
-	submit() {
+	submit(): void {
 		if (!this.busy) {
 			this.busy = true;
 			this.submitButton.setButtonText('Creating entry...');
-			this.submitCallback({selected: this.selectModalElements.filter(x => x.isActive()).map(x => x.value)});
+			this.submitCallback({ selected: this.selectModalElements.filter(x => x.isActive()).map(x => x.value) });
 		}
 	}
 
-	skip() {
+	skip(): void {
 		this.skipButton.setButtonText('Skipping...');
 		this.skipCallback();
 	}
 
-	onClose() {
+	onClose(): void {
 		this.closeCallback();
 	}
 }

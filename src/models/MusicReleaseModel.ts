@@ -1,7 +1,6 @@
-import {MediaTypeModel} from './MediaTypeModel';
-import {mediaDbTag, migrateObject} from '../utils/Utils';
-import {MediaType} from '../utils/MediaType';
-
+import { MediaTypeModel } from './MediaTypeModel';
+import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { MediaType } from '../utils/MediaType';
 
 export class MusicReleaseModel extends MediaTypeModel {
 	type: string;
@@ -50,8 +49,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 
 	getSummary(): string {
 		let summary = this.title + ' (' + this.year + ')';
-		if (this.artists.length > 0)
-			summary += ' - ' + this.artists.join(', ');
+		if (this.artists.length > 0) summary += ' - ' + this.artists.join(', ');
 		return summary;
 	}
 }

@@ -1,8 +1,8 @@
 // Credits go to Liam's Periodic Notes Plugin: https://github.com/liamcain/obsidian-periodic-notes
 
-import {App, ISuggestOwner, Scope} from 'obsidian';
-import {createPopper, Instance as PopperInstance} from '@popperjs/core';
-import {wrapAround} from 'src/utils/Utils';
+import { App, ISuggestOwner, Scope } from 'obsidian';
+import { createPopper, Instance as PopperInstance } from '@popperjs/core';
+import { wrapAround } from 'src/utils/Utils';
 
 export class Suggest<T> {
 	private owner: ISuggestOwner<T>;
@@ -16,27 +16,23 @@ export class Suggest<T> {
 		this.containerEl = containerEl;
 
 		containerEl.on('click', '.suggestion-item', this.onSuggestionClick.bind(this));
-		containerEl.on(
-			'mousemove',
-			'.suggestion-item',
-			this.onSuggestionMouseover.bind(this),
-		);
+		containerEl.on('mousemove', '.suggestion-item', this.onSuggestionMouseover.bind(this));
 
-		scope.register([], 'ArrowUp', (event) => {
+		scope.register([], 'ArrowUp', event => {
 			if (!event.isComposing) {
 				this.setSelectedItem(this.selectedItem - 1, true);
 				return false;
 			}
 		});
 
-		scope.register([], 'ArrowDown', (event) => {
+		scope.register([], 'ArrowDown', event => {
 			if (!event.isComposing) {
 				this.setSelectedItem(this.selectedItem + 1, true);
 				return false;
 			}
 		});
 
-		scope.register([], 'Enter', (event) => {
+		scope.register([], 'Enter', event => {
 			if (!event.isComposing) {
 				this.useSelectedItem(event);
 				return false;
@@ -57,11 +53,11 @@ export class Suggest<T> {
 		this.setSelectedItem(item, false);
 	}
 
-	setSuggestions(values: T[]) {
+	setSuggestions(values: T[]): void {
 		this.containerEl.empty();
 		const suggestionEls: HTMLDivElement[] = [];
 
-		values.forEach((value) => {
+		values.forEach(value => {
 			const suggestionEl = this.containerEl.createDiv('suggestion-item');
 			this.owner.renderSuggestion(value, suggestionEl);
 			suggestionEls.push(suggestionEl);
@@ -72,14 +68,14 @@ export class Suggest<T> {
 		this.setSelectedItem(0, false);
 	}
 
-	useSelectedItem(event: MouseEvent | KeyboardEvent) {
+	useSelectedItem(event: MouseEvent | KeyboardEvent): void {
 		const currentValue = this.values[this.selectedItem];
 		if (currentValue) {
 			this.owner.selectSuggestion(currentValue, event);
 		}
 	}
 
-	setSelectedItem(selectedIndex: number, scrollIntoView: boolean) {
+	setSelectedItem(selectedIndex: number, scrollIntoView: boolean): void {
 		const normalizedIndex = this.suggestions.length > 0 ? wrapAround(selectedIndex, this.suggestions.length) : 0;
 		const prevSelectedSuggestion = this.suggestions[this.selectedItem];
 		const selectedSuggestion = this.suggestions[normalizedIndex];
@@ -145,7 +141,7 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
 				{
 					name: 'sameWidth',
 					enabled: true,
-					fn: ({state, instance}) => {
+					fn: ({ state, instance }): void => {
 						// Note: positioning needs to be calculated twice -
 						// first pass - positioning it according to the width of the popper
 						// second pass - position it with the width bound to the reference element

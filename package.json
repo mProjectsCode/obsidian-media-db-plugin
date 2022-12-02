@@ -1,13 +1,14 @@
 {
 	"name": "obsidian-media-db-plugin",
-	"version": "0.4.1",
+	"version": "0.5.0",
 	"description": "A plugin that can query multiple APIs for movies, series, anime, games, music and wiki articles, and import them into your vault.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"test": "jest"
+		"test": "jest",
+		"format": "prettier --write ."
 	},
 	"keywords": [],
 	"author": "Moritz Jung",
@@ -22,6 +23,7 @@
 		"builtin-modules": "^3.2.0",
 		"esbuild": "0.13.12",
 		"esbuild-svelte": "^0.7.1",
+		"eslint-plugin-only-warn": "^1.0.3",
 		"jest": "^28.1.2",
 		"jest-fetch-mock": "^3.0.3",
 		"obsidian": "latest",
@@ -29,7 +31,8 @@
 		"svelte-preprocess": "^4.10.7",
 		"ts-jest": "^28.0.5",
 		"tslib": "2.3.1",
-		"typescript": "4.4.4"
+		"typescript": "4.4.4",
+		"prettier": "2.7.1"
 	},
 	"dependencies": {
 		"ts-node": "^10.8.1",
