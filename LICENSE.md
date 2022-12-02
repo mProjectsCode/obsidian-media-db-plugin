@@ -1,4 +1,5 @@
 # GNU GENERAL PUBLIC LICENSE
+
 Version 3, 29 June 2007
 
 Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
@@ -220,10 +221,10 @@ This requirement modifies the requirement in section 4 to
 "keep intact all notices".
 
 c) You must license the entire work, as a whole, under this
-License to anyone who comes into possession of a copy.  This
+License to anyone who comes into possession of a copy. This
 License will therefore apply, along with any applicable section 7
 additional terms, to the whole of the work, and all its parts,
-regardless of how they are packaged.  This License gives no
+regardless of how they are packaged. This License gives no
 permission to license the work in any other way, but it does not
 invalidate such permission if you have separately received it.
 
@@ -267,7 +268,7 @@ conveying of source, or (2) access to copy the
 Corresponding Source from a network server at no charge.
 
 c) Convey individual copies of the object code with a copy of the
-written offer to provide the Corresponding Source.  This
+written offer to provide the Corresponding Source. This
 alternative is allowed only occasionally and noncommercially, and
 only if you received the object code with such an offer, in accord
 with subsection 6b.
@@ -275,13 +276,13 @@ with subsection 6b.
 d) Convey the object code by offering access from a designated
 place (gratis or for a charge), and offer equivalent access to the
 Corresponding Source in the same way through the same place at no
-further charge.  You need not require recipients to copy the
-Corresponding Source along with the object code.  If the place to
+further charge. You need not require recipients to copy the
+Corresponding Source along with the object code. If the place to
 copy the object code is a network server, the Corresponding Source
 may be on a different server (operated by you or a third party)
 that supports equivalent copying facilities, provided you maintain
 clear directions next to the object code saying where to find the
-Corresponding Source.  Regardless of what server hosts the
+Corresponding Source. Regardless of what server hosts the
 Corresponding Source, you remain obligated to ensure that it is
 available for as long as needed to satisfy these requirements.
 
