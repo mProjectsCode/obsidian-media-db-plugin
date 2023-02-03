@@ -40,7 +40,11 @@ export class OMDbAPI extends APIModel {
 		const data = await fetchData.json();
 
 		if (data.Response === 'False') {
-			throw Error(`MDB | Received error from ${this.apiName}: ${data.Error}`);
+			if (data.Error === 'Movie not found!') {
+				return [];
+			}
+
+			throw Error(`MDB | Received error from ${this.apiName}: \n${JSON.stringify(data, undefined, 4)}`);
 		}
 		if (!data.Search) {
 			return [];
