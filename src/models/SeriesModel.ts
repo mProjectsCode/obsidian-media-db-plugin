@@ -17,9 +17,11 @@ export class SeriesModel extends MediaTypeModel {
 	episodes: number;
 	duration: string;
 	onlineRating: number;
+	actors: string[];
 	image: string;
 
 	released: boolean;
+	streamingServices: string[];
 	airing: boolean;
 	airedFrom: string;
 	airedTo: string;
@@ -38,11 +40,15 @@ export class SeriesModel extends MediaTypeModel {
 		this.episodes = undefined;
 		this.duration = undefined;
 		this.onlineRating = undefined;
+		this.actors = undefined;
 		this.image = undefined;
+
 		this.released = undefined;
+		this.streamingServices = undefined;
 		this.airing = undefined;
 		this.airedFrom = undefined;
 		this.airedTo = undefined;
+
 		this.userData = {
 			watched: undefined,
 			lastWatched: undefined,

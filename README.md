@@ -149,6 +149,15 @@ You are more than welcome to open an issue on [GitHub](https://github.com/mProje
 
 ### Changelog
 
+#### 0.5.0
+
+-   New simple search modal, select the media type and search all applicable APIs
+-   More data for Board Games
+-   Actors and Streaming Platforms for Movies and Series
+-   Separate new file location for all media types
+-   Separate command for each media type
+-   Fix problems with closing of preview modal
+
 #### 0.3.2
 
 -   Added Board Game Geek API (documentation pending)

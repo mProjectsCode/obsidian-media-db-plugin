@@ -45,7 +45,7 @@ export class SelectModalElement<T> {
 		return this.highlighted;
 	}
 
-	setHighlighted(value: boolean) {
+	setHighlighted(value: boolean): void {
 		this.highlighted = value;
 		if (this.highlighted) {
 			this.addClass(this.hoverClass);

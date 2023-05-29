@@ -59,7 +59,7 @@ export abstract class SelectModal<T> extends Modal {
 
 	abstract skip(): void;
 
-	disableAllOtherElements(elementId: number) {
+	disableAllOtherElements(elementId: number): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.id !== elementId) {
 				selectModalElement.setActive(false);
@@ -67,7 +67,7 @@ export abstract class SelectModal<T> extends Modal {
 		}
 	}
 
-	deHighlightAllOtherElements(elementId: number) {
+	deHighlightAllOtherElements(elementId: number): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.id !== elementId) {
 				selectModalElement.setHighlighted(false);
@@ -75,7 +75,7 @@ export abstract class SelectModal<T> extends Modal {
 		}
 	}
 
-	async onOpen() {
+	async onOpen(): Promise<void> {
 		const { contentEl, titleEl } = this;
 
 		titleEl.createEl('h2', { text: this.title });
@@ -122,7 +122,7 @@ export abstract class SelectModal<T> extends Modal {
 		});
 	}
 
-	activateHighlighted() {
+	activateHighlighted(): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.isHighlighted()) {
 				selectModalElement.setActive(!selectModalElement.isActive());
@@ -133,7 +133,7 @@ export abstract class SelectModal<T> extends Modal {
 		}
 	}
 
-	highlightUp() {
+	highlightUp(): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.isHighlighted()) {
 				this.getPreviousSelectModalElement(selectModalElement).setHighlighted(true);
@@ -145,7 +145,7 @@ export abstract class SelectModal<T> extends Modal {
 		this.selectModalElements.last().setHighlighted(true);
 	}
 
-	highlightDown() {
+	highlightDown(): void {
 		for (const selectModalElement of this.selectModalElements) {
 			if (selectModalElement.isHighlighted()) {
 				this.getNextSelectModalElement(selectModalElement).setHighlighted(true);

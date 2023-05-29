@@ -16,12 +16,12 @@ export class MediaDbFolderImportModal extends Modal {
 		this.selectedApi = plugin.apiManager.apis[0].apiName;
 	}
 
-	submit() {
+	submit(): void {
 		this.onSubmit(this.selectedApi, this.titleFieldName, this.appendContent);
 		this.close();
 	}
 
-	onOpen() {
+	onOpen(): void {
 		const { contentEl } = this;
 
 		contentEl.createEl('h2', { text: 'Import folder as Media DB entries' });
@@ -90,7 +90,7 @@ export class MediaDbFolderImportModal extends Modal {
 			});
 	}
 
-	onClose() {
+	onClose(): void {
 		const { contentEl } = this;
 		contentEl.empty();
 	}

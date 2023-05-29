@@ -9,7 +9,6 @@ import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { MediaTypeModel } from '../models/MediaTypeModel';
 
 export interface MediaDbPluginSettings {
-	folder: string;
 	OMDbKey: string;
 	sfwFilter: boolean;
 	useCustomYamlStringifier: boolean;
@@ -36,11 +35,17 @@ export interface MediaDbPluginSettings {
 	musicReleasePropertyConversionRules: string;
 	boardgamePropertyConversionRules: string;
 
+	movieFolder: string;
+	seriesFolder: string;
+	gameFolder: string;
+	wikiFolder: string;
+	musicReleaseFolder: string;
+	boardgameFolder: string;
+
 	propertyMappingModels: PropertyMappingModel[];
 }
 
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
-	folder: 'Media DB',
 	OMDbKey: '',
 	sfwFilter: true,
 	useCustomYamlStringifier: true,
@@ -67,13 +72,20 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
 
+	movieFolder: 'Media DB/movies',
+	seriesFolder: 'Media DB/series',
+	gameFolder: 'Media DB/games',
+	wikiFolder: 'Media DB/wiki',
+	musicReleaseFolder: 'Media DB/music',
+	boardgameFolder: 'Media DB/boardgames',
+
 	propertyMappingModels: [],
 };
 
 export const lockedPropertyMappings: string[] = ['type', 'id', 'dataSource'];
 
 export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings {
-	let defaultSettings = DEFAULT_SETTINGS;
+	const defaultSettings = DEFAULT_SETTINGS;
 
 	// construct property mapping defaults
 	const propertyMappingModels: PropertyMappingModel[] = [];
@@ -110,19 +122,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		containerEl.createEl('h2', { text: 'Media DB Plugin Settings' });
-
-		new Setting(containerEl)
-			.setName('New file location')
-			.setDesc('New media db entries will be placed here.')
-			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
-				cb.setPlaceholder('Example: folder1/folder2')
-					.setValue(this.plugin.settings.folder)
-					.onChange(data => {
-						this.plugin.settings.folder = data;
-						this.plugin.saveSettings();
-					});
-			});
 
 		new Setting(containerEl)
 			.setName('OMDb API key')
@@ -165,6 +164,87 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					this.plugin.saveSettings();
 				});
 			});
+
+		containerEl.createEl('h3', { text: 'New File Location' });
+		// region new file location
+		new Setting(containerEl)
+			.setName('Movie Folder')
+			.setDesc('Where newly imported movies should be places.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.movieFolder)
+					.setValue(this.plugin.settings.movieFolder)
+					.onChange(data => {
+						this.plugin.settings.movieFolder = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Series Folder')
+			.setDesc('Where newly imported series should be places.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.seriesFolder)
+					.setValue(this.plugin.settings.seriesFolder)
+					.onChange(data => {
+						this.plugin.settings.seriesFolder = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Game Folder')
+			.setDesc('Where newly imported games should be places.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.gameFolder)
+					.setValue(this.plugin.settings.gameFolder)
+					.onChange(data => {
+						this.plugin.settings.gameFolder = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Wiki Folder')
+			.setDesc('Where newly imported wiki articles should be places.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.wikiFolder)
+					.setValue(this.plugin.settings.wikiFolder)
+					.onChange(data => {
+						this.plugin.settings.wikiFolder = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Music Folder')
+			.setDesc('Where newly imported music should be places.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.musicReleaseFolder)
+					.setValue(this.plugin.settings.musicReleaseFolder)
+					.onChange(data => {
+						this.plugin.settings.musicReleaseFolder = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Board Game Folder')
+			.setDesc('Where newly imported board games should be places.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.boardgameFolder)
+					.setValue(this.plugin.settings.boardgameFolder)
+					.onChange(data => {
+						this.plugin.settings.boardgameFolder = data;
+						this.plugin.saveSettings();
+					});
+			});
+		// endregion
 
 		containerEl.createEl('h3', { text: 'Template Settings' });
 		// region templates
@@ -326,7 +406,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		containerEl.createEl('h3', { text: 'Property Mappings' });
 
-		let propertyMappingExplanation = containerEl.createEl('div');
+		const propertyMappingExplanation = containerEl.createEl('div');
 		propertyMappingExplanation.innerHTML = `
 		<p>Allow you to remap the metadata fields of newly created media db entries.</p>
 		<p>
@@ -345,8 +425,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			target: this.containerEl,
 			props: {
 				models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),
-				save: (model: PropertyMappingModel) => {
-					let propertyMappingModels: PropertyMappingModel[] = [];
+				save: (model: PropertyMappingModel): void => {
+					const propertyMappingModels: PropertyMappingModel[] = [];
 
 					for (const model2 of this.plugin.settings.propertyMappingModels) {
 						if (model2.type === model.type) {

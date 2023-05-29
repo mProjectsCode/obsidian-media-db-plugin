@@ -3,7 +3,8 @@ import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 import { requestUrl } from 'obsidian';
 import { MusicReleaseModel } from '../../models/MusicReleaseModel';
-import { contactEmail, debugLog, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { MediaType } from '../../utils/MediaType';
 
 export class MusicBrainzAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -15,7 +16,7 @@ export class MusicBrainzAPI extends APIModel {
 		this.apiName = 'MusicBrainz API';
 		this.apiDescription = 'Free API for music albums.';
 		this.apiUrl = 'https://musicbrainz.org/';
-		this.types = ['music'];
+		this.types = [MediaType.MusicRelease];
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
@@ -30,15 +31,15 @@ export class MusicBrainzAPI extends APIModel {
 			},
 		});
 
-		debugLog(fetchData);
+		console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
 			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
 
 		const data = await fetchData.json;
-		debugLog(data);
-		let ret: MediaTypeModel[] = [];
+		console.debug(data);
+		const ret: MediaTypeModel[] = [];
 
 		for (const result of data['release-groups']) {
 			ret.push(
@@ -76,7 +77,7 @@ export class MusicBrainzAPI extends APIModel {
 		}
 
 		const data = await fetchData.json;
-		debugLog(data);
+		console.debug(data);
 		const result = data;
 
 		const model = new MusicReleaseModel({

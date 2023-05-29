@@ -2,8 +2,8 @@ import { APIModel } from '../APIModel';
 import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 import { BoardGameModel } from 'src/models/BoardGameModel';
-import { debugLog } from '../../utils/Utils';
 import { requestUrl } from 'obsidian';
+import { MediaType } from '../../utils/MediaType';
 
 export class BoardGameGeekAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -15,7 +15,7 @@ export class BoardGameGeekAPI extends APIModel {
 		this.apiName = 'BoardGameGeekAPI';
 		this.apiDescription = 'A free API for BoardGameGeek things.';
 		this.apiUrl = 'https://api.geekdo.com/xmlapi';
-		this.types = ['boardgames'];
+		this.types = [MediaType.BoardGame];
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
@@ -33,13 +33,13 @@ export class BoardGameGeekAPI extends APIModel {
 		const data = fetchData.text;
 		const response = new window.DOMParser().parseFromString(data, 'text/xml');
 
-		debugLog(response);
+		console.debug(response);
 
-		let ret: MediaTypeModel[] = [];
+		const ret: MediaTypeModel[] = [];
 
 		for (const boardgame of Array.from(response.querySelectorAll('boardgame'))) {
 			const id = boardgame.attributes.getNamedItem('objectid')!.value;
-			const title = boardgame.querySelector('name')!.textContent!;
+			const title = boardgame.querySelector('name[primary=true]')?.textContent ?? boardgame.querySelector('name')!.textContent!;
 			const year = boardgame.querySelector('yearpublished')?.textContent ?? '';
 
 			ret.push(
@@ -70,17 +70,22 @@ export class BoardGameGeekAPI extends APIModel {
 
 		const data = fetchData.text;
 		const response = new window.DOMParser().parseFromString(data, 'text/xml');
-		debugLog(response);
+		console.debug(response);
 
 		const boardgame = response.querySelector('boardgame')!;
-		const title = boardgame.querySelector('name')!.textContent!;
+		const title = boardgame.querySelector('name[primary=true]')!.textContent!;
 		const year = boardgame.querySelector('yearpublished')?.textContent ?? '';
 		const image = boardgame.querySelector('image')?.textContent ?? undefined;
-		const onlineRating = Number.parseFloat(boardgame.querySelector('statistics ratings average')?.textContent ?? '');
+		const onlineRating = Number.parseFloat(boardgame.querySelector('statistics ratings average')?.textContent ?? '0');
 		const genres = Array.from(boardgame.querySelectorAll('boardgamecategory')).map(n => n!.textContent!);
+		const complexityRating = Number.parseFloat(boardgame.querySelector('averageweight')?.textContent ?? '0');
+		const minPlayers = Number.parseFloat(boardgame.querySelector('minplayers')?.textContent ?? '0');
+		const maxPlayers = Number.parseFloat(boardgame.querySelector('maxplayers')?.textContent ?? '0');
+		const playtime = (boardgame.querySelector('playingtime')?.textContent ?? 'unknown') + ' minutes';
+		const publishers = Array.from(boardgame.querySelectorAll('boardgamepublisher')).map(n => n!.textContent!);
 
 		const model = new BoardGameModel({
-			title,
+			title: title,
 			englishTitle: title,
 			year: year === '0' ? '' : year,
 			dataSource: this.apiName,
@@ -89,7 +94,13 @@ export class BoardGameGeekAPI extends APIModel {
 
 			genres: genres,
 			onlineRating: onlineRating,
+			complexityRating: complexityRating,
+			minPlayers: minPlayers,
+			maxPlayers: maxPlayers,
+			playtime: playtime,
+			publishers: publishers,
 			image: image,
+
 			released: true,
 
 			userData: {

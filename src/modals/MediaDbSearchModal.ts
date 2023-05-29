@@ -1,16 +1,10 @@
 import { ButtonComponent, Modal, Notice, Setting, TextComponent, ToggleComponent } from 'obsidian';
 import { MediaTypeModel } from '../models/MediaTypeModel';
 import MediaDbPlugin from '../main';
-import {
-	ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS,
-	AdvancedSearchModalData,
-	AdvancedSearchModalOptions,
-	SEARCH_MODAL_DEFAULT_OPTIONS,
-	SearchModalData,
-	SearchModalOptions,
-} from '../utils/ModalHelper';
+import { SEARCH_MODAL_DEFAULT_OPTIONS, SearchModalData, SearchModalOptions } from '../utils/ModalHelper';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { unCamelCase } from '../utils/Utils';
+import { MediaType } from '../utils/MediaType';
 
 export class MediaDbSearchModal extends Modal {
 	plugin: MediaDbPlugin;
@@ -18,7 +12,7 @@ export class MediaDbSearchModal extends Modal {
 	query: string;
 	isBusy: boolean;
 	title: string;
-	selectedTypes: { name: string; selected: boolean }[];
+	selectedTypes: { name: MediaType; selected: boolean }[];
 
 	searchBtn: ButtonComponent;
 
@@ -47,7 +41,7 @@ export class MediaDbSearchModal extends Modal {
 		this.closeCallback = closeCallback;
 	}
 
-	keyPressCallback(event: KeyboardEvent) {
+	keyPressCallback(event: KeyboardEvent): void {
 		if (event.key === 'Enter') {
 			this.search();
 		}
@@ -59,7 +53,7 @@ export class MediaDbSearchModal extends Modal {
 			return;
 		}
 
-		const types: string[] = this.selectedTypes.filter(x => x.selected).map(x => x.name);
+		const types: MediaType[] = this.selectedTypes.filter(x => x.selected).map(x => x.name);
 
 		if (types.length === 0) {
 			new Notice('MDB | No Type selected');
@@ -75,7 +69,7 @@ export class MediaDbSearchModal extends Modal {
 		}
 	}
 
-	onOpen() {
+	onOpen(): void {
 		const { contentEl } = this;
 
 		contentEl.createEl('h2', { text: this.title });
@@ -130,7 +124,7 @@ export class MediaDbSearchModal extends Modal {
 			});
 	}
 
-	onClose() {
+	onClose(): void {
 		this.closeCallback();
 		const { contentEl } = this;
 		contentEl.empty();

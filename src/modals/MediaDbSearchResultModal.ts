@@ -40,14 +40,14 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	}
 
 	// Renders each suggestion item.
-	renderElement(item: MediaTypeModel, el: HTMLElement) {
+	renderElement(item: MediaTypeModel, el: HTMLElement): void {
 		el.createEl('div', { text: this.plugin.mediaTypeManager.getFileName(item) });
 		el.createEl('small', { text: `${item.getSummary()}\n` });
 		el.createEl('small', { text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}` });
 	}
 
 	// Perform action on the selected suggestion.
-	submit() {
+	submit(): void {
 		if (!this.busy) {
 			this.busy = true;
 			this.submitButton.setButtonText('Creating entry...');
@@ -55,12 +55,12 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		}
 	}
 
-	skip() {
+	skip(): void {
 		this.skipButton.setButtonText('Skipping...');
 		this.skipCallback();
 	}
 
-	onClose() {
+	onClose(): void {
 		this.closeCallback();
 	}
 }

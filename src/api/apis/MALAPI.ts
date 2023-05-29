@@ -3,7 +3,7 @@ import { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
 import { SeriesModel } from '../../models/SeriesModel';
-import { debugLog } from '../../utils/Utils';
+import { MediaType } from '../../utils/MediaType';
 
 export class MALAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -16,7 +16,7 @@ export class MALAPI extends APIModel {
 		this.apiName = 'MALAPI';
 		this.apiDescription = 'A free API for Anime. Some results may take a long time to load.';
 		this.apiUrl = 'https://jikan.moe/';
-		this.types = ['movie', 'series', 'anime'];
+		this.types = [MediaType.Movie, MediaType.Series];
 		this.typeMappings = new Map<string, string>();
 		this.typeMappings.set('movie', 'movie');
 		this.typeMappings.set('special', 'special');
@@ -30,15 +30,15 @@ export class MALAPI extends APIModel {
 		const searchUrl = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(title)}&limit=20${this.plugin.settings.sfwFilter ? '&sfw' : ''}`;
 
 		const fetchData = await fetch(searchUrl);
-		debugLog(fetchData);
+		console.debug(fetchData);
 		if (fetchData.status !== 200) {
 			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 		}
 		const data = await fetchData.json();
 
-		debugLog(data);
+		console.debug(data);
 
-		let ret: MediaTypeModel[] = [];
+		const ret: MediaTypeModel[] = [];
 
 		for (const result of data.data) {
 			const type = this.typeMappings.get(result.type?.toLowerCase());
@@ -85,7 +85,7 @@ export class MALAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://api.jikan.moe/v4/anime/${encodeURIComponent(id)}`;
+		const searchUrl = `https://api.jikan.moe/v4/anime/${encodeURIComponent(id)}/full`;
 		const fetchData = await fetch(searchUrl);
 
 		if (fetchData.status !== 200) {
@@ -93,7 +93,7 @@ export class MALAPI extends APIModel {
 		}
 
 		const data = await fetchData.json();
-		debugLog(data);
+		console.debug(data);
 		const result = data.data;
 
 		const type = this.typeMappings.get(result.type?.toLowerCase());
@@ -111,10 +111,12 @@ export class MALAPI extends APIModel {
 				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
 				duration: result.duration ?? 'unknown',
 				onlineRating: result.score ?? 0,
+				actors: [],
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
 				premiere: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
+				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
 				userData: {
 					watched: false,
@@ -140,10 +142,12 @@ export class MALAPI extends APIModel {
 				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
 				duration: result.duration ?? 'unknown',
 				onlineRating: result.score ?? 0,
+				actors: [],
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
 				premiere: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
+				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
 				userData: {
 					watched: false,
@@ -168,6 +172,7 @@ export class MALAPI extends APIModel {
 				episodes: result.episodes,
 				duration: result.duration ?? 'unknown',
 				onlineRating: result.score ?? 0,
+				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
