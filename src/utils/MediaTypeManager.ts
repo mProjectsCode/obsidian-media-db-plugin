@@ -78,7 +78,7 @@ export class MediaTypeManager {
 		if (!folderPath) {
 			folderPath = `/`;
 		}
-		console.log(folderPath);
+		// console.log(folderPath);
 
 		if (!(await app.vault.adapter.exists(folderPath))) {
 			await app.vault.createFolder(folderPath);

@@ -117,4 +117,10 @@ small.media-db-plugin-list-text {
 	/*outline: 1px solid white;*/
 }
 
+.media-db-plugin-preview {
+	border-radius: var(--modal-radius);
+	border: var(--modal-border-width) solid var(--modal-border-color);
+	padding: var(--size-4-4);
+}
+
 /* endregion */
