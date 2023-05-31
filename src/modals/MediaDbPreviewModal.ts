@@ -1,4 +1,4 @@
-import { ButtonComponent, MarkdownRenderer, Modal, Setting } from 'obsidian';
+import {ButtonComponent, Component, MarkdownRenderer, Modal, Setting} from 'obsidian';
 import MediaDbPlugin from 'src/main';
 import { MediaTypeModel } from 'src/models/MediaTypeModel';
 import { PREVIEW_MODAL_DEFAULT_OPTIONS, PreviewModalData, PreviewModalOptions } from '../utils/ModalHelper';
@@ -13,6 +13,7 @@ export class MediaDbPreviewModal extends Modal {
 	title: string;
 	cancelButton: ButtonComponent;
 	submitButton: ButtonComponent;
+	markdownComponent: Component;
 
 	submitCallback: (previewModalData: PreviewModalData) => void;
 	closeCallback: (err?: Error) => void;
@@ -26,6 +27,8 @@ export class MediaDbPreviewModal extends Modal {
 		this.title = previewModalOptions.modalTitle;
 		this.elements = previewModalOptions.elements;
 		this.createNoteOptions = previewModalOptions.createNoteOptions;
+
+		this.markdownComponent = new Component();
 	}
 
 	setSubmitCallback(submitCallback: (previewModalData: PreviewModalData) => void): void {
@@ -44,14 +47,20 @@ export class MediaDbPreviewModal extends Modal {
 
 		const previewWrapper = contentEl.createDiv({ cls: 'media-db-plugin-preview-wrapper' });
 
+		this.markdownComponent.load();
+
 		for (const result of this.elements) {
 			previewWrapper.createEl('h3', { text: result.englishTitle });
-			const fileDiv = previewWrapper.createDiv();
+			const fileDiv = previewWrapper.createDiv({ cls: 'media-db-plugin-preview'});
 
 			let fileContent = await this.plugin.generateMediaDbNoteContents(result, this.createNoteOptions);
 			fileContent = `\n${fileContent}\n`;
 
-			MarkdownRenderer.renderMarkdown(fileContent, fileDiv, null, null);
+			try {
+				await MarkdownRenderer.renderMarkdown(fileContent, fileDiv, "", this.markdownComponent);
+			} catch (e) {
+				console.warn(`mdb | error during rendering of preview`, e);
+			}
 		}
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
@@ -77,6 +86,7 @@ export class MediaDbPreviewModal extends Modal {
 	}
 
 	onClose(): void {
+		this.markdownComponent.unload();
 		this.closeCallback();
 	}
 }
