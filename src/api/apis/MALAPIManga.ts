@@ -19,7 +19,12 @@ export class MALAPIManga extends APIModel {
 		this.types = [MediaType.Manga];
 		this.typeMappings = new Map<string, string>();
 		this.typeMappings.set('manga', 'manga');
+		this.typeMappings.set('manhwa', 'manhwa');
+		this.typeMappings.set('doujinshi', 'doujin');
+		this.typeMappings.set('one-shot', 'oneshot');
+		this.typeMappings.set('manhua', 'manhua');
 		this.typeMappings.set('light novel', 'lnovel');
+		this.typeMappings.set('novel', 'novel');
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
@@ -40,7 +45,6 @@ export class MALAPIManga extends APIModel {
 
 		for (const result of data.data) {
 			const type = this.typeMappings.get(result.type?.toLowerCase());
-			if (type === undefined) {
 				ret.push(
 					new MangaModel({
 						subType: type,
@@ -71,41 +75,7 @@ export class MALAPIManga extends APIModel {
 							personalRating: 0,
 						},
 					} as MangaModel)
-				);
-			}
-			if (type === 'manga' || type === "lnovel") {
-				ret.push(
-					new MangaModel({
-						subType: type,
-						title: result.title,
-						synopsis: result.synopsis,
-						englishTitle: result.title_english ?? result.title,
-						alternateTitles: result.titles?.map((x: any) => x.title) ?? [],
-						year: result.year ?? result.published?.prop?.from?.year ?? '',
-						dataSource: this.apiName,
-						url: result.url,
-						id: result.mal_id,
-		
-						genres: result.genres?.map((x: any) => x.name) ?? [],
-						authors: result.authors?.map((x: any) => x.name) ?? [],
-						chapters: result.chapters,
-						volumes: result.volumes,
-						onlineRating: result.score ?? 0,
-						image: result.images?.jpg?.image_url ?? '',
-		
-						released: true,
-						publishedFrom: new Date(result.published?.from).toLocaleDateString() ?? 'unknown',
-						publishedTo: new Date(result.published?.to).toLocaleDateString() ?? 'unknown',
-						status: result.status,
-		
-						userData: {
-							watched: false,
-							lastWatched: '',
-							personalRating: 0,
-						},
-					} as MangaModel)
-				);
-			}
+				)
 		}
 
 		return ret;
@@ -126,7 +96,6 @@ export class MALAPIManga extends APIModel {
 		const result = data.data;
 
 		const type = this.typeMappings.get(result.type?.toLowerCase());
-		if (type === undefined) {
 			const model = new MangaModel({
 				subType: type,
 				title: result.title,
@@ -158,42 +127,5 @@ export class MALAPIManga extends APIModel {
 			} as MangaModel);
 
 			return model;
-		}
-
-		if (type === 'manga' || type === 'lnovel') {
-			const model = new MangaModel({
-				subType: type,
-				title: result.title,
-				synopsis: result.synopsis,
-				englishTitle: result.title_english ?? result.title,
-				alternateTitles: result.titles?.map((x: any) => x.title) ?? [],
-				year: result.year ?? result.published?.prop?.from?.year ?? '',
-				dataSource: this.apiName,
-				url: result.url,
-				id: result.mal_id,
-
-				genres: result.genres?.map((x: any) => x.name) ?? [],
-				authors: result.authors?.map((x: any) => x.name) ?? [],
-				chapters: result.chapters,
-				volumes: result.volumes,
-				onlineRating: result.score ?? 0,
-				image: result.images?.jpg?.image_url ?? '',
-
-				released: true,
-				publishedFrom: new Date(result.published?.from).toLocaleDateString() ?? 'unknown',
-				publishedTo: new Date(result.published?.to).toLocaleDateString() ?? 'unknown',
-				status: result.status,
-
-				userData: {
-					watched: false,
-					lastWatched: '',
-					personalRating: 0,
-				},
-			} as MangaModel);
-
-			return model;
-		}
-
-		return;
 	}
 }
