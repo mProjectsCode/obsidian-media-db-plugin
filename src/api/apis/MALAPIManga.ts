@@ -23,7 +23,7 @@ export class MALAPIManga extends APIModel {
 		this.typeMappings.set('doujinshi', 'doujin');
 		this.typeMappings.set('one-shot', 'oneshot');
 		this.typeMappings.set('manhua', 'manhua');
-		this.typeMappings.set('light novel', 'lnovel');
+		this.typeMappings.set('light novel', 'light-novel');
 		this.typeMappings.set('novel', 'novel');
 	}
 
