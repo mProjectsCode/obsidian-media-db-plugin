@@ -16,6 +16,7 @@ export interface MediaDbPluginSettings {
 
 	movieTemplate: string;
 	seriesTemplate: string;
+	mangaTemplate: string;
 	gameTemplate: string;
 	wikiTemplate: string;
 	musicReleaseTemplate: string;
@@ -23,6 +24,7 @@ export interface MediaDbPluginSettings {
 
 	movieFileNameTemplate: string;
 	seriesFileNameTemplate: string;
+	mangaFileNameTemplate: string;
 	gameFileNameTemplate: string;
 	wikiFileNameTemplate: string;
 	musicReleaseFileNameTemplate: string;
@@ -30,6 +32,7 @@ export interface MediaDbPluginSettings {
 
 	moviePropertyConversionRules: string;
 	seriesPropertyConversionRules: string;
+	mangaPropertyConversionRules: string;
 	gamePropertyConversionRules: string;
 	wikiPropertyConversionRules: string;
 	musicReleasePropertyConversionRules: string;
@@ -37,6 +40,7 @@ export interface MediaDbPluginSettings {
 
 	movieFolder: string;
 	seriesFolder: string;
+	mangaFolder: string;
 	gameFolder: string;
 	wikiFolder: string;
 	musicReleaseFolder: string;
@@ -53,6 +57,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	movieTemplate: '',
 	seriesTemplate: '',
+	mangaTemplate: '',
 	gameTemplate: '',
 	wikiTemplate: '',
 	musicReleaseTemplate: '',
@@ -60,6 +65,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	movieFileNameTemplate: '{{ title }} ({{ year }})',
 	seriesFileNameTemplate: '{{ title }} ({{ year }})',
+	mangaFileNameTemplate: '{{ title }} ({{ year }})',
 	gameFileNameTemplate: '{{ title }} ({{ year }})',
 	wikiFileNameTemplate: '{{ title }}',
 	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
@@ -67,6 +73,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	moviePropertyConversionRules: '',
 	seriesPropertyConversionRules: '',
+	mangaPropertyConversionRules: '',
 	gamePropertyConversionRules: '',
 	wikiPropertyConversionRules: '',
 	musicReleasePropertyConversionRules: '',
@@ -74,6 +81,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	movieFolder: 'Media DB/movies',
 	seriesFolder: 'Media DB/series',
+	mangaFolder: 'Media DB/manga',
 	gameFolder: 'Media DB/games',
 	wikiFolder: 'Media DB/wiki',
 	musicReleaseFolder: 'Media DB/music',
@@ -194,6 +202,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
+			.setName('Manga Folder')
+			.setDesc('Where newly imported manga should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.mangaFolder)
+					.setValue(this.plugin.settings.mangaFolder)
+					.onChange(data => {
+						this.plugin.settings.mangaFolder = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
 			.setName('Game Folder')
 			.setDesc('Where newly imported games should be places.')
 			.addSearch(cb => {
@@ -275,6 +296,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
+			.setName('Manga template')
+			.setDesc('Template file to be used when creating a new note for a manga.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: mangaTemplate.md')
+					.setValue(this.plugin.settings.mangaTemplate)
+					.onChange(data => {
+						this.plugin.settings.mangaTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
 			.setName('Game template')
 			.setDesc('Template file to be used when creating a new note for a game.')
 			.addSearch(cb => {
@@ -349,6 +383,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.seriesFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.seriesFileNameTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Manga file name template')
+			.setDesc('Template for the file name used when creating a new note for a manga.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.mangaFileNameTemplate}`)
+					.setValue(this.plugin.settings.mangaFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.mangaFileNameTemplate = data;
 						this.plugin.saveSettings();
 					});
 			});
