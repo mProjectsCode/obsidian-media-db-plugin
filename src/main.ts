@@ -15,6 +15,7 @@ import { YAMLConverter } from './utils/YAMLConverter';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
 import { ModalHelper, ModalResultCode, SearchModalOptions } from './utils/ModalHelper';
+import { DateFormatter } from './utils/DateFormatter';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -22,6 +23,7 @@ export default class MediaDbPlugin extends Plugin {
 	mediaTypeManager: MediaTypeManager;
 	modelPropertyMapper: PropertyMapper;
 	modalHelper: ModalHelper;
+	dateFormatter: DateFormatter;
 
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
 
@@ -39,6 +41,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.mediaTypeManager = new MediaTypeManager();
 		this.modelPropertyMapper = new PropertyMapper(this);
 		this.modalHelper = new ModalHelper(this);
+		this.dateFormatter = new DateFormatter();
 
 		await this.loadSettings();
 		// register the settings tab
@@ -46,6 +49,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.mediaTypeManager.updateTemplates(this.settings);
 		this.mediaTypeManager.updateFolders(this.settings);
+		this.dateFormatter.setFormat(this.settings.customDateFormat);
 
 		// add icon to the left ribbon
 		const ribbonIconEl = this.addRibbonIcon('database', 'Add new Media DB entry', () => this.createEntryWithAdvancedSearchModal());
@@ -563,6 +567,7 @@ export default class MediaDbPlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		this.mediaTypeManager.updateTemplates(this.settings);
 		this.mediaTypeManager.updateFolders(this.settings);
+		this.dateFormatter.setFormat(this.settings.customDateFormat);
 
 		await this.saveData(this.settings);
 	}

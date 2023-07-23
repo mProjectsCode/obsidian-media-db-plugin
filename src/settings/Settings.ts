@@ -7,12 +7,14 @@ import PropertyMappingModelsComponent from './PropertyMappingModelsComponent.sve
 import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './PropertyMapping';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { MediaTypeModel } from '../models/MediaTypeModel';
+import { fragWithHTML } from '../utils/Utils';
 
 export interface MediaDbPluginSettings {
 	OMDbKey: string;
 	sfwFilter: boolean;
 	useCustomYamlStringifier: boolean;
 	templates: boolean;
+	customDateFormat: string;
 
 	movieTemplate: string;
 	seriesTemplate: string;
@@ -50,6 +52,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	sfwFilter: true,
 	useCustomYamlStringifier: true,
 	templates: true,
+	customDateFormat: 'L',
 
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -163,6 +166,23 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					this.plugin.settings.templates = data;
 					this.plugin.saveSettings();
 				});
+			});
+
+		new Setting(containerEl)
+			.setName('Date format')
+			.setDesc(fragWithHTML("Your custom date format. Use <em>\'YYYY-MM-DD\'</em> for example.<br>" +
+				"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
+				"Your current syntax looks like this: <b><a id='dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
+				this.plugin.dateFormatter.getPreview() + "</a></b>"))
+			.addText(cb => {
+				cb.setPlaceholder(DEFAULT_SETTINGS.customDateFormat)
+					.setValue(this.plugin.settings.customDateFormat === DEFAULT_SETTINGS.customDateFormat ? '' : this.plugin.settings.customDateFormat)
+					.onChange(data => {
+						const newDateFormat = data ? data : DEFAULT_SETTINGS.customDateFormat;
+						this.plugin.settings.customDateFormat = newDateFormat;
+						document.getElementById('dateformat-preview').innerHTML = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
+						this.plugin.saveSettings();
+					});
 			});
 
 		containerEl.createEl('h3', { text: 'New File Location' });
