@@ -6,12 +6,12 @@ const moment = obsidian.moment;
 
 export class DateFormatter {
 	toFormat: string;
-	localeString: string;
+	locale: string;
 
 	constructor() {
 		this.toFormat = 'YYYY-MM-DD';
-		// get locale string (e.g. en, en-gb, de, fr, etc.)
-		this.localeString = new Intl.DateTimeFormat().resolvedOptions().locale;
+		// get locale of this machine (e.g. en, en-gb, de, fr, etc.)
+		this.locale = new Intl.DateTimeFormat().resolvedOptions().locale;
 	}
 
 	setFormat(format: string): void {
@@ -20,13 +20,12 @@ export class DateFormatter {
 
 	getPreview(format?: string): string {
 		const today = moment();
-		today.locale(this.localeString);
 
 		if (!format) {
 			format = this.toFormat;
 		}
 
-		return today.format(format);
+		return today.locale(this.locale).format(format);
 	}
 
 	/**
@@ -36,9 +35,11 @@ export class DateFormatter {
 	 * @param dateString the date string to be formatted
 	 * @param dateFormat the current format of `dateString`. When this is `null` and the actual format of the 
 	 * given date string is not `C2822` or `ISO` format, this function will try to guess the format by using the native `Date` module.
+	 * @param locale the locale of `dateString`. This is needed when `dateString` includes a month or day name and its locale format differs
+	 * from the locale of this machine.
 	 * @returns formatted date string or null if `dateString` is not a valid date
 	 */
-	format(dateString: string, dateFormat?: string): string | null {
+	format(dateString: string, dateFormat?: string, locale: string = 'en'): string | null {
 		if (!dateString) {
 			return null;
 		}
@@ -47,6 +48,7 @@ export class DateFormatter {
 
 		if (!dateFormat) {
 			// reading date formats other then C2822 or ISO with moment is deprecated
+			// see https://momentjs.com/docs/#/parsing/string/
 			if (this.hasMomentFormat(dateString)) {
 				// expect C2822 or ISO format
 				date = moment(dateString);
@@ -54,13 +56,12 @@ export class DateFormatter {
 				// try to read date string with native Date
 				date = moment(new Date(dateString));
 			}
-			date.locale(this.localeString); // set local locale definition for moment
 		} else {
-			date = moment(dateString, dateFormat, this.localeString);
+			date = moment(dateString, dateFormat, locale);
 		}
 
 		// format date (if it is valid)
-		return date.isValid() ? date.format(this.toFormat) : null;
+		return date.isValid() ? date.locale(this.locale).format(this.toFormat) : null;
 	}
 
 	private hasMomentFormat(dateString: string): boolean {
