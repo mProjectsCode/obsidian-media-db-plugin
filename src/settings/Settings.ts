@@ -236,7 +236,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Board Game Folder')
 			.setDesc('Where newly imported board games should be places.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
+				new FolderSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(DEFAULT_SETTINGS.boardgameFolder)
 					.setValue(this.plugin.settings.boardgameFolder)
 					.onChange(data => {
