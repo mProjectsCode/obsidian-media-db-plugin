@@ -112,7 +112,7 @@ export class OMDbAPI extends APIModel {
 		}
 
 		const result = await fetchData.json();
-		console.debug(result);
+		// console.debug(result);
 
 		if (result.Response === 'False') {
 			throw Error(`MDB | Received error from ${this.apiName}: ${result.Error}`);
