@@ -9,6 +9,7 @@ import { MediaType } from '../../utils/MediaType';
 export class OMDbAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	typeMappings: Map<string, string>;
+	apiDateFormat: string = 'DD MMM YYYY';
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -142,7 +143,7 @@ export class OMDbAPI extends APIModel {
 
 				released: true,
 				streamingServices: [],
-				premiere: new Date(result.Released).toLocaleDateString() ?? 'unknown',
+				premiere: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
 
 				userData: {
 					watched: false,
@@ -173,7 +174,7 @@ export class OMDbAPI extends APIModel {
 				released: true,
 				streamingServices: [],
 				airing: false,
-				airedFrom: new Date(result.Released).toLocaleDateString() ?? 'unknown',
+				airedFrom: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
 				airedTo: 'unknown',
 
 				userData: {
@@ -199,7 +200,7 @@ export class OMDbAPI extends APIModel {
 				image: result.Poster ?? '',
 
 				released: true,
-				releaseDate: new Date(result.Released).toLocaleDateString() ?? 'unknown',
+				releaseDate: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
 
 				userData: {
 					played: false,
