@@ -1,9 +1,3 @@
-// obsidian already uses moment, so no need to package it twice!
-// import { moment } from 'obsidian'; // doesn't work for release build
-// obsidian uses a namespace-style import for moment, which ES6 doesn't allow anymore
-// const obsidian = require('obsidian');
-// const moment = obsidian.moment;
-
 import { moment } from 'obsidian';
 
 export class DateFormatter {
