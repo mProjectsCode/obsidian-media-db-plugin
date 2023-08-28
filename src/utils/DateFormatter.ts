@@ -1,8 +1,10 @@
 // obsidian already uses moment, so no need to package it twice!
 // import { moment } from 'obsidian'; // doesn't work for release build
 // obsidian uses a namespace-style import for moment, which ES6 doesn't allow anymore
-const obsidian = require('obsidian');
-const moment = obsidian.moment;
+// const obsidian = require('obsidian');
+// const moment = obsidian.moment;
+
+import { moment } from 'obsidian';
 
 export class DateFormatter {
 	toFormat: string;
@@ -33,7 +35,7 @@ export class DateFormatter {
 	 * You can set a date format by calling `setFormat()`.
 	 *
 	 * @param dateString the date string to be formatted
-	 * @param dateFormat the current format of `dateString`. When this is `null` and the actual format of the 
+	 * @param dateFormat the current format of `dateString`. When this is `null` and the actual format of the
 	 * given date string is not `C2822` or `ISO` format, this function will try to guess the format by using the native `Date` module.
 	 * @param locale the locale of `dateString`. This is needed when `dateString` includes a month or day name and its locale format differs
 	 * from the locale of this machine.

@@ -1,4 +1,4 @@
-import {ButtonComponent, Component, MarkdownRenderer, Modal, Setting} from 'obsidian';
+import { ButtonComponent, Component, MarkdownRenderer, Modal, Setting } from 'obsidian';
 import MediaDbPlugin from 'src/main';
 import { MediaTypeModel } from 'src/models/MediaTypeModel';
 import { PREVIEW_MODAL_DEFAULT_OPTIONS, PreviewModalData, PreviewModalOptions } from '../utils/ModalHelper';
@@ -51,13 +51,13 @@ export class MediaDbPreviewModal extends Modal {
 
 		for (const result of this.elements) {
 			previewWrapper.createEl('h3', { text: result.englishTitle });
-			const fileDiv = previewWrapper.createDiv({ cls: 'media-db-plugin-preview'});
+			const fileDiv = previewWrapper.createDiv({ cls: 'media-db-plugin-preview' });
 
 			let fileContent = await this.plugin.generateMediaDbNoteContents(result, this.createNoteOptions);
 			fileContent = `\n${fileContent}\n`;
 
 			try {
-				await MarkdownRenderer.renderMarkdown(fileContent, fileDiv, "", this.markdownComponent);
+				await MarkdownRenderer.renderMarkdown(fileContent, fileDiv, '', this.markdownComponent);
 			} catch (e) {
 				console.warn(`mdb | error during rendering of preview`, e);
 			}
