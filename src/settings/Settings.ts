@@ -172,7 +172,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Date format')
 			.setDesc(fragWithHTML("Your custom date format. Use <em>\'YYYY-MM-DD\'</em> for example.<br>" +
 				"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
-				"Your current syntax looks like this: <b><a id='dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
+				"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
 				this.plugin.dateFormatter.getPreview() + "</a></b>"))
 			.addText(cb => {
 				cb.setPlaceholder(DEFAULT_SETTINGS.customDateFormat)
@@ -180,7 +180,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.onChange(data => {
 						const newDateFormat = data ? data : DEFAULT_SETTINGS.customDateFormat;
 						this.plugin.settings.customDateFormat = newDateFormat;
-						document.getElementById('dateformat-preview').innerHTML = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
+						document.getElementById('media-db-dateformat-preview').textContent = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
 						this.plugin.saveSettings();
 					});
 			});
