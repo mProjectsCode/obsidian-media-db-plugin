@@ -42,7 +42,7 @@ async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 					englishTitle: result.title_english ?? result.title,
 					year: result.first_publish_year,
 					dataSource: this.apiName,
-					id: result.cover_edition_key,
+					id: result.cover_edition_key ?? result.edition_key,
 				} as BookModel)
 			);
 	}
