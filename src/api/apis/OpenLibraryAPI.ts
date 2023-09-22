@@ -3,6 +3,7 @@ import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 import { BookModel } from 'src/models/BookModel';
 import { requestUrl } from 'obsidian';
+import { contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { MediaType } from '../../utils/MediaType';
 
 export class OpenLibraryAPI extends APIModel {
@@ -21,7 +22,7 @@ export class OpenLibraryAPI extends APIModel {
 async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 	console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-	const searchUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&limit=20}`;
+	const searchUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}`;
 
 	const fetchData = await fetch(searchUrl);
 	console.debug(fetchData);
@@ -37,12 +38,11 @@ async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 	for (const result of data.docs) {
 			ret.push(
 				new BookModel({
-					subType: '',
 					title: result.title,
 					englishTitle: result.title_english ?? result.title,
-					year: result.year ?? result.aired?.prop?.from?.year ?? '',
+					year: result.first_publish_year,
 					dataSource: this.apiName,
-					id: result.mal_id,
+					id: result.cover_edition_key,
 				} as BookModel)
 			);
 	}
@@ -53,28 +53,34 @@ async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 async getById(id: string): Promise<MediaTypeModel> {
 	console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-	const searchUrl = `https://openlibrary.org/isbn/${encodeURIComponent(id)}.json`;
-	const fetchData = await fetch(searchUrl);
+	const searchUrl = `https://openlibrary.org/books/${encodeURIComponent(id)}.json`;
+	const fetchData = await requestUrl({
+		url: searchUrl,
+		headers: {
+			'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+		},
+	});
+
+	console.debug(fetchData);
 
 	if (fetchData.status !== 200) {
 		throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
 	}
 
-	const data = await fetchData.json();
-	console.debug(data);
-	const result = data.data;
+	const result = await fetchData.json;
 
 	const model = new BookModel({
-		subType: '',
 		title: result.title,
-		year: new Date(result.publish_date.date).getFullYear().toString(),
+		year: new Date(result.publish_date).getFullYear().toString(),
 		dataSource: this.apiName,
 		url: `https://openlibrary.org` + result.key,
-		id: result.isbn_10,
+		id: result.key.slice(7),
+		isbn10: result.isbn_10,
+		englishTitle: result.title_english ?? result.title,
 
 		author: result.authors.key ?? 'unknown',
 		pages: result.number_of_pages ?? 'unknown',
-		image: `https://covers.openlibrary.org/b/isbn/` + result.isbn_10 + `-L.jpg` ?? '',
+		image: `https://covers.openlibrary.org/b/OLID/` + result.key.slice(7) + `-L.jpg` ?? '',
 
 		released: true,
 
@@ -85,6 +91,6 @@ async getById(id: string): Promise<MediaTypeModel> {
 		},
 	} as BookModel);
 
-	return;
+	return model;
 }
 }

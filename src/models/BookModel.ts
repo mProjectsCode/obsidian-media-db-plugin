@@ -5,7 +5,9 @@ import { MediaType } from '../utils/MediaType';
 export class BookModel extends MediaTypeModel {
 	author: string;
 	pages: string;
+	isbn10: string;
 	image: string;
+	english_title: string;
 
 	released: boolean;
 
