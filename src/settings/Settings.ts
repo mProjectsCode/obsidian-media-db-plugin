@@ -22,6 +22,7 @@ export interface MediaDbPluginSettings {
 	wikiTemplate: string;
 	musicReleaseTemplate: string;
 	boardgameTemplate: string;
+	bookTemplate: string;
 
 	movieFileNameTemplate: string;
 	seriesFileNameTemplate: string;
@@ -29,6 +30,7 @@ export interface MediaDbPluginSettings {
 	wikiFileNameTemplate: string;
 	musicReleaseFileNameTemplate: string;
 	boardgameFileNameTemplate: string;
+	bookFileNameTemplate: string;
 
 	moviePropertyConversionRules: string;
 	seriesPropertyConversionRules: string;
@@ -36,6 +38,7 @@ export interface MediaDbPluginSettings {
 	wikiPropertyConversionRules: string;
 	musicReleasePropertyConversionRules: string;
 	boardgamePropertyConversionRules: string;
+	bookPropertyConversionRules: string;
 
 	movieFolder: string;
 	seriesFolder: string;
@@ -43,6 +46,7 @@ export interface MediaDbPluginSettings {
 	wikiFolder: string;
 	musicReleaseFolder: string;
 	boardgameFolder: string;
+	bookFolder: string;
 
 	propertyMappingModels: PropertyMappingModel[];
 }
@@ -60,6 +64,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiTemplate: '',
 	musicReleaseTemplate: '',
 	boardgameTemplate: '',
+	bookTemplate: '',
 
 	movieFileNameTemplate: '{{ title }} ({{ year }})',
 	seriesFileNameTemplate: '{{ title }} ({{ year }})',
@@ -67,6 +72,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiFileNameTemplate: '{{ title }}',
 	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
 	boardgameFileNameTemplate: '{{ title }} ({{ year }})',
+	bookFileNameTemplate: '{{ title }} ({{ year }})',
 
 	moviePropertyConversionRules: '',
 	seriesPropertyConversionRules: '',
@@ -74,6 +80,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiPropertyConversionRules: '',
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
+	bookPropertyConversionRules: '',
 
 	movieFolder: 'Media DB/movies',
 	seriesFolder: 'Media DB/series',
@@ -81,6 +88,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiFolder: 'Media DB/wiki',
 	musicReleaseFolder: 'Media DB/music',
 	boardgameFolder: 'Media DB/boardgames',
+	bookFolder: 'Media DB/books',
 
 	propertyMappingModels: [],
 };
@@ -194,7 +202,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		// region new file location
 		new Setting(containerEl)
 			.setName('Movie Folder')
-			.setDesc('Where newly imported movies should be places.')
+			.setDesc('Where newly imported movies should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(DEFAULT_SETTINGS.movieFolder)
@@ -207,7 +215,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Series Folder')
-			.setDesc('Where newly imported series should be places.')
+			.setDesc('Where newly imported series should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(DEFAULT_SETTINGS.seriesFolder)
@@ -220,7 +228,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Game Folder')
-			.setDesc('Where newly imported games should be places.')
+			.setDesc('Where newly imported games should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(DEFAULT_SETTINGS.gameFolder)
@@ -233,7 +241,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Wiki Folder')
-			.setDesc('Where newly imported wiki articles should be places.')
+			.setDesc('Where newly imported wiki articles should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(DEFAULT_SETTINGS.wikiFolder)
@@ -246,7 +254,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Music Folder')
-			.setDesc('Where newly imported music should be places.')
+			.setDesc('Where newly imported music should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(DEFAULT_SETTINGS.musicReleaseFolder)
@@ -266,6 +274,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.boardgameFolder)
 					.onChange(data => {
 						this.plugin.settings.boardgameFolder = data;
+						this.plugin.saveSettings();
+					});
+			});
+		new Setting(containerEl)
+			.setName('Book Folder')
+			.setDesc('Where newly imported books should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.bookFolder)
+					.setValue(this.plugin.settings.bookFolder)
+					.onChange(data => {
+						this.plugin.settings.bookFolder = data;
 						this.plugin.saveSettings();
 					});
 			});
@@ -350,6 +370,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						this.plugin.saveSettings();
 					});
 			});
+
+		new Setting(containerEl)
+			.setName('Book template')
+			.setDesc('Template file to be used when creating a new note for a book.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: bookTemplate.md')
+					.setValue(this.plugin.settings.bookTemplate)
+					.onChange(data => {
+						this.plugin.settings.bookTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
 		// endregion
 
 		containerEl.createEl('h3', { text: 'File Name Settings' });
@@ -422,6 +455,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.boardgameFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.boardgameFileNameTemplate = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Book file name template')
+			.setDesc('Template for the file name used when creating a new note for a book.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.bookFileNameTemplate}`)
+					.setValue(this.plugin.settings.bookFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.bookFileNameTemplate = data;
 						this.plugin.saveSettings();
 					});
 			});

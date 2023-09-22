@@ -9,8 +9,9 @@ import { GameModel } from '../models/GameModel';
 import { WikiModel } from '../models/WikiModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { BoardGameModel } from '../models/BoardGameModel';
+import { BookModel } from '../models/BookModel';
 
-export const MEDIA_TYPES: MediaType[] = [MediaType.Movie, MediaType.Series, MediaType.Game, MediaType.Wiki, MediaType.MusicRelease, MediaType.BoardGame];
+export const MEDIA_TYPES: MediaType[] = [MediaType.Movie, MediaType.Series, MediaType.Game, MediaType.Wiki, MediaType.MusicRelease, MediaType.BoardGame, MediaType.Book];
 
 export class MediaTypeManager {
 	mediaFileNameTemplateMap: Map<MediaType, string>;
@@ -27,6 +28,7 @@ export class MediaTypeManager {
 		this.mediaFileNameTemplateMap.set(MediaType.Wiki, settings.wikiFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.BoardGame, settings.boardgameFileNameTemplate);
+		this.mediaFileNameTemplateMap.set(MediaType.Book, settings.bookFileNameTemplate);
 
 		this.mediaTemplateMap = new Map<MediaType, string>();
 		this.mediaTemplateMap.set(MediaType.Movie, settings.movieTemplate);
@@ -35,6 +37,7 @@ export class MediaTypeManager {
 		this.mediaTemplateMap.set(MediaType.Wiki, settings.wikiTemplate);
 		this.mediaTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseTemplate);
 		this.mediaTemplateMap.set(MediaType.BoardGame, settings.boardgameTemplate);
+		this.mediaTemplateMap.set(MediaType.Book, settings.bookTemplate);
 	}
 
 	updateFolders(settings: MediaDbPluginSettings): void {
@@ -45,6 +48,7 @@ export class MediaTypeManager {
 		this.mediaFolderMap.set(MediaType.Wiki, settings.wikiFolder);
 		this.mediaFolderMap.set(MediaType.MusicRelease, settings.musicReleaseFolder);
 		this.mediaFolderMap.set(MediaType.BoardGame, settings.boardgameFolder);
+		this.mediaFolderMap.set(MediaType.Book, settings.bookFolder);
 	}
 
 	getFileName(mediaTypeModel: MediaTypeModel): string {
@@ -111,6 +115,8 @@ export class MediaTypeManager {
 			return new MusicReleaseModel(obj);
 		} else if (mediaType === MediaType.BoardGame) {
 			return new BoardGameModel(obj);
+		} else if (mediaType === MediaType.Book) {
+			return new BookModel(obj);
 		}
 
 		return undefined;
