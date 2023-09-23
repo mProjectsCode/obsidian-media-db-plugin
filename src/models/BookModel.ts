@@ -4,8 +4,9 @@ import { MediaType } from '../utils/MediaType';
 
 export class BookModel extends MediaTypeModel {
 	author: string;
-	pages: string;
+	pages: number;
 	image: string;
+	onlineRating: number;
 	english_title: string;
 
 	released: boolean;
@@ -22,6 +23,7 @@ export class BookModel extends MediaTypeModel {
 		this.author = undefined;
 		this.pages = undefined;
 		this.image = undefined;
+		this.onlineRating = undefined;
 
 		this.released = undefined;
 

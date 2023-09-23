@@ -2,8 +2,6 @@ import { APIModel } from '../APIModel';
 import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 import { BookModel } from 'src/models/BookModel';
-import { requestUrl } from 'obsidian';
-import { contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { MediaType } from '../../utils/MediaType';
 
 export class OpenLibraryAPI extends APIModel {
@@ -75,6 +73,7 @@ export class OpenLibraryAPI extends APIModel {
 
 			author: result.author_name ?? 'unknown',
 			pages: result.number_of_pages_median ?? 'unknown',
+			onlineRating: Number.parseFloat(result.ratings_average.toFixed(2)) ?? 0,
 			image: `https://covers.openlibrary.org/b/OLID/` + result.cover_edition_key + `-L.jpg` ?? '',
 
 			released: true,
