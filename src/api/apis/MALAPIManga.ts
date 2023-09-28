@@ -1,6 +1,5 @@
 import { APIModel } from '../APIModel';
 import { MediaTypeModel } from '../../models/MediaTypeModel';
-// import { MovieModel } from '../../models/MovieModel';
 import MediaDbPlugin from '../../main';
 import { MangaModel } from '../../models/MangaModel';
 import { MediaType } from '../../utils/MediaType';
@@ -96,36 +95,36 @@ export class MALAPIManga extends APIModel {
 		const result = data.data;
 
 		const type = this.typeMappings.get(result.type?.toLowerCase());
-			const model = new MangaModel({
-				subType: type,
-				title: result.title,
-				synopsis: result.synopsis,
-				englishTitle: result.title_english ?? result.title,
-				alternateTitles: result.titles?.map((x: any) => x.title) ?? [],
-				year: result.year ?? result.published?.prop?.from?.year ?? '',
-				dataSource: this.apiName,
-				url: result.url,
-				id: result.mal_id,
+		const model = new MangaModel({
+			subType: type,
+			title: result.title,
+			synopsis: result.synopsis,
+			englishTitle: result.title_english ?? result.title,
+			alternateTitles: result.titles?.map((x: any) => x.title) ?? [],
+			year: result.year ?? result.published?.prop?.from?.year ?? '',
+			dataSource: this.apiName,
+			url: result.url,
+			id: result.mal_id,
 
-				genres: result.genres?.map((x: any) => x.name) ?? [],
-				authors: result.authors?.map((x: any) => x.name) ?? [],
-				chapters: result.chapters,
-				volumes: result.volumes,
-				onlineRating: result.score ?? 0,
-				image: result.images?.jpg?.image_url ?? '',
+			genres: result.genres?.map((x: any) => x.name) ?? [],
+			authors: result.authors?.map((x: any) => x.name) ?? [],
+			chapters: result.chapters,
+			volumes: result.volumes,
+			onlineRating: result.score ?? 0,
+			image: result.images?.jpg?.image_url ?? '',
 
-				released: true,
-				publishedFrom: new Date(result.published?.from).toLocaleDateString() ?? 'unknown',
-				publishedTo: new Date(result.published?.to).toLocaleDateString() ?? 'unknown',
-				status: result.status,
+			released: true,
+			publishedFrom: new Date(result.published?.from).toLocaleDateString() ?? 'unknown',
+			publishedTo: new Date(result.published?.to).toLocaleDateString() ?? 'unknown',
+			status: result.status,
 
-				userData: {
-					watched: false,
-					lastWatched: '',
-					personalRating: 0,
-				},
-			} as MangaModel);
+			userData: {
+				watched: false,
+				lastWatched: '',
+				personalRating: 0,
+			},
+		} as MangaModel);
 
-			return model;
+		return model;
 	}
 }
