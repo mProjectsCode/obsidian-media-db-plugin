@@ -1,6 +1,6 @@
 ## Obsidian Media DB Plugin
 
-A plugin that can query multiple APIs for movies, series, anime, games, music and wiki articles, and import them into your vault.
+A plugin that can query multiple APIs for movies, series, anime, manga, games, music and wiki articles, and import them into your vault.
 
 ### Features
 
@@ -112,7 +112,7 @@ Now you select the result you want and the plugin will cast it's magic and creat
 
 | Name                                                 | Description                                                                                       | Supported formats              | Authentification                                                             | Rate limiting                  | SFW filter support |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------- | ------------------------------ | ------------------ |
-| [Jikan](https://jikan.moe/)                          | Jikan is an API that uses [My Anime List](https://myanimelist.net) and offers metadata for anime. | series, movies, specials, OVAs | No                                                                           | 60 per minute and 3 per second | Yes                |
+| [Jikan](https://jikan.moe/)                          | Jikan is an API that uses [My Anime List](https://myanimelist.net) and offers metadata for anime. | series, movies, specials, OVAs, manga, manwha, novels | No                                                                           | 60 per minute and 3 per second | Yes                |
 | [OMDb](https://www.omdbapi.com/)                     | OMDb is an API that offers metadata for movie, series and games.                                  | series, movies, games          | Yes, you can get a free key here [here](https://www.omdbapi.com/apikey.aspx) | 1000 per day                   | No                 |
 | [MusicBrainz](https://musicbrainz.org/)              | MusicBrainz is an API that offers information about music releases.                               | music releases                 | No                                                                           | 50 per second                  | No                 |
 | [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) | The Wikipedia API allows access to all Wikipedia articles.                                        | wiki articles                  | No                                                                           | None                           | No                 |
@@ -131,6 +131,10 @@ Now you select the result you want and the plugin will cast it's magic and creat
     -   the ID you need is the ID of the anime on [My Anime List](https://myanimelist.net)
     -   you can find this ID in the URL
         -   e.g. for "Beyond the Boundary" the URL looks like this `https://myanimelist.net/anime/18153/Kyoukai_no_Kanata` so the ID is `18153`
+-   [Jikan Manga](https://jikan.moe/)
+    -   the ID you need is the ID of the manga on [My Anime List](https://myanimelist.net)
+    -   you can find this ID in the URL
+        -   e.g. for "All You Need Is Kill" the URL looks like this `https://myanimelist.net/manga/62887/All_You_Need_Is_Kill` so the ID is `62887`
 -   [OMDb](https://www.omdbapi.com/)
     -   the ID you need is the ID of the movie or show on [IMDb](https://www.imdb.com)
     -   you can find this ID in the URL
