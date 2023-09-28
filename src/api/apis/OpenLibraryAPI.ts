@@ -15,7 +15,7 @@ export class OpenLibraryAPI extends APIModel {
 		this.apiDescription = 'A free API for books';
 		this.apiUrl = 'https://openlibrary.org/';
 		this.types = [MediaType.Book];
-}
+	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
@@ -34,15 +34,15 @@ export class OpenLibraryAPI extends APIModel {
 		const ret: MediaTypeModel[] = [];
 
 		for (const result of data.docs) {
-				ret.push(
-					new BookModel({
-						title: result.title,
-						englishTitle: result.title_english ?? result.title,
-						year: result.first_publish_year,
-						dataSource: this.apiName,
-						id: result.key,
-					} as BookModel)
-				);
+			ret.push(
+				new BookModel({
+					title: result.title,
+					englishTitle: result.title_english ?? result.title,
+					year: result.first_publish_year,
+					dataSource: this.apiName,
+					id: result.key,
+				} as BookModel)
+			);
 		}
 
 		return ret;

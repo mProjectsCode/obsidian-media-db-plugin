@@ -440,7 +440,7 @@ export class ModalHelper {
 	 * then executes the `submitCallback` returning the callbacks result and closing the modal.
 	 *
 	 * @param selectModalOptions the options for the modal, see {@link SELECT_MODAL_OPTIONS_DEFAULT}
-	 * @param submitCallback the callback that gets executed after the modal has been submitted, but after it has been closed
+	 * @param submitCallback the callback that gets executed after the modal has been submitted, but before it has been closed
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
 	async openSelectModal(selectModalOptions: SelectModalOptions, submitCallback: (selectModalData: SelectModalData) => Promise<MediaTypeModel[]>): Promise<MediaTypeModel[]> {

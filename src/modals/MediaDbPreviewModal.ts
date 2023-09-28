@@ -57,7 +57,8 @@ export class MediaDbPreviewModal extends Modal {
 			fileContent = `\n${fileContent}\n`;
 
 			try {
-				await MarkdownRenderer.renderMarkdown(fileContent, fileDiv, '', this.markdownComponent);
+				// TODO: fix this not rendering the frontmatter any more
+				await MarkdownRenderer.render(this.app, fileContent, fileDiv, '', this.markdownComponent);
 			} catch (e) {
 				console.warn(`mdb | error during rendering of preview`, e);
 			}

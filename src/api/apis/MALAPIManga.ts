@@ -44,37 +44,37 @@ export class MALAPIManga extends APIModel {
 
 		for (const result of data.data) {
 			const type = this.typeMappings.get(result.type?.toLowerCase());
-				ret.push(
-					new MangaModel({
-						subType: type,
-						title: result.title,
-						synopsis: result.synopsis,
-						englishTitle: result.title_english ?? result.title,
-						alternateTitles: result.titles?.map((x: any) => x.title) ?? [],
-						year: result.year ?? result.published?.prop?.from?.year ?? '',
-						dataSource: this.apiName,
-						url: result.url,
-						id: result.mal_id,
-		
-						genres: result.genres?.map((x: any) => x.name) ?? [],
-						authors: result.authors?.map((x: any) => x.name) ?? [],
-						chapters: result.chapters,
-						volumes: result.volumes,
-						onlineRating: result.score ?? 0,
-						image: result.images?.jpg?.image_url ?? '',
-		
-						released: true,
-						publishedFrom: new Date(result.published?.from).toLocaleDateString() ?? 'unknown',
-						publishedTo: new Date(result.published?.to).toLocaleDateString() ?? 'unknown',
-						status: result.status,
-		
-						userData: {
-							watched: false,
-							lastWatched: '',
-							personalRating: 0,
-						},
-					} as MangaModel)
-				)
+			ret.push(
+				new MangaModel({
+					subType: type,
+					title: result.title,
+					synopsis: result.synopsis,
+					englishTitle: result.title_english ?? result.title,
+					alternateTitles: result.titles?.map((x: any) => x.title) ?? [],
+					year: result.year ?? result.published?.prop?.from?.year ?? '',
+					dataSource: this.apiName,
+					url: result.url,
+					id: result.mal_id,
+
+					genres: result.genres?.map((x: any) => x.name) ?? [],
+					authors: result.authors?.map((x: any) => x.name) ?? [],
+					chapters: result.chapters,
+					volumes: result.volumes,
+					onlineRating: result.score ?? 0,
+					image: result.images?.jpg?.image_url ?? '',
+
+					released: true,
+					publishedFrom: new Date(result.published?.from).toLocaleDateString() ?? 'unknown',
+					publishedTo: new Date(result.published?.to).toLocaleDateString() ?? 'unknown',
+					status: result.status,
+
+					userData: {
+						watched: false,
+						lastWatched: '',
+						personalRating: 0,
+					},
+				} as MangaModel)
+			);
 		}
 
 		return ret;

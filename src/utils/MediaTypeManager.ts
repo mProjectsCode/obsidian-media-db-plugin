@@ -12,7 +12,16 @@ import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { BoardGameModel } from '../models/BoardGameModel';
 import { BookModel } from '../models/BookModel';
 
-export const MEDIA_TYPES: MediaType[] = [MediaType.Movie, MediaType.Series, MediaType.Manga, MediaType.Game, MediaType.Wiki, MediaType.MusicRelease, MediaType.BoardGame, MediaType.Book];
+export const MEDIA_TYPES: MediaType[] = [
+	MediaType.Movie,
+	MediaType.Series,
+	MediaType.Manga,
+	MediaType.Game,
+	MediaType.Wiki,
+	MediaType.MusicRelease,
+	MediaType.BoardGame,
+	MediaType.Book,
+];
 
 export class MediaTypeManager {
 	mediaFileNameTemplateMap: Map<MediaType, string>;
