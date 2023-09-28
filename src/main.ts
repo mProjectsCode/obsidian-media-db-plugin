@@ -5,6 +5,7 @@ import { MediaTypeModel } from './models/MediaTypeModel';
 import { CreateNoteOptions, dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, unCamelCase } from './utils/Utils';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { MALAPI } from './api/apis/MALAPI';
+import { MALAPIManga } from './api/apis/MALAPIManga';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
@@ -33,6 +34,7 @@ export default class MediaDbPlugin extends Plugin {
 		// register APIs
 		this.apiManager.registerAPI(new OMDbAPI(this));
 		this.apiManager.registerAPI(new MALAPI(this));
+		this.apiManager.registerAPI(new MALAPIManga(this));
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
 		this.apiManager.registerAPI(new SteamAPI(this));
