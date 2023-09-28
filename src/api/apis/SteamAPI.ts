@@ -8,6 +8,7 @@ import { MediaType } from '../../utils/MediaType';
 export class SteamAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	typeMappings: Map<string, string>;
+	apiDateFormat: string = 'DD MMM, YYYY';
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -109,7 +110,7 @@ export class SteamAPI extends APIModel {
 			image: result.header_image ?? '',
 
 			released: !result.release_date?.comming_soon,
-			releaseDate: new Date(result.release_date?.date).toLocaleDateString() ?? 'unknown',
+			releaseDate: this.plugin.dateFormatter.format(result.release_date?.date, this.apiDateFormat) ?? 'unknown',
 
 			userData: {
 				played: false,

@@ -107,6 +107,7 @@ Now you select the result you want and the plugin will cast it's magic and creat
 -   games
 -   music releases
 -   wiki articles
+-   books
 
 ### Currently supported APIs:
 
@@ -117,6 +118,8 @@ Now you select the result you want and the plugin will cast it's magic and creat
 | [MusicBrainz](https://musicbrainz.org/)              | MusicBrainz is an API that offers information about music releases.                               | music releases                 | No                                                                           | 50 per second                  | No                 |
 | [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) | The Wikipedia API allows access to all Wikipedia articles.                                        | wiki articles                  | No                                                                           | None                           | No                 |
 | [Steam](https://store.steampowered.com/)             | The Steam API offers information on all steam games.                                              | games                          | No                                                                           | 10000 per day                  | No                 |
+| [Open Library](https://openlibrary.org)                                          | The OpenLibrary API offers metadata for books                                                     | books                          | No                                                                           |         Cover access is rate-limited when not using CoverID or OLID by max 100 requests/IP every 5 minutes. This plugin uses OLID so there shouldn't be a rate limit.                       |          No          |
+
 
 #### Notes
 
@@ -146,6 +149,11 @@ Now you select the result you want and the plugin will cast it's magic and creat
 -   [Steam](https://store.steampowered.com/)
     -   you can find this ID in the URL
         -   e.g. for "Factorio" the URL looks like this `https://store.steampowered.com/app/427520/Factorio/` so the ID is `427520`
+-   [Open Library](https://openlibrary.org)
+    -   The ID you need is the "work" ID and not the "book" ID, it needs to start with `/works/`. You can find this ID in the URL
+        -   e.g. for "Fantastic Mr. Fox" the URL looks like this `https://openlibrary.org/works/OL45804W` so the ID is `/works/OL45804W`
+        -   This URL is located near the top of the page above the title, see `An edition of Fantastic Mr Fox (1970) `
+
 
 ### Problems, unexpected behavior or improvement suggestions?
 

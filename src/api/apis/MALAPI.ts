@@ -8,6 +8,7 @@ import { MediaType } from '../../utils/MediaType';
 export class MALAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	typeMappings: Map<string, string>;
+	apiDateFormat: string = 'YYYY-MM-DDTHH:mm:ssZ'; // ISO
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -115,7 +116,7 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				premiere: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
+				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
 				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
 				userData: {
@@ -146,7 +147,7 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				premiere: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
+				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
 				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
 				userData: {
@@ -176,8 +177,8 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				airedFrom: new Date(result.aired?.from).toLocaleDateString() ?? 'unknown',
-				airedTo: new Date(result.aired?.to).toLocaleDateString() ?? 'unknown',
+				airedFrom: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
+				airedTo: this.plugin.dateFormatter.format(result.aired?.to, this.apiDateFormat) ?? 'unknown',
 				airing: result.airing,
 
 				userData: {
