@@ -6,7 +6,7 @@ export class MangaModel extends MediaTypeModel {
 	type: string;
 	subType: string;
 	title: string;
-	synopsis: string;
+	plot: string;
 	englishTitle: string;
 	alternateTitles: string[];
 	year: string;
@@ -35,6 +35,7 @@ export class MangaModel extends MediaTypeModel {
 	constructor(obj: any = {}) {
 		super();
 
+		this.plot = undefined;
 		this.genres = undefined;
 		this.authors = undefined;
 		this.alternateTitles = undefined;

@@ -134,6 +134,7 @@ export class OMDbAPI extends APIModel {
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
 
+				plot: result.Plot ?? '',
 				genres: result.Genre?.split(', ') ?? [],
 				producer: result.Director ?? 'unknown',
 				duration: result.Runtime ?? 'unknown',
@@ -163,6 +164,7 @@ export class OMDbAPI extends APIModel {
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
 
+				plot: result.Plot ?? '',
 				genres: result.Genre?.split(', ') ?? [],
 				studios: [result.Director] ?? 'unknown',
 				episodes: 0,

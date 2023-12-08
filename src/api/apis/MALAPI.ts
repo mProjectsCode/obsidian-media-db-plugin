@@ -108,6 +108,7 @@ export class MALAPI extends APIModel {
 				url: result.url,
 				id: result.mal_id,
 
+				plot: result.synopsis,
 				genres: result.genres?.map((x: any) => x.name) ?? [],
 				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
 				duration: result.duration ?? 'unknown',
@@ -139,6 +140,7 @@ export class MALAPI extends APIModel {
 				url: result.url,
 				id: result.mal_id,
 
+				plot: result.synopsis,
 				genres: result.genres?.map((x: any) => x.name) ?? [],
 				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
 				duration: result.duration ?? 'unknown',
