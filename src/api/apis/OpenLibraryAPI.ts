@@ -72,6 +72,7 @@ export class OpenLibraryAPI extends APIModel {
 			englishTitle: result.title_english ?? result.title,
 
 			author: result.author_name ?? 'unknown',
+			plot: result.description ?? 'unknown',
 			pages: result.number_of_pages_median ?? 'unknown',
 			onlineRating: Number.parseFloat(Number(result.ratings_average ?? 0).toFixed(2)),
 			image: `https://covers.openlibrary.org/b/OLID/` + result.cover_edition_key + `-L.jpg` ?? '',
