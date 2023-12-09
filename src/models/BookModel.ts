@@ -4,7 +4,7 @@ import { MediaType } from '../utils/MediaType';
 
 export class BookModel extends MediaTypeModel {
 	author: string;
-	plot:string;
+	plot: string;
 	pages: number;
 	image: string;
 	onlineRating: number;
