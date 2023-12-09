@@ -136,7 +136,9 @@ export class OMDbAPI extends APIModel {
 
 				plot: result.Plot ?? '',
 				genres: result.Genre?.split(', ') ?? [],
-				producer: result.Director ?? 'unknown',
+				director: result.Director?.split(', ') ?? [],
+				writer: result.Writer?.split(', ') ?? [],
+				studio: ['N/A'],
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', ') ?? [],
@@ -166,7 +168,8 @@ export class OMDbAPI extends APIModel {
 
 				plot: result.Plot ?? '',
 				genres: result.Genre?.split(', ') ?? [],
-				studios: [result.Director] ?? 'unknown',
+				writer: result.Writer?.split(', ') ?? [],
+				studio: [],
 				episodes: 0,
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),

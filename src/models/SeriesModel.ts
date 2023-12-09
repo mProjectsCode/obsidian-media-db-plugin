@@ -14,7 +14,8 @@ export class SeriesModel extends MediaTypeModel {
 
 	plot: string;
 	genres: string[];
-	studios: string[];
+	writer: string[];
+	studio: string[];
 	episodes: number;
 	duration: string;
 	onlineRating: number;
@@ -38,7 +39,8 @@ export class SeriesModel extends MediaTypeModel {
 
 		this.plot = undefined;
 		this.genres = undefined;
-		this.studios = undefined;
+		this.writer = undefined;
+		this.studio = undefined;
 		this.episodes = undefined;
 		this.duration = undefined;
 		this.onlineRating = undefined;

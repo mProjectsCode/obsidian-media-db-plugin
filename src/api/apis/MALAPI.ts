@@ -110,7 +110,9 @@ export class MALAPI extends APIModel {
 
 				plot: result.synopsis,
 				genres: result.genres?.map((x: any) => x.name) ?? [],
-				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
+				director: [],
+				writer: [],
+				studio: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
 				duration: result.duration ?? 'unknown',
 				onlineRating: result.score ?? 0,
 				actors: [],
@@ -142,7 +144,9 @@ export class MALAPI extends APIModel {
 
 				plot: result.synopsis,
 				genres: result.genres?.map((x: any) => x.name) ?? [],
-				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
+				director: [],
+				writer: [],
+				studio: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
 				duration: result.duration ?? 'unknown',
 				onlineRating: result.score ?? 0,
 				actors: [],
@@ -171,7 +175,8 @@ export class MALAPI extends APIModel {
 				id: result.mal_id,
 
 				genres: result.genres?.map((x: any) => x.name) ?? [],
-				studios: result.studios?.map((x: any) => x.name) ?? [],
+				writer: [],
+				studio: result.studios?.map((x: any) => x.name) ?? [],
 				episodes: result.episodes,
 				duration: result.duration ?? 'unknown',
 				onlineRating: result.score ?? 0,
