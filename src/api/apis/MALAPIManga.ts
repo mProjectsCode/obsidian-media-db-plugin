@@ -48,7 +48,7 @@ export class MALAPIManga extends APIModel {
 				new MangaModel({
 					subType: type,
 					title: result.title,
-					synopsis: result.synopsis,
+					plot: result.synopsis,
 					englishTitle: result.title_english ?? result.title,
 					alternateTitles: result.titles?.map((x: any) => x.title) ?? [],
 					year: result.year ?? result.published?.prop?.from?.year ?? '',
@@ -98,7 +98,6 @@ export class MALAPIManga extends APIModel {
 		const model = new MangaModel({
 			subType: type,
 			title: result.title,
-			synopsis: result.synopsis,
 			englishTitle: result.title_english ?? result.title,
 			alternateTitles: result.titles?.map((x: any) => x.title) ?? [],
 			year: result.year ?? result.published?.prop?.from?.year ?? '',
@@ -106,6 +105,7 @@ export class MALAPIManga extends APIModel {
 			url: result.url,
 			id: result.mal_id,
 
+			plot: result.synopsis,
 			genres: result.genres?.map((x: any) => x.name) ?? [],
 			authors: result.authors?.map((x: any) => x.name) ?? [],
 			chapters: result.chapters,

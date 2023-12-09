@@ -11,6 +11,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 	dataSource: string;
 	url: string;
 	id: string;
+	image: string;
 
 	genres: string[];
 	artists: string[];
@@ -25,6 +26,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 
 		this.genres = undefined;
 		this.artists = undefined;
+		this.image = undefined;
 		this.rating = undefined;
 		this.userData = {
 			personalRating: undefined,

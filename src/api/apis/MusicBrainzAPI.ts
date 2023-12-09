@@ -49,8 +49,9 @@ export class MusicBrainzAPI extends APIModel {
 					englishTitle: result.title,
 					year: new Date(result['first-release-date']).getFullYear().toString(),
 					dataSource: this.apiName,
-					url: '',
+					url: 'https://musicbrainz.org/release-group/' + result.id,
 					id: result.id,
+					image: 'https://coverartarchive.org/release-group/' + result.id + '/front',
 
 					artists: result['artist-credit'].map((a: any) => a.name),
 					subType: result['primary-type'],
@@ -86,8 +87,9 @@ export class MusicBrainzAPI extends APIModel {
 			englishTitle: result.title,
 			year: new Date(result['first-release-date']).getFullYear().toString(),
 			dataSource: this.apiName,
-			url: '',
+			url: 'https://musicbrainz.org/release-group/' + result.id,
 			id: result.id,
+			image: 'https://coverartarchive.org/release-group/' + result.id + '/front',
 
 			artists: result['artist-credit'].map((a: any) => a.name),
 			genres: result.genres.map((g: any) => g.name),
