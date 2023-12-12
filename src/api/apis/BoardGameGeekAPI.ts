@@ -49,7 +49,7 @@ export class BoardGameGeekAPI extends APIModel {
 					title,
 					englishTitle: title,
 					year,
-				} as BoardGameModel)
+				} as BoardGameModel),
 			);
 		}
 

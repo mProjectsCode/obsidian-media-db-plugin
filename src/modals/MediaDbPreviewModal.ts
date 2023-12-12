@@ -26,7 +26,6 @@ export class MediaDbPreviewModal extends Modal {
 		this.plugin = plugin;
 		this.title = previewModalOptions.modalTitle;
 		this.elements = previewModalOptions.elements;
-		this.createNoteOptions = previewModalOptions.createNoteOptions;
 
 		this.markdownComponent = new Component();
 	}
@@ -53,8 +52,8 @@ export class MediaDbPreviewModal extends Modal {
 			previewWrapper.createEl('h3', { text: result.englishTitle });
 			const fileDiv = previewWrapper.createDiv({ cls: 'media-db-plugin-preview' });
 
-			let fileContent = await this.plugin.generateMediaDbNoteContents(result, this.createNoteOptions);
-			fileContent = `\n${fileContent}\n`;
+			let fileContent = this.plugin.generateMediaDbNoteFrontmatterPreview(result);
+			fileContent = `\`\`\`yaml\n${fileContent}\`\`\``;
 
 			try {
 				// TODO: fix this not rendering the frontmatter any more
@@ -83,7 +82,7 @@ export class MediaDbPreviewModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.preview();
+		void this.preview();
 	}
 
 	onClose(): void {

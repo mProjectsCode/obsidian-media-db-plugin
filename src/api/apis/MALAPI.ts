@@ -52,7 +52,7 @@ export class MALAPI extends APIModel {
 						year: result.year ?? result.aired?.prop?.from?.year ?? '',
 						dataSource: this.apiName,
 						id: result.mal_id,
-					} as MovieModel)
+					} as MovieModel),
 				);
 			}
 			if (type === 'movie' || type === 'special') {
@@ -64,7 +64,7 @@ export class MALAPI extends APIModel {
 						year: result.year ?? result.aired?.prop?.from?.year ?? '',
 						dataSource: this.apiName,
 						id: result.mal_id,
-					} as MovieModel)
+					} as MovieModel),
 				);
 			} else if (type === 'series' || type === 'ova') {
 				ret.push(
@@ -75,7 +75,7 @@ export class MALAPI extends APIModel {
 						year: result.year ?? result.aired?.prop?.from?.year ?? '',
 						dataSource: this.apiName,
 						id: result.mal_id,
-					} as SeriesModel)
+					} as SeriesModel),
 				);
 			}
 		}

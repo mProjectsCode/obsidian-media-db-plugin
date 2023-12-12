@@ -175,7 +175,6 @@ export interface SelectModalOptions {
 export interface PreviewModalOptions {
 	modalTitle?: string;
 	elements?: MediaTypeModel[];
-	createNoteOptions?: CreateNoteOptions;
 }
 
 export const SEARCH_MODAL_DEFAULT_OPTIONS: SearchModalOptions = {
@@ -206,7 +205,6 @@ export const SELECT_MODAL_OPTIONS_DEFAULT: SelectModalOptions = {
 export const PREVIEW_MODAL_DEFAULT_OPTIONS: PreviewModalOptions = {
 	modalTitle: 'Media DB Preview',
 	elements: [],
-	createNoteOptions: { attachTemplate: true },
 };
 
 /**
@@ -289,7 +287,7 @@ export class ModalHelper {
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
 	async createAdvancedSearchModal(
-		advancedSearchModalOptions: AdvancedSearchModalOptions
+		advancedSearchModalOptions: AdvancedSearchModalOptions,
 	): Promise<{ advancedSearchModalResult: AdvancedSearchModalResult; advancedSearchModal: MediaDbAdvancedSearchModal }> {
 		const modal = new MediaDbAdvancedSearchModal(this.plugin, advancedSearchModalOptions);
 		const res: AdvancedSearchModalResult = await new Promise(resolve => {
@@ -316,7 +314,7 @@ export class ModalHelper {
 	 */
 	async openAdvancedSearchModal(
 		advancedSearchModalOptions: AdvancedSearchModalOptions,
-		submitCallback: (advancedSearchModalData: AdvancedSearchModalData) => Promise<MediaTypeModel[]>
+		submitCallback: (advancedSearchModalData: AdvancedSearchModalData) => Promise<MediaTypeModel[]>,
 	): Promise<MediaTypeModel[]> {
 		const { advancedSearchModalResult, advancedSearchModal } = await this.createAdvancedSearchModal(advancedSearchModalOptions);
 		console.debug(`MDB | advencedSearchModal closed with code ${advancedSearchModalResult.code}`);
@@ -380,7 +378,7 @@ export class ModalHelper {
 	 */
 	async openIdSearchModal(
 		idSearchModalOptions: IdSearchModalOptions,
-		submitCallback: (idSearchModalData: IdSearchModalData) => Promise<MediaTypeModel>
+		submitCallback: (idSearchModalData: IdSearchModalData) => Promise<MediaTypeModel>,
 	): Promise<MediaTypeModel> {
 		const { idSearchModalResult, idSearchModal } = await this.createIdSearchModal(idSearchModalOptions);
 		console.debug(`MDB | idSearchModal closed with code ${idSearchModalResult.code}`);

@@ -60,7 +60,7 @@ export class SteamAPI extends APIModel {
 					year: '',
 					dataSource: this.apiName,
 					id: result.appid,
-				} as GameModel)
+				} as GameModel),
 			);
 		}
 

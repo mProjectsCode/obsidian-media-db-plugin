@@ -68,7 +68,7 @@ export default class MediaDbPlugin extends Plugin {
 							.onClick(() => this.createEntriesFromFolder(file));
 					});
 				}
-			})
+			}),
 		);
 
 		// register command to open search modal
@@ -289,6 +289,11 @@ export default class MediaDbPlugin extends Plugin {
 			console.warn(e);
 			new Notice(e.toString());
 		}
+	}
+
+	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
+		const fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		return this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata);
 	}
 
 	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<string> {

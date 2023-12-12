@@ -55,7 +55,7 @@ export class MusicBrainzAPI extends APIModel {
 
 					artists: result['artist-credit'].map((a: any) => a.name),
 					subType: result['primary-type'],
-				} as MusicReleaseModel)
+				} as MusicReleaseModel),
 			);
 		}
 

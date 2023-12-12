@@ -69,7 +69,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
-					} as MovieModel)
+					} as MovieModel),
 				);
 			} else if (type === 'series') {
 				ret.push(
@@ -80,7 +80,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
-					} as SeriesModel)
+					} as SeriesModel),
 				);
 			} else if (type === 'game') {
 				ret.push(
@@ -91,7 +91,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
-					} as GameModel)
+					} as GameModel),
 				);
 			}
 		}

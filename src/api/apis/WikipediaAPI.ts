@@ -42,7 +42,7 @@ export class WikipediaAPI extends APIModel {
 					year: '',
 					dataSource: this.apiName,
 					id: result.pageid,
-				} as WikiModel)
+				} as WikiModel),
 			);
 		}
 

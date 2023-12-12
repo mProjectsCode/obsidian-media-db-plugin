@@ -73,7 +73,7 @@ export class MALAPIManga extends APIModel {
 						lastWatched: '',
 						personalRating: 0,
 					},
-				} as MangaModel)
+				} as MangaModel),
 			);
 		}
 

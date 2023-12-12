@@ -41,7 +41,7 @@ export class OpenLibraryAPI extends APIModel {
 					year: result.first_publish_year,
 					dataSource: this.apiName,
 					id: result.key,
-				} as BookModel)
+				} as BookModel),
 			);
 		}
 
@@ -75,7 +75,7 @@ export class OpenLibraryAPI extends APIModel {
 			plot: result.description ?? 'unknown',
 			pages: result.number_of_pages_median ?? 'unknown',
 			onlineRating: Number.parseFloat(Number(result.ratings_average ?? 0).toFixed(2)),
-			image: `https://covers.openlibrary.org/b/OLID/` + result.cover_edition_key + `-L.jpg` ?? '',
+			image: `https://covers.openlibrary.org/b/OLID/` + result.cover_edition_key + `-L.jpg`,
 
 			released: true,
 

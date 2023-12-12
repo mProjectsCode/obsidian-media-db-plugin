@@ -44,7 +44,7 @@ export class PropertyMappingModel {
 				return {
 					res: false,
 					err: new PropertyMappingNameConflictError(
-						`Multiple remapped properties (${propertiesWithSameTarget.map(x => x.toString()).toString()}) may not share the same name.`
+						`Multiple remapped properties (${propertiesWithSameTarget.map(x => x.toString()).toString()}) may not share the same name.`,
 					),
 				};
 			}
