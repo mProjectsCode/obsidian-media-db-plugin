@@ -159,6 +159,14 @@ You are more than welcome to open an issue on [GitHub](https://github.com/mProje
 
 ### Changelog
 
+#### 0.6.0
+
+-   Added manga support through Jikan
+-   Added book support through Open Library
+-   Added album cover support for music releases
+-   Split up `producer` into `studio`, `director` and `writer` for movies and series
+-   fixed the preview modal not displaying the frontmatter anymore
+
 #### 0.5.0
 
 -   New simple search modal, select the media type and search all applicable APIs
