@@ -6,6 +6,7 @@ import { MediaType } from '../../utils/MediaType';
 
 export class WikipediaAPI extends APIModel {
 	plugin: MediaDbPlugin;
+	apiDateFormat: string = 'YYYY-MM-DDTHH:mm:ssZ'; // ISO
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -41,7 +42,7 @@ export class WikipediaAPI extends APIModel {
 					year: '',
 					dataSource: this.apiName,
 					id: result.pageid,
-				} as WikiModel)
+				} as WikiModel),
 			);
 		}
 
@@ -72,7 +73,7 @@ export class WikipediaAPI extends APIModel {
 			id: result.pageid,
 
 			wikiUrl: result.fullurl,
-			lastUpdated: new Date(result.touched).toLocaleDateString('en-CA') ?? 'unknown',
+			lastUpdated: this.plugin.dateFormatter.format(result.touched, this.apiDateFormat),
 			length: result.length,
 
 			userData: {},

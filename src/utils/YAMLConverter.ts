@@ -19,7 +19,7 @@ export class YAMLConverter {
 		} else if (typeof value === 'number') {
 			return value.toString();
 		} else if (typeof value === 'string') {
-			return '"' + value.replace("\"", "\\\"") + '"';
+			return '"' + value.replace('"', '\\"') + '"';
 		} else if (typeof value === 'object') {
 			let output = '';
 

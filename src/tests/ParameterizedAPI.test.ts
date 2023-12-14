@@ -100,5 +100,5 @@ describe.each([{ name: OMDbAPI }, { name: MALAPI }, { name: LocGovAPI }, { name:
 			await expect(apiMock.searchByTitle('Hooking Season Playtest')).resolves.toEqual(ret);
 			expect(fetchMock).toHaveBeenCalledTimes(1);
 		});
-	}
+	},
 );

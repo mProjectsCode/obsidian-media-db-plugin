@@ -2,31 +2,29 @@ import { MediaTypeModel } from './MediaTypeModel';
 import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
 
-export class SeriesModel extends MediaTypeModel {
+export class MangaModel extends MediaTypeModel {
 	type: string;
 	subType: string;
 	title: string;
+	plot: string;
 	englishTitle: string;
+	alternateTitles: string[];
 	year: string;
 	dataSource: string;
 	url: string;
 	id: string;
 
-	plot: string;
 	genres: string[];
-	writer: string[];
-	studio: string[];
-	episodes: number;
-	duration: string;
+	authors: string[];
+	chapters: number;
+	volumes: number;
 	onlineRating: number;
-	actors: string[];
 	image: string;
 
 	released: boolean;
-	streamingServices: string[];
-	airing: boolean;
-	airedFrom: string;
-	airedTo: string;
+	status: string;
+	publishedFrom: string;
+	publishedTo: string;
 
 	userData: {
 		watched: boolean;
@@ -39,19 +37,17 @@ export class SeriesModel extends MediaTypeModel {
 
 		this.plot = undefined;
 		this.genres = undefined;
-		this.writer = undefined;
-		this.studio = undefined;
-		this.episodes = undefined;
-		this.duration = undefined;
+		this.authors = undefined;
+		this.alternateTitles = undefined;
+		this.chapters = undefined;
+		this.volumes = undefined;
 		this.onlineRating = undefined;
-		this.actors = undefined;
 		this.image = undefined;
 
 		this.released = undefined;
-		this.streamingServices = undefined;
-		this.airing = undefined;
-		this.airedFrom = undefined;
-		this.airedTo = undefined;
+		this.status = undefined;
+		this.publishedFrom = undefined;
+		this.publishedTo = undefined;
 
 		this.userData = {
 			watched: undefined,
@@ -69,11 +65,11 @@ export class SeriesModel extends MediaTypeModel {
 	}
 
 	getTags(): string[] {
-		return ['tv', 'series'];
+		return [mediaDbTag, 'manga', 'light-novel'];
 	}
 
 	getMediaType(): MediaType {
-		return MediaType.Series;
+		return MediaType.Manga;
 	}
 
 	getSummary(): string {

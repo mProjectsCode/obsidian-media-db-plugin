@@ -3,8 +3,11 @@ import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
 
 export class MovieModel extends MediaTypeModel {
+	plot: string;
 	genres: string[];
-	producer: string;
+	director: string[];
+	writer: string[];
+	studio: string[];
 	duration: string;
 	onlineRating: number;
 	actors: string[];
@@ -23,8 +26,11 @@ export class MovieModel extends MediaTypeModel {
 	constructor(obj: any = {}) {
 		super();
 
+		this.plot = undefined;
 		this.genres = undefined;
-		this.producer = undefined;
+		this.director = undefined;
+		this.writer = undefined;
+		this.studio = undefined;
 		this.duration = undefined;
 		this.onlineRating = undefined;
 		this.actors = undefined;

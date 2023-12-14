@@ -8,6 +8,7 @@ import { MediaType } from '../../utils/MediaType';
 export class MALAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	typeMappings: Map<string, string>;
+	apiDateFormat: string = 'YYYY-MM-DDTHH:mm:ssZ'; // ISO
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -51,7 +52,7 @@ export class MALAPI extends APIModel {
 						year: result.year ?? result.aired?.prop?.from?.year ?? '',
 						dataSource: this.apiName,
 						id: result.mal_id,
-					} as MovieModel)
+					} as MovieModel),
 				);
 			}
 			if (type === 'movie' || type === 'special') {
@@ -63,7 +64,7 @@ export class MALAPI extends APIModel {
 						year: result.year ?? result.aired?.prop?.from?.year ?? '',
 						dataSource: this.apiName,
 						id: result.mal_id,
-					} as MovieModel)
+					} as MovieModel),
 				);
 			} else if (type === 'series' || type === 'ova') {
 				ret.push(
@@ -74,7 +75,7 @@ export class MALAPI extends APIModel {
 						year: result.year ?? result.aired?.prop?.from?.year ?? '',
 						dataSource: this.apiName,
 						id: result.mal_id,
-					} as SeriesModel)
+					} as SeriesModel),
 				);
 			}
 		}
@@ -107,15 +108,18 @@ export class MALAPI extends APIModel {
 				url: result.url,
 				id: result.mal_id,
 
+				plot: result.synopsis,
 				genres: result.genres?.map((x: any) => x.name) ?? [],
-				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
+				director: [],
+				writer: [],
+				studio: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
 				duration: result.duration ?? 'unknown',
 				onlineRating: result.score ?? 0,
 				actors: [],
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				premiere: new Date(result.aired?.from).toLocaleDateString('en-CA') ?? 'unknown',
+				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
 				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
 				userData: {
@@ -138,15 +142,18 @@ export class MALAPI extends APIModel {
 				url: result.url,
 				id: result.mal_id,
 
+				plot: result.synopsis,
 				genres: result.genres?.map((x: any) => x.name) ?? [],
-				producer: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
+				director: [],
+				writer: [],
+				studio: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
 				duration: result.duration ?? 'unknown',
 				onlineRating: result.score ?? 0,
 				actors: [],
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				premiere: new Date(result.aired?.from).toLocaleDateString('en-CA') ?? 'unknown',
+				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
 				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
 				userData: {
@@ -168,7 +175,8 @@ export class MALAPI extends APIModel {
 				id: result.mal_id,
 
 				genres: result.genres?.map((x: any) => x.name) ?? [],
-				studios: result.studios?.map((x: any) => x.name) ?? [],
+				writer: [],
+				studio: result.studios?.map((x: any) => x.name) ?? [],
 				episodes: result.episodes,
 				duration: result.duration ?? 'unknown',
 				onlineRating: result.score ?? 0,
@@ -176,8 +184,8 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
-				airedFrom: new Date(result.aired?.from).toLocaleDateString('en-CA') ?? 'unknown',
-				airedTo: new Date(result.aired?.to).toLocaleDateString('en-CA') ?? 'unknown',
+				airedFrom: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
+				airedTo: this.plugin.dateFormatter.format(result.aired?.to, this.apiDateFormat) ?? 'unknown',
 				airing: result.airing,
 
 				userData: {
