@@ -1,4 +1,4 @@
-import {ButtonComponent, Component, MarkdownRenderer, Modal, Setting} from 'obsidian';
+import { ButtonComponent, Component, MarkdownRenderer, Modal, Setting } from 'obsidian';
 import MediaDbPlugin from 'src/main';
 import { MediaTypeModel } from 'src/models/MediaTypeModel';
 import { PREVIEW_MODAL_DEFAULT_OPTIONS, PreviewModalData, PreviewModalOptions } from '../utils/ModalHelper';
@@ -26,7 +26,6 @@ export class MediaDbPreviewModal extends Modal {
 		this.plugin = plugin;
 		this.title = previewModalOptions.modalTitle;
 		this.elements = previewModalOptions.elements;
-		this.createNoteOptions = previewModalOptions.createNoteOptions;
 
 		this.markdownComponent = new Component();
 	}
@@ -51,13 +50,14 @@ export class MediaDbPreviewModal extends Modal {
 
 		for (const result of this.elements) {
 			previewWrapper.createEl('h3', { text: result.englishTitle });
-			const fileDiv = previewWrapper.createDiv({ cls: 'media-db-plugin-preview'});
+			const fileDiv = previewWrapper.createDiv({ cls: 'media-db-plugin-preview' });
 
-			let fileContent = await this.plugin.generateMediaDbNoteContents(result, this.createNoteOptions);
-			fileContent = `\n${fileContent}\n`;
+			let fileContent = this.plugin.generateMediaDbNoteFrontmatterPreview(result);
+			fileContent = `\`\`\`yaml\n${fileContent}\`\`\``;
 
 			try {
-				await MarkdownRenderer.renderMarkdown(fileContent, fileDiv, "", this.markdownComponent);
+				// TODO: fix this not rendering the frontmatter any more
+				await MarkdownRenderer.render(this.app, fileContent, fileDiv, '', this.markdownComponent);
 			} catch (e) {
 				console.warn(`mdb | error during rendering of preview`, e);
 			}
@@ -82,7 +82,7 @@ export class MediaDbPreviewModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.preview();
+		void this.preview();
 	}
 
 	onClose(): void {

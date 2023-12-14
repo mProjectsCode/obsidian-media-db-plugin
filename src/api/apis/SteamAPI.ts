@@ -8,6 +8,7 @@ import { MediaType } from '../../utils/MediaType';
 export class SteamAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	typeMappings: Map<string, string>;
+	apiDateFormat: string = 'DD MMM, YYYY';
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -59,7 +60,7 @@ export class SteamAPI extends APIModel {
 					year: '',
 					dataSource: this.apiName,
 					id: result.appid,
-				} as GameModel)
+				} as GameModel),
 			);
 		}
 
@@ -109,7 +110,7 @@ export class SteamAPI extends APIModel {
 			image: result.header_image ?? '',
 
 			released: !result.release_date?.comming_soon,
-			releaseDate: new Date(result.release_date?.date).toLocaleDateString('en-CA') ?? 'unknown',
+			releaseDate: this.plugin.dateFormatter.format(result.release_date?.date, this.apiDateFormat) ?? 'unknown',
 
 			achievementCount: result.achievements?.total ?? 0,
 

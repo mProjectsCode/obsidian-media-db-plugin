@@ -135,6 +135,8 @@ export function markdownTable(content: string[][]): string {
 	return table;
 }
 
+export const fragWithHTML = (html: string) => createFragment(frag => (frag.createDiv().innerHTML = html));
+
 export function dateToString(date: Date): string {
 	return `${date.getMonth() + 1}-${date.getDate()}-${date.getFullYear()}`;
 }

@@ -5,16 +5,19 @@ import { MediaTypeModel } from './models/MediaTypeModel';
 import { CreateNoteOptions, dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, unCamelCase } from './utils/Utils';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { MALAPI } from './api/apis/MALAPI';
+import { MALAPIManga } from './api/apis/MALAPIManga';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
+import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { YAMLConverter } from './utils/YAMLConverter';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
 import { ModalHelper, ModalResultCode, SearchModalOptions } from './utils/ModalHelper';
+import { DateFormatter } from './utils/DateFormatter';
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -22,6 +25,7 @@ export default class MediaDbPlugin extends Plugin {
 	mediaTypeManager: MediaTypeManager;
 	modelPropertyMapper: PropertyMapper;
 	modalHelper: ModalHelper;
+	dateFormatter: DateFormatter;
 
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
 
@@ -30,15 +34,18 @@ export default class MediaDbPlugin extends Plugin {
 		// register APIs
 		this.apiManager.registerAPI(new OMDbAPI(this));
 		this.apiManager.registerAPI(new MALAPI(this));
+		this.apiManager.registerAPI(new MALAPIManga(this));
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
 		this.apiManager.registerAPI(new SteamAPI(this));
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
+		this.apiManager.registerAPI(new OpenLibraryAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager();
 		this.modelPropertyMapper = new PropertyMapper(this);
 		this.modalHelper = new ModalHelper(this);
+		this.dateFormatter = new DateFormatter();
 
 		await this.loadSettings();
 		// register the settings tab
@@ -46,6 +53,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.mediaTypeManager.updateTemplates(this.settings);
 		this.mediaTypeManager.updateFolders(this.settings);
+		this.dateFormatter.setFormat(this.settings.customDateFormat);
 
 		// add icon to the left ribbon
 		const ribbonIconEl = this.addRibbonIcon('database', 'Add new Media DB entry', () => this.createEntryWithAdvancedSearchModal());
@@ -60,7 +68,7 @@ export default class MediaDbPlugin extends Plugin {
 							.onClick(() => this.createEntriesFromFolder(file));
 					});
 				}
-			})
+			}),
 		);
 
 		// register command to open search modal
@@ -281,6 +289,11 @@ export default class MediaDbPlugin extends Plugin {
 			console.warn(e);
 			new Notice(e.toString());
 		}
+	}
+
+	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
+		const fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		return this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata);
 	}
 
 	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<string> {
@@ -563,6 +576,7 @@ export default class MediaDbPlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		this.mediaTypeManager.updateTemplates(this.settings);
 		this.mediaTypeManager.updateFolders(this.settings);
+		this.dateFormatter.setFormat(this.settings.customDateFormat);
 
 		await this.saveData(this.settings);
 	}

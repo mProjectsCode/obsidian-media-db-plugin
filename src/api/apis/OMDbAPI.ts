@@ -9,6 +9,7 @@ import { MediaType } from '../../utils/MediaType';
 export class OMDbAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	typeMappings: Map<string, string>;
+	apiDateFormat: string = 'DD MMM YYYY';
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -68,7 +69,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
-					} as MovieModel)
+					} as MovieModel),
 				);
 			} else if (type === 'series') {
 				ret.push(
@@ -79,7 +80,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
-					} as SeriesModel)
+					} as SeriesModel),
 				);
 			} else if (type === 'game') {
 				ret.push(
@@ -90,7 +91,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
-					} as GameModel)
+					} as GameModel),
 				);
 			}
 		}
@@ -133,8 +134,11 @@ export class OMDbAPI extends APIModel {
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
 
+				plot: result.Plot ?? '',
 				genres: result.Genre?.split(', ') ?? [],
-				producer: result.Director ?? 'unknown',
+				director: result.Director?.split(', ') ?? [],
+				writer: result.Writer?.split(', ') ?? [],
+				studio: ['N/A'],
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', ') ?? [],
@@ -142,7 +146,7 @@ export class OMDbAPI extends APIModel {
 
 				released: true,
 				streamingServices: [],
-				premiere: new Date(result.Released).toLocaleDateString('en-CA') ?? 'unknown',
+				premiere: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
 
 				userData: {
 					watched: false,
@@ -162,8 +166,10 @@ export class OMDbAPI extends APIModel {
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
 
+				plot: result.Plot ?? '',
 				genres: result.Genre?.split(', ') ?? [],
-				studios: [result.Director] ?? 'unknown',
+				writer: result.Writer?.split(', ') ?? [],
+				studio: [],
 				episodes: 0,
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
@@ -173,7 +179,7 @@ export class OMDbAPI extends APIModel {
 				released: true,
 				streamingServices: [],
 				airing: false,
-				airedFrom: new Date(result.Released).toLocaleDateString('en-CA') ?? 'unknown',
+				airedFrom: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
 				airedTo: 'unknown',
 
 				userData: {
@@ -199,7 +205,7 @@ export class OMDbAPI extends APIModel {
 				image: result.Poster ?? '',
 
 				released: true,
-				releaseDate: new Date(result.Released).toLocaleDateString('en-CA') ?? 'unknown',
+				releaseDate: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
 
 				achievementCount: 0,
 

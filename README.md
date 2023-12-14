@@ -1,6 +1,6 @@
 ## Obsidian Media DB Plugin
 
-A plugin that can query multiple APIs for movies, series, anime, games, music and wiki articles, and import them into your vault.
+A plugin that can query multiple APIs for movies, series, anime, manga, games, music and wiki articles, and import them into your vault.
 
 ### Features
 
@@ -107,16 +107,18 @@ Now you select the result you want and the plugin will cast it's magic and creat
 -   games
 -   music releases
 -   wiki articles
+-   books
 
 ### Currently supported APIs:
 
-| Name                                                 | Description                                                                                       | Supported formats              | Authentification                                                             | Rate limiting                  | SFW filter support |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------- | ------------------------------ | ------------------ |
-| [Jikan](https://jikan.moe/)                          | Jikan is an API that uses [My Anime List](https://myanimelist.net) and offers metadata for anime. | series, movies, specials, OVAs | No                                                                           | 60 per minute and 3 per second | Yes                |
-| [OMDb](https://www.omdbapi.com/)                     | OMDb is an API that offers metadata for movie, series and games.                                  | series, movies, games          | Yes, you can get a free key here [here](https://www.omdbapi.com/apikey.aspx) | 1000 per day                   | No                 |
-| [MusicBrainz](https://musicbrainz.org/)              | MusicBrainz is an API that offers information about music releases.                               | music releases                 | No                                                                           | 50 per second                  | No                 |
-| [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) | The Wikipedia API allows access to all Wikipedia articles.                                        | wiki articles                  | No                                                                           | None                           | No                 |
-| [Steam](https://store.steampowered.com/)             | The Steam API offers information on all steam games.                                              | games                          | No                                                                           | 10000 per day                  | No                 |
+| Name                                                 | Description                                                                                       | Supported formats                                     | Authentification                                                             | Rate limiting                                                                                                                                                 | SFW filter support |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| [Jikan](https://jikan.moe/)                          | Jikan is an API that uses [My Anime List](https://myanimelist.net) and offers metadata for anime. | series, movies, specials, OVAs, manga, manwha, novels | No                                                                           | 60 per minute and 3 per second                                                                                                                                | Yes                |
+| [OMDb](https://www.omdbapi.com/)                     | OMDb is an API that offers metadata for movie, series and games.                                  | series, movies, games                                 | Yes, you can get a free key here [here](https://www.omdbapi.com/apikey.aspx) | 1000 per day                                                                                                                                                  | No                 |
+| [MusicBrainz](https://musicbrainz.org/)              | MusicBrainz is an API that offers information about music releases.                               | music releases                                        | No                                                                           | 50 per second                                                                                                                                                 | No                 |
+| [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) | The Wikipedia API allows access to all Wikipedia articles.                                        | wiki articles                                         | No                                                                           | None                                                                                                                                                          | No                 |
+| [Steam](https://store.steampowered.com/)             | The Steam API offers information on all steam games.                                              | games                                                 | No                                                                           | 10000 per day                                                                                                                                                 | No                 |
+| [Open Library](https://openlibrary.org)              | The OpenLibrary API offers metadata for books                                                     | books                                                 | No                                                                           | Cover access is rate-limited when not using CoverID or OLID by max 100 requests/IP every 5 minutes. This plugin uses OLID so there shouldn't be a rate limit. | No                 |
 
 #### Notes
 
@@ -131,6 +133,10 @@ Now you select the result you want and the plugin will cast it's magic and creat
     -   the ID you need is the ID of the anime on [My Anime List](https://myanimelist.net)
     -   you can find this ID in the URL
         -   e.g. for "Beyond the Boundary" the URL looks like this `https://myanimelist.net/anime/18153/Kyoukai_no_Kanata` so the ID is `18153`
+-   [Jikan Manga](https://jikan.moe/)
+    -   the ID you need is the ID of the manga on [My Anime List](https://myanimelist.net)
+    -   you can find this ID in the URL
+        -   e.g. for "All You Need Is Kill" the URL looks like this `https://myanimelist.net/manga/62887/All_You_Need_Is_Kill` so the ID is `62887`
 -   [OMDb](https://www.omdbapi.com/)
     -   the ID you need is the ID of the movie or show on [IMDb](https://www.imdb.com)
     -   you can find this ID in the URL
@@ -142,12 +148,24 @@ Now you select the result you want and the plugin will cast it's magic and creat
 -   [Steam](https://store.steampowered.com/)
     -   you can find this ID in the URL
         -   e.g. for "Factorio" the URL looks like this `https://store.steampowered.com/app/427520/Factorio/` so the ID is `427520`
+-   [Open Library](https://openlibrary.org)
+    -   The ID you need is the "work" ID and not the "book" ID, it needs to start with `/works/`. You can find this ID in the URL
+        -   e.g. for "Fantastic Mr. Fox" the URL looks like this `https://openlibrary.org/works/OL45804W` so the ID is `/works/OL45804W`
+        -   This URL is located near the top of the page above the title, see `An edition of Fantastic Mr Fox (1970) `
 
 ### Problems, unexpected behavior or improvement suggestions?
 
 You are more than welcome to open an issue on [GitHub](https://github.com/mProjectsCode/obsidian-media-db-plugin/issues).
 
 ### Changelog
+
+#### 0.6.0
+
+-   Added manga support through Jikan
+-   Added book support through Open Library
+-   Added album cover support for music releases
+-   Split up `producer` into `studio`, `director` and `writer` for movies and series
+-   fixed the preview modal not displaying the frontmatter anymore
 
 #### 0.5.0
 

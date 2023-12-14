@@ -21,7 +21,7 @@ export function setWikipediaResponseMock() {
 			year: '',
 			dataSource: apiMock.apiName,
 			id: wikiresponse.pageid,
-		})
+		}),
 	);
 	return ret;
 }
@@ -37,7 +37,7 @@ export function setOMDbResponseMock() {
 			year: omdbresponse.Year,
 			dataSource: apiMock.apiName,
 			id: omdbresponse.imdbID,
-		})
+		}),
 	);
 	return ret;
 }
@@ -53,7 +53,7 @@ export function setMALResponseMock() {
 			year: result.aired.prop.from.year,
 			dataSource: apiMock.apiName,
 			id: result.mal_id,
-		})
+		}),
 	);
 	return ret;
 }
@@ -69,7 +69,7 @@ export function setSteamResponseMock() {
 			year: '',
 			dataSource: apiMock.apiName,
 			id: steamResponse.appid,
-		})
+		}),
 	);
 	return ret;
 }
@@ -89,7 +89,7 @@ export function setMusicBrainzResponseMock() {
 
 			artists: result['artist-credit'].map((a: any) => a.name),
 			subType: result['primary-type'],
-		} as MusicReleaseModel)
+		} as MusicReleaseModel),
 	);
 	return ret;
 }
