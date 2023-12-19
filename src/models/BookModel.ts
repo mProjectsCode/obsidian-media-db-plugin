@@ -9,6 +9,7 @@ export class BookModel extends MediaTypeModel {
 	image: string;
 	onlineRating: number;
 	english_title: string;
+	isbn: number;
 
 	released: boolean;
 
@@ -25,6 +26,7 @@ export class BookModel extends MediaTypeModel {
 		this.pages = undefined;
 		this.image = undefined;
 		this.onlineRating = undefined;
+		this.isbn = undefined;
 
 		this.released = undefined;
 

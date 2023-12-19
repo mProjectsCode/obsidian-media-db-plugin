@@ -69,6 +69,7 @@ export class OpenLibraryAPI extends APIModel {
 			dataSource: this.apiName,
 			url: `https://openlibrary.org` + result.key,
 			id: result.key,
+			isbn: result.isbn[0] ?? 'unknown',
 			englishTitle: result.title_english ?? result.title,
 
 			author: result.author_name ?? 'unknown',
