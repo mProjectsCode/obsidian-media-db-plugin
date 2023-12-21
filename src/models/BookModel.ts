@@ -56,6 +56,6 @@ export class BookModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		return this.englishTitle + ' (' + this.year + ')';
+		return this.englishTitle + ' (' + this.year + ') - ' + this.author;
 	}
 }

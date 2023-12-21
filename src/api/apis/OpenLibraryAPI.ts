@@ -19,9 +19,13 @@ export class OpenLibraryAPI extends APIModel {
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
-
-		const searchUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}`;
-
+		const titlesplit = title.split("++")
+		if(titlesplit.length !== 1 ){
+			var searchUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(titlesplit[0])}&author=${encodeURIComponent(titlesplit[1])}`;
+		}
+		else{
+			var searchUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}`;
+		}
 		const fetchData = await fetch(searchUrl);
 		console.debug(fetchData);
 		if (fetchData.status !== 200) {
@@ -41,6 +45,7 @@ export class OpenLibraryAPI extends APIModel {
 					year: result.first_publish_year,
 					dataSource: this.apiName,
 					id: result.key,
+					author: result.author_name ?? 'unknown',
 				} as BookModel),
 			);
 		}
