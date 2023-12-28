@@ -17,11 +17,11 @@ export class FileSuggest extends TextInputSuggest<TFile> {
 	}
 
 	renderSuggestion(file: TFile, el: HTMLElement): void {
-		el.setText(file.name);
+		el.setText(file.path);
 	}
 
 	selectSuggestion(file: TFile): void {
-		this.inputEl.value = file.name;
+		this.inputEl.value = file.path;
 		this.inputEl.trigger('input');
 		this.close();
 	}
