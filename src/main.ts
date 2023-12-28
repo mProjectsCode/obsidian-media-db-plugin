@@ -310,10 +310,12 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<string> {
-		if (this.settings.useDefaultFrontMatter) {
+		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
+
+		if (this.settings.useDefaultFrontMatter || !template) {
 			let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
 			let fileContent = '';
-			const template = options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : '';
+			template = options.attachTemplate ? template : '';
 
 			({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
 			({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
@@ -321,7 +323,6 @@ export default class MediaDbPlugin extends Plugin {
 			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
 			return fileContent;
 		} else {
-			let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
 			const parts = template.split('---');
 
 			if (parts.length < 3) {
