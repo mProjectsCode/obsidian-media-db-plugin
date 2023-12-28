@@ -202,3 +202,47 @@ export function unCamelCase(str: string): string {
 			})
 	);
 }
+
+// Copied from https://github.com/anpigon/obsidian-book-search-plugin
+// Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
+export function getFunctionConstructor(): typeof Function {
+	try {
+		return new Function('return (function(){}).constructor')();
+	} catch (err) {
+		console.warn(err);
+		if (err instanceof SyntaxError) {
+			throw Error('Bad template syntax');
+		} else {
+			throw err;
+		}
+	}
+}
+
+// Modified from https://github.com/anpigon/obsidian-book-search-plugin
+// Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
+export function executeInlineScriptsTemplates(media: MediaTypeModel, text: string) {
+	const commandRegex = /<%(?:=)(.+)%>/g;
+	const ctor = getFunctionConstructor();
+	const matchedList = [...text.matchAll(commandRegex)];
+	return matchedList.reduce((result, [matched, script]) => {
+		try {
+			const outputs = new ctor(
+				['const [media] = arguments', `const output = ${script}`, 'if(typeof output === "string") return output', 'return JSON.stringify(output)'].join(';'),
+			)(media);
+			return result.replace(matched, outputs);
+		} catch (err) {
+			console.warn(err);
+		}
+		return result;
+	}, text);
+}
+
+// Copied from https://github.com/anpigon/obsidian-book-search-plugin
+// Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
+export async function useTemplaterPluginInFile(app: App, file: TFile) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const templater = (app as any).plugins.plugins['templater-obsidian'];
+	if (templater && !templater?.settings['trigger_on_file_creation']) {
+		await templater.templater.overwrite_file_commands(file);
+	}
+}

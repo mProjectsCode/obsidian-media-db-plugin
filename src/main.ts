@@ -2,7 +2,15 @@ import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder 
 import { getDefaultSettings, MediaDbPluginSettings, MediaDbSettingTab } from './settings/Settings';
 import { APIManager } from './api/APIManager';
 import { MediaTypeModel } from './models/MediaTypeModel';
-import { CreateNoteOptions, dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, unCamelCase } from './utils/Utils';
+import {
+	CreateNoteOptions,
+	dateTimeToString,
+	markdownTable,
+	replaceIllegalFileNameCharactersInString,
+	unCamelCase,
+	executeInlineScriptsTemplates,
+	useTemplaterPluginInFile,
+} from './utils/Utils';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { MALAPI } from './api/apis/MALAPI';
 import { MALAPIManga } from './api/apis/MALAPIManga';
@@ -63,7 +71,8 @@ export default class MediaDbPlugin extends Plugin {
 			this.app.workspace.on('file-menu', (menu, file) => {
 				if (file instanceof TFolder) {
 					menu.addItem(item => {
-						item.setTitle('Import folder as Media DB entries')
+						item
+							.setTitle('Import folder as Media DB entries')
 							.setIcon('database')
 							.onClick(() => this.createEntriesFromFolder(file));
 					});
@@ -286,7 +295,9 @@ export default class MediaDbPlugin extends Plugin {
 				options.folder = await this.mediaTypeManager.getFolder(mediaTypeModel, this.app);
 			}
 
-			await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
+			const targetFile = await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
+
+			await useTemplaterPluginInFile(this.app, targetFile);
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
@@ -299,15 +310,67 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<string> {
-		let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
-		let fileContent = '';
-		const template = options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : '';
+		if (this.settings.useDefaultFrontMatter) {
+			let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+			let fileContent = '';
+			const template = options.attachTemplate ? await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app) : '';
 
-		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
-		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
+			({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
+			({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 
-		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
-		return fileContent;
+			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
+			return fileContent;
+		} else {
+			let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
+			const parts = template.split('---');
+
+			if (parts.length < 3) {
+				throw new Error('Cannot find YAML front matter for template.');
+			}
+
+			let frontMatter = parseYaml(parts[1]);
+			let fileContent: string = parts[2];
+
+			// Updating a previous file
+			if (options.attachFile) {
+				const previousMetadata = this.app.metadataCache.getFileCache(options.attachFile).frontmatter;
+
+				// Use contents (below front matter) from previous file
+				fileContent = await this.app.vault.read(options.attachFile);
+				const regExp = new RegExp(this.frontMatterRexExpPattern);
+				fileContent = fileContent.replace(regExp, '');
+				fileContent = fileContent.startsWith('\n') ? fileContent.substring(1) : fileContent;
+
+				// Update updated front matter with entries from the old front matter, if it isn't defined in the new front matter
+				Object.keys(previousMetadata).forEach(key => {
+					const value = previousMetadata[key];
+
+					if (!frontMatter[key] && value) {
+						frontMatter[key] = value;
+					}
+				});
+			}
+
+			// Ensure that id, type, and dataSource are defined
+			if (!frontMatter.id) {
+				frontMatter.id = mediaTypeModel.id;
+			}
+
+			if (!frontMatter.type) {
+				frontMatter.type = mediaTypeModel.type;
+			}
+
+			if (!frontMatter.dataSource) {
+				frontMatter.dataSource = mediaTypeModel.dataSource;
+			}
+
+			// Only support stringifyYaml for templater plugin
+			fileContent = `---\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
+
+			fileContent = executeInlineScriptsTemplates(mediaTypeModel, fileContent);
+
+			return fileContent;
+		}
 	}
 
 	async attachFile(fileMetadata: any, fileContent: string, fileToAttach?: TFile): Promise<{ fileMetadata: any; fileContent: string }> {
@@ -386,7 +449,7 @@ export default class MediaDbPlugin extends Plugin {
 	 * @param fileContent
 	 * @param options
 	 */
-	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions): Promise<void> {
+	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions): Promise<TFile> {
 		// find and possibly create the folder set in settings or passed in folder
 		const folder = options.folder ?? this.app.vault.getAbstractFileByPath('/');
 
@@ -412,6 +475,8 @@ export default class MediaDbPlugin extends Plugin {
 			}
 			await activeLeaf.openFile(targetFile, { state: { mode: 'source' } });
 		}
+
+		return targetFile;
 	}
 
 	/**
