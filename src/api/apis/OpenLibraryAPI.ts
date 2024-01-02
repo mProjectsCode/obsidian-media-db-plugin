@@ -41,6 +41,7 @@ export class OpenLibraryAPI extends APIModel {
 					year: result.first_publish_year,
 					dataSource: this.apiName,
 					id: result.key,
+					author: result.author_name ?? 'unknown',
 				} as BookModel),
 			);
 		}
@@ -69,6 +70,8 @@ export class OpenLibraryAPI extends APIModel {
 			dataSource: this.apiName,
 			url: `https://openlibrary.org` + result.key,
 			id: result.key,
+			isbn: result.isbn.find((el: string | any[]) => el.length <= 10) ?? 'unknown',
+			isbn13: result.isbn.find((el: string | any[]) => el.length == 13) ?? 'unknown',
 			englishTitle: result.title_english ?? result.title,
 
 			author: result.author_name ?? 'unknown',
