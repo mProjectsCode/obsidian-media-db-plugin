@@ -200,6 +200,8 @@ export class OMDbAPI extends APIModel {
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
 
+				developers: [],
+				publishers: [],
 				genres: result.Genre?.split(', ') ?? [],
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				image: result.Poster ?? '',
