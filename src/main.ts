@@ -323,14 +323,16 @@ export default class MediaDbPlugin extends Plugin {
 			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
 			return fileContent;
 		} else {
-			const parts = template.split('---');
+			const frontMatterRegex = /^---*\n([\s\S]*?)\n---\h*/;
 
-			if (parts.length < 3) {
+			const match = template.match(frontMatterRegex);
+
+			if (!match || match.length !== 2) {
 				throw new Error('Cannot find YAML front matter for template.');
 			}
 
-			let frontMatter = parseYaml(parts[1]);
-			let fileContent: string = parts[2];
+			let frontMatter = parseYaml(match[1]);
+			let fileContent: string = template.replace(frontMatterRegex, '');
 
 			// Updating a previous file
 			if (options.attachFile) {
