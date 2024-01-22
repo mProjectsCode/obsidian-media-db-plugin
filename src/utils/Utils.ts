@@ -1,5 +1,5 @@
 import { MediaTypeModel } from '../models/MediaTypeModel';
-import { TFile, TFolder } from 'obsidian';
+import { TFile, TFolder, App } from 'obsidian';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -203,38 +203,10 @@ export function unCamelCase(str: string): string {
 	);
 }
 
-// Copied from https://github.com/anpigon/obsidian-book-search-plugin
-// Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
-export function getFunctionConstructor(): typeof Function {
-	try {
-		return new Function('return (function(){}).constructor')();
-	} catch (err) {
-		console.warn(err);
-		if (err instanceof SyntaxError) {
-			throw Error('Bad template syntax');
-		} else {
-			throw err;
-		}
-	}
-}
+export function hasTemplaterPlugin(app: App) {
+	const templater = app.plugins.plugins['templater-obsidian'];
 
-// Modified from https://github.com/anpigon/obsidian-book-search-plugin
-// Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
-export function executeInlineScriptsTemplates(media: MediaTypeModel, text: string) {
-	const commandRegex = /<%(?:=)(.+)%>/g;
-	const ctor = getFunctionConstructor();
-	const matchedList = [...text.matchAll(commandRegex)];
-	return matchedList.reduce((result, [matched, script]) => {
-		try {
-			const outputs = new ctor(
-				['const [media] = arguments', `const output = ${script}`, 'if(typeof output === "string") return output', 'return JSON.stringify(output)'].join(';'),
-			)(media);
-			return result.replace(matched, outputs);
-		} catch (err) {
-			console.warn(err);
-		}
-		return result;
-	}, text);
+	return !!templater;
 }
 
 // Copied from https://github.com/anpigon/obsidian-book-search-plugin

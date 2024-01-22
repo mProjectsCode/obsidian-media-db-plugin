@@ -8,7 +8,7 @@ import {
 	markdownTable,
 	replaceIllegalFileNameCharactersInString,
 	unCamelCase,
-	executeInlineScriptsTemplates,
+	hasTemplaterPlugin,
 	useTemplaterPluginInFile,
 } from './utils/Utils';
 import { OMDbAPI } from './api/apis/OMDbAPI';
@@ -376,10 +376,13 @@ export default class MediaDbPlugin extends Plugin {
 			frontMatter.dataSource = mediaTypeModel.dataSource;
 		}
 
-		// Only support stringifyYaml for templater plugin
-		fileContent = `---\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
-
-		fileContent = executeInlineScriptsTemplates(mediaTypeModel, fileContent);
+		if (hasTemplaterPlugin(this.app)) {
+			// Only support stringifyYaml for templater plugin
+			// Include the media variable in all templater commands by using a top level JavaScript execution command.
+			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
+		} else {
+			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(frontMatter) : stringifyYaml(frontMatter)}---\n` + fileContent;
+		}
 
 		return fileContent;
 	}
