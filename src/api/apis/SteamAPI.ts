@@ -105,6 +105,8 @@ export class SteamAPI extends APIModel {
 			url: `https://store.steampowered.com/app/${result.steam_appid}`,
 			id: result.steam_appid,
 
+			developers: result['developers'],
+			publishers: result['publishers'],
 			genres: result.genres?.map((x: any) => x.description) ?? [],
 			onlineRating: Number.parseFloat(result.metacritic?.score ?? 0),
 			image: result.header_image ?? '',
