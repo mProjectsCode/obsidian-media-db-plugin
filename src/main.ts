@@ -313,67 +313,75 @@ export default class MediaDbPlugin extends Plugin {
 		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
 
 		if (this.settings.useDefaultFrontMatter || !template) {
-			let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
-			let fileContent = '';
-			template = options.attachTemplate ? template : '';
-
-			({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
-			({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
-
-			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
-			return fileContent;
+			return this.generateContentWithDefaultFrontMatter(mediaTypeModel, options, template);
 		} else {
-			const frontMatterRegex = /^---*\n([\s\S]*?)\n---\h*/;
-
-			const match = template.match(frontMatterRegex);
-
-			if (!match || match.length !== 2) {
-				throw new Error('Cannot find YAML front matter for template.');
-			}
-
-			let frontMatter = parseYaml(match[1]);
-			let fileContent: string = template.replace(frontMatterRegex, '');
-
-			// Updating a previous file
-			if (options.attachFile) {
-				const previousMetadata = this.app.metadataCache.getFileCache(options.attachFile).frontmatter;
-
-				// Use contents (below front matter) from previous file
-				fileContent = await this.app.vault.read(options.attachFile);
-				const regExp = new RegExp(this.frontMatterRexExpPattern);
-				fileContent = fileContent.replace(regExp, '');
-				fileContent = fileContent.startsWith('\n') ? fileContent.substring(1) : fileContent;
-
-				// Update updated front matter with entries from the old front matter, if it isn't defined in the new front matter
-				Object.keys(previousMetadata).forEach(key => {
-					const value = previousMetadata[key];
-
-					if (!frontMatter[key] && value) {
-						frontMatter[key] = value;
-					}
-				});
-			}
-
-			// Ensure that id, type, and dataSource are defined
-			if (!frontMatter.id) {
-				frontMatter.id = mediaTypeModel.id;
-			}
-
-			if (!frontMatter.type) {
-				frontMatter.type = mediaTypeModel.type;
-			}
-
-			if (!frontMatter.dataSource) {
-				frontMatter.dataSource = mediaTypeModel.dataSource;
-			}
-
-			// Only support stringifyYaml for templater plugin
-			fileContent = `---\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
-
-			fileContent = executeInlineScriptsTemplates(mediaTypeModel, fileContent);
-
-			return fileContent;
+			return this.generateContentWithCustomFrontMatter(mediaTypeModel, options, template);
 		}
+	}
+
+	async generateContentWithDefaultFrontMatter(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions, template?: string): Promise<string> {
+		let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		let fileContent = '';
+		template = options.attachTemplate ? template : '';
+
+		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
+		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
+
+		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
+		return fileContent;
+	}
+
+	async generateContentWithCustomFrontMatter(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions, template: string): Promise<string> {
+		const frontMatterRegex = /^---*\n([\s\S]*?)\n---\h*/;
+
+		const match = template.match(frontMatterRegex);
+
+		if (!match || match.length !== 2) {
+			throw new Error('Cannot find YAML front matter for template.');
+		}
+
+		let frontMatter = parseYaml(match[1]);
+		let fileContent: string = template.replace(frontMatterRegex, '');
+
+		// Updating a previous file
+		if (options.attachFile) {
+			const previousMetadata = this.app.metadataCache.getFileCache(options.attachFile).frontmatter;
+
+			// Use contents (below front matter) from previous file
+			fileContent = await this.app.vault.read(options.attachFile);
+			const regExp = new RegExp(this.frontMatterRexExpPattern);
+			fileContent = fileContent.replace(regExp, '');
+			fileContent = fileContent.startsWith('\n') ? fileContent.substring(1) : fileContent;
+
+			// Update updated front matter with entries from the old front matter, if it isn't defined in the new front matter
+			Object.keys(previousMetadata).forEach(key => {
+				const value = previousMetadata[key];
+
+				if (!frontMatter[key] && value) {
+					frontMatter[key] = value;
+				}
+			});
+		}
+
+		// Ensure that id, type, and dataSource are defined
+		if (!frontMatter.id) {
+			frontMatter.id = mediaTypeModel.id;
+		}
+
+		if (!frontMatter.type) {
+			frontMatter.type = mediaTypeModel.type;
+		}
+
+		if (!frontMatter.dataSource) {
+			frontMatter.dataSource = mediaTypeModel.dataSource;
+		}
+
+		// Only support stringifyYaml for templater plugin
+		fileContent = `---\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
+
+		fileContent = executeInlineScriptsTemplates(mediaTypeModel, fileContent);
+
+		return fileContent;
 	}
 
 	async attachFile(fileMetadata: any, fileContent: string, fileToAttach?: TFile): Promise<{ fileMetadata: any; fileContent: string }> {
