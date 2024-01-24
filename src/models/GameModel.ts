@@ -3,6 +3,8 @@ import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
 
 export class GameModel extends MediaTypeModel {
+	developers: string[];
+	publishers: string[];
 	genres: string[];
 	onlineRating: number;
 	image: string;
@@ -20,6 +22,8 @@ export class GameModel extends MediaTypeModel {
 	constructor(obj: any = {}) {
 		super();
 
+		this.developers = undefined;
+		this.publishers = undefined;
 		this.genres = undefined;
 		this.onlineRating = undefined;
 		this.image = undefined;

@@ -105,7 +105,7 @@ export class MALAPIManga extends APIModel {
 			url: result.url,
 			id: result.mal_id,
 
-			plot: result.synopsis,
+			plot: (result.synopsis ?? 'unknown').replace(/"/g, "'") ?? 'unknown',
 			genres: result.genres?.map((x: any) => x.name) ?? [],
 			authors: result.authors?.map((x: any) => x.name) ?? [],
 			chapters: result.chapters,
