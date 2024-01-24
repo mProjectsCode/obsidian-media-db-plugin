@@ -15,6 +15,7 @@ export interface MediaDbPluginSettings {
 	useCustomYamlStringifier: boolean;
 	templates: boolean;
 	customDateFormat: string;
+	openNoteInNewTab: boolean;
 
 	movieTemplate: string;
 	seriesTemplate: string;
@@ -61,6 +62,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	useCustomYamlStringifier: true,
 	templates: true,
 	customDateFormat: 'L',
+	openNoteInNewTab: true,
 
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -204,6 +206,16 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						document.getElementById('media-db-dateformat-preview').textContent = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
 						this.plugin.saveSettings();
 					});
+			});
+
+		new Setting(containerEl)
+			.setName('Open note in new tab')
+			.setDesc('Open the newly created note in a new tab.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.openNoteInNewTab).onChange(data => {
+					this.plugin.settings.openNoteInNewTab = data;
+					this.plugin.saveSettings();
+				});
 			});
 
 		containerEl.createEl('h3', { text: 'New File Location' });
