@@ -65,7 +65,8 @@ export class MediaTypeManager {
 	}
 
 	getFileName(mediaTypeModel: MediaTypeModel): string {
-		return replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType()), mediaTypeModel);
+		// Ignore undefined tags since some search APIs do not return all properties in the model and produce clean file names even if errors occur
+		return replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType()), mediaTypeModel, true);
 	}
 
 	async getTemplate(mediaTypeModel: MediaTypeModel, app: App): Promise<string> {
