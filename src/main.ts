@@ -297,7 +297,9 @@ export default class MediaDbPlugin extends Plugin {
 
 			const targetFile = await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
 
-			await useTemplaterPluginInFile(this.app, targetFile);
+			if (this.settings.enableTemplaterIntegration) {
+				await useTemplaterPluginInFile(this.app, targetFile);
+			}
 		} catch (e) {
 			console.warn(e);
 			new Notice(e.toString());
@@ -376,7 +378,7 @@ export default class MediaDbPlugin extends Plugin {
 			frontMatter.dataSource = mediaTypeModel.dataSource;
 		}
 
-		if (hasTemplaterPlugin(this.app)) {
+		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
 			// Only support stringifyYaml for templater plugin
 			// Include the media variable in all templater commands by using a top level JavaScript execution command.
 			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(frontMatter)}---\n${fileContent}`;

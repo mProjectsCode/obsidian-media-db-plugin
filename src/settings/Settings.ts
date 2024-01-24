@@ -17,6 +17,7 @@ export interface MediaDbPluginSettings {
 	customDateFormat: string;
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
+	enableTemplaterIntegration: boolean;
 
 	movieTemplate: string;
 	seriesTemplate: string;
@@ -65,6 +66,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	customDateFormat: 'L',
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
+	enableTemplaterIntegration: false,
 
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -229,6 +231,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					this.plugin.saveSettings();
 					// Redraw settings to display/remove the property mappings
 					this.display();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('Enable Templater integration')
+			.setDesc(
+				'Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.',
+			)
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
+					this.plugin.settings.enableTemplaterIntegration = data;
+					this.plugin.saveSettings();
 				});
 			});
 
