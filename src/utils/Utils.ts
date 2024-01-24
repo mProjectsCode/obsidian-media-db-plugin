@@ -204,7 +204,7 @@ export function unCamelCase(str: string): string {
 }
 
 export function hasTemplaterPlugin(app: App) {
-	const templater = app.plugins.plugins['templater-obsidian'];
+	const templater = (app as any).plugins.plugins['templater-obsidian'];
 
 	return !!templater;
 }
