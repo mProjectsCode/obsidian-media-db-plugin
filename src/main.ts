@@ -278,6 +278,8 @@ export default class MediaDbPlugin extends Plugin {
 		try {
 			console.debug('MDB | creating new note');
 
+			options.openNote = this.settings.openNoteInNewTab;
+
 			const fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, options);
 
 			if (!options.folder) {
