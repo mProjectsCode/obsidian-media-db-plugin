@@ -329,7 +329,14 @@ export default class MediaDbPlugin extends Plugin {
 		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
 		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 
-		fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
+		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
+			// Only support stringifyYaml for templater plugin
+			// Include the media variable in all templater commands by using a top level JavaScript execution command.
+			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
+		} else {
+			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
+		}
+
 		return fileContent;
 	}
 
