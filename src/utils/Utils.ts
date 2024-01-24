@@ -1,5 +1,5 @@
 import { MediaTypeModel } from '../models/MediaTypeModel';
-import { TFile, TFolder } from 'obsidian';
+import { TFile, TFolder, App } from 'obsidian';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -201,4 +201,20 @@ export function unCamelCase(str: string): string {
 				return str.toUpperCase();
 			})
 	);
+}
+
+export function hasTemplaterPlugin(app: App) {
+	const templater = (app as any).plugins.plugins['templater-obsidian'];
+
+	return !!templater;
+}
+
+// Copied from https://github.com/anpigon/obsidian-book-search-plugin
+// Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
+export async function useTemplaterPluginInFile(app: App, file: TFile) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const templater = (app as any).plugins.plugins['templater-obsidian'];
+	if (templater && !templater?.settings['trigger_on_file_creation']) {
+		await templater.templater.overwrite_file_commands(file);
+	}
 }

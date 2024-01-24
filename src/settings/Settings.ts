@@ -16,6 +16,8 @@ export interface MediaDbPluginSettings {
 	templates: boolean;
 	customDateFormat: string;
 	openNoteInNewTab: boolean;
+	useDefaultFrontMatter: boolean;
+	enableTemplaterIntegration: boolean;
 
 	movieTemplate: string;
 	seriesTemplate: string;
@@ -63,6 +65,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	templates: true,
 	customDateFormat: 'L',
 	openNoteInNewTab: true,
+	useDefaultFrontMatter: true,
+	enableTemplaterIntegration: false,
 
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -214,6 +218,30 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.openNoteInNewTab).onChange(data => {
 					this.plugin.settings.openNoteInNewTab = data;
+					this.plugin.saveSettings();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('Use default front matter')
+			.setDesc('Wheter to use the default front matter. If disabled, the front matter from the template will be used. Same as mapping everything to remove.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.useDefaultFrontMatter).onChange(data => {
+					this.plugin.settings.useDefaultFrontMatter = data;
+					this.plugin.saveSettings();
+					// Redraw settings to display/remove the property mappings
+					this.display();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('Enable Templater integration')
+			.setDesc(
+				'Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.',
+			)
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
+					this.plugin.settings.enableTemplaterIntegration = data;
 					this.plugin.saveSettings();
 				});
 			});
@@ -531,11 +559,11 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		// endregion
 
 		// region Property Mappings
+		if (this.plugin.settings.useDefaultFrontMatter) {
+			containerEl.createEl('h3', { text: 'Property Mappings' });
 
-		containerEl.createEl('h3', { text: 'Property Mappings' });
-
-		const propertyMappingExplanation = containerEl.createEl('div');
-		propertyMappingExplanation.innerHTML = `
+			const propertyMappingExplanation = containerEl.createEl('div');
+			propertyMappingExplanation.innerHTML = `
 		<p>Allow you to remap the metadata fields of newly created media db entries.</p>
 		<p>
 			The different options are:
@@ -549,27 +577,28 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			Don't forget to save your changes using the save button for each individual category.
 		</p>`;
 
-		new PropertyMappingModelsComponent({
-			target: this.containerEl,
-			props: {
-				models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),
-				save: (model: PropertyMappingModel): void => {
-					const propertyMappingModels: PropertyMappingModel[] = [];
+			new PropertyMappingModelsComponent({
+				target: this.containerEl,
+				props: {
+					models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),
+					save: (model: PropertyMappingModel): void => {
+						const propertyMappingModels: PropertyMappingModel[] = [];
 
-					for (const model2 of this.plugin.settings.propertyMappingModels) {
-						if (model2.type === model.type) {
-							propertyMappingModels.push(model);
-						} else {
-							propertyMappingModels.push(model2);
+						for (const model2 of this.plugin.settings.propertyMappingModels) {
+							if (model2.type === model.type) {
+								propertyMappingModels.push(model);
+							} else {
+								propertyMappingModels.push(model2);
+							}
 						}
-					}
 
-					this.plugin.settings.propertyMappingModels = propertyMappingModels;
-					new Notice(`MDB: Property Mappings for ${model.type} saved successfully.`);
-					this.plugin.saveSettings();
+						this.plugin.settings.propertyMappingModels = propertyMappingModels;
+						new Notice(`MDB: Property Mappings for ${model.type} saved successfully.`);
+						this.plugin.saveSettings();
+					},
 				},
-			},
-		});
+			});
+		}
 
 		// endregion
 	}

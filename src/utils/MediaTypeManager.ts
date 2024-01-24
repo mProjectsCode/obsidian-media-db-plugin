@@ -69,22 +69,28 @@ export class MediaTypeManager {
 	}
 
 	async getTemplate(mediaTypeModel: MediaTypeModel, app: App): Promise<string> {
-		const templateFileName = this.mediaTemplateMap.get(mediaTypeModel.getMediaType());
+		const templateFilePath = this.mediaTemplateMap.get(mediaTypeModel.getMediaType());
 
-		if (!templateFileName) {
+		if (!templateFilePath) {
 			return '';
 		}
 
-		const templateFile: TFile = app.vault
-			.getFiles()
-			.filter((f: TFile) => f.name === templateFileName)
-			.first();
+		let templateFile = app.vault.getAbstractFileByPath(templateFilePath);
 
-		if (!templateFile) {
-			return '';
+		// WARNING: This was previously selected by filename, but that could lead to collisions and unwanted effects.
+		// This now falls back to the previous method if no file is found
+		if (!templateFile || templateFile instanceof TFolder) {
+			templateFile = app.vault
+				.getFiles()
+				.filter((f: TFile) => f.name === templateFilePath)
+				.first();
+
+			if (!templateFile) {
+				return '';
+			}
 		}
 
-		const template = await app.vault.cachedRead(templateFile);
+		const template = await app.vault.cachedRead(templateFile as TFile);
 		// console.log(template);
 		return replaceTags(template, mediaTypeModel);
 	}
