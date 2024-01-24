@@ -64,6 +64,16 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
 				return '{{ INVALID TEMPLATE TAG - operator ENUM is only applicable on an array }}';
 			}
 			return obj.join(', ');
+		} else if (operator === 'FIRST') {
+			if (!Array.isArray(obj)) {
+				return '{{ INVALID TEMPLATE TAG - operator FIRST is only applicable on an array }}';
+			}
+			return obj[0];
+		} else if (operator === 'LAST') {
+			if (!Array.isArray(obj)) {
+				return '{{ INVALID TEMPLATE TAG - operator LAST is only applicable on an array }}';
+			}
+			return obj[obj.length - 1];
 		}
 
 		return `{{ INVALID TEMPLATE TAG - unknown operator ${operator} }}`;
