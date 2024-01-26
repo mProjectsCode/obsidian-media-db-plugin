@@ -1,5 +1,5 @@
 import { MediaTypeModel } from '../models/MediaTypeModel';
-import { TFile, TFolder } from 'obsidian';
+import { TFile, TFolder, App } from 'obsidian';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -22,11 +22,11 @@ export function replaceIllegalFileNameCharactersInString(string: string): string
 	return string.replace(/[\\,#%&{}/*<>$"@.?]*/g, '').replace(/:+/g, ' -');
 }
 
-export function replaceTags(template: string, mediaTypeModel: MediaTypeModel): string {
-	return template.replace(new RegExp('{{.*?}}', 'g'), (match: string) => replaceTag(match, mediaTypeModel));
+export function replaceTags(template: string, mediaTypeModel: MediaTypeModel, ignoreUndefined: boolean = false): string {
+	return template.replace(new RegExp('{{.*?}}', 'g'), (match: string) => replaceTag(match, mediaTypeModel, ignoreUndefined));
 }
 
-function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
+function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefined: boolean): string {
 	let tag = match;
 	tag = tag.substring(2);
 	tag = tag.substring(0, tag.length - 2);
@@ -39,7 +39,7 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
 		const obj = traverseMetaData(path, mediaTypeModel);
 
 		if (obj === undefined) {
-			return '{{ INVALID TEMPLATE TAG - object undefined }}';
+			return ignoreUndefined ? '' : '{{ INVALID TEMPLATE TAG - object undefined }}';
 		}
 
 		return obj;
@@ -51,7 +51,7 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
 		const obj = traverseMetaData(path, mediaTypeModel);
 
 		if (obj === undefined) {
-			return '{{ INVALID TEMPLATE TAG - object undefined }}';
+			return ignoreUndefined ? '' : '{{ INVALID TEMPLATE TAG - object undefined }}';
 		}
 
 		if (operator === 'LIST') {
@@ -64,6 +64,16 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel): string {
 				return '{{ INVALID TEMPLATE TAG - operator ENUM is only applicable on an array }}';
 			}
 			return obj.join(', ');
+		} else if (operator === 'FIRST') {
+			if (!Array.isArray(obj)) {
+				return '{{ INVALID TEMPLATE TAG - operator FIRST is only applicable on an array }}';
+			}
+			return obj[0];
+		} else if (operator === 'LAST') {
+			if (!Array.isArray(obj)) {
+				return '{{ INVALID TEMPLATE TAG - operator LAST is only applicable on an array }}';
+			}
+			return obj[obj.length - 1];
 		}
 
 		return `{{ INVALID TEMPLATE TAG - unknown operator ${operator} }}`;
@@ -201,4 +211,20 @@ export function unCamelCase(str: string): string {
 				return str.toUpperCase();
 			})
 	);
+}
+
+export function hasTemplaterPlugin(app: App) {
+	const templater = (app as any).plugins.plugins['templater-obsidian'];
+
+	return !!templater;
+}
+
+// Copied from https://github.com/anpigon/obsidian-book-search-plugin
+// Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
+export async function useTemplaterPluginInFile(app: App, file: TFile) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const templater = (app as any).plugins.plugins['templater-obsidian'];
+	if (templater && !templater?.settings['trigger_on_file_creation']) {
+		await templater.templater.overwrite_file_commands(file);
+	}
 }
