@@ -11,6 +11,7 @@ import { fragWithHTML } from '../utils/Utils';
 
 export interface MediaDbPluginSettings {
 	OMDbKey: string;
+	MobyGamesKey: string;
 	sfwFilter: boolean;
 	useCustomYamlStringifier: boolean;
 	templates: boolean;
@@ -60,6 +61,7 @@ export interface MediaDbPluginSettings {
 
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
+	MobyGamesKey: '',
 	sfwFilter: true,
 	useCustomYamlStringifier: true,
 	templates: true,
@@ -156,6 +158,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.OMDbKey)
 					.onChange(data => {
 						this.plugin.settings.OMDbKey = data;
+						this.plugin.saveSettings();
+					});
+			});
+
+			new Setting(containerEl)
+			.setName('Moby Games key')
+			.setDesc('API key for "www.mobygames.com".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.MobyGamesKey)
+					.onChange(data => {
+						this.plugin.settings.MobyGamesKey = data;
 						this.plugin.saveSettings();
 					});
 			});
