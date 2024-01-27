@@ -19,6 +19,13 @@ export interface MediaDbPluginSettings {
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
+	OMDbAPIMovies: boolean;
+	OMDbAPISeries: boolean;
+	OMDbAPIGames: boolean;
+	MALAPIMovies: boolean;
+	MALAPISeries: boolean;
+	SteamAPI: boolean;
+	MobyGamesAPI: boolean;
 
 	movieTemplate: string;
 	seriesTemplate: string;
@@ -69,6 +76,13 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
 	enableTemplaterIntegration: false,
+	OMDbAPIMovies: true,
+	OMDbAPIGames: true,
+	OMDbAPISeries: true,
+	MALAPISeries: true,
+	MALAPIMovies: true,
+	SteamAPI: true,
+	MobyGamesAPI: true,
 
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -256,6 +270,75 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
 					this.plugin.settings.enableTemplaterIntegration = data;
+					this.plugin.saveSettings();
+				});
+			});
+
+
+		containerEl.createEl('h3', { text: 'APIs Per Media Type' });
+		containerEl.createEl('h5', { text: 'Movies' });
+		new Setting(containerEl)
+		.setName('OMDb API')
+		.setDesc('Use OMDb API for movies.')
+		.addToggle(cb => {
+			cb.setValue(this.plugin.settings.OMDbAPIMovies).onChange(data => {
+				this.plugin.settings.OMDbAPIMovies = data;
+				this.plugin.saveSettings();
+			});
+		});
+		new Setting(containerEl)
+		.setName('MAL API')
+		.setDesc('Use MAL API for movies.')
+		.addToggle(cb => {
+			cb.setValue(this.plugin.settings.MALAPIMovies).onChange(data => {
+				this.plugin.settings.MALAPIMovies = data;
+				this.plugin.saveSettings();
+			});
+		});
+		containerEl.createEl('h5', { text: 'Series' });
+		new Setting(containerEl)
+			.setName('OMDb API')
+			.setDesc('Use OMDb API for series.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.OMDbAPISeries).onChange(data => {
+					this.plugin.settings.OMDbAPISeries = data;
+					this.plugin.saveSettings();
+				});
+			});
+			new Setting(containerEl)
+			.setName('MAL API')
+			.setDesc('Use MAL API for series.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.MALAPISeries).onChange(data => {
+					this.plugin.settings.MALAPISeries = data;
+					this.plugin.saveSettings();
+				});
+			});
+		containerEl.createEl('h5', { text: 'Games' });
+			new Setting(containerEl)
+			.setName('OMDb API')
+			.setDesc('Use OMDb API for games.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.OMDbAPIGames).onChange(data => {
+					this.plugin.settings.OMDbAPIGames = data;
+					this.plugin.saveSettings();
+				});
+			});
+			new Setting(containerEl)
+			.setName('Steam API')
+			.setDesc('Use OMDb API for games.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.SteamAPI).onChange(data => {
+					this.plugin.settings.SteamAPI = data;
+					this.plugin.saveSettings();
+				});
+			});
+			new Setting(containerEl)
+			.setName('MobyGames API')
+			.setDesc('Use MobyGames API for games.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.MobyGamesAPI).onChange(data => {
+					this.plugin.settings.MobyGamesAPI = data;
 					this.plugin.saveSettings();
 				});
 			});
