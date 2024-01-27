@@ -162,7 +162,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 
-			new Setting(containerEl)
+		new Setting(containerEl)
 			.setName('Moby Games key')
 			.setDesc('API key for "www.mobygames.com".')
 			.addText(cb => {
