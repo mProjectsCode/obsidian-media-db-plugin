@@ -7,6 +7,7 @@ import { MediaType } from '../../utils/MediaType';
 
 export class MobyGamesAPI extends APIModel {
 	plugin: MediaDbPlugin;
+	apiDateFormat: string = 'YYYY-DD-MM';
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -46,7 +47,7 @@ export class MobyGamesAPI extends APIModel {
 					type: MediaType.Game,
 					title: result.title,
 					englishTitle: result.title,
-					year: result.platforms[0].first_release_date ?? '',
+					year: new Date(result.platforms[0].first_release_date).getFullYear().toString(),
 					dataSource: this.apiName,
 					id: result.game_id,
 											 
@@ -78,7 +79,7 @@ export class MobyGamesAPI extends APIModel {
 			type: MediaType.Game,
 			title: result.title,
 			englishTitle: result.title,
-			year: result.platforms[0].first_release_date,
+			year: new Date(result.platforms[0].first_release_date).getFullYear().toString(),
 			dataSource: this.apiName,
 			url: `https://www.mobygames.com/game/${result.game_id}`,
 			id: result.game_id,
