@@ -1,10 +1,14 @@
 import { APIModel } from './APIModel';
 import { MediaTypeModel } from '../models/MediaTypeModel';
+import MediaDbPlugin from '../main';
+
 
 export class APIManager {
+	plugin: MediaDbPlugin;
 	apis: APIModel[];
 
-	constructor() {
+	constructor(plugin: MediaDbPlugin) {
+		this.plugin = plugin;
 		this.apis = [];
 	}
 
@@ -18,9 +22,9 @@ export class APIManager {
 		console.debug(`MDB | api manager queried with "${query}"`);
 
 		let res: MediaTypeModel[] = [];
-
 		for (const api of this.apis) {
-			if (apisToQuery.contains(api.apiName)) {
+			const apiSettings = [api.apiName, MediaTypeModel].filter(s => s).join('') as keyof typeof this.plugin.settings;
+			if (apisToQuery.contains(api.apiName) && this.plugin.settings[apiSettings]) {
 				const apiRes = await api.searchByTitle(query);
 				res = res.concat(apiRes);
 			}

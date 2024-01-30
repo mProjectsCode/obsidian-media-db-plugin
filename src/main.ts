@@ -39,7 +39,7 @@ export default class MediaDbPlugin extends Plugin {
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
 
 	async onload(): Promise<void> {
-		this.apiManager = new APIManager();
+		this.apiManager = new APIManager(this);
 		// register APIs
 		this.apiManager.registerAPI(new OMDbAPI(this));
 		this.apiManager.registerAPI(new MALAPI(this));
@@ -73,7 +73,8 @@ export default class MediaDbPlugin extends Plugin {
 			this.app.workspace.on('file-menu', (menu, file) => {
 				if (file instanceof TFolder) {
 					menu.addItem(item => {
-						item.setTitle('Import folder as Media DB entries')
+						item
+							.setTitle('Import folder as Media DB entries')
 							.setIcon('database')
 							.onClick(() => this.createEntriesFromFolder(file));
 					});
