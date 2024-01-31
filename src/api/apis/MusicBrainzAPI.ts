@@ -13,7 +13,7 @@ export class MusicBrainzAPI extends APIModel {
 		super();
 
 		this.plugin = plugin;
-		this.apiName = 'MusicBrainz API';
+		this.apiName = 'MusicBrainzAPI';
 		this.apiDescription = 'Free API for music albums.';
 		this.apiUrl = 'https://musicbrainz.org/';
 		this.types = [MediaType.MusicRelease];
