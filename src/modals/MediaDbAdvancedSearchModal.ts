@@ -87,21 +87,23 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 		// const apiToggleComponents: Component[] = [];
 		for (const api of this.plugin.apiManager.apis) {
-			const apiToggleListElementWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
+			if (this.plugin.settings[[api.apiName, "default"].filter(s => s).join('') as keyof typeof this.plugin.settings] || this.plugin.settings[[api.apiName, "game"].filter(s => s).join('') as keyof typeof this.plugin.settings] || this.plugin.settings[[api.apiName, "series"].filter(s => s).join('') as keyof typeof this.plugin.settings] || this.plugin.settings[[api.apiName, "movie"].filter(s => s).join('') as keyof typeof this.plugin.settings]) {
+				const apiToggleListElementWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
 
-			const apiToggleTextWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
-			apiToggleTextWrapper.createEl('span', { text: api.apiName, cls: 'media-db-plugin-list-text' });
-			apiToggleTextWrapper.createEl('small', { text: api.apiDescription, cls: 'media-db-plugin-list-text' });
+				const apiToggleTextWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
+				apiToggleTextWrapper.createEl('span', { text: api.apiName, cls: 'media-db-plugin-list-text' });
+				apiToggleTextWrapper.createEl('small', { text: api.apiDescription, cls: 'media-db-plugin-list-text' });
 
-			const apiToggleComponentWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-toggle' });
+				const apiToggleComponentWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-toggle' });
 
-			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
-			apiToggleComponent.setTooltip(api.apiName);
-			apiToggleComponent.setValue(this.selectedApis.find(x => x.name === api.apiName).selected);
-			apiToggleComponent.onChange(value => {
-				this.selectedApis.find(x => x.name === api.apiName).selected = value;
-			});
-			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
+				const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
+				apiToggleComponent.setTooltip(api.apiName);
+				apiToggleComponent.setValue(this.selectedApis.find(x => x.name === api.apiName).selected);
+				apiToggleComponent.onChange(value => {
+					this.selectedApis.find(x => x.name === api.apiName).selected = value;
+				});
+				apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
+			}
 		}
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
