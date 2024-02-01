@@ -23,7 +23,7 @@ export class APIManager {
 
 		let res: MediaTypeModel[] = [];
 		for (const api of this.apis) {
-			if (apisToQuery.contains(api.apiName) && (this.plugin.settings[[api.apiName, mediaType].filter(s => s).join('') as keyof typeof this.plugin.settings] || this.plugin.settings[[api.apiName, "default"].filter(s => s).join('') as keyof typeof this.plugin.settings])) {
+			if (apisToQuery.contains(api.apiName) && !(this.plugin.settings[[api.apiName, mediaType].filter(s => s).join('') as keyof typeof this.plugin.settings] === false)) {
 				const apiRes = await api.searchByTitle(query);
 				res = res.concat(apiRes);
 			}

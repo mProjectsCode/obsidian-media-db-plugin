@@ -26,11 +26,6 @@ export interface MediaDbPluginSettings {
 	MALAPIseries: boolean;
 	SteamAPIgame: boolean;
 	MobyGamesAPIgame: boolean;
-	BoardGameGeekAPIdefault: boolean;
-	MALAPIMangadefault: boolean;
-	MusicBrainzAPIdefault: boolean;
-	OpenLibraryAPIdefault: boolean;
-	WikipediaAPIdefault: boolean;
 
 	movieTemplate: string;
 	seriesTemplate: string;
@@ -88,11 +83,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	MALAPImovie: true,
 	SteamAPIgame: true,
 	MobyGamesAPIgame: true,
-	BoardGameGeekAPIdefault: true,
-	MALAPIMangadefault: true,
-	MusicBrainzAPIdefault: true,
-	OpenLibraryAPIdefault: true,
-	WikipediaAPIdefault: true,
 
 	movieTemplate: '',
 	seriesTemplate: '',

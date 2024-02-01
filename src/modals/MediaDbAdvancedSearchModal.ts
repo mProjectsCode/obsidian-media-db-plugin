@@ -87,8 +87,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 		// const apiToggleComponents: Component[] = [];
 		for (const api of this.plugin.apiManager.apis) {
-			if (this.plugin.settings[[api.apiName, "default"].filter(s => s).join('') as keyof typeof this.plugin.settings] || this.plugin.settings[[api.apiName, "game"].filter(s => s).join('') as keyof typeof this.plugin.settings] || this.plugin.settings[[api.apiName, "series"].filter(s => s).join('') as keyof typeof this.plugin.settings] || this.plugin.settings[[api.apiName, "movie"].filter(s => s).join('') as keyof typeof this.plugin.settings]) {
-				const apiToggleListElementWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
+			const apiToggleListElementWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
 
 				const apiToggleTextWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
 				apiToggleTextWrapper.createEl('span', { text: api.apiName, cls: 'media-db-plugin-list-text' });
@@ -104,7 +103,6 @@ export class MediaDbAdvancedSearchModal extends Modal {
 				});
 				apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
 			}
-		}
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 

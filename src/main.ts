@@ -156,7 +156,7 @@ export default class MediaDbPlugin extends Plugin {
 	 */
 	async createLinkWithSearchModal(): Promise<void> {
 		const apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
-			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis, "default");
+			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis, "");
 		});
 
 		if (!apiSearchResults) {
@@ -218,7 +218,7 @@ export default class MediaDbPlugin extends Plugin {
 
 	async createEntryWithAdvancedSearchModal(): Promise<void> {
 		const apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
-			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis, "default");
+			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis, "");
 		});
 
 		if (!apiSearchResults) {
@@ -570,7 +570,7 @@ export default class MediaDbPlugin extends Plugin {
 
 				let results: MediaTypeModel[] = [];
 				try {
-					results = await this.apiManager.query(title, [selectedAPI], "default");
+					results = await this.apiManager.query(title, [selectedAPI], "");
 				} catch (e) {
 					erroredFiles.push({ filePath: file.path, error: e.toString() });
 					continue;
