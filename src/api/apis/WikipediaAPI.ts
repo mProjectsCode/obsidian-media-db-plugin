@@ -12,7 +12,7 @@ export class WikipediaAPI extends APIModel {
 		super();
 
 		this.plugin = plugin;
-		this.apiName = 'WikipediaAPI';
+		this.apiName = 'Wikipedia API';
 		this.apiDescription = 'The API behind Wikipedia';
 		this.apiUrl = 'https://www.wikipedia.com';
 		this.types = [MediaType.Wiki];
