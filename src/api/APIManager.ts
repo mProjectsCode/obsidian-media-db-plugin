@@ -18,12 +18,12 @@ export class APIManager {
 	 * @param query
 	 * @param apisToQuery
 	 */
-	async query(query: string, apisToQuery: string[]): Promise<MediaTypeModel[]> {
+	async query(query: string, apisToQuery: string[], mediaType: string): Promise<MediaTypeModel[]> {
 		console.debug(`MDB | api manager queried with "${query}"`);
 
 		let res: MediaTypeModel[] = [];
 		for (const api of this.apis) {
-			if (apisToQuery.contains(api.apiName) && (this.plugin.settings[[api.apiName, "game"].filter(s => s).join('') as keyof typeof this.plugin.settings] || this.plugin.settings[[api.apiName, "default"].filter(s => s).join('') as keyof typeof this.plugin.settings])) {
+			if (apisToQuery.contains(api.apiName) && (this.plugin.settings[[api.apiName, mediaType].filter(s => s).join('') as keyof typeof this.plugin.settings] || this.plugin.settings[[api.apiName, "default"].filter(s => s).join('') as keyof typeof this.plugin.settings])) {
 				const apiRes = await api.searchByTitle(query);
 				res = res.concat(apiRes);
 			}
