@@ -106,10 +106,17 @@ export class MediaDbSearchModal extends Modal {
 				currentToggle = apiToggleComponent;
 			}
 			apiToggleComponent.onChange(value => {
-				if (currentToggle && currentToggle !== apiToggleComponent) {
-					currentToggle.setValue(false);
+				if (value) {
+					if (currentToggle && currentToggle !== apiToggleComponent) {
+						currentToggle.setValue(false);
+						this.selectedTypes.find(x => x.name === mediaType).selected = false;
+					}
+					currentToggle = apiToggleComponent;
+					this.selectedTypes.find(x => x.name === mediaType).selected = true;
+				} else {
+					currentToggle = null;
+					this.selectedTypes.find(x => x.name === mediaType).selected = false;
 				}
-				currentToggle = value ? apiToggleComponent : null;
 			});
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
 			toggleComponents.push(apiToggleComponent);
