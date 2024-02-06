@@ -76,6 +76,9 @@ export class MediaDbSearchModal extends Modal {
 
 		const placeholder = 'Search by title';
 		const searchComponent = new TextComponent(contentEl);
+		const toggleComponents = [];
+		let currentToggle: ToggleComponent = null;
+	
 		searchComponent.inputEl.style.width = '100%';
 		searchComponent.setPlaceholder(placeholder);
 		searchComponent.setValue(this.query);
@@ -99,10 +102,17 @@ export class MediaDbSearchModal extends Modal {
 			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
 			apiToggleComponent.setTooltip(unCamelCase(mediaType));
 			apiToggleComponent.setValue(this.selectedTypes.find(x => x.name === mediaType).selected);
+			if (apiToggleComponent.getValue()) {
+				currentToggle = apiToggleComponent;
+			}
 			apiToggleComponent.onChange(value => {
-				this.selectedTypes.find(x => x.name === mediaType).selected = value;
+				if (currentToggle && currentToggle !== apiToggleComponent) {
+					currentToggle.setValue(false);
+				}
+				currentToggle = value ? apiToggleComponent : null;
 			});
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
+			toggleComponents.push(apiToggleComponent);
 		}
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
