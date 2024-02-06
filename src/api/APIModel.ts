@@ -1,11 +1,13 @@
 import { MediaTypeModel } from '../models/MediaTypeModel';
 import { MediaType } from '../utils/MediaType';
+import MediaDbPlugin from '../main';
 
 export abstract class APIModel {
 	apiName: string;
 	apiUrl: string;
 	apiDescription: string;
 	types: MediaType[];
+	plugin: MediaDbPlugin;
 
 	/**
 	 * This function should query the api and return a list of matches. The matches should be caped at 20.
@@ -17,7 +19,9 @@ export abstract class APIModel {
 	abstract getById(id: string): Promise<MediaTypeModel>;
 
 	hasType(type: MediaType): boolean {
-		return this.types.contains(type);
+		if (this.types.contains(type) && !(this.plugin.settings[[this.apiName, type.toString()].filter(s => s).join('') as keyof typeof this.plugin.settings] === false)){
+			return true;
+		}
 	}
 
 	hasTypeOverlap(types: MediaType[]): boolean {

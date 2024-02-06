@@ -39,7 +39,7 @@ export default class MediaDbPlugin extends Plugin {
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
 
 	async onload(): Promise<void> {
-		this.apiManager = new APIManager(this);
+		this.apiManager = new APIManager();
 		// register APIs
 		this.apiManager.registerAPI(new OMDbAPI(this));
 		this.apiManager.registerAPI(new MALAPI(this));
@@ -156,7 +156,7 @@ export default class MediaDbPlugin extends Plugin {
 	 */
 	async createLinkWithSearchModal(): Promise<void> {
 		const apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
-			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis, "");
+			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
 		});
 
 		if (!apiSearchResults) {
@@ -186,7 +186,7 @@ export default class MediaDbPlugin extends Plugin {
 		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openSearchModal(searchModalOptions ?? {}, async searchModalData => {
 			types = searchModalData.types;
 			const apis = this.apiManager.apis.filter(x => x.hasTypeOverlap(searchModalData.types)).map(x => x.apiName);
-			return await this.apiManager.query(searchModalData.query, apis, searchModalData.types.toString());
+			return await this.apiManager.query(searchModalData.query, apis);
 		});
 
 		if (!apiSearchResults) {
@@ -218,7 +218,7 @@ export default class MediaDbPlugin extends Plugin {
 
 	async createEntryWithAdvancedSearchModal(): Promise<void> {
 		const apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
-			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis, "");
+			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
 		});
 
 		if (!apiSearchResults) {
@@ -570,7 +570,7 @@ export default class MediaDbPlugin extends Plugin {
 
 				let results: MediaTypeModel[] = [];
 				try {
-					results = await this.apiManager.query(title, [selectedAPI], "");
+					results = await this.apiManager.query(title, [selectedAPI]);
 				} catch (e) {
 					erroredFiles.push({ filePath: file.path, error: e.toString() });
 					continue;

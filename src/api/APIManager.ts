@@ -1,14 +1,10 @@
 import { APIModel } from './APIModel';
 import { MediaTypeModel } from '../models/MediaTypeModel';
-import MediaDbPlugin from '../main';
-
 
 export class APIManager {
-	plugin: MediaDbPlugin;
 	apis: APIModel[];
 
-	constructor(plugin: MediaDbPlugin) {
-		this.plugin = plugin;
+	constructor() {
 		this.apis = [];
 	}
 
@@ -18,12 +14,13 @@ export class APIManager {
 	 * @param query
 	 * @param apisToQuery
 	 */
-	async query(query: string, apisToQuery: string[], mediaType: string): Promise<MediaTypeModel[]> {
+	async query(query: string, apisToQuery: string[]): Promise<MediaTypeModel[]> {
 		console.debug(`MDB | api manager queried with "${query}"`);
 
 		let res: MediaTypeModel[] = [];
+		
 		for (const api of this.apis) {
-			if (apisToQuery.contains(api.apiName) && !(this.plugin.settings[[api.apiName, mediaType].filter(s => s).join('') as keyof typeof this.plugin.settings] === false)) {
+			if (apisToQuery.contains(api.apiName)) {
 				const apiRes = await api.searchByTitle(query);
 				res = res.concat(apiRes);
 			}
