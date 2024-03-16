@@ -76,9 +76,8 @@ export class MediaDbSearchModal extends Modal {
 
 		const placeholder = 'Search by title';
 		const searchComponent = new TextComponent(contentEl);
-		const toggleComponents = [];
 		let currentToggle: ToggleComponent = null;
-	
+
 		searchComponent.inputEl.style.width = '100%';
 		searchComponent.setPlaceholder(placeholder);
 		searchComponent.setValue(this.query);
@@ -119,7 +118,6 @@ export class MediaDbSearchModal extends Modal {
 				}
 			});
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
-			toggleComponents.push(apiToggleComponent);
 		}
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });

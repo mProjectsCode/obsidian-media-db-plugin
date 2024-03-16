@@ -176,7 +176,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 
-			new Setting(containerEl)
+		new Setting(containerEl)
 			.setName('Moby Games key')
 			.setDesc('API key for "www.mobygames.com".')
 			.addText(cb => {
@@ -223,10 +223,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setDesc(
 				fragWithHTML(
 					"Your custom date format. Use <em>'YYYY-MM-DD'</em> for example.<br>" +
-						"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
-						"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
-						this.plugin.dateFormatter.getPreview() +
-						'</a></b>',
+					"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
+					"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
+					this.plugin.dateFormatter.getPreview() +
+					'</a></b>',
 				),
 			)
 			.addText(cb => {
@@ -278,23 +278,23 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		containerEl.createEl('h3', { text: 'APIs Per Media Type' });
 		containerEl.createEl('h5', { text: 'Movies' });
 		new Setting(containerEl)
-		.setName('OMDb API')
-		.setDesc('Use OMDb API for movies.')
-		.addToggle(cb => {
-			cb.setValue(this.plugin.settings.OMDbAPImovie).onChange(data => {
-				this.plugin.settings.OMDbAPImovie = data;
-				this.plugin.saveSettings();
+			.setName('OMDb API')
+			.setDesc('Use OMDb API for movies.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.OMDbAPImovie).onChange(data => {
+					this.plugin.settings.OMDbAPImovie = data;
+					this.plugin.saveSettings();
+				});
 			});
-		});
 		new Setting(containerEl)
-		.setName('MAL API')
-		.setDesc('Use MAL API for movies.')
-		.addToggle(cb => {
-			cb.setValue(this.plugin.settings.MALAPImovie).onChange(data => {
-				this.plugin.settings.MALAPImovie = data;
-				this.plugin.saveSettings();
+			.setName('MAL API')
+			.setDesc('Use MAL API for movies.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.MALAPImovie).onChange(data => {
+					this.plugin.settings.MALAPImovie = data;
+					this.plugin.saveSettings();
+				});
 			});
-		});
 		containerEl.createEl('h5', { text: 'Series' });
 		new Setting(containerEl)
 			.setName('OMDb API')
@@ -305,7 +305,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					this.plugin.saveSettings();
 				});
 			});
-			new Setting(containerEl)
+		new Setting(containerEl)
 			.setName('MAL API')
 			.setDesc('Use MAL API for series.')
 			.addToggle(cb => {
@@ -315,7 +315,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				});
 			});
 		containerEl.createEl('h5', { text: 'Games' });
-			new Setting(containerEl)
+		new Setting(containerEl)
 			.setName('OMDb API')
 			.setDesc('Use OMDb API for games.')
 			.addToggle(cb => {
@@ -324,7 +324,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					this.plugin.saveSettings();
 				});
 			});
-			new Setting(containerEl)
+		new Setting(containerEl)
 			.setName('Steam API')
 			.setDesc('Use OMDb API for games.')
 			.addToggle(cb => {
@@ -333,7 +333,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					this.plugin.saveSettings();
 				});
 			});
-			new Setting(containerEl)
+		new Setting(containerEl)
 			.setName('MobyGames API')
 			.setDesc('Use MobyGames API for games.')
 			.addToggle(cb => {

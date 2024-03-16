@@ -18,7 +18,7 @@ export class APIManager {
 		console.debug(`MDB | api manager queried with "${query}"`);
 
 		let res: MediaTypeModel[] = [];
-		
+
 		for (const api of this.apis) {
 			if (apisToQuery.contains(api.apiName)) {
 				const apiRes = await api.searchByTitle(query);
