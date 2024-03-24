@@ -20,7 +20,7 @@ export abstract class APIModel {
 	abstract getById(id: string): Promise<MediaTypeModel>;
 
 	hasType(type: MediaType): boolean {
-		if (this.types.contains(type) && !(this.plugin.settings[((`${this.apiName}"."${type}`)) as keyof MediaDbPluginSettings] === false)) {
+		if (this.types.contains(type) && (Boolean((this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type] as MediaDbPluginSettings) === true || (this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type] as MediaDbPluginSettings === undefined)) {
 			return true;
 		}
 	}

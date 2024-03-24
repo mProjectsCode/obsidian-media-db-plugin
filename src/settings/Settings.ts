@@ -19,21 +19,23 @@ export interface MediaDbPluginSettings {
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
-	OMDbAPI: {
-		movie: boolean,
-		series: boolean,
-		game: boolean
-	};
-	MALAPI: {
-		movie: boolean,
-		series: boolean
-	};
-	SteamAPI: {
-		game: boolean
-	};
-	MobyGamesAPI: {
-		game: boolean
-	};
+	apiToggle: {
+		OMDbAPI: {
+			movie: boolean;
+			series: boolean;
+			game: boolean;
+		},
+		MALAPI: {
+			movie: boolean;
+			series: boolean;
+		},
+		SteamAPI: {
+			game: boolean;
+		},
+		MobyGamesAPI: {
+			game: boolean;
+		}
+	},
 	movieTemplate: string;
 	seriesTemplate: string;
 	mangaTemplate: string;
@@ -83,20 +85,22 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
 	enableTemplaterIntegration: false,
-	OMDbAPI: {
-		movie: true,
-		game: true,
-		series: true,
-	},
-	MALAPI: {
-		movie: true,
-		series: true,
-	},
-	SteamAPI: {
-		game: true,
-	},
-	MobyGamesAPI: {
-		game: true,
+	apiToggle: {
+		OMDbAPI: {
+			movie: true,
+			series: true,
+			game: true,
+		},
+		MALAPI: {
+			movie: true,
+			series: true,
+		},
+		SteamAPI: {
+			game: true,
+		},
+		MobyGamesAPI: {
+			game: true,
+		}
 	},
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -295,8 +299,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('OMDb API')
 			.setDesc('Use OMDb API for movies.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.OMDbAPI.movie).onChange(data => {
-					this.plugin.settings.OMDbAPI.movie = data;
+				cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.movie).onChange(data => {
+					this.plugin.settings.apiToggle.OMDbAPI.movie = data;
 					this.plugin.saveSettings();
 				});
 			});
@@ -304,8 +308,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('MAL API')
 			.setDesc('Use MAL API for movies.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.MALAPI.movie).onChange(data => {
-					this.plugin.settings.MALAPI.movie = data;
+				cb.setValue(this.plugin.settings.apiToggle.MALAPI.movie).onChange(data => {
+					this.plugin.settings.apiToggle.MALAPI.movie = data;
 					this.plugin.saveSettings();
 				});
 			});
@@ -314,8 +318,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('OMDb API')
 			.setDesc('Use OMDb API for series.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.OMDbAPI.series).onChange(data => {
-					this.plugin.settings.OMDbAPI.series = data;
+				cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.series).onChange(data => {
+					this.plugin.settings.apiToggle.OMDbAPI.series = data;
 					this.plugin.saveSettings();
 				});
 			});
@@ -323,8 +327,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('MAL API')
 			.setDesc('Use MAL API for series.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.MALAPI.series).onChange(data => {
-					this.plugin.settings.MALAPI.series = data;
+				cb.setValue(this.plugin.settings.apiToggle.MALAPI.series).onChange(data => {
+					this.plugin.settings.apiToggle.MALAPI.series = data;
 					this.plugin.saveSettings();
 				});
 			});
@@ -333,8 +337,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('OMDb API')
 			.setDesc('Use OMDb API for games.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.OMDbAPI.game).onChange(data => {
-					this.plugin.settings.OMDbAPI.game = data;
+				cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.game).onChange(data => {
+					this.plugin.settings.apiToggle.OMDbAPI.game = data;
 					this.plugin.saveSettings();
 				});
 			});
@@ -342,8 +346,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Steam API')
 			.setDesc('Use OMDb API for games.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.SteamAPI.game).onChange(data => {
-					this.plugin.settings.SteamAPI.game = data;
+				cb.setValue(this.plugin.settings.apiToggle.SteamAPI.game).onChange(data => {
+					this.plugin.settings.apiToggle.SteamAPI.game = data;
 					this.plugin.saveSettings();
 				});
 			});
@@ -351,8 +355,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('MobyGames API')
 			.setDesc('Use MobyGames API for games.')
 			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.MobyGamesAPI.game).onChange(data => {
-					this.plugin.settings.MobyGamesAPI.game = data;
+				cb.setValue(this.plugin.settings.apiToggle.MobyGamesAPI.game).onChange(data => {
+					this.plugin.settings.apiToggle.MobyGamesAPI.game = data;
 					this.plugin.saveSettings();
 				});
 			});
