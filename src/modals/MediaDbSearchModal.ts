@@ -76,6 +76,8 @@ export class MediaDbSearchModal extends Modal {
 
 		const placeholder = 'Search by title';
 		const searchComponent = new TextComponent(contentEl);
+		let currentToggle: ToggleComponent = null;
+
 		searchComponent.inputEl.style.width = '100%';
 		searchComponent.setPlaceholder(placeholder);
 		searchComponent.setValue(this.query);
@@ -99,8 +101,21 @@ export class MediaDbSearchModal extends Modal {
 			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
 			apiToggleComponent.setTooltip(unCamelCase(mediaType));
 			apiToggleComponent.setValue(this.selectedTypes.find(x => x.name === mediaType).selected);
+			if (apiToggleComponent.getValue()) {
+				currentToggle = apiToggleComponent;
+			}
 			apiToggleComponent.onChange(value => {
-				this.selectedTypes.find(x => x.name === mediaType).selected = value;
+				if (value) {
+					if (currentToggle && currentToggle !== apiToggleComponent) {
+						currentToggle.setValue(false);
+						this.selectedTypes.find(x => x.name === mediaType).selected = false;
+					}
+					currentToggle = apiToggleComponent;
+					this.selectedTypes.find(x => x.name === mediaType).selected = true;
+				} else {
+					currentToggle = null;
+					this.selectedTypes.find(x => x.name === mediaType).selected = false;
+				}
 			});
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
 		}

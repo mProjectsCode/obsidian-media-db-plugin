@@ -28,7 +28,7 @@ export class MediaTypeManager {
 	mediaTemplateMap: Map<MediaType, string>;
 	mediaFolderMap: Map<MediaType, string>;
 
-	constructor() {}
+	constructor() { }
 
 	updateTemplates(settings: MediaDbPluginSettings): void {
 		this.mediaFileNameTemplateMap = new Map<MediaType, string>();

@@ -19,7 +19,23 @@ export interface MediaDbPluginSettings {
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
-
+	apiToggle: {
+		OMDbAPI: {
+			movie: boolean;
+			series: boolean;
+			game: boolean;
+		},
+		MALAPI: {
+			movie: boolean;
+			series: boolean;
+		},
+		SteamAPI: {
+			game: boolean;
+		},
+		MobyGamesAPI: {
+			game: boolean;
+		}
+	},
 	movieTemplate: string;
 	seriesTemplate: string;
 	mangaTemplate: string;
@@ -69,7 +85,23 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
 	enableTemplaterIntegration: false,
-
+	apiToggle: {
+		OMDbAPI: {
+			movie: true,
+			series: true,
+			game: true,
+		},
+		MALAPI: {
+			movie: true,
+			series: true,
+		},
+		SteamAPI: {
+			game: true,
+		},
+		MobyGamesAPI: {
+			game: true,
+		}
+	},
 	movieTemplate: '',
 	seriesTemplate: '',
 	mangaTemplate: '',
@@ -209,10 +241,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setDesc(
 				fragWithHTML(
 					"Your custom date format. Use <em>'YYYY-MM-DD'</em> for example.<br>" +
-						"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
-						"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
-						this.plugin.dateFormatter.getPreview() +
-						'</a></b>',
+					"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
+					"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
+					this.plugin.dateFormatter.getPreview() +
+					'</a></b>',
 				),
 			)
 			.addText(cb => {
@@ -256,6 +288,75 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
 					this.plugin.settings.enableTemplaterIntegration = data;
+					this.plugin.saveSettings();
+				});
+			});
+
+
+		containerEl.createEl('h3', { text: 'APIs Per Media Type' });
+		containerEl.createEl('h5', { text: 'Movies' });
+		new Setting(containerEl)
+			.setName('OMDb API')
+			.setDesc('Use OMDb API for movies.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.movie).onChange(data => {
+					this.plugin.settings.apiToggle.OMDbAPI.movie = data;
+					this.plugin.saveSettings();
+				});
+			});
+		new Setting(containerEl)
+			.setName('MAL API')
+			.setDesc('Use MAL API for movies.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.apiToggle.MALAPI.movie).onChange(data => {
+					this.plugin.settings.apiToggle.MALAPI.movie = data;
+					this.plugin.saveSettings();
+				});
+			});
+		containerEl.createEl('h5', { text: 'Series' });
+		new Setting(containerEl)
+			.setName('OMDb API')
+			.setDesc('Use OMDb API for series.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.series).onChange(data => {
+					this.plugin.settings.apiToggle.OMDbAPI.series = data;
+					this.plugin.saveSettings();
+				});
+			});
+		new Setting(containerEl)
+			.setName('MAL API')
+			.setDesc('Use MAL API for series.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.apiToggle.MALAPI.series).onChange(data => {
+					this.plugin.settings.apiToggle.MALAPI.series = data;
+					this.plugin.saveSettings();
+				});
+			});
+		containerEl.createEl('h5', { text: 'Games' });
+		new Setting(containerEl)
+			.setName('OMDb API')
+			.setDesc('Use OMDb API for games.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.game).onChange(data => {
+					this.plugin.settings.apiToggle.OMDbAPI.game = data;
+					this.plugin.saveSettings();
+				});
+			});
+		new Setting(containerEl)
+			.setName('Steam API')
+			.setDesc('Use OMDb API for games.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.apiToggle.SteamAPI.game).onChange(data => {
+					this.plugin.settings.apiToggle.SteamAPI.game = data;
+					this.plugin.saveSettings();
+				});
+			});
+		new Setting(containerEl)
+			.setName('MobyGames API')
+			.setDesc('Use MobyGames API for games.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.apiToggle.MobyGamesAPI.game).onChange(data => {
+					this.plugin.settings.apiToggle.MobyGamesAPI.game = data;
 					this.plugin.saveSettings();
 				});
 			});
