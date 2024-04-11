@@ -21,8 +21,12 @@ export class APIManager {
 
 		for (const api of this.apis) {
 			if (apisToQuery.contains(api.apiName)) {
-				const apiRes = await api.searchByTitle(query);
-				res = res.concat(apiRes);
+				try {
+					const apiRes = await api.searchByTitle(query);
+					res = res.concat(apiRes);
+				} catch (e) {
+					console.warn(e);
+				}
 			}
 		}
 

@@ -17,7 +17,7 @@ export class WikiModel extends MediaTypeModel {
 	length: number;
 	article: string;
 
-	userData: {};
+	userData: Record<string, unknown>;
 
 	constructor(obj: any = {}) {
 		super();
@@ -45,8 +45,8 @@ export class WikiModel extends MediaTypeModel {
 		return MediaType.Wiki;
 	}
 
-	override getWithOutUserData(): object {
-		const copy = Object.assign({}, this);
+	override getWithOutUserData(): Record<string, unknown> {
+		const copy = structuredClone(this) as Record<string, unknown>;
 		delete copy.userData;
 		delete copy.article;
 		return copy;

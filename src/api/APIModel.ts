@@ -1,6 +1,5 @@
 import { MediaTypeModel } from '../models/MediaTypeModel';
 import { MediaType } from '../utils/MediaType';
-import { MediaDbPluginSettings } from 'src/settings/Settings';
 import MediaDbPlugin from '../main';
 
 export abstract class APIModel {
@@ -20,7 +19,10 @@ export abstract class APIModel {
 	abstract getById(id: string): Promise<MediaTypeModel>;
 
 	hasType(type: MediaType): boolean {
-		if (this.types.contains(type) && (Boolean((this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type] as MediaDbPluginSettings) === true || (this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type] as MediaDbPluginSettings === undefined)) {
+		if (
+			this.types.contains(type) &&
+			(Boolean((this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type]) === true || (this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type] === undefined)
+		) {
 			return true;
 		}
 	}

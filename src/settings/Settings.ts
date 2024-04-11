@@ -13,7 +13,6 @@ export interface MediaDbPluginSettings {
 	OMDbKey: string;
 	MobyGamesKey: string;
 	sfwFilter: boolean;
-	useCustomYamlStringifier: boolean;
 	templates: boolean;
 	customDateFormat: string;
 	openNoteInNewTab: boolean;
@@ -24,18 +23,18 @@ export interface MediaDbPluginSettings {
 			movie: boolean;
 			series: boolean;
 			game: boolean;
-		},
+		};
 		MALAPI: {
 			movie: boolean;
 			series: boolean;
-		},
+		};
 		SteamAPI: {
 			game: boolean;
-		},
+		};
 		MobyGamesAPI: {
 			game: boolean;
-		}
-	},
+		};
+	};
 	movieTemplate: string;
 	seriesTemplate: string;
 	mangaTemplate: string;
@@ -79,7 +78,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
 	MobyGamesKey: '',
 	sfwFilter: true,
-	useCustomYamlStringifier: true,
 	templates: true,
 	customDateFormat: 'L',
 	openNoteInNewTab: true,
@@ -100,7 +98,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 		},
 		MobyGamesAPI: {
 			game: true,
-		}
+		},
 	},
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -190,7 +188,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.OMDbKey)
 					.onChange(data => {
 						this.plugin.settings.OMDbKey = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -202,7 +200,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.MobyGamesKey)
 					.onChange(data => {
 						this.plugin.settings.MobyGamesKey = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -212,17 +210,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.sfwFilter).onChange(data => {
 					this.plugin.settings.sfwFilter = data;
-					this.plugin.saveSettings();
-				});
-			});
-
-		new Setting(containerEl)
-			.setName('YAML formatter')
-			.setDesc('Add optional quotation marks around strings in the metadata block.')
-			.addToggle(cb => {
-				cb.setValue(this.plugin.settings.useCustomYamlStringifier).onChange(data => {
-					this.plugin.settings.useCustomYamlStringifier = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 
@@ -232,7 +220,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.templates).onChange(data => {
 					this.plugin.settings.templates = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 
@@ -241,10 +229,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setDesc(
 				fragWithHTML(
 					"Your custom date format. Use <em>'YYYY-MM-DD'</em> for example.<br>" +
-					"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
-					"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
-					this.plugin.dateFormatter.getPreview() +
-					'</a></b>',
+						"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
+						"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
+						this.plugin.dateFormatter.getPreview() +
+						'</a></b>',
 				),
 			)
 			.addText(cb => {
@@ -254,7 +242,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						const newDateFormat = data ? data : DEFAULT_SETTINGS.customDateFormat;
 						this.plugin.settings.customDateFormat = newDateFormat;
 						document.getElementById('media-db-dateformat-preview').textContent = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -264,17 +252,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.openNoteInNewTab).onChange(data => {
 					this.plugin.settings.openNoteInNewTab = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 
 		new Setting(containerEl)
 			.setName('Use default front matter')
-			.setDesc('Wheter to use the default front matter. If disabled, the front matter from the template will be used. Same as mapping everything to remove.')
+			.setDesc('Whether to use the default front matter. If disabled, the front matter from the template will be used. Same as mapping everything to remove.')
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.useDefaultFrontMatter).onChange(data => {
 					this.plugin.settings.useDefaultFrontMatter = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 					// Redraw settings to display/remove the property mappings
 					this.display();
 				});
@@ -288,10 +276,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
 					this.plugin.settings.enableTemplaterIntegration = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
-
 
 		containerEl.createEl('h3', { text: 'APIs Per Media Type' });
 		containerEl.createEl('h5', { text: 'Movies' });
@@ -301,7 +288,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.movie).onChange(data => {
 					this.plugin.settings.apiToggle.OMDbAPI.movie = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 		new Setting(containerEl)
@@ -310,7 +297,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.apiToggle.MALAPI.movie).onChange(data => {
 					this.plugin.settings.apiToggle.MALAPI.movie = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 		containerEl.createEl('h5', { text: 'Series' });
@@ -320,7 +307,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.series).onChange(data => {
 					this.plugin.settings.apiToggle.OMDbAPI.series = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 		new Setting(containerEl)
@@ -329,7 +316,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.apiToggle.MALAPI.series).onChange(data => {
 					this.plugin.settings.apiToggle.MALAPI.series = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 		containerEl.createEl('h5', { text: 'Games' });
@@ -339,7 +326,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.game).onChange(data => {
 					this.plugin.settings.apiToggle.OMDbAPI.game = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 		new Setting(containerEl)
@@ -348,7 +335,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.apiToggle.SteamAPI.game).onChange(data => {
 					this.plugin.settings.apiToggle.SteamAPI.game = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 		new Setting(containerEl)
@@ -357,7 +344,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.apiToggle.MobyGamesAPI.game).onChange(data => {
 					this.plugin.settings.apiToggle.MobyGamesAPI.game = data;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 
@@ -372,7 +359,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.movieFolder)
 					.onChange(data => {
 						this.plugin.settings.movieFolder = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -385,7 +372,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.seriesFolder)
 					.onChange(data => {
 						this.plugin.settings.seriesFolder = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -398,7 +385,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.mangaFolder)
 					.onChange(data => {
 						this.plugin.settings.mangaFolder = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -411,7 +398,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.gameFolder)
 					.onChange(data => {
 						this.plugin.settings.gameFolder = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -424,7 +411,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.wikiFolder)
 					.onChange(data => {
 						this.plugin.settings.wikiFolder = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -437,7 +424,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.musicReleaseFolder)
 					.onChange(data => {
 						this.plugin.settings.musicReleaseFolder = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -450,7 +437,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.boardgameFolder)
 					.onChange(data => {
 						this.plugin.settings.boardgameFolder = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 		new Setting(containerEl)
@@ -462,7 +449,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.bookFolder)
 					.onChange(data => {
 						this.plugin.settings.bookFolder = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 		// endregion
@@ -478,7 +465,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.movieTemplate)
 					.onChange(data => {
 						this.plugin.settings.movieTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -491,7 +478,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.seriesTemplate)
 					.onChange(data => {
 						this.plugin.settings.seriesTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -504,7 +491,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.mangaTemplate)
 					.onChange(data => {
 						this.plugin.settings.mangaTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -517,7 +504,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.gameTemplate)
 					.onChange(data => {
 						this.plugin.settings.gameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -530,7 +517,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.wikiTemplate)
 					.onChange(data => {
 						this.plugin.settings.wikiTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -543,7 +530,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.musicReleaseTemplate)
 					.onChange(data => {
 						this.plugin.settings.musicReleaseTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -556,7 +543,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.boardgameTemplate)
 					.onChange(data => {
 						this.plugin.settings.boardgameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -569,7 +556,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.bookTemplate)
 					.onChange(data => {
 						this.plugin.settings.bookTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 		// endregion
@@ -584,7 +571,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.movieFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.movieFileNameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -596,7 +583,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.seriesFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.seriesFileNameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -608,7 +595,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.mangaFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.mangaFileNameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -620,7 +607,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.gameFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.gameFileNameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -632,7 +619,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.wikiFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.wikiFileNameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -644,7 +631,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.musicReleaseFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.musicReleaseFileNameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -656,7 +643,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.boardgameFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.boardgameFileNameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -668,7 +655,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.bookFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.bookFileNameTemplate = data;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 		// endregion
@@ -709,7 +696,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 						this.plugin.settings.propertyMappingModels = propertyMappingModels;
 						new Notice(`MDB: Property Mappings for ${model.type} saved successfully.`);
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					},
 				},
 			});

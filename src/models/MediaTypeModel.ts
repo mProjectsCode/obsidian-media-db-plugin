@@ -31,12 +31,12 @@ export abstract class MediaTypeModel {
 
 	abstract getTags(): string[];
 
-	toMetaDataObject(): object {
+	toMetaDataObject(): Record<string, unknown> {
 		return { ...this.getWithOutUserData(), ...this.userData, tags: this.getTags().join('/') };
 	}
 
-	getWithOutUserData(): object {
-		const copy = Object.assign({}, this);
+	getWithOutUserData(): Record<string, unknown> {
+		const copy = structuredClone(this) as Record<string, unknown>;
 		delete copy.userData;
 		return copy;
 	}

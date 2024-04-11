@@ -68,7 +68,7 @@ export class PropertyMappingModel {
 		};
 	}
 
-	getMappedProperties() {
+	getMappedProperties(): PropertyMapping[] {
 		return this.properties.filter(x => x.mapping === PropertyMappingOption.Map);
 	}
 

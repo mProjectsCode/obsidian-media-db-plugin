@@ -1,0 +1,126 @@
+.media-db-plugin-list-wrapper {
+	display: flex;
+	align-content: center;
+	margin-bottom: 5px;
+	margin-top: 5px;
+}
+
+.media-db-plugin-list-toggle {
+}
+
+.media-db-plugin-list-text-wrapper {
+	flex: 1;
+}
+
+.media-db-plugin-list-text {
+	display: block;
+}
+
+small.media-db-plugin-list-text {
+	color: var(--text-muted);
+}
+
+.media-db-plugin-select-modal {
+	display: contents;
+}
+
+.media-db-plugin-select-wrapper {
+	display: flex;
+	flex-direction: column;
+	margin: 5px;
+	overflow-y: auto;
+}
+
+.media-db-plugin-select-element {
+	cursor: pointer;
+	border-left: 5px solid transparent;
+	padding: 5px;
+	margin: 5px 0 5px 0;
+	border-radius: 5px;
+	white-space: pre-wrap;
+	font-size: 16px;
+}
+
+.media-db-plugin-select-element-selected {
+	border-left: 5px solid var(--interactive-accent) !important;
+	background: var(--background-secondary-alt);
+}
+
+.media-db-plugin-select-element-hover {
+	background: var(--background-secondary-alt);
+}
+
+.media-db-plugin-preview-modal {
+	display: contents;
+}
+
+.media-db-plugin-preview-wrapper {
+	display: flex;
+	flex-direction: column;
+	overflow-y: auto;
+}
+
+.media-db-plugin-spacer {
+	margin-bottom: 10px;
+}
+
+/* region property mappings */
+.media-db-plugin-property-mappings-model-container {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 5px;
+	padding: 10px;
+	width: 100%;
+}
+
+.media-db-plugin-property-mappings-container {
+	margin: 10px 0;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.media-db-plugin-property-mapping-element {
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+}
+
+.media-db-plugin-property-mapping-element-property-name-wrapper {
+	min-width: 160px;
+	background: var(--background-modifier-form-field);
+	padding: 2px 5px;
+	border-radius: 5px;
+
+	display: flex;
+	align-items: center;
+}
+
+.media-db-plugin-property-mapping-element-property-name {
+	margin: 0;
+}
+
+.media-db-plugin-property-mappings-save-button {
+	margin: 0;
+}
+
+.media-db-plugin-property-mapping-to {
+	display: flex;
+	align-items: center;
+}
+
+.media-db-plugin-property-mapping-validation {
+	color: var(--text-error);
+	margin-bottom: 5px;
+}
+
+.media-db-plugin-button:focus {
+	/*outline: 1px solid white;*/
+}
+
+.media-db-plugin-preview {
+	border-radius: var(--modal-radius);
+	border: var(--modal-border-width) solid var(--modal-border-color);
+	padding: var(--size-4-4);
+}
+
+/* endregion */

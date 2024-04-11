@@ -15,15 +15,13 @@ export class PropertyMapper {
 	 *
 	 * @param obj
 	 */
-	convertObject(obj: object): object {
+	convertObject(obj: Record<string, unknown>): Record<string, unknown> {
 		if (!obj.hasOwnProperty('type')) {
 			return obj;
 		}
 
-		// @ts-ignore
 		// console.log(obj.type);
 
-		// @ts-ignore
 		if (MEDIA_TYPES.filter(x => x.toString() == obj.type).length < 1) {
 			return obj;
 		}
@@ -31,7 +29,7 @@ export class PropertyMapper {
 		// @ts-ignore
 		const propertyMappings = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type).properties;
 
-		const newObj: object = {};
+		const newObj: Record<string, unknown> = {};
 
 		for (const [key, value] of Object.entries(obj)) {
 			for (const propertyMapping of propertyMappings) {
@@ -59,20 +57,18 @@ export class PropertyMapper {
 	 *
 	 * @param obj
 	 */
-	convertObjectBack(obj: object): object {
+	convertObjectBack(obj: Record<string, unknown>): Record<string, unknown> {
 		if (!obj.hasOwnProperty('type')) {
 			return obj;
 		}
 
-		// @ts-ignore
-		if (MEDIA_TYPES.contains(obj.type)) {
+		if (MEDIA_TYPES.contains(obj.type as any)) {
 			return obj;
 		}
 
-		// @ts-ignore
 		const propertyMappings = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type).properties;
 
-		const originalObj: object = {};
+		const originalObj: Record<string, unknown> = {};
 
 		objLoop: for (const [key, value] of Object.entries(obj)) {
 			// first try if it is a normal property
