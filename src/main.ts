@@ -22,11 +22,19 @@ import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { MobyGamesAPI } from './api/apis/MobyGamesAPI';
 import { PropertyMapper } from './settings/PropertyMapper';
-import { YAMLConverter } from './utils/YAMLConverter';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
 import { ModalHelper, ModalResultCode, SearchModalOptions } from './utils/ModalHelper';
 import { DateFormatter } from './utils/DateFormatter';
+import { MediaType } from 'src/utils/MediaType';
+
+export type Metadata = Record<string, unknown>;
+
+export interface MediaTypeModelObj {
+	id: string;
+	type: MediaType;
+	dataSource: string;
+}
 
 export default class MediaDbPlugin extends Plugin {
 	settings: MediaDbPluginSettings;
@@ -186,7 +194,12 @@ export default class MediaDbPlugin extends Plugin {
 		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openSearchModal(searchModalOptions ?? {}, async searchModalData => {
 			types = searchModalData.types;
 			const apis = this.apiManager.apis.filter(x => x.hasTypeOverlap(searchModalData.types)).map(x => x.apiName);
-			return await this.apiManager.query(searchModalData.query, apis);
+			try {
+				return await this.apiManager.query(searchModalData.query, apis);
+			} catch (e) {
+				console.warn(e);
+				return [];
+			}
 		});
 
 		if (!apiSearchResults) {
@@ -309,21 +322,40 @@ export default class MediaDbPlugin extends Plugin {
 
 	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
 		const fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
-		return this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata);
+		return stringifyYaml(fileMetadata);
 	}
 
+	/**
+	 * Generates the content of a note from a media model and some options.
+	 *
+	 * @param mediaTypeModel
+	 * @param options
+	 */
 	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<string> {
-		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
+		const template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
 
-		if (this.settings.useDefaultFrontMatter || !template) {
-			return this.generateContentWithDefaultFrontMatter(mediaTypeModel, options, template);
-		} else {
-			return this.generateContentWithCustomFrontMatter(mediaTypeModel, options, template);
-		}
+		return this.generateContentWithDefaultFrontMatter(mediaTypeModel, options, template);
+
+		// if (this.settings.useDefaultFrontMatter || !template) {
+		// 	return this.generateContentWithDefaultFrontMatter(mediaTypeModel, options, template);
+		// } else {
+		// 	return this.generateContentWithCustomFrontMatter(mediaTypeModel, options, template);
+		// }
 	}
 
 	async generateContentWithDefaultFrontMatter(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions, template?: string): Promise<string> {
-		let fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		let fileMetadata: Record<string, unknown>;
+
+		if (this.settings.useDefaultFrontMatter) {
+			fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		} else {
+			fileMetadata = {
+				id: mediaTypeModel.id,
+				type: mediaTypeModel.type,
+				dataSource: mediaTypeModel.dataSource,
+			};
+		}
+
 		let fileContent = '';
 		template = options.attachTemplate ? template : '';
 
@@ -331,27 +363,20 @@ export default class MediaDbPlugin extends Plugin {
 		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 
 		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
-			// Only support stringifyYaml for templater plugin
 			// Include the media variable in all templater commands by using a top level JavaScript execution command.
 			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
 		} else {
-			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(fileMetadata) : stringifyYaml(fileMetadata)}---\n` + fileContent;
+			fileContent = `---\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
 		}
 
 		return fileContent;
 	}
 
 	async generateContentWithCustomFrontMatter(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions, template: string): Promise<string> {
-		const frontMatterRegex = /^---*\n([\s\S]*?)\n---\h*/;
+		const regExp = new RegExp(this.frontMatterRexExpPattern);
 
-		const match = template.match(frontMatterRegex);
-
-		if (!match || match.length !== 2) {
-			throw new Error('Cannot find YAML front matter for template.');
-		}
-
-		let frontMatter = parseYaml(match[1]);
-		let fileContent: string = template.replace(frontMatterRegex, '');
+		const frontMatter = this.getMetaDataFromFileContent(template);
+		let fileContent: string = template.replace(regExp, '');
 
 		// Updating a previous file
 		if (options.attachFile) {
@@ -359,7 +384,7 @@ export default class MediaDbPlugin extends Plugin {
 
 			// Use contents (below front matter) from previous file
 			fileContent = await this.app.vault.read(options.attachFile);
-			const regExp = new RegExp(this.frontMatterRexExpPattern);
+
 			fileContent = fileContent.replace(regExp, '');
 			fileContent = fileContent.startsWith('\n') ? fileContent.substring(1) : fileContent;
 
@@ -391,18 +416,19 @@ export default class MediaDbPlugin extends Plugin {
 			// Include the media variable in all templater commands by using a top level JavaScript execution command.
 			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
 		} else {
-			fileContent = `---\n${this.settings.useCustomYamlStringifier ? YAMLConverter.toYaml(frontMatter) : stringifyYaml(frontMatter)}---\n` + fileContent;
+			fileContent = `---\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
 		}
 
 		return fileContent;
 	}
 
-	async attachFile(fileMetadata: any, fileContent: string, fileToAttach?: TFile): Promise<{ fileMetadata: any; fileContent: string }> {
+	async attachFile(fileMetadata: Metadata, fileContent: string, fileToAttach?: TFile): Promise<{ fileMetadata: Metadata; fileContent: string }> {
 		if (!fileToAttach) {
 			return { fileMetadata: fileMetadata, fileContent: fileContent };
 		}
 
 		const attachFileMetadata: any = this.getMetadataFromFileCache(fileToAttach);
+		// TODO: better object merging
 		fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
 
 		let attachFileContent: string = await this.app.vault.read(fileToAttach);
@@ -414,12 +440,13 @@ export default class MediaDbPlugin extends Plugin {
 		return { fileMetadata: fileMetadata, fileContent: fileContent };
 	}
 
-	async attachTemplate(fileMetadata: any, fileContent: string, template: string): Promise<{ fileMetadata: any; fileContent: string }> {
+	async attachTemplate(fileMetadata: Metadata, fileContent: string, template: string): Promise<{ fileMetadata: Metadata; fileContent: string }> {
 		if (!template) {
 			return { fileMetadata: fileMetadata, fileContent: fileContent };
 		}
 
-		const templateMetadata: any = this.getMetaDataFromFileContent(template);
+		const templateMetadata: Metadata = this.getMetaDataFromFileContent(template);
+		// TODO: better object merging
 		fileMetadata = Object.assign(templateMetadata, fileMetadata);
 
 		const regExp = new RegExp(this.frontMatterRexExpPattern);
@@ -429,8 +456,8 @@ export default class MediaDbPlugin extends Plugin {
 		return { fileMetadata: fileMetadata, fileContent: fileContent };
 	}
 
-	getMetaDataFromFileContent(fileContent: string): any {
-		let metadata: any;
+	getMetaDataFromFileContent(fileContent: string): Metadata {
+		let metadata: Metadata;
 
 		const regExp = new RegExp(this.frontMatterRexExpPattern);
 		const frontMatterRegExpResult = regExp.exec(fileContent);
@@ -455,15 +482,9 @@ export default class MediaDbPlugin extends Plugin {
 		return metadata;
 	}
 
-	getMetadataFromFileCache(file: TFile): any {
-		let metadata: any = this.app.metadataCache.getFileCache(file).frontmatter;
-		if (metadata) {
-			metadata = Object.assign({}, metadata); // copy
-			delete metadata.position;
-		} else {
-			metadata = {};
-		}
-		return metadata;
+	getMetadataFromFileCache(file: TFile): Metadata {
+		const metadata: Metadata | undefined = this.app.metadataCache.getFileCache(file).frontmatter;
+		return structuredClone(metadata ?? {});
 	}
 
 	/**
@@ -513,7 +534,7 @@ export default class MediaDbPlugin extends Plugin {
 			throw new Error('MDB | there is no active note');
 		}
 
-		let metadata: any = this.getMetadataFromFileCache(activeFile);
+		let metadata = this.getMetadataFromFileCache(activeFile);
 		metadata = this.modelPropertyMapper.convertObjectBack(metadata);
 
 		console.debug(`MDB | read metadata`, metadata);
@@ -522,10 +543,12 @@ export default class MediaDbPlugin extends Plugin {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
 		}
 
-		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(metadata, metadata.type);
+		const validOldMetadata: MediaTypeModelObj = metadata as unknown as MediaTypeModelObj;
+
+		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(validOldMetadata, validOldMetadata.type);
 		// console.debug(oldMediaTypeModel);
 
-		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(metadata.id, metadata.dataSource);
+		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(validOldMetadata.id, validOldMetadata.dataSource);
 		if (!newMediaTypeModel) {
 			return;
 		}
@@ -533,8 +556,6 @@ export default class MediaDbPlugin extends Plugin {
 		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
 		// console.debug(newMediaTypeModel);
 
-		// deletion not happening anymore why is this log statement still here
-		console.debug('MDB | deleting old entry');
 		if (onlyMetadata) {
 			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent, openNote: true });
 		} else {

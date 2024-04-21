@@ -23,3 +23,14 @@ data.json
 
 src/**/*.js
 __mocks__/*.js
+
+obsidian.css
+
+!exampleVault/.obsidian
+
+exampleVault/.obsidian/*
+!exampleVault/.obsidian/plugins
+
+exampleVault/.obsidian/plugins/*
+exampleVault/.obsidian/plugins/obsidian-media-db-plugin/*
+!exampleVault/.obsidian/plugins/obsidian-media-db-plugin/.hotreload

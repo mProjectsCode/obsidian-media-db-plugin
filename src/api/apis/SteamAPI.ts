@@ -41,7 +41,13 @@ export class SteamAPI extends APIModel {
 		const filteredData = [];
 
 		for (const app of data.applist.apps) {
-			if (app.name.toLowerCase().includes(title.toLowerCase())) {
+			if (
+				app.name
+					.normalize('NFD')
+					.replace(/\p{Diacritic}/gu, '')
+					.toLowerCase()
+					.includes(title.toLowerCase())
+			) {
 				filteredData.push(app);
 			}
 			if (filteredData.length > 20) {

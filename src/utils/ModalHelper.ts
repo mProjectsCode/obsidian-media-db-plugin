@@ -5,7 +5,6 @@ import { MediaDbSearchResultModal } from '../modals/MediaDbSearchResultModal';
 import { Notice } from 'obsidian';
 import MediaDbPlugin from '../main';
 import { MediaDbPreviewModal } from 'src/modals/MediaDbPreviewModal';
-import { CreateNoteOptions } from './Utils';
 import { MediaDbSearchModal } from '../modals/MediaDbSearchModal';
 import { MediaType } from './MediaType';
 

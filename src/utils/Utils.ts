@@ -145,7 +145,9 @@ export function markdownTable(content: string[][]): string {
 	return table;
 }
 
-export const fragWithHTML = (html: string) => createFragment(frag => (frag.createDiv().innerHTML = html));
+export function fragWithHTML(html: string): DocumentFragment {
+	return createFragment(frag => (frag.createDiv().innerHTML = html));
+}
 
 export function dateToString(date: Date): string {
 	return `${date.getMonth() + 1}-${date.getDate()}-${date.getFullYear()}`;
@@ -213,7 +215,7 @@ export function unCamelCase(str: string): string {
 	);
 }
 
-export function hasTemplaterPlugin(app: App) {
+export function hasTemplaterPlugin(app: App): boolean {
 	const templater = (app as any).plugins.plugins['templater-obsidian'];
 
 	return !!templater;
@@ -221,7 +223,7 @@ export function hasTemplaterPlugin(app: App) {
 
 // Copied from https://github.com/anpigon/obsidian-book-search-plugin
 // Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
-export async function useTemplaterPluginInFile(app: App, file: TFile) {
+export async function useTemplaterPluginInFile(app: App, file: TFile): Promise<void> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const templater = (app as any).plugins.plugins['templater-obsidian'];
 	if (templater && !templater?.settings['trigger_on_file_creation']) {
