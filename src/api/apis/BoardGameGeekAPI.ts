@@ -75,7 +75,9 @@ export class BoardGameGeekAPI extends APIModel {
 		const boardgame = response.querySelector('boardgame')!;
 		const title = boardgame.querySelector('name[primary=true]')!.textContent!;
 		const year = boardgame.querySelector('yearpublished')?.textContent ?? '';
-		const image = boardgame.querySelector('image')?.textContent ?? undefined;
+		const image = this.plugin.settings.embedPosters
+			? `![](${boardgame.querySelector('image')?.textContent ?? undefined})`
+			: boardgame.querySelector('image')?.textContent ?? undefined;
 		const onlineRating = Number.parseFloat(boardgame.querySelector('statistics ratings average')?.textContent ?? '0');
 		const genres = Array.from(boardgame.querySelectorAll('boardgamecategory')).map(n => n!.textContent!);
 		const complexityRating = Number.parseFloat(boardgame.querySelector('averageweight')?.textContent ?? '0');

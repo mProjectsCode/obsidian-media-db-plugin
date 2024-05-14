@@ -18,6 +18,7 @@ export interface MediaDbPluginSettings {
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
+	embedPosters: boolean;
 	apiToggle: {
 		OMDbAPI: {
 			movie: boolean;
@@ -83,6 +84,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
 	enableTemplaterIntegration: false,
+	embedPosters: false,
 	apiToggle: {
 		OMDbAPI: {
 			movie: true,
@@ -276,6 +278,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.addToggle(cb => {
 				cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
 					this.plugin.settings.enableTemplaterIntegration = data;
+					void this.plugin.saveSettings();
+				});
+			});
+		new Setting(containerEl)
+			.setName('Embed posters in YAML')
+			.setDesc('Embed the poster urls as images in the yaml to integrate with dataview.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.embedPosters).onChange(data => {
+					this.plugin.settings.embedPosters = data;
 					void this.plugin.saveSettings();
 				});
 			});

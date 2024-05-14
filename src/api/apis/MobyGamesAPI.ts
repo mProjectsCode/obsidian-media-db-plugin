@@ -86,7 +86,7 @@ export class MobyGamesAPI extends APIModel {
 			publishers: [],
 			genres: result.genres?.map((x: any) => x.genre_name) ?? [],
 			onlineRating: result.moby_score,
-			image: result.sample_cover.image ?? '',
+			image: this.plugin.settings.embedPosters ? `![](${result.sample_cover.image ?? ''})` ?? '' : result.sample_cover.image ?? '',
 
 			released: true,
 			releaseDate: result.platforms[0].first_release_date ?? 'unknown',

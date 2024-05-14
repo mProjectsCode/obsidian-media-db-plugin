@@ -115,7 +115,7 @@ export class SteamAPI extends APIModel {
 			publishers: result['publishers'],
 			genres: result.genres?.map((x: any) => x.description) ?? [],
 			onlineRating: Number.parseFloat(result.metacritic?.score ?? 0),
-			image: result.header_image ?? '',
+			image: this.plugin.settings.embedPosters ? `![](${result.header_image ?? ''})` : result.header_image ?? '',
 
 			released: !result.release_date?.comming_soon,
 			releaseDate: this.plugin.dateFormatter.format(result.release_date?.date, this.apiDateFormat) ?? 'unknown',

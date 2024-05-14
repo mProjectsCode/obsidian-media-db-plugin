@@ -61,7 +61,7 @@ export class MALAPIManga extends APIModel {
 					chapters: result.chapters,
 					volumes: result.volumes,
 					onlineRating: result.score ?? 0,
-					image: result.images?.jpg?.image_url ?? '',
+					image: this.plugin.settings.embedPosters ? `![](${result.images?.jpg?.image_url})` ?? '' : result.images?.jpg?.image_url ?? '',
 
 					released: true,
 					publishedFrom: new Date(result.published?.from).toLocaleDateString() ?? 'unknown',
@@ -111,7 +111,7 @@ export class MALAPIManga extends APIModel {
 			chapters: result.chapters,
 			volumes: result.volumes,
 			onlineRating: result.score ?? 0,
-			image: result.images?.jpg?.image_url ?? '',
+			image: this.plugin.settings.embedPosters ? `![](${result.images?.jpg?.image_url})` ?? '' : result.images?.jpg?.image_url ?? '',
 
 			released: true,
 			publishedFrom: new Date(result.published?.from).toLocaleDateString() ?? 'unknown',

@@ -142,7 +142,7 @@ export class OMDbAPI extends APIModel {
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', ') ?? [],
-				image: result.Poster ?? '',
+				image: this.plugin.settings.embedPosters ? (result.Poster ? `![](${result.Poster})` : '') : result.Poster ? result.Poster : '',
 
 				released: true,
 				streamingServices: [],
@@ -174,7 +174,7 @@ export class OMDbAPI extends APIModel {
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', ') ?? [],
-				image: result.Poster ?? '',
+				image: this.plugin.settings.embedPosters ? (result.Poster ? `![](${result.Poster})` : '') : result.Poster ? result.Poster : '',
 
 				released: true,
 				streamingServices: [],
@@ -204,7 +204,7 @@ export class OMDbAPI extends APIModel {
 				publishers: [],
 				genres: result.Genre?.split(', ') ?? [],
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
-				image: result.Poster ?? '',
+				image: this.plugin.settings.embedPosters ? (result.Poster ? `![](${result.Poster})` : '') : result.Poster ? result.Poster : '',
 
 				released: true,
 				releaseDate: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
