@@ -12,6 +12,7 @@ export class MovieModel extends MediaTypeModel {
 	onlineRating: number;
 	actors: string[];
 	image: string;
+	plot: string;
 
 	released: boolean;
 	streamingServices: string[];
@@ -35,6 +36,7 @@ export class MovieModel extends MediaTypeModel {
 		this.onlineRating = undefined;
 		this.actors = undefined;
 		this.image = undefined;
+		this.plot = undefined;
 
 		this.released = undefined;
 		this.streamingServices = undefined;
