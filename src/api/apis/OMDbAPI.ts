@@ -143,7 +143,6 @@ export class OMDbAPI extends APIModel {
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', ') ?? [],
 				image: result.Poster ?? '',
-				plot: result.Plot ?? '',
 
 				released: true,
 				streamingServices: [],
@@ -176,7 +175,6 @@ export class OMDbAPI extends APIModel {
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', ') ?? [],
 				image: result.Poster ?? '',
-				plot: result.Plot ?? '',
 
 				released: true,
 				streamingServices: [],

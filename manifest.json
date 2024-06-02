@@ -6,5 +6,6 @@
 	"description": "A plugin that can query multiple APIs for movies, series, anime, games, music and wiki articles, and import them into your vault.",
 	"author": "Moritz Jung",
 	"authorUrl": "https://www.moritzjung.dev",
+	"fundingUrl": "https://github.com/sponsors/mProjectsCode",
 	"isDesktopOnly": false
 }
