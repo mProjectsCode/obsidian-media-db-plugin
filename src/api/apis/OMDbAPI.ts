@@ -28,6 +28,10 @@ export class OMDbAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
+		if(!this.plugin.settings.OMDbKey) {
+			throw Error(`MDB | OMDb ${this.apiName} API key missing.`);
+		}
+
 		const searchUrl = `http://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`;
 		const fetchData = await fetch(searchUrl);
 
@@ -101,6 +105,10 @@ export class OMDbAPI extends APIModel {
 
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
+
+		if(!this.plugin.settings.OMDbKey) {
+			throw Error(`MDB | OMDb ${this.apiName} API key missing.`);
+		}
 
 		const searchUrl = `http://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${this.plugin.settings.OMDbKey}`;
 		const fetchData = await fetch(searchUrl);

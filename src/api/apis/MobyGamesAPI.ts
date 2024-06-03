@@ -21,6 +21,10 @@ export class MobyGamesAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
+		if(!this.plugin.settings.MobyGamesKey) {
+			throw Error(`MDB | MobyGames ${this.apiName} API key missing.`);
+		}
+
 		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${this.plugin.settings.MobyGamesKey}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
@@ -59,6 +63,10 @@ export class MobyGamesAPI extends APIModel {
 
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
+
+		if(!this.plugin.settings.MobyGamesKey) {
+			throw Error(`MDB | MobyGames ${this.apiName} API key missing.`);
+		}
 
 		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${this.plugin.settings.MobyGamesKey}`;
 		const fetchData = await requestUrl({
