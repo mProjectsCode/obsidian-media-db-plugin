@@ -1,10 +1,11 @@
 {
 	"id": "obsidian-media-db-plugin",
 	"name": "Media DB",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"minAppVersion": "1.5.0",
 	"description": "A plugin that can query multiple APIs for movies, series, anime, games, music and wiki articles, and import them into your vault.",
 	"author": "Moritz Jung",
 	"authorUrl": "https://www.moritzjung.dev",
+	"fundingUrl": "https://github.com/sponsors/mProjectsCode",
 	"isDesktopOnly": false
 }
