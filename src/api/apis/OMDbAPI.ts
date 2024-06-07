@@ -29,7 +29,7 @@ export class OMDbAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		if(!this.plugin.settings.OMDbKey) {
-			throw Error(`MDB | OMDb ${this.apiName} API key missing.`);
+			throw Error(`MDB | ${this.apiName} API key missing.`);
 		}
 
 		const searchUrl = `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`;
@@ -107,7 +107,7 @@ export class OMDbAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		if(!this.plugin.settings.OMDbKey) {
-			throw Error(`MDB | OMDb ${this.apiName} API key missing.`);
+			throw Error(`MDB | ${this.apiName} API key missing.`);
 		}
 
 		const searchUrl = `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${this.plugin.settings.OMDbKey}`;

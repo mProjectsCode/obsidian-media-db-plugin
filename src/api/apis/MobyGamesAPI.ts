@@ -22,7 +22,7 @@ export class MobyGamesAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		if(!this.plugin.settings.MobyGamesKey) {
-			throw Error(`MDB | MobyGames ${this.apiName} API key missing.`);
+			throw Error(`MDB | ${this.apiName} API key missing.`);
 		}
 
 		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${this.plugin.settings.MobyGamesKey}`;
@@ -65,7 +65,7 @@ export class MobyGamesAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		if(!this.plugin.settings.MobyGamesKey) {
-			throw Error(`MDB | MobyGames ${this.apiName} API key missing.`);
+			throw Error(`MDB | ${this.apiName} API key missing.`);
 		}
 
 		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${this.plugin.settings.MobyGamesKey}`;
