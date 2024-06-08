@@ -23,13 +23,13 @@ export class OpenLibraryAPI extends APIModel {
 		const searchUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}`;
 
 		const fetchData = await fetch(searchUrl);
-		console.debug(fetchData);
+		// console.debug(fetchData);
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 		const data = await fetchData.json();
 
-		console.debug(data);
+		// console.debug(data);
 
 		const ret: MediaTypeModel[] = [];
 
@@ -54,17 +54,17 @@ export class OpenLibraryAPI extends APIModel {
 
 		const searchUrl = `https://openlibrary.org/search.json?q=key:${encodeURIComponent(id)}`;
 		const fetchData = await fetch(searchUrl);
-		console.debug(fetchData);
+		// console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json();
-		console.debug(data);
+		// console.debug(data);
 		const result = data.docs[0];
 
-		const model = new BookModel({
+		return new BookModel({
 			title: result.title,
 			year: result.first_publish_year,
 			dataSource: this.apiName,
@@ -88,7 +88,5 @@ export class OpenLibraryAPI extends APIModel {
 				personalRating: 0,
 			},
 		} as BookModel);
-
-		return model;
 	}
 }

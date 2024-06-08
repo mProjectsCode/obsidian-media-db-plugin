@@ -21,12 +21,16 @@ export class MobyGamesAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
+		if (!this.plugin.settings.MobyGamesKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
+		}
+
 		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${this.plugin.settings.MobyGamesKey}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
 
-		console.debug(fetchData);
+		// console.debug(fetchData);
 
 		if (fetchData.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
@@ -35,11 +39,11 @@ export class MobyGamesAPI extends APIModel {
 			throw Error(`MDB | Too many requests for ${this.apiName}, you've exceeded your API quota.`);
 		}
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json;
-		console.debug(data);
+		// console.debug(data);
 		const ret: MediaTypeModel[] = [];
 		for (const result of data.games) {
 			ret.push(
@@ -60,6 +64,10 @@ export class MobyGamesAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
+		if (!this.plugin.settings.MobyGamesKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
+		}
+
 		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${this.plugin.settings.MobyGamesKey}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
@@ -67,14 +75,14 @@ export class MobyGamesAPI extends APIModel {
 		console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json;
-		console.debug(data);
+		// console.debug(data);
 		const result = data.games[0];
 
-		const model = new GameModel({
+		return new GameModel({
 			type: MediaType.Game,
 			title: result.title,
 			englishTitle: result.title,
@@ -97,7 +105,5 @@ export class MobyGamesAPI extends APIModel {
 				personalRating: 0,
 			},
 		} as GameModel);
-
-		return model;
 	}
 }

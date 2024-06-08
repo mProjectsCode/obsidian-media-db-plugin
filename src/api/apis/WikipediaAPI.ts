@@ -23,10 +23,10 @@ export class WikipediaAPI extends APIModel {
 
 		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&srlimit=20&utf8=&format=json&origin=*`;
 		const fetchData = await fetch(searchUrl);
-		console.debug(fetchData);
+		// console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json();
@@ -56,14 +56,14 @@ export class WikipediaAPI extends APIModel {
 		const fetchData = await fetch(searchUrl);
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json();
-		console.debug(data);
+		// console.debug(data);
 		const result: any = Object.entries(data?.query?.pages)[0][1];
 
-		const model = new WikiModel({
+		return new WikiModel({
 			type: 'wiki',
 			title: result.title,
 			englishTitle: result.title,
@@ -78,7 +78,5 @@ export class WikipediaAPI extends APIModel {
 
 			userData: {},
 		} as WikiModel);
-
-		return model;
 	}
 }

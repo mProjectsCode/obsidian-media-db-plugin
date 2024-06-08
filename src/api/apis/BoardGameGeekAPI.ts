@@ -27,13 +27,13 @@ export class BoardGameGeekAPI extends APIModel {
 		});
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = fetchData.text;
 		const response = new window.DOMParser().parseFromString(data, 'text/xml');
 
-		console.debug(response);
+		// console.debug(response);
 
 		const ret: MediaTypeModel[] = [];
 
@@ -65,12 +65,12 @@ export class BoardGameGeekAPI extends APIModel {
 		});
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = fetchData.text;
 		const response = new window.DOMParser().parseFromString(data, 'text/xml');
-		console.debug(response);
+		// console.debug(response);
 
 		const boardgame = response.querySelector('boardgame')!;
 		const title = boardgame.querySelector('name[primary=true]')!.textContent!;
@@ -84,7 +84,7 @@ export class BoardGameGeekAPI extends APIModel {
 		const playtime = (boardgame.querySelector('playingtime')?.textContent ?? 'unknown') + ' minutes';
 		const publishers = Array.from(boardgame.querySelectorAll('boardgamepublisher')).map(n => n!.textContent!);
 
-		const model = new BoardGameModel({
+		return new BoardGameModel({
 			title: title,
 			englishTitle: title,
 			year: year === '0' ? '' : year,
@@ -108,7 +108,5 @@ export class BoardGameGeekAPI extends APIModel {
 				personalRating: 0,
 			},
 		} as BoardGameModel);
-
-		return model;
 	}
 }
