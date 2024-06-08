@@ -28,8 +28,8 @@ export class OMDbAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if(!this.plugin.settings.OMDbKey) {
-			throw Error(`MDB | ${this.apiName} API key missing.`);
+		if (!this.plugin.settings.OMDbKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`;
@@ -39,7 +39,7 @@ export class OMDbAPI extends APIModel {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json();
@@ -55,7 +55,7 @@ export class OMDbAPI extends APIModel {
 			return [];
 		}
 
-		console.debug(data.Search);
+		// console.debug(data.Search);
 
 		const ret: MediaTypeModel[] = [];
 
@@ -106,8 +106,8 @@ export class OMDbAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if(!this.plugin.settings.OMDbKey) {
-			throw Error(`MDB | ${this.apiName} API key missing.`);
+		if (!this.plugin.settings.OMDbKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${this.plugin.settings.OMDbKey}`;
@@ -117,7 +117,7 @@ export class OMDbAPI extends APIModel {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const result = await fetchData.json();
@@ -133,7 +133,7 @@ export class OMDbAPI extends APIModel {
 		}
 
 		if (type === 'movie') {
-			const model = new MovieModel({
+			return new MovieModel({
 				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
@@ -162,10 +162,8 @@ export class OMDbAPI extends APIModel {
 					personalRating: 0,
 				},
 			} as MovieModel);
-
-			return model;
 		} else if (type === 'series') {
-			const model = new SeriesModel({
+			return new SeriesModel({
 				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
@@ -196,10 +194,8 @@ export class OMDbAPI extends APIModel {
 					personalRating: 0,
 				},
 			} as SeriesModel);
-
-			return model;
 		} else if (type === 'game') {
-			const model = new GameModel({
+			return new GameModel({
 				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
@@ -222,8 +218,6 @@ export class OMDbAPI extends APIModel {
 					personalRating: 0,
 				},
 			} as GameModel);
-
-			return model;
 		}
 
 		return;

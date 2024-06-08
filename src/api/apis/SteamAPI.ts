@@ -31,12 +31,12 @@ export class SteamAPI extends APIModel {
 		});
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json;
 
-		console.debug(data);
+		// console.debug(data);
 
 		const ret: MediaTypeModel[] = [];
 
@@ -65,10 +65,10 @@ export class SteamAPI extends APIModel {
 		});
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
-		console.debug(await fetchData.json);
+		// console.debug(await fetchData.json);
 
 		let result: any;
 		for (const [key, value] of Object.entries(await fetchData.json)) {
@@ -83,9 +83,9 @@ export class SteamAPI extends APIModel {
 			throw Error(`MDB | API returned invalid data.`);
 		}
 
-		console.debug(result);
+		// console.debug(result);
 
-		const model = new GameModel({
+		return new GameModel({
 			type: MediaType.Game,
 			title: result.name,
 			englishTitle: result.name,
@@ -108,7 +108,5 @@ export class SteamAPI extends APIModel {
 				personalRating: 0,
 			},
 		} as GameModel);
-
-		return model;
 	}
 }

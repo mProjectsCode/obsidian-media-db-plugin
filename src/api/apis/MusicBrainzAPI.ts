@@ -31,14 +31,14 @@ export class MusicBrainzAPI extends APIModel {
 			},
 		});
 
-		console.debug(fetchData);
+		// console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json;
-		console.debug(data);
+		// console.debug(data);
 		const ret: MediaTypeModel[] = [];
 
 		for (const result of data['release-groups']) {
@@ -74,14 +74,12 @@ export class MusicBrainzAPI extends APIModel {
 		});
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json;
-		console.debug(data);
-		const result = data;
+		const result = await fetchData.json;
 
-		const model = new MusicReleaseModel({
+		return new MusicReleaseModel({
 			type: 'musicRelease',
 			title: result.title,
 			englishTitle: result.title,
@@ -100,7 +98,5 @@ export class MusicBrainzAPI extends APIModel {
 				personalRating: 0,
 			},
 		} as MusicReleaseModel);
-
-		return model;
 	}
 }
