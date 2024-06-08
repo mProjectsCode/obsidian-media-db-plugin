@@ -16,7 +16,7 @@ export class SteamAPI extends APIModel {
 		this.plugin = plugin;
 		this.apiName = 'SteamAPI';
 		this.apiDescription = 'A free API for all Steam games.';
-		this.apiUrl = 'http://www.steampowered.com/';
+		this.apiUrl = 'https://www.steampowered.com/';
 		this.types = [MediaType.Game];
 		this.typeMappings = new Map<string, string>();
 		this.typeMappings.set('game', 'game');
@@ -25,7 +25,7 @@ export class SteamAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `http://api.steampowered.com/ISteamApps/GetAppList/v0002/?format=json`;
+		const searchUrl = `https://steamcommunity.com/actions/SearchApps/${encodeURIComponent(title)}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -38,26 +38,9 @@ export class SteamAPI extends APIModel {
 
 		console.debug(data);
 
-		const filteredData = [];
-
-		for (const app of data.applist.apps) {
-			if (
-				app.name
-					.normalize('NFD')
-					.replace(/\p{Diacritic}/gu, '')
-					.toLowerCase()
-					.includes(title.toLowerCase())
-			) {
-				filteredData.push(app);
-			}
-			if (filteredData.length > 20) {
-				break;
-			}
-		}
-
 		const ret: MediaTypeModel[] = [];
 
-		for (const result of filteredData) {
+		for (const result of data) {
 			ret.push(
 				new GameModel({
 					type: MediaType.Game,
@@ -76,7 +59,7 @@ export class SteamAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `http://store.steampowered.com/api/appdetails?appids=${encodeURIComponent(id)}&l=en`;
+		const searchUrl = `https://store.steampowered.com/api/appdetails?appids=${encodeURIComponent(id)}&l=en`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
