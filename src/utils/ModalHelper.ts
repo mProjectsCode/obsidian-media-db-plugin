@@ -9,10 +9,10 @@ import { MediaDbSearchModal } from '../modals/MediaDbSearchModal';
 import { MediaType } from './MediaType';
 
 export enum ModalResultCode {
-	SUCCESS,
-	SKIP,
-	CLOSE,
-	ERROR,
+	SUCCESS = 'SUCCESS',
+	SKIP = 'SKIP',
+	CLOSE = 'CLOSE',
+	ERROR = 'ERROR',
 }
 
 /**

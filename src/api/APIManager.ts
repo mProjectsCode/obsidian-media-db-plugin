@@ -17,20 +17,17 @@ export class APIManager {
 	async query(query: string, apisToQuery: string[]): Promise<MediaTypeModel[]> {
 		console.debug(`MDB | api manager queried with "${query}"`);
 
-		let res: MediaTypeModel[] = [];
-
-		for (const api of this.apis) {
-			if (apisToQuery.contains(api.apiName)) {
+		const promises = this.apis
+			.filter(api => apisToQuery.contains(api.apiName))
+			.map(async api => {
 				try {
-					const apiRes = await api.searchByTitle(query);
-					res = res.concat(apiRes);
+					return await api.searchByTitle(query);
 				} catch (e) {
 					console.warn(e);
 				}
-			}
-		}
+			});
 
-		return res;
+		return (await Promise.all(promises)).flat();
 	}
 
 	/**

@@ -195,6 +195,7 @@ export default class MediaDbPlugin extends Plugin {
 			types = searchModalData.types;
 			const apis = this.apiManager.apis.filter(x => x.hasTypeOverlap(searchModalData.types)).map(x => x.apiName);
 			try {
+				console.log(apis);
 				return await this.apiManager.query(searchModalData.query, apis);
 			} catch (e) {
 				console.warn(e);
