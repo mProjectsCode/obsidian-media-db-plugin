@@ -6,6 +6,8 @@
 -   Use Steam Community SearchApps for Steam search by title for fuzzy results [#146](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/146) (thanks ZackBoe)
 -   Don't search APIs that don't have an API key set [#147](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/147) (thanks ZackBoe)
 -   Use https for all API requests [#147](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/147) (thanks ZackBoe)
+-   Sped up multi API search
+-   Fixed unrelated APIs being searched when searching by a specific media type
 
 # 0.7.0
 
