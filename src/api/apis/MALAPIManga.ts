@@ -32,13 +32,13 @@ export class MALAPIManga extends APIModel {
 		const searchUrl = `https://api.jikan.moe/v4/manga?q=${encodeURIComponent(title)}&limit=20${this.plugin.settings.sfwFilter ? '&sfw' : ''}`;
 
 		const fetchData = await fetch(searchUrl);
-		console.debug(fetchData);
+		// console.debug(fetchData);
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 		const data = await fetchData.json();
 
-		console.debug(data);
+		// console.debug(data);
 
 		const ret: MediaTypeModel[] = [];
 
@@ -87,15 +87,15 @@ export class MALAPIManga extends APIModel {
 		const fetchData = await fetch(searchUrl);
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from an API.`);
+			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json();
-		console.debug(data);
+		// console.debug(data);
 		const result = data.data;
 
 		const type = this.typeMappings.get(result.type?.toLowerCase());
-		const model = new MangaModel({
+		return new MangaModel({
 			subType: type,
 			title: result.title,
 			englishTitle: result.title_english ?? result.title,
@@ -124,7 +124,5 @@ export class MALAPIManga extends APIModel {
 				personalRating: 0,
 			},
 		} as MangaModel);
-
-		return model;
 	}
 }
