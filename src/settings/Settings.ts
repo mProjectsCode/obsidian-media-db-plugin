@@ -347,7 +347,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		// 		});
 		// 	});
 
-		containerEl.createEl('h3', { text: 'New file location' });
+		new Setting(containerEl).setName('New file location').setHeading();
 		// region new file location
 		new Setting(containerEl)
 			.setName('Movie folder')
@@ -453,7 +453,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 		// endregion
 
-		containerEl.createEl('h3', { text: 'Template settings' });
+		new Setting(containerEl).setName('Template settings').setHeading();
 		// region templates
 		new Setting(containerEl)
 			.setName('Movie template')
@@ -560,7 +560,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 		// endregion
 
-		containerEl.createEl('h3', { text: 'File name settings' });
+		new Setting(containerEl).setName('File name settings').setHeading();
 		// region file name templates
 		new Setting(containerEl)
 			.setName('Movie file name template')
@@ -661,19 +661,16 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		// region Property Mappings
 		if (this.plugin.settings.useDefaultFrontMatter) {
-			containerEl.createEl('h3', { text: 'Property mappings' });
+			new Setting(containerEl).setName('Property mappings').setHeading();
 
 			const propertyMappingExplanation = containerEl.createEl('div');
 			propertyMappingExplanation.innerHTML = `
-		<p>Remap the metadata fields of newly created media DB entries.</p>
-		<p>
-			The options are:
-			<ul>
-				<li>"default": does no remapping and keeps the metadata field as it is</li>
-				<li>"remap": renames the metadata field to what ever you specify</li>
-				<li>"remove": removes the metadata field entirely</li>
-			</ul>
-		</p>
+		<p>Choose how metadata fields are mapped to property names. The options are:</p>
+		<ul>
+			<li><strong>default</strong>: keep the original name.</li>
+			<li><strong>remap</strong>: rename the property.</li>
+			<li><strong>remove</strong>: remove the property entirely.</li>
+		</ul>
 		<p>
 			Don't forget to save your changes using the save button for each individual category.
 		</p>`;
