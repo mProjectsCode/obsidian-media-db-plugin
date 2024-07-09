@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.7.2
+
+-   Improvements to UI text to match the Obsidian plugin guidelines [#153](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/153) (thanks kepano)
+
 # 0.7.1
 
 -   Fixed mobygames result without an image crashing the search [#148](https://github.com/mProjectsCode/obsidian-media-db-plugin/issues/148) [#149](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/149) (thanks ltctceplrm)
