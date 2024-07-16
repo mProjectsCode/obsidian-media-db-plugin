@@ -24,7 +24,7 @@
 					<pre class="media-db-plugin-property-mapping-element-property-name"><code>{property.property}</code></pre>
 				</div>
 				{#if property.locked}
-					<div class="media-db-plugin-property-binding-text">property can not be remapped</div>
+					<div class="media-db-plugin-property-binding-text">property cannot be remapped</div>
 				{:else}
 					<select class="dropdown" bind:value={property.mapping}>
 						{#each propertyMappingOptions as remappingOption}

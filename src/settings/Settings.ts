@@ -178,8 +178,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'Media DB Plugin Settings' });
-
 		new Setting(containerEl)
 			.setName('OMDb API key')
 			.setDesc('API key for "www.omdbapi.com".')
@@ -348,10 +346,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				});
 			});
 
-		containerEl.createEl('h3', { text: 'New File Location' });
+		new Setting(containerEl).setName('New file location').setHeading();
 		// region new file location
 		new Setting(containerEl)
-			.setName('Movie Folder')
+			.setName('Movie folder')
 			.setDesc('Where newly imported movies should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
@@ -364,7 +362,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Series Folder')
+			.setName('Series folder')
 			.setDesc('Where newly imported series should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
@@ -377,7 +375,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Manga Folder')
+			.setName('Manga folder')
 			.setDesc('Where newly imported manga should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
@@ -390,7 +388,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Game Folder')
+			.setName('Game folder')
 			.setDesc('Where newly imported games should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
@@ -403,7 +401,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Wiki Folder')
+			.setName('Wiki folder')
 			.setDesc('Where newly imported wiki articles should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
@@ -416,7 +414,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Music Folder')
+			.setName('Music folder')
 			.setDesc('Where newly imported music should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
@@ -429,7 +427,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Board Game Folder')
+			.setName('Board game folder')
 			.setDesc('Where newly imported board games should be places.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
@@ -441,7 +439,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 		new Setting(containerEl)
-			.setName('Book Folder')
+			.setName('Book folder')
 			.setDesc('Where newly imported books should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
@@ -454,7 +452,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 		// endregion
 
-		containerEl.createEl('h3', { text: 'Template Settings' });
+		new Setting(containerEl).setName('Template settings').setHeading();
 		// region templates
 		new Setting(containerEl)
 			.setName('Movie template')
@@ -522,7 +520,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Music Release template')
+			.setName('Music release template')
 			.setDesc('Template file to be used when creating a new note for a music release.')
 			.addSearch(cb => {
 				new FileSuggest(this.app, cb.inputEl);
@@ -535,7 +533,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Board Game template')
+			.setName('Board game template')
 			.setDesc('Template file to be used when creating a new note for a boardgame.')
 			.addSearch(cb => {
 				new FileSuggest(this.app, cb.inputEl);
@@ -561,7 +559,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 		// endregion
 
-		containerEl.createEl('h3', { text: 'File Name Settings' });
+		new Setting(containerEl).setName('File name settings').setHeading();
 		// region file name templates
 		new Setting(containerEl)
 			.setName('Movie file name template')
@@ -624,7 +622,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Music Release file name template')
+			.setName('Music release file name template')
 			.setDesc('Template for the file name used when creating a new note for a music release.')
 			.addText(cb => {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.musicReleaseFileNameTemplate}`)
@@ -636,7 +634,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Board Game file name template')
+			.setName('Board game file name template')
 			.setDesc('Template for the file name used when creating a new note for a boardgame.')
 			.addText(cb => {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.boardgameFileNameTemplate}`)
@@ -662,19 +660,16 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		// region Property Mappings
 		if (this.plugin.settings.useDefaultFrontMatter) {
-			containerEl.createEl('h3', { text: 'Property Mappings' });
+			new Setting(containerEl).setName('Property mappings').setHeading();
 
 			const propertyMappingExplanation = containerEl.createEl('div');
 			propertyMappingExplanation.innerHTML = `
-		<p>Allow you to remap the metadata fields of newly created media db entries.</p>
-		<p>
-			The different options are:
-			<lu>
-				<li>"default": does no remapping and keeps the metadata field as it is</li>
-				<li>"remap": renames the metadata field to what ever you specify</li>
-				<li>"remove": removes the metadata field entirely</li>
-			</lu>
-		</p>
+		<p>Choose how metadata fields are mapped to property names. The options are:</p>
+		<ul>
+			<li><strong>default</strong>: keep the original name.</li>
+			<li><strong>remap</strong>: rename the property.</li>
+			<li><strong>remove</strong>: remove the property entirely.</li>
+		</ul>
 		<p>
 			Don't forget to save your changes using the save button for each individual category.
 		</p>`;
@@ -695,7 +690,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						}
 
 						this.plugin.settings.propertyMappingModels = propertyMappingModels;
-						new Notice(`MDB: Property Mappings for ${model.type} saved successfully.`);
+						new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
 						void this.plugin.saveSettings();
 					},
 				},

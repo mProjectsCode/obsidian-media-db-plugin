@@ -27,11 +27,6 @@ export abstract class APIModel {
 		}
 		
 	hasTypeOverlap(types: MediaType[]): boolean {
-		for (const type of types) {
-			if (this.hasType(type)) {
-				return true;
-			}
-		}
-		return false;
+		return types.some(type => this.hasType(type));
 	}
 }
