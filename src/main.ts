@@ -27,6 +27,7 @@ import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMappin
 import { ModalHelper, ModalResultCode, SearchModalOptions } from './utils/ModalHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MediaType } from 'src/utils/MediaType';
+import { MyDramaListAPI } from './api/apis/MyDramaListAPI';
 
 export type Metadata = Record<string, unknown>;
 
@@ -58,6 +59,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		this.apiManager.registerAPI(new OpenLibraryAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
+		this.apiManager.registerAPI(new MyDramaListAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager();
