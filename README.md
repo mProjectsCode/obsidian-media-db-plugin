@@ -1,12 +1,12 @@
 ## Obsidian Media DB Plugin
 
-A plugin that can query multiple APIs for movies, series, anime, manga, games, music and wiki articles, and import them into your vault.
+A plugin that can query multiple APIs for movies, series, asian dramas, anime, manga, games, music and wiki articles, and import them into your vault.
 
 ### Features
 
 #### Search by Title
 
-Search a movie, series, anime, game, music release or wiki article by its name across multiple APIs.
+Search a movie, series, asian dramas, anime, game, music release or wiki article by its name across multiple APIs.
 
 #### Search by ID
 
@@ -104,6 +104,7 @@ Now you select the result you want and the plugin will cast it's magic and creat
 
 -   movies (including specials)
 -   series (including OVAs)
+-   Asian Dramas and Movies (including specials)
 -   games
 -   music releases
 -   wiki articles
@@ -111,22 +112,28 @@ Now you select the result you want and the plugin will cast it's magic and creat
 
 ### Currently supported APIs:
 
-| Name                                                 | Description                                                                                       | Supported formats                                     | Authentification                                                             | Rate limiting                                                                                                                                                 | SFW filter support |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| [Jikan](https://jikan.moe/)                          | Jikan is an API that uses [My Anime List](https://myanimelist.net) and offers metadata for anime. | series, movies, specials, OVAs, manga, manwha, novels | No                                                                           | 60 per minute and 3 per second                                                                                                                                | Yes                |
-| [OMDb](https://www.omdbapi.com/)                     | OMDb is an API that offers metadata for movie, series and games.                                  | series, movies, games                                 | Yes, you can get a free key here [here](https://www.omdbapi.com/apikey.aspx) | 1000 per day                                                                                                                                                  | No                 |
-| [MusicBrainz](https://musicbrainz.org/)              | MusicBrainz is an API that offers information about music releases.                               | music releases                                        | No                                                                           | 50 per second                                                                                                                                                 | No                 |
-| [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) | The Wikipedia API allows access to all Wikipedia articles.                                        | wiki articles                                         | No                                                                           | None                                                                                                                                                          | No                 |
-| [Steam](https://store.steampowered.com/)             | The Steam API offers information on all steam games.                                              | games                                                 | No                                                                           | 10000 per day                                                                                                                                                 | No                 |
-| [Open Library](https://openlibrary.org)              | The OpenLibrary API offers metadata for books                                                     | books                                                 | No                                                                           | Cover access is rate-limited when not using CoverID or OLID by max 100 requests/IP every 5 minutes. This plugin uses OLID so there shouldn't be a rate limit. | No                 |
-| [Moby Games](https://www.mobygames.com)              | The Moby Games API offers metadata for games for all platforms                                    | games                                                 | Yes, by making an account [here](https://www.mobygames.com/user/register/)   | API requests are limited to 360 per hour (one every ten seconds). In addition, requests should be made no more frequently than one per second.                | No                 |
+| Name                                                 | Description                                                                                                                             | Supported formats                                     | Authentification                                                             | Rate limiting                                                                                                                                                 | SFW filter support |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| [Jikan](https://jikan.moe/)                          | Jikan is an API that uses [My Anime List](https://myanimelist.net) and offers metadata for anime.                                       | series, movies, specials, OVAs, manga, manwha, novels | No                                                                           | 60 per minute and 3 per second                                                                                                                                | Yes                |
+| [OMDb](https://www.omdbapi.com/)                     | OMDb is an API that offers metadata for movie, series and games.                                                                        | series, movies, games                                 | Yes, you can get a free key here [here](https://www.omdbapi.com/apikey.aspx) | 1000 per day                                                                                                                                                  | No                 |
+| [MyDramaList](https://mydramalist.com/)              | MyDramaList offers metadata for Asian Dramas, movies, specials, etc. [Unofficial API](https://github.com/tbdsux/kuryana) is being used. | series, movies, specials                              | No                                                                           | No                                                                                                                                                            | No                 |
+| [MusicBrainz](https://musicbrainz.org/)              | MusicBrainz is an API that offers information about music releases.                                                                     | music releases                                        | No                                                                           | 50 per second                                                                                                                                                 | No                 |
+| [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) | The Wikipedia API allows access to all Wikipedia articles.                                                                              | wiki articles                                         | No                                                                           | None                                                                                                                                                          | No                 |
+| [Steam](https://store.steampowered.com/)             | The Steam API offers information on all steam games.                                                                                    | games                                                 | No                                                                           | 10000 per day                                                                                                                                                 | No                 |
+| [Open Library](https://openlibrary.org)              | The OpenLibrary API offers metadata for books                                                                                           | books                                                 | No                                                                           | Cover access is rate-limited when not using CoverID or OLID by max 100 requests/IP every 5 minutes. This plugin uses OLID so there shouldn't be a rate limit. | No                 |
+| [Moby Games](https://www.mobygames.com)              | The Moby Games API offers metadata for games for all platforms                                                                          | games                                                 | Yes, by making an account [here](https://www.mobygames.com/user/register/)   | API requests are limited to 360 per hour (one every ten seconds). In addition, requests should be made no more frequently than one per second.                | No                 |
 
 #### Notes
 
 -   [Jikan](https://jikan.moe/)
+
     -   sometimes the api is very slow, this is normal
     -   you need to use the title the anime has on [My Anime List](https://myanimelist.net), which is in most cases the japanese title
         -   e.g. instead of "Demon Slayer" you have to search "Kimetsu no Yaiba"
+
+-   [MyDramaList](https://mydramalist.com/)
+    -   [Unofficial API](https://github.com/tbdsux/kuryana/) is being used
+    -   Ratelimit is unknown
 
 #### Search by ID
 
@@ -142,6 +149,9 @@ Now you select the result you want and the plugin will cast it's magic and creat
     -   the ID you need is the ID of the movie or show on [IMDb](https://www.imdb.com)
     -   you can find this ID in the URL
         -   e.g. for "Rogue One" the URL looks like this `https://www.imdb.com/title/tt3748528/` so the ID is `tt3748528`
+-   [MyDramaList](https://mydramalist.com/)
+    -   Id is in the URL
+        -   e.g. for "The Roundup" the URL looks like this `https://mydramalist.com/29612-the-outlaws-2/` so the ID is `29612-the-outlaws-2`
 -   [MusicBrainz](https://musicbrainz.org/)
     -   the id of a release is not easily accessible, you are better off just searching by title
 -   [Wikipedia](https://en.wikipedia.org/wiki/Main_Page)
