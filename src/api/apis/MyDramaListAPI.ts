@@ -30,7 +30,7 @@ export class MyDramaListAPI extends APIModel {
 		}
 
 		const data = await fetchData.json();
-		console.debug(data);
+		//console.debug(data);
 
 		const ret: MediaTypeModel[] = [];
 		for (const result of data.results.dramas) {
@@ -46,7 +46,7 @@ export class MyDramaListAPI extends APIModel {
 						id: result.slug,
 					} as MovieModel),
 				);
-			} else if (type.contains('series') || type.contains('show') || type.contains('drama')) {
+			} else if (type.contains('series') || type.contains('show') || type.contains('drama') || type.contains('special')) {
 				ret.push(
 					new SeriesModel({
 						type: result.type,
@@ -124,7 +124,7 @@ export class MyDramaListAPI extends APIModel {
 					personalRating: 0,
 				},
 			} as MovieModel);
-		} else if (type.contains('series') || type.contains('show') || type.contains('drama')) {
+		} else if (type.contains('series') || type.contains('show') || type.contains('drama') || type.contains('special')) {
 			return new SeriesModel({
 				type: result.details.type,
 				title: result.title,
