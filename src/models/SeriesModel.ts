@@ -6,19 +6,30 @@ export class SeriesModel extends MediaTypeModel {
 	type: string;
 	subType: string;
 	title: string;
+	nativeTitle: string;
 	englishTitle: string;
+	aliases: string[];
 	year: string;
 	dataSource: string;
 	url: string;
 	id: string;
+	country: string;
+	content_rating: string;
 
 	plot: string;
 	genres: string[];
+	mediaTags: string[];
+	relatedContent: string[];
+	director: string[];
 	writer: string[];
 	studio: string[];
 	episodes: number;
 	duration: string;
 	onlineRating: number;
+	votes: number;
+	ranked: number;
+	popularity: number;
+	watchers: number;
 	actors: string[];
 	image: string;
 
@@ -37,15 +48,26 @@ export class SeriesModel extends MediaTypeModel {
 	constructor(obj: any = {}) {
 		super();
 
+		this.nativeTitle = undefined;
+		this.aliases = undefined;
 		this.plot = undefined;
 		this.genres = undefined;
+		this.mediaTags = undefined;
+		this.relatedContent = undefined;
+		this.director = undefined;
 		this.writer = undefined;
 		this.studio = undefined;
 		this.episodes = undefined;
 		this.duration = undefined;
 		this.onlineRating = undefined;
+		this.votes = undefined;
+		this.ranked = undefined;
+		this.popularity = undefined;
+		this.watchers = undefined;
 		this.actors = undefined;
 		this.image = undefined;
+		this.country = undefined;
+		this.content_rating = undefined;
 
 		this.released = undefined;
 		this.streamingServices = undefined;
