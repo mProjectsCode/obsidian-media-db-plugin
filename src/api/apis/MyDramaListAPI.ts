@@ -38,7 +38,8 @@ export class MyDramaListAPI extends APIModel {
 			if (type.contains('movie')) {
 				ret.push(
 					new MovieModel({
-						type: result.type,
+						type: 'Movie',
+						subType: result.type,
 						title: result.title,
 						englishTitle: result.title,
 						year: result.year,
@@ -49,7 +50,8 @@ export class MyDramaListAPI extends APIModel {
 			} else if (type.contains('series') || type.contains('show') || type.contains('drama') || type.contains('special')) {
 				ret.push(
 					new SeriesModel({
-						type: result.type,
+						type: 'Series',
+						subType: result.type,
 						title: result.title,
 						englishTitle: result.title,
 						year: result.year,
@@ -86,7 +88,8 @@ export class MyDramaListAPI extends APIModel {
 		const type = result.details.type.toLowerCase();
 		if (type.contains('movie')) {
 			return new MovieModel({
-				type: result.details.type,
+				type: 'Movie',
+				subType: result.details.type,
 				title: result.title,
 				englishTitle: result.title,
 				nativeTitle: result?.others?.native_title ?? '',
@@ -126,7 +129,8 @@ export class MyDramaListAPI extends APIModel {
 			} as MovieModel);
 		} else if (type.contains('series') || type.contains('show') || type.contains('drama') || type.contains('special')) {
 			return new SeriesModel({
-				type: result.details.type,
+				type: 'Series',
+				subType: result.details.type,
 				title: result.title,
 				nativeTitle: result?.others?.native_title ?? '',
 				aliases: result?.others?.also_known_as ?? [],
