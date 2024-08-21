@@ -29,7 +29,8 @@ export class OMDbAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		if (!this.plugin.settings.OMDbKey) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			console.error(Error(`MDB | API key for ${this.apiName} missing.`));
+			return [];
 		}
 
 		const searchUrl = `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`;
