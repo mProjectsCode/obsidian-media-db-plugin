@@ -1,4 +1,5 @@
 import { APIModel } from '../APIModel';
+import { Notice } from 'obsidian';
 import { MediaTypeModel } from '../../models/MediaTypeModel';
 import MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
@@ -23,6 +24,7 @@ export class MobyGamesAPI extends APIModel {
 
 		if (!this.plugin.settings.MobyGamesKey) {
 			console.error(new Error(`MDB | API key for ${this.apiName} missing.`));
+			new Notice(`MediaDB | API key for ${this.apiName} missing.`);
 			return [];
 		}
 
@@ -66,6 +68,7 @@ export class MobyGamesAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		if (!this.plugin.settings.MobyGamesKey) {
+			new Notice(`MediaDB | API key for ${this.apiName} missing.`);
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
