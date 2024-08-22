@@ -29,7 +29,7 @@ export class OMDbAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		if (!this.plugin.settings.OMDbKey) {
-			console.error(Error(`MDB | API key for ${this.apiName} missing.`));
+			console.error(new Error(`MDB | API key for ${this.apiName} missing.`));
 			return [];
 		}
 
