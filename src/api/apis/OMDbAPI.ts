@@ -118,9 +118,11 @@ export class OMDbAPI extends APIModel {
 		const fetchData = await fetch(searchUrl);
 
 		if (fetchData.status === 401) {
+			new Notice(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (fetchData.status !== 200) {
+			new Notice(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
@@ -128,6 +130,7 @@ export class OMDbAPI extends APIModel {
 		// console.debug(result);
 
 		if (result.Response === 'False') {
+			new Notice(`MDB | Received error from ${this.apiName}: ${result.Error}`);
 			throw Error(`MDB | Received error from ${this.apiName}: ${result.Error}`);
 		}
 

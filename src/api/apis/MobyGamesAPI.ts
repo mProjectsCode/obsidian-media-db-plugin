@@ -79,6 +79,7 @@ export class MobyGamesAPI extends APIModel {
 		console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
+			new Notice(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
