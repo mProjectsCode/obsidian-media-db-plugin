@@ -113,8 +113,15 @@ export class VNDBAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
+		// prettier-ignore
 		const vnData = await this.postVNQuery(`{
-			"filters": ["search", "=", "${title}"],
+			"filters": ["and", ${!this.plugin.settings.sfwFilter ? `` :
+				`["release", "!=", ["and",
+					["official", "=", "1"],
+					["has_ero", "=", "1"]
+				]],`}
+				["search", "=", "${title}"]
+			],
 			"fields": "title, titles{title, lang}, released",
 			"sort": "searchrank",
 			"results": 20
