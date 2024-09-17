@@ -120,6 +120,7 @@ Now you select the result you want and the plugin will cast it's magic and creat
 | [Steam](https://store.steampowered.com/)             | The Steam API offers information on all steam games.                                              | games                                                 | No                                                                           | 10000 per day                                                                                                                                                 | No                 |
 | [Open Library](https://openlibrary.org)              | The OpenLibrary API offers metadata for books                                                     | books                                                 | No                                                                           | Cover access is rate-limited when not using CoverID or OLID by max 100 requests/IP every 5 minutes. This plugin uses OLID so there shouldn't be a rate limit. | No                 |
 | [Moby Games](https://www.mobygames.com)              | The Moby Games API offers metadata for games for all platforms                                    | games                                                 | Yes, by making an account [here](https://www.mobygames.com/user/register/)   | API requests are limited to 360 per hour (one every ten seconds). In addition, requests should be made no more frequently than one per second.                | No                 |
+| [VNDB](https://vndb.org/)                            | The VNDB API offers metadata for visual novels                                                    | games                                                 | No                                                                           | 200 requests per 5 minutes                                                                                                                                    | Yes                |
 
 #### Notes
 
@@ -156,6 +157,9 @@ Now you select the result you want and the plugin will cast it's magic and creat
 -   [Moby Games](https://www.mobygames.com)
     -   you can find this ID in the URL
         -   e.g. for "Bioshock 2" the URL looks like this `https://www.mobygames.com/game/45089/bioshock-2/` so the ID is `45089`
+-   [VNDB](https://vndb.org/)
+    -   Located in the novel's VNDB URL path
+        -   e.g. The ID for [Katawa Shoujo](https://vndb.org/v945) (`https://vndb.org/v945`) is `v945`
 
 ### Problems, unexpected behavior or improvement suggestions?
 
