@@ -24,6 +24,7 @@ interface VNJSONResponse {
 			released: string | 'TBA' | null;
 			image: {
 				url: string;
+				sexual: number;
 			} | null;
 			rating: number | null;
 			tags: [
@@ -113,14 +114,27 @@ export class VNDBAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
+		/* SFW Filter: has ANY official&&complete&&standalone&&SFW release
+		            OR has NO  official&&standalone&&NSFW release
+		            OR has the `In-game Sexual Content Toggle` (g2708) tag */
 		// prettier-ignore
 		const vnData = await this.postVNQuery(`{
-			"filters": ["and", ${!this.plugin.settings.sfwFilter ? `` :
-				`["release", "!=", ["and",
-					["official", "=", "1"],
-					["has_ero", "=", "1"]
-				]],`}
-				["search", "=", "${title}"]
+			"filters": ["and" ${!this.plugin.settings.sfwFilter ? `` :
+				`, ["or"
+					, ["release", "=", ["and"
+						, ["official", "=", "1"]
+						, ["rtype", "=", "complete"]
+						, ["patch", "!=", "1"]
+						, ["has_ero", "!=", "1"]
+					  ]]
+					, ["release", "!=", ["and"
+						, ["official", "=", "1"]
+						, ["patch", "!=", "1"]
+						, ["has_ero", "=", "1"]
+					  ]]
+					, ["tag", "=", "g2708"]
+				  ]`}
+				, ["search", "=", "${title}"]
 			],
 			"fields": "title, titles{title, lang}, released",
 			"sort": "searchrank",
@@ -149,19 +163,18 @@ export class VNDBAPI extends APIModel {
 
 		const vnData = await this.postVNQuery(`{
 			"filters": ["id", "=", "${id}"],
-			"fields": "title, titles{title, lang}, devstatus, released, image{url}, rating, tags{name, category, rating, spoiler}, developers{name}"
+			"fields": "title, titles{title, lang}, devstatus, released, image{url, sexual}, rating, tags{name, category, rating, spoiler}, developers{name}"
 		}`);
 
 		if (vnData.results.length !== 1) throw Error(`MDB | Expected 1 result from query, got ${vnData.results.length}.`);
 		const vn = vnData.results[0];
 
 		const releaseData = await this.postReleaseQuery(`{
-			"filters": ["and",
-				["vn", "=",
-					["id", "=", "${id}"]
-				],
-				["official", "=", 1],
-				["patch", "!=", 1]
+			"filters": ["and"
+				, ["vn", "="
+					, ["id", "=", "${id}"]
+				  ]
+				, ["official", "=", 1]
 			],
 			"fields": "producers.name, producers.publisher, producers.developer",
 			"results": 100
@@ -188,7 +201,8 @@ export class VNDBAPI extends APIModel {
 				.sort((t1, t2) => t2.rating - t1.rating)
 				.map(t => t.name),
 			onlineRating: vn.rating ?? NaN,
-			image: vn.image?.url,
+			// TODO: Ideally we should simply flag a sensitive image, then let the user handle it non-destructively
+			image: this.plugin.settings.sfwFilter && (vn.image?.sexual ?? 0) > 0.5 ? 'NSFW' : vn.image?.url,
 
 			released: vn.devstatus === 0,
 			releaseDate: this.plugin.dateFormatter.format(vn.released, this.apiDateFormat),
