@@ -21,6 +21,7 @@ import { SteamAPI } from './api/apis/SteamAPI';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { MobyGamesAPI } from './api/apis/MobyGamesAPI';
+import { GiantBombAPI } from './api/apis/GiantBombAPI';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
@@ -58,6 +59,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		this.apiManager.registerAPI(new OpenLibraryAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
+		this.apiManager.registerAPI(new GiantBombAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager();
