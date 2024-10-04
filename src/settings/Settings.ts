@@ -12,6 +12,7 @@ import { fragWithHTML } from '../utils/Utils';
 export interface MediaDbPluginSettings {
 	OMDbKey: string;
 	MobyGamesKey: string;
+	GiantBombKey: string;
 	sfwFilter: boolean;
 	templates: boolean;
 	customDateFormat: string;
@@ -77,6 +78,7 @@ export interface MediaDbPluginSettings {
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
 	MobyGamesKey: '',
+	GiantBombKey: '',
 	sfwFilter: true,
 	templates: true,
 	customDateFormat: 'L',
@@ -190,7 +192,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
+			new Setting(containerEl)
 			.setName('Moby Games key')
 			.setDesc('API key for "www.mobygames.com".')
 			.addText(cb => {
@@ -198,6 +200,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.MobyGamesKey)
 					.onChange(data => {
 						this.plugin.settings.MobyGamesKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+			new Setting(containerEl)
+			.setName('Giant Bomb Key')
+			.setDesc('API key for "www.giantbomb.com".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.GiantBombKey)
+					.onChange(data => {
+						this.plugin.settings.GiantBombKey = data;
 						void this.plugin.saveSettings();
 					});
 			});
