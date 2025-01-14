@@ -4,13 +4,16 @@
 	import { setIcon } from 'obsidian';
 	import { onMount } from 'svelte';
 
-	export let iconName: string = '';
-	export let iconSize: number = 20;
+	interface Props {
+		iconName?: string;
+	}
 
-	let iconEl: HTMLElement;
+	let { iconName = '' }: Props = $props();
+
+	let iconEl: HTMLElement | undefined = $state();
 
 	onMount(() => {
-		setIcon(iconEl, iconName, iconSize);
+		setIcon(iconEl!, iconName);
 	});
 </script>
 

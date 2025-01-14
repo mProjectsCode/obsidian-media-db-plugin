@@ -1,4 +1,4 @@
-import { MediaType } from '../utils/MediaType';
+import type { MediaType } from '../utils/MediaType';
 
 export abstract class MediaTypeModel {
 	type: string;
@@ -13,14 +13,14 @@ export abstract class MediaTypeModel {
 	userData: object;
 
 	protected constructor() {
-		this.type = undefined;
-		this.subType = undefined;
-		this.title = undefined;
-		this.englishTitle = undefined;
-		this.year = undefined;
-		this.dataSource = undefined;
-		this.url = undefined;
-		this.id = undefined;
+		this.type = '';
+		this.subType = '';
+		this.title = '';
+		this.englishTitle = '';
+		this.year = '';
+		this.dataSource = '';
+		this.url = '';
+		this.id = '';
 		this.userData = {};
 	}
 

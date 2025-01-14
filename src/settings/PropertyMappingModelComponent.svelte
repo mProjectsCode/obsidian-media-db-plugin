@@ -1,18 +1,22 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { PropertyMappingModel, PropertyMappingOption, propertyMappingOptions } from './PropertyMapping';
 	import { capitalizeFirstLetter } from '../utils/Utils';
 	import Icon from './Icon.svelte';
 
-	export let model: PropertyMappingModel;
-	export let save: (model: PropertyMappingModel) => void;
-
-	let validationResult: { res: boolean; err?: Error };
-
-	$: modelChanged(model);
-
-	function modelChanged(model: PropertyMappingModel) {
-		validationResult = model.validate();
+	interface Props {
+		model: PropertyMappingModel;
+		save: (model: PropertyMappingModel) => void;
 	}
+
+	let { model, save }: Props = $props();
+
+	let validationResult: { res: boolean; err?: Error } | undefined = $state();
+
+	$effect(() => {
+		validationResult = model.validate();
+	});
 </script>
 
 <div class="media-db-plugin-property-mappings-model-container">
@@ -51,7 +55,7 @@
 	{/if}
 	<button
 		class="media-db-plugin-property-mappings-save-button {validationResult?.res ? 'mod-cta' : 'mod-muted'}"
-		on:click={() => {
+		onclick={() => {
 			if (model.validate().res) save(model);
 		}}
 		>Save

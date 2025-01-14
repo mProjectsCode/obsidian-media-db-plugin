@@ -1,5 +1,5 @@
-import { MediaTypeModel } from '../models/MediaTypeModel';
-import { TFile, TFolder, App } from 'obsidian';
+import type { TFile, TFolder, App } from 'obsidian';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -82,7 +82,7 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 	return '{{ INVALID TEMPLATE TAG }}';
 }
 
-function traverseMetaData(path: Array<string>, mediaTypeModel: MediaTypeModel): any {
+function traverseMetaData(path: string[], mediaTypeModel: MediaTypeModel): any {
 	let o: any = mediaTypeModel;
 
 	for (const part of path) {
@@ -226,7 +226,11 @@ export function hasTemplaterPlugin(app: App): boolean {
 export async function useTemplaterPluginInFile(app: App, file: TFile): Promise<void> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const templater = (app as any).plugins.plugins['templater-obsidian'];
-	if (templater && !templater?.settings['trigger_on_file_creation']) {
+	if (templater && !templater?.settings.trigger_on_file_creation) {
 		await templater.templater.overwrite_file_commands(file);
 	}
 }
+
+export type ModelToData<T> = {
+	[K in keyof T as T[K] extends Function ? never : K]?: T[K];
+};

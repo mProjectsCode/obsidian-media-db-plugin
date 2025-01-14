@@ -1,16 +1,17 @@
-import { MediaDbPluginSettings } from '../settings/Settings';
-import { MediaType } from './MediaType';
-import { MediaTypeModel } from '../models/MediaTypeModel';
-import { replaceTags } from './Utils';
-import { App, TAbstractFile, TFile, TFolder } from 'obsidian';
-import { MovieModel } from '../models/MovieModel';
-import { SeriesModel } from '../models/SeriesModel';
-import { MangaModel } from '../models/MangaModel';
-import { GameModel } from '../models/GameModel';
-import { WikiModel } from '../models/WikiModel';
-import { MusicReleaseModel } from '../models/MusicReleaseModel';
+import type { App, TAbstractFile, TFile } from 'obsidian';
+import { TFolder } from 'obsidian';
 import { BoardGameModel } from '../models/BoardGameModel';
 import { BookModel } from '../models/BookModel';
+import { GameModel } from '../models/GameModel';
+import { MangaModel } from '../models/MangaModel';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
+import { MovieModel } from '../models/MovieModel';
+import { MusicReleaseModel } from '../models/MusicReleaseModel';
+import { SeriesModel } from '../models/SeriesModel';
+import type { MediaDbPluginSettings } from '../settings/Settings';
+import { MediaType } from './MediaType';
+import { replaceTags } from './Utils';
+import { WikiModel } from '../models/WikiModel';
 
 export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Movie,
@@ -28,7 +29,11 @@ export class MediaTypeManager {
 	mediaTemplateMap: Map<MediaType, string>;
 	mediaFolderMap: Map<MediaType, string>;
 
-	constructor() {}
+	constructor() {
+		this.mediaFileNameTemplateMap = new Map<MediaType, string>();
+		this.mediaTemplateMap = new Map<MediaType, string>();
+		this.mediaFolderMap = new Map<MediaType, string>();
+	}
 
 	updateTemplates(settings: MediaDbPluginSettings): void {
 		this.mediaFileNameTemplateMap = new Map<MediaType, string>();
@@ -66,7 +71,7 @@ export class MediaTypeManager {
 
 	getFileName(mediaTypeModel: MediaTypeModel): string {
 		// Ignore undefined tags since some search APIs do not return all properties in the model and produce clean file names even if errors occur
-		return replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType()), mediaTypeModel, true);
+		return replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType())!, mediaTypeModel, true);
 	}
 
 	async getTemplate(mediaTypeModel: MediaTypeModel, app: App): Promise<string> {
@@ -76,7 +81,7 @@ export class MediaTypeManager {
 			return '';
 		}
 
-		let templateFile = app.vault.getAbstractFileByPath(templateFilePath);
+		let templateFile = app.vault.getAbstractFileByPath(templateFilePath) ?? undefined;
 
 		// WARNING: This was previously selected by filename, but that could lead to collisions and unwanted effects.
 		// This now falls back to the previous method if no file is found
@@ -107,7 +112,7 @@ export class MediaTypeManager {
 		if (!(await app.vault.adapter.exists(folderPath))) {
 			await app.vault.createFolder(folderPath);
 		}
-		const folder: TAbstractFile = app.vault.getAbstractFileByPath(folderPath);
+		const folder = app.vault.getAbstractFileByPath(folderPath);
 
 		if (!(folder instanceof TFolder)) {
 			throw Error(`Expected ${folder} to be instance of TFolder`);
@@ -141,6 +146,6 @@ export class MediaTypeManager {
 			return new BookModel(obj);
 		}
 
-		return undefined;
+		throw new Error(`Unknown media type: ${mediaType}`);
 	}
 }

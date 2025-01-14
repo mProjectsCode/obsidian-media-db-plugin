@@ -1,5 +1,5 @@
+import type { MediaType } from '../utils/MediaType';
 import { containsOnlyLettersAndUnderscores, PropertyMappingNameConflictError, PropertyMappingValidationError } from '../utils/Utils';
-import { MediaType } from '../utils/MediaType';
 
 export enum PropertyMappingOption {
 	Default = 'default',

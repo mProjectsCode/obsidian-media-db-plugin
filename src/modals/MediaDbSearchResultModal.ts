@@ -1,7 +1,8 @@
-import { MediaTypeModel } from '../models/MediaTypeModel';
-import MediaDbPlugin from '../main';
+import type MediaDbPlugin from '../main';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
+import type { SelectModalData, SelectModalOptions } from '../utils/ModalHelper';
+import { SELECT_MODAL_OPTIONS_DEFAULT } from '../utils/ModalHelper';
 import { SelectModal } from './SelectModal';
-import { SELECT_MODAL_OPTIONS_DEFAULT, SelectModalData, SelectModalOptions } from '../utils/ModalHelper';
 
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
@@ -9,18 +10,18 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	busy: boolean;
 	sendCallback: boolean;
 
-	submitCallback: (res: SelectModalData) => void;
-	closeCallback: (err?: Error) => void;
-	skipCallback: () => void;
+	submitCallback?: (res: SelectModalData) => void;
+	closeCallback?: (err?: Error) => void;
+	skipCallback?: () => void;
 
 	constructor(plugin: MediaDbPlugin, selectModalOptions: SelectModalOptions) {
 		selectModalOptions = Object.assign({}, SELECT_MODAL_OPTIONS_DEFAULT, selectModalOptions);
-		super(plugin.app, selectModalOptions.elements, selectModalOptions.multiSelect);
+		super(plugin.app, selectModalOptions.elements ?? [], selectModalOptions.multiSelect);
 		this.plugin = plugin;
 
-		this.title = selectModalOptions.modalTitle;
+		this.title = selectModalOptions.modalTitle ?? '';
 		this.description = 'Select one or multiple search results.';
-		this.addSkipButton = selectModalOptions.skipButton;
+		this.addSkipButton = selectModalOptions.skipButton ?? false;
 
 		this.busy = false;
 
@@ -50,17 +51,17 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	submit(): void {
 		if (!this.busy) {
 			this.busy = true;
-			this.submitButton.setButtonText('Creating entry...');
-			this.submitCallback({ selected: this.selectModalElements.filter(x => x.isActive()).map(x => x.value) });
+			this.submitButton?.setButtonText('Creating entry...');
+			this.submitCallback?.({ selected: this.selectModalElements.filter(x => x.isActive()).map(x => x.value) });
 		}
 	}
 
 	skip(): void {
-		this.skipButton.setButtonText('Skipping...');
-		this.skipCallback();
+		this.skipButton?.setButtonText('Skipping...');
+		this.skipCallback?.();
 	}
 
 	onClose(): void {
-		this.closeCallback();
+		this.closeCallback?.();
 	}
 }

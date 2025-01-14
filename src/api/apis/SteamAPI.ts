@@ -1,9 +1,9 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import MediaDbPlugin from '../../main';
-import { GameModel } from '../../models/GameModel';
 import { requestUrl } from 'obsidian';
+import type MediaDbPlugin from '../../main';
+import { GameModel } from '../../models/GameModel';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 export class SteamAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -49,7 +49,7 @@ export class SteamAPI extends APIModel {
 					year: '',
 					dataSource: this.apiName,
 					id: result.appid,
-				} as GameModel),
+				}),
 			);
 		}
 
@@ -94,8 +94,8 @@ export class SteamAPI extends APIModel {
 			url: `https://store.steampowered.com/app/${result.steam_appid}`,
 			id: result.steam_appid,
 
-			developers: result['developers'],
-			publishers: result['publishers'],
+			developers: result.developers,
+			publishers: result.publishers,
 			genres: result.genres?.map((x: any) => x.description) ?? [],
 			onlineRating: Number.parseFloat(result.metacritic?.score ?? 0),
 			image: result.header_image ?? '',
@@ -107,6 +107,6 @@ export class SteamAPI extends APIModel {
 				played: false,
 				personalRating: 0,
 			},
-		} as GameModel);
+		});
 	}
 }

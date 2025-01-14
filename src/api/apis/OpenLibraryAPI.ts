@@ -1,8 +1,8 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import MediaDbPlugin from '../../main';
 import { BookModel } from 'src/models/BookModel';
+import type MediaDbPlugin from '../../main';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 export class OpenLibraryAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -42,7 +42,7 @@ export class OpenLibraryAPI extends APIModel {
 					dataSource: this.apiName,
 					id: result.key,
 					author: result.author_name ?? 'unknown',
-				} as BookModel),
+				}),
 			);
 		}
 
@@ -87,6 +87,6 @@ export class OpenLibraryAPI extends APIModel {
 				lastRead: '',
 				personalRating: 0,
 			},
-		} as BookModel);
+		});
 	}
 }

@@ -2,8 +2,12 @@
 	import { PropertyMappingModel } from './PropertyMapping';
 	import PropertyMappingModelComponent from './PropertyMappingModelComponent.svelte';
 
-	export let models: PropertyMappingModel[] = [];
-	export let save: (model: PropertyMappingModel) => void;
+	interface Props {
+		models?: PropertyMappingModel[];
+		save: (model: PropertyMappingModel) => void;
+	}
+
+	let { models = [], save }: Props = $props();
 </script>
 
 <div class="setting-item" style="display: flex; gap: 10px; flex-direction: column; align-items: stretch;">

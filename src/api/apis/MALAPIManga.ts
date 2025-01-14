@@ -1,8 +1,8 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import MediaDbPlugin from '../../main';
+import type MediaDbPlugin from '../../main';
 import { MangaModel } from '../../models/MangaModel';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 export class MALAPIManga extends APIModel {
 	plugin: MediaDbPlugin;
@@ -73,7 +73,7 @@ export class MALAPIManga extends APIModel {
 						lastWatched: '',
 						personalRating: 0,
 					},
-				} as MangaModel),
+				}),
 			);
 		}
 
@@ -123,6 +123,6 @@ export class MALAPIManga extends APIModel {
 				lastWatched: '',
 				personalRating: 0,
 			},
-		} as MangaModel);
+		});
 	}
 }

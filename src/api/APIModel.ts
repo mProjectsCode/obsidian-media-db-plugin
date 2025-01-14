@@ -1,13 +1,13 @@
-import { MediaTypeModel } from '../models/MediaTypeModel';
-import { MediaType } from '../utils/MediaType';
-import MediaDbPlugin from '../main';
+import type MediaDbPlugin from '../main';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
+import type { MediaType } from '../utils/MediaType';
 
 export abstract class APIModel {
-	apiName: string;
-	apiUrl: string;
-	apiDescription: string;
-	types: MediaType[];
-	plugin: MediaDbPlugin;
+	apiName!: string;
+	apiUrl!: string;
+	apiDescription!: string;
+	types!: MediaType[];
+	plugin!: MediaDbPlugin;
 
 	/**
 	 * This function should query the api and return a list of matches. The matches should be caped at 20.

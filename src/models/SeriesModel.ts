@@ -1,17 +1,10 @@
-import { MediaTypeModel } from './MediaTypeModel';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
+import { mediaDbTag, migrateObject, type ModelToData } from '../utils/Utils';
+import { MediaTypeModel } from './MediaTypeModel';
+
+export type SeriesData = ModelToData<SeriesModel>;
 
 export class SeriesModel extends MediaTypeModel {
-	type: string;
-	subType: string;
-	title: string;
-	englishTitle: string;
-	year: string;
-	dataSource: string;
-	url: string;
-	id: string;
-
 	plot: string;
 	genres: string[];
 	writer: string[];
@@ -34,29 +27,29 @@ export class SeriesModel extends MediaTypeModel {
 		personalRating: number;
 	};
 
-	constructor(obj: any = {}) {
+	constructor(obj: SeriesData) {
 		super();
 
-		this.plot = undefined;
-		this.genres = undefined;
-		this.writer = undefined;
-		this.studio = undefined;
-		this.episodes = undefined;
-		this.duration = undefined;
-		this.onlineRating = undefined;
-		this.actors = undefined;
-		this.image = undefined;
+		this.plot = '';
+		this.genres = [];
+		this.writer = [];
+		this.studio = [];
+		this.episodes = 0;
+		this.duration = '';
+		this.onlineRating = 0;
+		this.actors = [];
+		this.image = '';
 
-		this.released = undefined;
-		this.streamingServices = undefined;
-		this.airing = undefined;
-		this.airedFrom = undefined;
-		this.airedTo = undefined;
+		this.released = false;
+		this.streamingServices = [];
+		this.airing = false;
+		this.airedFrom = '';
+		this.airedTo = '';
 
 		this.userData = {
-			watched: undefined,
-			lastWatched: undefined,
-			personalRating: undefined,
+			watched: false,
+			lastWatched: '',
+			personalRating: 0,
 		};
 
 		migrateObject(this, obj, this);

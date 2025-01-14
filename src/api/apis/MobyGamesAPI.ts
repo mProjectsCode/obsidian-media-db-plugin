@@ -1,10 +1,10 @@
-import { APIModel } from '../APIModel';
 import { Notice } from 'obsidian';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import MediaDbPlugin from '../../main';
-import { GameModel } from '../../models/GameModel';
 import { requestUrl } from 'obsidian';
+import type MediaDbPlugin from '../../main';
+import { GameModel } from '../../models/GameModel';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 export class MobyGamesAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -23,9 +23,7 @@ export class MobyGamesAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		if (!this.plugin.settings.MobyGamesKey) {
-			console.error(new Error(`MDB | API key for ${this.apiName} missing.`));
-			new Notice(`MediaDB | API key for ${this.apiName} missing.`);
-			return [];
+			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${this.plugin.settings.MobyGamesKey}`;
@@ -68,7 +66,6 @@ export class MobyGamesAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		if (!this.plugin.settings.MobyGamesKey) {
-			new Notice(`MediaDB | API key for ${this.apiName} missing.`);
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
@@ -79,7 +76,6 @@ export class MobyGamesAPI extends APIModel {
 		console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
-			new Notice(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
@@ -109,6 +105,6 @@ export class MobyGamesAPI extends APIModel {
 
 				personalRating: 0,
 			},
-		} as GameModel);
+		});
 	}
 }

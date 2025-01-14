@@ -1,9 +1,9 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
+import type MediaDbPlugin from '../../main';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
-import MediaDbPlugin from '../../main';
 import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 export class MALAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -52,7 +52,7 @@ export class MALAPI extends APIModel {
 						year: result.year ?? result.aired?.prop?.from?.year ?? '',
 						dataSource: this.apiName,
 						id: result.mal_id,
-					} as MovieModel),
+					}),
 				);
 			}
 			if (type === 'movie' || type === 'special') {
@@ -64,7 +64,7 @@ export class MALAPI extends APIModel {
 						year: result.year ?? result.aired?.prop?.from?.year ?? '',
 						dataSource: this.apiName,
 						id: result.mal_id,
-					} as MovieModel),
+					}),
 				);
 			} else if (type === 'series' || type === 'ova') {
 				ret.push(
@@ -75,7 +75,7 @@ export class MALAPI extends APIModel {
 						year: result.year ?? result.aired?.prop?.from?.year ?? '',
 						dataSource: this.apiName,
 						id: result.mal_id,
-					} as SeriesModel),
+					}),
 				);
 			}
 		}
@@ -127,7 +127,7 @@ export class MALAPI extends APIModel {
 					lastWatched: '',
 					personalRating: 0,
 				},
-			} as MovieModel);
+			});
 		}
 
 		if (type === 'movie' || type === 'special') {
@@ -159,7 +159,7 @@ export class MALAPI extends APIModel {
 					lastWatched: '',
 					personalRating: 0,
 				},
-			} as MovieModel);
+			});
 		} else if (type === 'series' || type === 'ova') {
 			return new SeriesModel({
 				subType: type,
@@ -190,9 +190,9 @@ export class MALAPI extends APIModel {
 					lastWatched: '',
 					personalRating: 0,
 				},
-			} as SeriesModel);
+			});
 		}
 
-		return;
+		throw new Error(`MDB | Unknown media type for id ${id}`);
 	}
 }

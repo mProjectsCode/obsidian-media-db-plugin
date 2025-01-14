@@ -1,11 +1,12 @@
-import { App, ButtonComponent, DropdownComponent, Modal, Setting, TextComponent, ToggleComponent } from 'obsidian';
-import MediaDbPlugin from '../main';
+import type { App, ButtonComponent } from 'obsidian';
+import { DropdownComponent, Modal, Setting, TextComponent, ToggleComponent } from 'obsidian';
+import type MediaDbPlugin from '../main';
 
 export class MediaDbFolderImportModal extends Modal {
 	plugin: MediaDbPlugin;
 	onSubmit: (selectedAPI: string, titleFieldName: string, appendContent: boolean) => void;
 	selectedApi: string;
-	searchBtn: ButtonComponent;
+	searchBtn?: ButtonComponent;
 	titleFieldName: string;
 	appendContent: boolean;
 
@@ -14,6 +15,8 @@ export class MediaDbFolderImportModal extends Modal {
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
 		this.selectedApi = plugin.apiManager.apis[0].apiName;
+		this.titleFieldName = '';
+		this.appendContent = false;
 	}
 
 	submit(): void {

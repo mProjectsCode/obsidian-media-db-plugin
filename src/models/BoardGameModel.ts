@@ -1,6 +1,8 @@
-import { MediaTypeModel } from './MediaTypeModel';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
+import { mediaDbTag, migrateObject, type ModelToData } from '../utils/Utils';
+import { MediaTypeModel } from './MediaTypeModel';
+
+export type BoardGameData = ModelToData<BoardGameModel>;
 
 export class BoardGameModel extends MediaTypeModel {
 	genres: string[];
@@ -19,23 +21,23 @@ export class BoardGameModel extends MediaTypeModel {
 		personalRating: number;
 	};
 
-	constructor(obj: any = {}) {
+	constructor(obj: BoardGameData) {
 		super();
 
-		this.genres = undefined;
-		this.onlineRating = undefined;
-		this.minPlayers = undefined;
-		this.maxPlayers = undefined;
-		this.playtime = undefined;
-		this.publishers = undefined;
-		this.complexityRating = undefined;
-		this.image = undefined;
+		this.genres = [];
+		this.onlineRating = 0;
+		this.complexityRating = 0;
+		this.minPlayers = 0;
+		this.maxPlayers = 0;
+		this.playtime = '';
+		this.publishers = [];
+		this.image = '';
 
-		this.released = undefined;
+		this.released = false;
 
 		this.userData = {
-			played: undefined,
-			personalRating: undefined,
+			played: false,
+			personalRating: 0,
 		};
 
 		migrateObject(this, obj, this);

@@ -1,6 +1,6 @@
-import { PropertyMappingOption } from './PropertyMapping';
+import type MediaDbPlugin from '../main';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
-import MediaDbPlugin from '../main';
+import { PropertyMappingOption } from './PropertyMapping';
 
 export class PropertyMapper {
 	plugin: MediaDbPlugin;
@@ -66,7 +66,7 @@ export class PropertyMapper {
 			return obj;
 		}
 
-		const propertyMappings = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type).properties;
+		const propertyMappings = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type)?.properties ?? [];
 
 		const originalObj: Record<string, unknown> = {};
 

@@ -1,6 +1,8 @@
-import { MediaTypeModel } from './MediaTypeModel';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
+import { mediaDbTag, migrateObject, type ModelToData } from '../utils/Utils';
+import { MediaTypeModel } from './MediaTypeModel';
+
+export type MovieData = ModelToData<MovieModel>;
 
 export class MovieModel extends MediaTypeModel {
 	plot: string;
@@ -23,27 +25,27 @@ export class MovieModel extends MediaTypeModel {
 		personalRating: number;
 	};
 
-	constructor(obj: any = {}) {
+	constructor(obj: MovieData) {
 		super();
 
-		this.plot = undefined;
-		this.genres = undefined;
-		this.director = undefined;
-		this.writer = undefined;
-		this.studio = undefined;
-		this.duration = undefined;
-		this.onlineRating = undefined;
-		this.actors = undefined;
-		this.image = undefined;
+		this.plot = '';
+		this.genres = [];
+		this.director = [];
+		this.writer = [];
+		this.studio = [];
+		this.duration = '';
+		this.onlineRating = 0;
+		this.actors = [];
+		this.image = '';
 
-		this.released = undefined;
-		this.streamingServices = undefined;
-		this.premiere = undefined;
+		this.released = false;
+		this.streamingServices = [];
+		this.premiere = '';
 
 		this.userData = {
-			watched: undefined,
-			lastWatched: undefined,
-			personalRating: undefined,
+			watched: false,
+			lastWatched: '',
+			personalRating: 0,
 		};
 
 		migrateObject(this, obj, this);

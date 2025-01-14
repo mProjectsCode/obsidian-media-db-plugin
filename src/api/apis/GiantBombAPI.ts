@@ -1,9 +1,9 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import MediaDbPlugin from '../../main';
-import { GameModel } from '../../models/GameModel';
 import { requestUrl } from 'obsidian';
+import type MediaDbPlugin from '../../main';
+import { GameModel } from '../../models/GameModel';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 export class GiantBombAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -54,7 +54,7 @@ export class GiantBombAPI extends APIModel {
 					year: new Date(result.original_release_date).getFullYear().toString(),
 					dataSource: this.apiName,
 					id: result.guid,
-				} as GameModel),
+				}),
 			);
 		}
 
@@ -104,6 +104,6 @@ export class GiantBombAPI extends APIModel {
 
 				personalRating: 0,
 			},
-		} as GameModel);
+		});
 	}
 }
