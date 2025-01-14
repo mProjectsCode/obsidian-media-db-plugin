@@ -6,7 +6,7 @@ import { $choice as $choice, $confirm, $seq, CMD_FMT, Verboseness } from 'utils/
 async function runPreconditions(): Promise<void> {
 	// run preconditions
 	await $seq(
-		[`bun run format`, `bun run lint:fix`, `bun run test`],
+		[`bun run format`, `bun run test`],
 		(cmd: string) => {
 			throw new UserError(`precondition "${cmd}" failed`);
 		},

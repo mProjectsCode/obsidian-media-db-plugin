@@ -8,10 +8,10 @@ import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MovieModel } from '../models/MovieModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { SeriesModel } from '../models/SeriesModel';
+import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
 import { MediaType } from './MediaType';
 import { replaceTags } from './Utils';
-import { WikiModel } from '../models/WikiModel';
 
 export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Movie,

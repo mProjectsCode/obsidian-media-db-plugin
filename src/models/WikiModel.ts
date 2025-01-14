@@ -1,5 +1,6 @@
 import { MediaType } from '../utils/MediaType';
-import { mediaDbTag, migrateObject, type ModelToData } from '../utils/Utils';
+import type {ModelToData} from '../utils/Utils';
+import { mediaDbTag, migrateObject  } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
 export type WikiData = ModelToData<WikiModel>;
