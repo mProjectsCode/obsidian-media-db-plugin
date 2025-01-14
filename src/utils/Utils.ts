@@ -15,7 +15,7 @@ export function wrapAround(value: number, size: number): number {
 }
 
 export function containsOnlyLettersAndUnderscores(str: string): boolean {
-	return /^[a-zA-Z_]+$/.test(str);
+	return /^[\p{Letter}\p{M}_]+$/u.test(str);
 }
 
 export function replaceIllegalFileNameCharactersInString(string: string): string {
