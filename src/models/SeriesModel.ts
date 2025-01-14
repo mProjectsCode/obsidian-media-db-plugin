@@ -1,6 +1,6 @@
 import { MediaType } from '../utils/MediaType';
-import type {ModelToData} from '../utils/Utils';
-import { mediaDbTag, migrateObject  } from '../utils/Utils';
+import type { ModelToData } from '../utils/Utils';
+import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
 export type SeriesData = ModelToData<SeriesModel>;
