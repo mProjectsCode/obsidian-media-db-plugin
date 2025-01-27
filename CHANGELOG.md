@@ -1,5 +1,13 @@
 # Changelog
 
+# 0.8.0
+
+- Fixed bugs when API keys for certain APIs were missing [#161](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/161) (thanks ltctceplrm)
+- Added support for other languages when remapping fields [#162](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/162) (thanks ltctceplrm)
+- Added support for the `Giant Bomb` API [#166](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/166) (thanks ltctceplrm)
+- Migration to Svelte 5
+- Some internal changes and improved error handling
+
 # 0.7.2
 
 - Improvements to UI text to match the Obsidian plugin guidelines [#153](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/153) (thanks kepano)
