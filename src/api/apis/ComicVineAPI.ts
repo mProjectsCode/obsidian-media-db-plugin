@@ -56,7 +56,7 @@ export class ComicVineAPI extends APIModel {
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
-		
+
 		console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
@@ -68,31 +68,30 @@ export class ComicVineAPI extends APIModel {
 		const result = data.results;
 
 		return new ComicMangaModel({
-					type: MediaType.ComicManga,
-					title: result.name,
-					englishTitle: result.name,
-					alternateTitles: result.aliases,
-					plot: result.deck,
-					year: result.start_year ?? '',
-					dataSource: this.apiName,
-					url: result.site_detail_url,
-					id: `4050-${result.id}`,
+			type: MediaType.ComicManga,
+			title: result.name,
+			englishTitle: result.name,
+			alternateTitles: result.aliases,
+			plot: result.deck,
+			year: result.start_year ?? '',
+			dataSource: this.apiName,
+			url: result.site_detail_url,
+			id: `4050-${result.id}`,
 
+			authors: result.people?.map((x: any) => x.name) ?? [],
+			chapters: result.count_of_issues,
+			image: result.image?.original_url ?? '',
 
-					authors: result.people?.map((x: any) => x.name) ?? [],
-					chapters: result.count_of_issues,
-					image: result.image?.original_url ?? '',
+			released: true,
+			publishers: result.publisher?.name ?? [],
+			publishedFrom: result.start_year ?? 'unknown',
+			publishedTo: 'unknown',
+			status: result.status,
 
-					released: true,
-					publishers: result.publisher?.name ?? [],
-					publishedFrom: result.start_year ?? 'unknown',
-					publishedTo: 'unknown',
-					status: result.status,
-
-					userData: {
-						read: false,
-						lastRead: '',
-						personalRating: 0,
+			userData: {
+				read: false,
+				lastRead: '',
+				personalRating: 0,
 			},
 		});
 	}

@@ -219,7 +219,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void this.plugin.saveSettings();
 					});
 			});
-			new Setting(containerEl)
+		new Setting(containerEl)
 			.setName('Comic Vine Key')
 			.setDesc('API key for "www.comicvine.gamespot.com".')
 			.addText(cb => {

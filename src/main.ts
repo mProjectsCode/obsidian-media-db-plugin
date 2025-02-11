@@ -12,7 +12,7 @@ import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
-import { VNDBAPI } from './api/apis/VNDBAPI';
+//import { VNDBAPI } from './api/apis/VNDBAPI';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
@@ -58,7 +58,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new ComicVineAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
 		this.apiManager.registerAPI(new GiantBombAPI(this));
-		this.apiManager.registerAPI(new VNDBAPI(this));
+		//this.apiManager.registerAPI(new VNDBAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager();
@@ -542,37 +542,36 @@ export default class MediaDbPlugin extends Plugin {
 		if (!activeFile) {
 			throw new Error('MDB | there is no active note');
 		}
-	
+
 		let metadata = this.getMetadataFromFileCache(activeFile);
 		metadata = this.modelPropertyMapper.convertObjectBack(metadata);
-	
+
 		console.debug(`MDB | read metadata`, metadata);
-			
+
 		if (!metadata?.type || !metadata?.dataSource || !metadata?.id) {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
 		}
-	
+
 		const validOldMetadata: MediaTypeModelObj = metadata as unknown as MediaTypeModelObj;
 		console.debug(`MDB | validOldMetadata`, validOldMetadata);
-	
+
 		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(validOldMetadata, validOldMetadata.type);
 		console.debug(`MDB | oldMediaTypeModel created`, oldMediaTypeModel);
-	
+
 		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(validOldMetadata.id, validOldMetadata.dataSource);
 		if (!newMediaTypeModel) {
 			return;
 		}
-	
+
 		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
 		console.debug(`MDB | newMediaTypeModel after merge`, newMediaTypeModel);
-	
+
 		if (onlyMetadata) {
 			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent ?? undefined, openNote: true });
 		} else {
 			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachTemplate: true, folder: activeFile.parent ?? undefined, openNote: true });
 		}
 	}
-	
 
 	async createEntriesFromFolder(folder: TFolder): Promise<void> {
 		const erroredFiles: { filePath: string; error: string }[] = [];
