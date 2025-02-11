@@ -14,6 +14,7 @@ export interface MediaDbPluginSettings {
 	OMDbKey: string;
 	MobyGamesKey: string;
 	GiantBombKey: string;
+	ComicVineKey: string;
 	sfwFilter: boolean;
 	templates: boolean;
 	customDateFormat: string;
@@ -46,6 +47,7 @@ export interface MediaDbPluginSettings {
 	musicReleaseTemplate: string;
 	boardgameTemplate: string;
 	bookTemplate: string;
+	comicbookTemplate: string;
 
 	movieFileNameTemplate: string;
 	seriesFileNameTemplate: string;
@@ -55,6 +57,7 @@ export interface MediaDbPluginSettings {
 	musicReleaseFileNameTemplate: string;
 	boardgameFileNameTemplate: string;
 	bookFileNameTemplate: string;
+	comicbookFileNameTemplate: string;
 
 	moviePropertyConversionRules: string;
 	seriesPropertyConversionRules: string;
@@ -64,6 +67,7 @@ export interface MediaDbPluginSettings {
 	musicReleasePropertyConversionRules: string;
 	boardgamePropertyConversionRules: string;
 	bookPropertyConversionRules: string;
+	comicbookPropertyConversionRules: string;
 
 	movieFolder: string;
 	seriesFolder: string;
@@ -73,6 +77,7 @@ export interface MediaDbPluginSettings {
 	musicReleaseFolder: string;
 	boardgameFolder: string;
 	bookFolder: string;
+	comicbookFolder: string;
 
 	propertyMappingModels: PropertyMappingModel[];
 }
@@ -81,6 +86,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
 	MobyGamesKey: '',
 	GiantBombKey: '',
+	ComicVineKey: '',
 	sfwFilter: true,
 	templates: true,
 	customDateFormat: 'L',
@@ -112,6 +118,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseTemplate: '',
 	boardgameTemplate: '',
 	bookTemplate: '',
+	comicbookTemplate: '',
 
 	movieFileNameTemplate: '{{ title }} ({{ year }})',
 	seriesFileNameTemplate: '{{ title }} ({{ year }})',
@@ -121,6 +128,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
 	boardgameFileNameTemplate: '{{ title }} ({{ year }})',
 	bookFileNameTemplate: '{{ title }} ({{ year }})',
+	comicbookFileNameTemplate: '{{ title }} ({{ year }})',
 
 	moviePropertyConversionRules: '',
 	seriesPropertyConversionRules: '',
@@ -130,6 +138,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
 	bookPropertyConversionRules: '',
+	comicbookPropertyConversionRules: '',
 
 	movieFolder: 'Media DB/movies',
 	seriesFolder: 'Media DB/series',
@@ -139,6 +148,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseFolder: 'Media DB/music',
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
+	comicbookFolder: 'Media DB/comicbooks',
 
 	propertyMappingModels: [],
 };
@@ -214,6 +224,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.GiantBombKey)
 					.onChange(data => {
 						this.plugin.settings.GiantBombKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
+			new Setting(containerEl)
+			.setName('Comic Vine Key')
+			.setDesc('API key for "www.comicvine.gamespot.com".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.ComicVineKey)
+					.onChange(data => {
+						this.plugin.settings.ComicVineKey = data;
 						void this.plugin.saveSettings();
 					});
 			});
@@ -364,7 +385,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		// 			void this.plugin.saveSettings();
 		// 		});
 		// 	});
-
+		//	new Setting(containerEl)
+		//	.setName('Giantbomb API')
+		//	.setDesc('Use Giantbomb API for games.')
+		//	.addToggle(cb => {
+		//		cb.setValue(this.plugin.settings.apiToggle.GiantBombAPI.game).onChange(data => {
+		//			this.plugin.settings.apiToggle.GiantBombAPI.game = data;
+		//			void this.plugin.saveSettings();
+		//		});
+		//	});
 		new Setting(containerEl).setName('New file location').setHeading();
 		// region new file location
 		new Setting(containerEl)
@@ -466,6 +495,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.bookFolder)
 					.onChange(data => {
 						this.plugin.settings.bookFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
+			new Setting(containerEl)
+			.setName('Comic Book folder')
+			.setDesc('Where newly imported comic books should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.comicbookFolder)
+					.setValue(this.plugin.settings.comicbookFolder)
+					.onChange(data => {
+						this.plugin.settings.comicbookFolder = data;
 						void this.plugin.saveSettings();
 					});
 			});
@@ -576,6 +617,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void this.plugin.saveSettings();
 					});
 			});
+
+			new Setting(containerEl)
+			.setName('Comic Book template')
+			.setDesc('Template file to be used when creating a new note for a comic book.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: comicbookTemplate.md')
+					.setValue(this.plugin.settings.comicbookTemplate)
+					.onChange(data => {
+						this.plugin.settings.comicbookTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 		// endregion
 
 		new Setting(containerEl).setName('File name settings').setHeading();
@@ -672,6 +726,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.bookFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.bookFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+			new Setting(containerEl)
+			.setName('Comic Book file name template')
+			.setDesc('Template for the file name used when creating a new note for a book.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.comicbookFileNameTemplate}`)
+					.setValue(this.plugin.settings.comicbookFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.comicbookFileNameTemplate = data;
 						void this.plugin.saveSettings();
 					});
 			});
