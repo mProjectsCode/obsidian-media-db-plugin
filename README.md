@@ -109,7 +109,7 @@ Now you select the result you want and the plugin will cast it's magic and creat
 - wiki articles
 - books
 - manga
-- comic
+- comics
 
 ### Currently supported APIs:
 
