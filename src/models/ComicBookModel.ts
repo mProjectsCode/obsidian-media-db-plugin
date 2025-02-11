@@ -62,6 +62,6 @@ export class ComicBookModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		return this.englishTitle + ' (' + this.year + ') - ' + this.publisher;
+		return this.englishTitle + ' (' + this.year + ') - ' + this.publishers;
 	}
 }

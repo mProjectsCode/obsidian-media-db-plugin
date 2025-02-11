@@ -82,7 +82,7 @@ export class ComicVineAPI extends APIModel {
 					image: result.image?.original_url ?? '',
 
 					released: true,
-					publishers: result.publisher.map((x: any) => x.name) ?? [],
+					publishers: result.publisher.name ?? [],
 					publishedFrom: result.start_year ?? 'unknown',
 					publishedTo: 'unknown',
 					status: result.status,
