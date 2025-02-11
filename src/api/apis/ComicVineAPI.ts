@@ -40,8 +40,8 @@ export class ComicVineAPI extends APIModel {
 					englishTitle: result.name,
 					year: result.start_year,
 					dataSource: this.apiName,
-					id: result.id,
-					publishers: result.publisher.name ?? [],
+					id: `4050-${result.id}`,
+					publishers: result.publisher?.name ?? [],
 				}),
 			);
 		}
@@ -52,7 +52,7 @@ export class ComicVineAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `${this.apiUrl}/volume/4050-${encodeURIComponent(id)}/?api_key=${this.plugin.settings.ComicVineKey}&format=json`;
+		const searchUrl = `${this.apiUrl}/volume/${encodeURIComponent(id)}/?api_key=${this.plugin.settings.ComicVineKey}&format=json`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -76,7 +76,7 @@ export class ComicVineAPI extends APIModel {
 					year: result.start_year ?? '',
 					dataSource: this.apiName,
 					url: result.site_detail_url,
-					id: result.id,
+					id: `4050-${result.id}`,
 
 
 					authors: result.people?.map((x: any) => x.name) ?? [],
@@ -84,7 +84,7 @@ export class ComicVineAPI extends APIModel {
 					image: result.image?.original_url ?? '',
 
 					released: true,
-					publishers: result.publisher.name ?? [],
+					publishers: result.publisher?.name ?? [],
 					publishedFrom: result.start_year ?? 'unknown',
 					publishedTo: 'unknown',
 					status: result.status,
