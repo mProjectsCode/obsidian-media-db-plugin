@@ -7,7 +7,7 @@ export type ComicBookData = ModelToData<ComicBookModel>;
 
 export class ComicBookModel extends MediaTypeModel {
 	creators: string[];
-	publisher: string;
+	publishers: string[];
 	plot: string;
 	issues: number;
 	image: string;
@@ -27,7 +27,7 @@ export class ComicBookModel extends MediaTypeModel {
 		super();
 
 		this.creators = [];
-		this.publisher = '';
+		this.publishers = [];
 		this.plot = '';
 		this.issues = 0;
 		this.image = '';

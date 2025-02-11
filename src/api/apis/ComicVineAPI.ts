@@ -41,7 +41,7 @@ export class ComicVineAPI extends APIModel {
 					year: result.start_year,
 					dataSource: this.apiName,
 					id: result.id,
-					publisher: result.publisher.name ?? 'unknown',
+					publishers: result.publisher.name ?? [],
 				}),
 			);
 		}
@@ -82,7 +82,7 @@ export class ComicVineAPI extends APIModel {
 					image: result.image?.original_url ?? '',
 
 					released: true,
-					publisher: result.publisher.name ?? '',
+					publishers: result.publisher.map((x: any) => x.name) ?? [],
 					publishedFrom: result.start_year ?? 'unknown',
 					publishedTo: 'unknown',
 					status: result.status,

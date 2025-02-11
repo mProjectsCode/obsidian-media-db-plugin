@@ -17,6 +17,7 @@ export class MangaModel extends MediaTypeModel {
 
 	released: boolean;
 	status: string;
+	publishers: string[];
 	publishedFrom: string;
 	publishedTo: string;
 
@@ -40,6 +41,7 @@ export class MangaModel extends MediaTypeModel {
 
 		this.released = false;
 		this.status = '';
+		this.publishers = [];
 		this.publishedFrom = '';
 		this.publishedTo = '';
 

@@ -114,6 +114,7 @@ export class MALAPIManga extends APIModel {
 			image: result.images?.jpg?.image_url ?? '',
 
 			released: true,
+			publishers: result.serializations?.map((x: any) => x.name) ?? [],
 			publishedFrom: new Date(result.published?.from).toLocaleDateString() ?? 'unknown',
 			publishedTo: new Date(result.published?.to).toLocaleDateString() ?? 'unknown',
 			status: result.status,
