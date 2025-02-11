@@ -62,7 +62,12 @@ export class PropertyMapper {
 			return obj;
 		}
 
-		if (MEDIA_TYPES.contains(obj.type as any)) {
+		
+		if (obj.type === "manga") {
+			obj.type = "comicManga";
+			console.debug(`MDB | updated metadata type`, obj.type);
+		}
+			if (MEDIA_TYPES.contains(obj.type as any)) {
 			return obj;
 		}
 

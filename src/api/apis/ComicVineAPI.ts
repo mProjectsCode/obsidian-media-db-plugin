@@ -1,5 +1,5 @@
 import { requestUrl } from 'obsidian';
-import { ComicBookModel } from 'src/models/ComicBookModel';
+import { ComicMangaModel } from 'src/models/ComicMangaModel';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
@@ -15,7 +15,7 @@ export class ComicVineAPI extends APIModel {
 		this.apiName = 'ComicVineAPI';
 		this.apiDescription = 'A free API for comic books.';
 		this.apiUrl = 'https://comicvine.gamespot.com/api';
-		this.types = [MediaType.ComicBook];
+		this.types = [MediaType.ComicManga];
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
@@ -35,7 +35,7 @@ export class ComicVineAPI extends APIModel {
 		const ret: MediaTypeModel[] = [];
 		for (const result of data.results) {
 			ret.push(
-				new ComicBookModel({
+				new ComicMangaModel({
 					title: result.name,
 					englishTitle: result.name,
 					year: result.start_year,
@@ -67,18 +67,20 @@ export class ComicVineAPI extends APIModel {
 		// console.debug(data);
 		const result = data.results;
 
-		return new ComicBookModel({
-					type: MediaType.ComicBook,
+		return new ComicMangaModel({
+					type: MediaType.ComicManga,
 					title: result.name,
+					englishTitle: result.name,
+					alternateTitles: result.aliases,
 					plot: result.deck,
 					year: result.start_year ?? '',
 					dataSource: this.apiName,
 					url: result.site_detail_url,
 					id: result.id,
 
-					creators: result.people?.map((x: any) => x.name) ?? [],
-					issues: result.count_of_issues,
-					onlineRating: result.score ?? 0,
+
+					authors: result.people?.map((x: any) => x.name) ?? [],
+					chapters: result.count_of_issues,
 					image: result.image?.original_url ?? '',
 
 					released: true,

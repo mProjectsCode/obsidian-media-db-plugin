@@ -1,5 +1,5 @@
 import type MediaDbPlugin from '../../main';
-import { MangaModel } from '../../models/MangaModel';
+import { ComicMangaModel } from '../../models/ComicMangaModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -15,7 +15,7 @@ export class MALAPIManga extends APIModel {
 		this.apiName = 'MALAPI Manga';
 		this.apiDescription = 'A free API for Manga. Some results may take a long time to load.';
 		this.apiUrl = 'https://jikan.moe/';
-		this.types = [MediaType.Manga];
+		this.types = [MediaType.ComicManga];
 		this.typeMappings = new Map<string, string>();
 		this.typeMappings.set('manga', 'manga');
 		this.typeMappings.set('manhwa', 'manhwa');
@@ -45,7 +45,7 @@ export class MALAPIManga extends APIModel {
 		for (const result of data.data) {
 			const type = this.typeMappings.get(result.type?.toLowerCase());
 			ret.push(
-				new MangaModel({
+				new ComicMangaModel({
 					subType: type,
 					title: result.title,
 					plot: result.synopsis,
@@ -69,8 +69,8 @@ export class MALAPIManga extends APIModel {
 					status: result.status,
 
 					userData: {
-						watched: false,
-						lastWatched: '',
+						read: false,
+						lastRead: '',
 						personalRating: 0,
 					},
 				}),
@@ -95,7 +95,7 @@ export class MALAPIManga extends APIModel {
 		const result = data.data;
 
 		const type = this.typeMappings.get(result.type?.toLowerCase());
-		return new MangaModel({
+		return new ComicMangaModel({
 			subType: type,
 			title: result.title,
 			englishTitle: result.title_english ?? result.title,
@@ -120,8 +120,8 @@ export class MALAPIManga extends APIModel {
 			status: result.status,
 
 			userData: {
-				watched: false,
-				lastWatched: '',
+				read: false,
+				lastRead: '',
 				personalRating: 0,
 			},
 		});

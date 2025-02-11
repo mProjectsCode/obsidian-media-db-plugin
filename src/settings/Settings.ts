@@ -47,7 +47,6 @@ export interface MediaDbPluginSettings {
 	musicReleaseTemplate: string;
 	boardgameTemplate: string;
 	bookTemplate: string;
-	comicbookTemplate: string;
 
 	movieFileNameTemplate: string;
 	seriesFileNameTemplate: string;
@@ -57,7 +56,6 @@ export interface MediaDbPluginSettings {
 	musicReleaseFileNameTemplate: string;
 	boardgameFileNameTemplate: string;
 	bookFileNameTemplate: string;
-	comicbookFileNameTemplate: string;
 
 	moviePropertyConversionRules: string;
 	seriesPropertyConversionRules: string;
@@ -67,7 +65,6 @@ export interface MediaDbPluginSettings {
 	musicReleasePropertyConversionRules: string;
 	boardgamePropertyConversionRules: string;
 	bookPropertyConversionRules: string;
-	comicbookPropertyConversionRules: string;
 
 	movieFolder: string;
 	seriesFolder: string;
@@ -77,7 +74,6 @@ export interface MediaDbPluginSettings {
 	musicReleaseFolder: string;
 	boardgameFolder: string;
 	bookFolder: string;
-	comicbookFolder: string;
 
 	propertyMappingModels: PropertyMappingModel[];
 }
@@ -118,7 +114,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseTemplate: '',
 	boardgameTemplate: '',
 	bookTemplate: '',
-	comicbookTemplate: '',
 
 	movieFileNameTemplate: '{{ title }} ({{ year }})',
 	seriesFileNameTemplate: '{{ title }} ({{ year }})',
@@ -128,7 +123,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
 	boardgameFileNameTemplate: '{{ title }} ({{ year }})',
 	bookFileNameTemplate: '{{ title }} ({{ year }})',
-	comicbookFileNameTemplate: '{{ title }} ({{ year }})',
 
 	moviePropertyConversionRules: '',
 	seriesPropertyConversionRules: '',
@@ -138,17 +132,15 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
 	bookPropertyConversionRules: '',
-	comicbookPropertyConversionRules: '',
 
 	movieFolder: 'Media DB/movies',
 	seriesFolder: 'Media DB/series',
-	mangaFolder: 'Media DB/manga',
+	mangaFolder: 'Media DB/comics',
 	gameFolder: 'Media DB/games',
 	wikiFolder: 'Media DB/wiki',
 	musicReleaseFolder: 'Media DB/music',
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
-	comicbookFolder: 'Media DB/comicbooks',
 
 	propertyMappingModels: [],
 };
@@ -423,8 +415,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Manga folder')
-			.setDesc('Where newly imported manga should be placed.')
+			.setName('Comic and manga folder')
+			.setDesc('Where newly imported comics and manga should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(DEFAULT_SETTINGS.mangaFolder)
@@ -498,18 +490,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void this.plugin.saveSettings();
 					});
 			});
-			new Setting(containerEl)
-			.setName('Comic Book folder')
-			.setDesc('Where newly imported comic books should be placed.')
-			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
-				cb.setPlaceholder(DEFAULT_SETTINGS.comicbookFolder)
-					.setValue(this.plugin.settings.comicbookFolder)
-					.onChange(data => {
-						this.plugin.settings.comicbookFolder = data;
-						void this.plugin.saveSettings();
-					});
-			});
+
 		// endregion
 
 		new Setting(containerEl).setName('Template settings').setHeading();
@@ -541,8 +522,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Manga template')
-			.setDesc('Template file to be used when creating a new note for a manga.')
+			.setName('Manga and Comics template')
+			.setDesc('Template file to be used when creating a new note for a manga or a comic.')
 			.addSearch(cb => {
 				new FileSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder('Example: mangaTemplate.md')
@@ -618,18 +599,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 
-			new Setting(containerEl)
-			.setName('Comic Book template')
-			.setDesc('Template file to be used when creating a new note for a comic book.')
-			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
-				cb.setPlaceholder('Example: comicbookTemplate.md')
-					.setValue(this.plugin.settings.comicbookTemplate)
-					.onChange(data => {
-						this.plugin.settings.comicbookTemplate = data;
-						void this.plugin.saveSettings();
-					});
-			});
 		// endregion
 
 		new Setting(containerEl).setName('File name settings').setHeading();
@@ -659,8 +628,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Manga file name template')
-			.setDesc('Template for the file name used when creating a new note for a manga.')
+			.setName('Manga and comic file name template')
+			.setDesc('Template for the file name used when creating a new note for a manga or comic.')
 			.addText(cb => {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.mangaFileNameTemplate}`)
 					.setValue(this.plugin.settings.mangaFileNameTemplate)
@@ -730,17 +699,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 
-			new Setting(containerEl)
-			.setName('Comic Book file name template')
-			.setDesc('Template for the file name used when creating a new note for a book.')
-			.addText(cb => {
-				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.comicbookFileNameTemplate}`)
-					.setValue(this.plugin.settings.comicbookFileNameTemplate)
-					.onChange(data => {
-						this.plugin.settings.comicbookFileNameTemplate = data;
-						void this.plugin.saveSettings();
-					});
-			});
 		// endregion
 
 		// region Property Mappings

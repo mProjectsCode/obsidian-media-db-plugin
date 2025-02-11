@@ -1,11 +1,10 @@
 export enum MediaType {
 	Movie = 'movie',
 	Series = 'series',
-	Manga = 'manga',
+	ComicManga = 'comicManga',
 	Game = 'game',
 	MusicRelease = 'musicRelease',
 	Wiki = 'wiki',
 	BoardGame = 'boardgame',
 	Book = 'book',
-	ComicBook = 'comicBook',
 }
