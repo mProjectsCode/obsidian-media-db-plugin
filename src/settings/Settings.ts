@@ -14,6 +14,7 @@ export interface MediaDbPluginSettings {
 	OMDbKey: string;
 	MobyGamesKey: string;
 	GiantBombKey: string;
+	ComicVineKey: string;
 	sfwFilter: boolean;
 	templates: boolean;
 	customDateFormat: string;
@@ -81,6 +82,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
 	MobyGamesKey: '',
 	GiantBombKey: '',
+	ComicVineKey: '',
 	sfwFilter: true,
 	templates: true,
 	customDateFormat: 'L',
@@ -133,7 +135,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	movieFolder: 'Media DB/movies',
 	seriesFolder: 'Media DB/series',
-	mangaFolder: 'Media DB/manga',
+	mangaFolder: 'Media DB/comics',
 	gameFolder: 'Media DB/games',
 	wikiFolder: 'Media DB/wiki',
 	musicReleaseFolder: 'Media DB/music',
@@ -214,6 +216,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.GiantBombKey)
 					.onChange(data => {
 						this.plugin.settings.GiantBombKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
+		new Setting(containerEl)
+			.setName('Comic Vine Key')
+			.setDesc('API key for "www.comicvine.gamespot.com".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.ComicVineKey)
+					.onChange(data => {
+						this.plugin.settings.ComicVineKey = data;
 						void this.plugin.saveSettings();
 					});
 			});
@@ -364,7 +377,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		// 			void this.plugin.saveSettings();
 		// 		});
 		// 	});
-
+		//	new Setting(containerEl)
+		//	.setName('Giantbomb API')
+		//	.setDesc('Use Giantbomb API for games.')
+		//	.addToggle(cb => {
+		//		cb.setValue(this.plugin.settings.apiToggle.GiantBombAPI.game).onChange(data => {
+		//			this.plugin.settings.apiToggle.GiantBombAPI.game = data;
+		//			void this.plugin.saveSettings();
+		//		});
+		//	});
 		new Setting(containerEl).setName('New file location').setHeading();
 		// region new file location
 		new Setting(containerEl)
@@ -394,8 +415,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Manga folder')
-			.setDesc('Where newly imported manga should be placed.')
+			.setName('Comic and manga folder')
+			.setDesc('Where newly imported comics and manga should be placed.')
 			.addSearch(cb => {
 				new FolderSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder(DEFAULT_SETTINGS.mangaFolder)
@@ -469,6 +490,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void this.plugin.saveSettings();
 					});
 			});
+
 		// endregion
 
 		new Setting(containerEl).setName('Template settings').setHeading();
@@ -500,8 +522,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Manga template')
-			.setDesc('Template file to be used when creating a new note for a manga.')
+			.setName('Manga and Comics template')
+			.setDesc('Template file to be used when creating a new note for a manga or a comic.')
 			.addSearch(cb => {
 				new FileSuggest(this.app, cb.inputEl);
 				cb.setPlaceholder('Example: mangaTemplate.md')
@@ -576,6 +598,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void this.plugin.saveSettings();
 					});
 			});
+
 		// endregion
 
 		new Setting(containerEl).setName('File name settings').setHeading();
@@ -605,8 +628,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Manga file name template')
-			.setDesc('Template for the file name used when creating a new note for a manga.')
+			.setName('Manga and comic file name template')
+			.setDesc('Template for the file name used when creating a new note for a manga or comic.')
 			.addText(cb => {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.mangaFileNameTemplate}`)
 					.setValue(this.plugin.settings.mangaFileNameTemplate)
@@ -675,6 +698,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void this.plugin.saveSettings();
 					});
 			});
+
 		// endregion
 
 		// region Property Mappings

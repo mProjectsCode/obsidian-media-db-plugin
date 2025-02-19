@@ -3,9 +3,9 @@ import type { ModelToData } from '../utils/Utils';
 import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
-export type MangaData = ModelToData<MangaModel>;
+export type ComicMangaData = ModelToData<ComicMangaModel>;
 
-export class MangaModel extends MediaTypeModel {
+export class ComicMangaModel extends MediaTypeModel {
 	plot: string;
 	alternateTitles: string[];
 	genres: string[];
@@ -17,16 +17,17 @@ export class MangaModel extends MediaTypeModel {
 
 	released: boolean;
 	status: string;
+	publishers: string[];
 	publishedFrom: string;
 	publishedTo: string;
 
 	userData: {
-		watched: boolean;
-		lastWatched: string;
+		read: boolean;
+		lastRead: string;
 		personalRating: number;
 	};
 
-	constructor(obj: MangaData) {
+	constructor(obj: ComicMangaData) {
 		super();
 
 		this.plot = '';
@@ -40,12 +41,13 @@ export class MangaModel extends MediaTypeModel {
 
 		this.released = false;
 		this.status = '';
+		this.publishers = [];
 		this.publishedFrom = '';
 		this.publishedTo = '';
 
 		this.userData = {
-			watched: false,
-			lastWatched: '',
+			read: false,
+			lastRead: '',
 			personalRating: 0,
 		};
 
@@ -59,11 +61,11 @@ export class MangaModel extends MediaTypeModel {
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'manga', 'light-novel'];
+		return [mediaDbTag, 'manga', 'light-novel', 'comicbook'];
 	}
 
 	getMediaType(): MediaType {
-		return MediaType.Manga;
+		return MediaType.ComicManga;
 	}
 
 	getSummary(): string {
