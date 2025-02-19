@@ -3,7 +3,7 @@ import { TFolder } from 'obsidian';
 import { BoardGameModel } from '../models/BoardGameModel';
 import { BookModel } from '../models/BookModel';
 import { GameModel } from '../models/GameModel';
-import { MangaModel } from '../models/MangaModel';
+import { ComicMangaModel } from '../models/ComicMangaModel';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MovieModel } from '../models/MovieModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
@@ -16,7 +16,7 @@ import { replaceTags } from './Utils';
 export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Movie,
 	MediaType.Series,
-	MediaType.Manga,
+	MediaType.ComicManga,
 	MediaType.Game,
 	MediaType.Wiki,
 	MediaType.MusicRelease,
@@ -39,7 +39,7 @@ export class MediaTypeManager {
 		this.mediaFileNameTemplateMap = new Map<MediaType, string>();
 		this.mediaFileNameTemplateMap.set(MediaType.Movie, settings.movieFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Series, settings.seriesFileNameTemplate);
-		this.mediaFileNameTemplateMap.set(MediaType.Manga, settings.mangaFileNameTemplate);
+		this.mediaFileNameTemplateMap.set(MediaType.ComicManga, settings.mangaFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Game, settings.gameFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Wiki, settings.wikiFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseFileNameTemplate);
@@ -49,7 +49,7 @@ export class MediaTypeManager {
 		this.mediaTemplateMap = new Map<MediaType, string>();
 		this.mediaTemplateMap.set(MediaType.Movie, settings.movieTemplate);
 		this.mediaTemplateMap.set(MediaType.Series, settings.seriesTemplate);
-		this.mediaTemplateMap.set(MediaType.Manga, settings.mangaTemplate);
+		this.mediaTemplateMap.set(MediaType.ComicManga, settings.mangaTemplate);
 		this.mediaTemplateMap.set(MediaType.Game, settings.gameTemplate);
 		this.mediaTemplateMap.set(MediaType.Wiki, settings.wikiTemplate);
 		this.mediaTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseTemplate);
@@ -61,7 +61,7 @@ export class MediaTypeManager {
 		this.mediaFolderMap = new Map<MediaType, string>();
 		this.mediaFolderMap.set(MediaType.Movie, settings.movieFolder);
 		this.mediaFolderMap.set(MediaType.Series, settings.seriesFolder);
-		this.mediaFolderMap.set(MediaType.Manga, settings.mangaFolder);
+		this.mediaFolderMap.set(MediaType.ComicManga, settings.mangaFolder);
 		this.mediaFolderMap.set(MediaType.Game, settings.gameFolder);
 		this.mediaFolderMap.set(MediaType.Wiki, settings.wikiFolder);
 		this.mediaFolderMap.set(MediaType.MusicRelease, settings.musicReleaseFolder);
@@ -132,8 +132,8 @@ export class MediaTypeManager {
 			return new MovieModel(obj);
 		} else if (mediaType === MediaType.Series) {
 			return new SeriesModel(obj);
-		} else if (mediaType === MediaType.Manga) {
-			return new MangaModel(obj);
+		} else if (mediaType === MediaType.ComicManga) {
+			return new ComicMangaModel(obj);
 		} else if (mediaType === MediaType.Game) {
 			return new GameModel(obj);
 		} else if (mediaType === MediaType.Wiki) {

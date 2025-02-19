@@ -11,6 +11,7 @@ import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
+import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
@@ -53,6 +54,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new SteamAPI(this));
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		this.apiManager.registerAPI(new OpenLibraryAPI(this));
+		this.apiManager.registerAPI(new ComicVineAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
 		this.apiManager.registerAPI(new GiantBombAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
@@ -549,9 +551,10 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		const validOldMetadata: MediaTypeModelObj = metadata as unknown as MediaTypeModelObj;
+		console.debug(`MDB | validOldMetadata`, validOldMetadata);
 
 		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(validOldMetadata, validOldMetadata.type);
-		// console.debug(oldMediaTypeModel);
+		console.debug(`MDB | oldMediaTypeModel created`, oldMediaTypeModel);
 
 		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(validOldMetadata.id, validOldMetadata.dataSource);
 		if (!newMediaTypeModel) {
@@ -559,7 +562,7 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
-		// console.debug(newMediaTypeModel);
+		console.debug(`MDB | newMediaTypeModel after merge`, newMediaTypeModel);
 
 		if (onlyMetadata) {
 			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent ?? undefined, openNote: true });
