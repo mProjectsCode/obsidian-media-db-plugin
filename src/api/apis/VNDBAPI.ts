@@ -168,6 +168,8 @@ export class VNDBAPI extends APIModel {
 
 		if (vnData.results.length !== 1) throw Error(`MDB | Expected 1 result from query, got ${vnData.results.length}.`);
 		const vn = vnData.results[0];
+		const releasedIsDate = vn.released !== null && vn.released !== 'TBA';
+		vn.released ??= 'Unknown';
 
 		const releaseData = await this.postReleaseQuery(`{
 			"filters": ["and"
@@ -184,7 +186,7 @@ export class VNDBAPI extends APIModel {
 			type: MediaType.Game,
 			title: vn.title,
 			englishTitle: vn.titles.find(t => t.lang === 'en')?.title ?? vn.title,
-			year: vn.released && vn.released !== 'TBA' ? new Date(vn.released).getFullYear().toString() : 'TBA',
+			year: releasedIsDate ? new Date(vn.released).getFullYear().toString() : vn.released,
 			dataSource: this.apiName,
 			url: `https://vndb.org/${vn.id}`,
 			id: vn.id,
@@ -205,7 +207,7 @@ export class VNDBAPI extends APIModel {
 			image: this.plugin.settings.sfwFilter && (vn.image?.sexual ?? 0) > 0.5 ? 'NSFW' : vn.image?.url,
 
 			released: vn.devstatus === 0,
-			releaseDate: this.plugin.dateFormatter.format(vn.released, this.apiDateFormat),
+			releaseDate: releasedIsDate ? this.plugin.dateFormatter.format(vn.released, this.apiDateFormat) : vn.released,
 
 			userData: {
 				played: false,
