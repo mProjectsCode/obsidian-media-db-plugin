@@ -1,19 +1,13 @@
-import { MediaTypeModel } from './MediaTypeModel';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
+import type { ModelToData } from '../utils/Utils';
+import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { MediaTypeModel } from './MediaTypeModel';
+
+export type MangaData = ModelToData<MangaModel>;
 
 export class MangaModel extends MediaTypeModel {
-	type: string;
-	subType: string;
-	title: string;
 	plot: string;
-	englishTitle: string;
 	alternateTitles: string[];
-	year: string;
-	dataSource: string;
-	url: string;
-	id: string;
-
 	genres: string[];
 	authors: string[];
 	chapters: number;
@@ -32,27 +26,27 @@ export class MangaModel extends MediaTypeModel {
 		personalRating: number;
 	};
 
-	constructor(obj: any = {}) {
+	constructor(obj: MangaData) {
 		super();
 
-		this.plot = undefined;
-		this.genres = undefined;
-		this.authors = undefined;
-		this.alternateTitles = undefined;
-		this.chapters = undefined;
-		this.volumes = undefined;
-		this.onlineRating = undefined;
-		this.image = undefined;
+		this.plot = '';
+		this.alternateTitles = [];
+		this.genres = [];
+		this.authors = [];
+		this.chapters = 0;
+		this.volumes = 0;
+		this.onlineRating = 0;
+		this.image = '';
 
-		this.released = undefined;
-		this.status = undefined;
-		this.publishedFrom = undefined;
-		this.publishedTo = undefined;
+		this.released = false;
+		this.status = '';
+		this.publishedFrom = '';
+		this.publishedTo = '';
 
 		this.userData = {
-			watched: undefined,
-			lastWatched: undefined,
-			personalRating: undefined,
+			watched: false,
+			lastWatched: '',
+			personalRating: 0,
 		};
 
 		migrateObject(this, obj, this);

@@ -1,9 +1,9 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import MediaDbPlugin from '../../main';
-import { BoardGameModel } from 'src/models/BoardGameModel';
 import { requestUrl } from 'obsidian';
+import { BoardGameModel } from 'src/models/BoardGameModel';
+import type MediaDbPlugin from '../../main';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 export class BoardGameGeekAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -38,8 +38,8 @@ export class BoardGameGeekAPI extends APIModel {
 		const ret: MediaTypeModel[] = [];
 
 		for (const boardgame of Array.from(response.querySelectorAll('boardgame'))) {
-			const id = boardgame.attributes.getNamedItem('objectid')!.value;
-			const title = boardgame.querySelector('name[primary=true]')?.textContent ?? boardgame.querySelector('name')!.textContent!;
+			const id = boardgame.attributes.getNamedItem('objectid')?.value;
+			const title = boardgame.querySelector('name[primary=true]')?.textContent ?? boardgame.querySelector('name')?.textContent ?? undefined;
 			const year = boardgame.querySelector('yearpublished')?.textContent ?? '';
 
 			ret.push(
@@ -49,7 +49,7 @@ export class BoardGameGeekAPI extends APIModel {
 					title,
 					englishTitle: title,
 					year,
-				} as BoardGameModel),
+				}),
 			);
 		}
 
@@ -72,21 +72,29 @@ export class BoardGameGeekAPI extends APIModel {
 		const response = new window.DOMParser().parseFromString(data, 'text/xml');
 		// console.debug(response);
 
-		const boardgame = response.querySelector('boardgame')!;
-		const title = boardgame.querySelector('name[primary=true]')!.textContent!;
+		const boardgame = response.querySelector('boardgame');
+		if (!boardgame) {
+			throw Error(`MDB | Received invalid data from ${this.apiName}.`);
+		}
+
+		const title = boardgame.querySelector('name[primary=true]')?.textContent;
 		const year = boardgame.querySelector('yearpublished')?.textContent ?? '';
 		const image = boardgame.querySelector('image')?.textContent ?? undefined;
 		const onlineRating = Number.parseFloat(boardgame.querySelector('statistics ratings average')?.textContent ?? '0');
-		const genres = Array.from(boardgame.querySelectorAll('boardgamecategory')).map(n => n!.textContent!);
+		const genres = Array.from(boardgame.querySelectorAll('boardgamecategory'))
+			.map(n => n.textContent)
+			.filter(n => n !== null);
 		const complexityRating = Number.parseFloat(boardgame.querySelector('averageweight')?.textContent ?? '0');
 		const minPlayers = Number.parseFloat(boardgame.querySelector('minplayers')?.textContent ?? '0');
 		const maxPlayers = Number.parseFloat(boardgame.querySelector('maxplayers')?.textContent ?? '0');
 		const playtime = (boardgame.querySelector('playingtime')?.textContent ?? 'unknown') + ' minutes';
-		const publishers = Array.from(boardgame.querySelectorAll('boardgamepublisher')).map(n => n!.textContent!);
+		const publishers = Array.from(boardgame.querySelectorAll('boardgamepublisher'))
+			.map(n => n.textContent)
+			.filter(n => n !== null);
 
 		return new BoardGameModel({
-			title: title,
-			englishTitle: title,
+			title: title ?? undefined,
+			englishTitle: title ?? undefined,
 			year: year === '0' ? '' : year,
 			dataSource: this.apiName,
 			url: `https://boardgamegeek.com/boardgame/${id}`,
@@ -107,6 +115,6 @@ export class BoardGameGeekAPI extends APIModel {
 				played: false,
 				personalRating: 0,
 			},
-		} as BoardGameModel);
+		});
 	}
 }

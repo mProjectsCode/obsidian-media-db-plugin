@@ -6,8 +6,8 @@ labels: bug
 assignees: ''
 ---
 
--   [ ] The Plugin is up to date
--   [ ] Obsidian is up to date
+- [ ] The Plugin is up to date
+- [ ] Obsidian is up to date
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -28,11 +28,11 @@ If applicable, add screenshots to help explain your problem.
 
 **Occurs on**
 
--   [ ] Windows
--   [ ] macOS
--   [ ] Linux
--   [ ] Android
--   [ ] iOS
+- [ ] Windows
+- [ ] macOS
+- [ ] Linux
+- [ ] Android
+- [ ] iOS
 
 **Plugin version**
 x.x.x

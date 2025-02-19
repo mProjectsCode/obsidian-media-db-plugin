@@ -1,10 +1,10 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import MediaDbPlugin from '../../main';
 import { requestUrl } from 'obsidian';
+import type MediaDbPlugin from '../../main';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MusicReleaseModel } from '../../models/MusicReleaseModel';
-import { contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { MediaType } from '../../utils/MediaType';
+import { contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { APIModel } from '../APIModel';
 
 export class MusicBrainzAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -55,7 +55,7 @@ export class MusicBrainzAPI extends APIModel {
 
 					artists: result['artist-credit'].map((a: any) => a.name),
 					subType: result['primary-type'],
-				} as MusicReleaseModel),
+				}),
 			);
 		}
 
@@ -97,6 +97,6 @@ export class MusicBrainzAPI extends APIModel {
 			userData: {
 				personalRating: 0,
 			},
-		} as MusicReleaseModel);
+		});
 	}
 }

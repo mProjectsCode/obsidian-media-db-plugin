@@ -1,4 +1,4 @@
-import { SelectModal } from './SelectModal';
+import type { SelectModal } from './SelectModal';
 
 export class SelectModalElement<T> {
 	selectModal: SelectModal<T>;
@@ -35,6 +35,8 @@ export class SelectModalElement<T> {
 		this.element.on('mouseleave', '#' + this.getHTMLId(), () => {
 			this.setHighlighted(false);
 		});
+
+		this.highlighted = false;
 	}
 
 	getHTMLId(): string {

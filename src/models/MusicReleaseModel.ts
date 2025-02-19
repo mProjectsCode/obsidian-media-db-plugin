@@ -1,35 +1,29 @@
-import { MediaTypeModel } from './MediaTypeModel';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
+import type { ModelToData } from '../utils/Utils';
+import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { MediaTypeModel } from './MediaTypeModel';
+
+export type MusicReleaseData = ModelToData<MusicReleaseModel>;
 
 export class MusicReleaseModel extends MediaTypeModel {
-	type: string;
-	subType: string;
-	title: string;
-	englishTitle: string;
-	year: string;
-	dataSource: string;
-	url: string;
-	id: string;
-	image: string;
-
 	genres: string[];
 	artists: string[];
+	image: string;
 	rating: number;
 
 	userData: {
 		personalRating: number;
 	};
 
-	constructor(obj: any = {}) {
+	constructor(obj: MusicReleaseData) {
 		super();
 
-		this.genres = undefined;
-		this.artists = undefined;
-		this.image = undefined;
-		this.rating = undefined;
+		this.genres = [];
+		this.artists = [];
+		this.image = '';
+		this.rating = 0;
 		this.userData = {
-			personalRating: undefined,
+			personalRating: 0,
 		};
 
 		migrateObject(this, obj, this);

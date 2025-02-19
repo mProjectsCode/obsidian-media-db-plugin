@@ -1,10 +1,12 @@
-import { ButtonComponent, Modal, Notice, Setting, TextComponent, ToggleComponent } from 'obsidian';
-import { MediaTypeModel } from '../models/MediaTypeModel';
-import MediaDbPlugin from '../main';
-import { SEARCH_MODAL_DEFAULT_OPTIONS, SearchModalData, SearchModalOptions } from '../utils/ModalHelper';
+import type { ButtonComponent } from 'obsidian';
+import { Modal, Notice, Setting, TextComponent, ToggleComponent } from 'obsidian';
+import type MediaDbPlugin from '../main';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
+import type { MediaType } from '../utils/MediaType';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
+import type { SearchModalData, SearchModalOptions } from '../utils/ModalHelper';
+import { SEARCH_MODAL_DEFAULT_OPTIONS } from '../utils/ModalHelper';
 import { unCamelCase } from '../utils/Utils';
-import { MediaType } from '../utils/MediaType';
 
 export class MediaDbSearchModal extends Modal {
 	plugin: MediaDbPlugin;
@@ -12,9 +14,9 @@ export class MediaDbSearchModal extends Modal {
 	query: string;
 	isBusy: boolean;
 	title: string;
-	selectedTypes: { name: MediaType; selected: boolean }[];
+	selectedTypes: MediaType[];
 
-	searchBtn: ButtonComponent;
+	searchBtn?: ButtonComponent;
 
 	submitCallback?: (res: SearchModalData) => void;
 	closeCallback?: (err?: Error) => void;
@@ -24,13 +26,10 @@ export class MediaDbSearchModal extends Modal {
 		super(plugin.app);
 
 		this.plugin = plugin;
-		this.selectedTypes = [];
-		this.title = searchModalOptions.modalTitle;
-		this.query = searchModalOptions.prefilledSearchString;
-
-		for (const mediaType of MEDIA_TYPES) {
-			this.selectedTypes.push({ name: mediaType, selected: searchModalOptions.preselectedTypes.contains(mediaType) });
-		}
+		this.selectedTypes = [...(searchModalOptions.preselectedTypes ?? [])];
+		this.title = searchModalOptions.modalTitle ?? '';
+		this.query = searchModalOptions.prefilledSearchString ?? '';
+		this.isBusy = false;
 	}
 
 	setSubmitCallback(submitCallback: (res: SearchModalData) => void): void {
@@ -47,13 +46,13 @@ export class MediaDbSearchModal extends Modal {
 		}
 	}
 
-	async search(): Promise<MediaTypeModel[]> {
+	async search(): Promise<void> {
 		if (!this.query || this.query.length < 3) {
 			new Notice('MDB | Query too short');
 			return;
 		}
 
-		const types: MediaType[] = this.selectedTypes.filter(x => x.selected).map(x => x.name);
+		const types: MediaType[] = this.selectedTypes;
 
 		if (types.length === 0) {
 			new Notice('MDB | No Type selected');
@@ -62,10 +61,10 @@ export class MediaDbSearchModal extends Modal {
 
 		if (!this.isBusy) {
 			this.isBusy = true;
-			this.searchBtn.setDisabled(false);
-			this.searchBtn.setButtonText('Searching...');
+			this.searchBtn?.setDisabled(false);
+			this.searchBtn?.setButtonText('Searching...');
 
-			this.submitCallback({ query: this.query, types: types });
+			this.submitCallback?.({ query: this.query, types: types });
 		}
 	}
 
@@ -76,7 +75,7 @@ export class MediaDbSearchModal extends Modal {
 
 		const placeholder = 'Search by title';
 		const searchComponent = new TextComponent(contentEl);
-		let currentToggle: ToggleComponent = null;
+		let currentToggle: ToggleComponent | undefined = undefined;
 
 		searchComponent.inputEl.style.width = '100%';
 		searchComponent.setPlaceholder(placeholder);
@@ -100,7 +99,7 @@ export class MediaDbSearchModal extends Modal {
 
 			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
 			apiToggleComponent.setTooltip(unCamelCase(mediaType));
-			apiToggleComponent.setValue(this.selectedTypes.find(x => x.name === mediaType).selected);
+			apiToggleComponent.setValue(this.selectedTypes.contains(mediaType));
 			if (apiToggleComponent.getValue()) {
 				currentToggle = apiToggleComponent;
 			}
@@ -108,13 +107,13 @@ export class MediaDbSearchModal extends Modal {
 				if (value) {
 					if (currentToggle && currentToggle !== apiToggleComponent) {
 						currentToggle.setValue(false);
-						this.selectedTypes.find(x => x.name === mediaType).selected = false;
+						this.selectedTypes = this.selectedTypes.filter(x => x !== mediaType);
 					}
 					currentToggle = apiToggleComponent;
-					this.selectedTypes.find(x => x.name === mediaType).selected = true;
+					this.selectedTypes.push(mediaType);
 				} else {
-					currentToggle = null;
-					this.selectedTypes.find(x => x.name === mediaType).selected = false;
+					currentToggle = undefined;
+					this.selectedTypes = this.selectedTypes.filter(x => x !== mediaType);
 				}
 			});
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
@@ -140,7 +139,7 @@ export class MediaDbSearchModal extends Modal {
 	}
 
 	onClose(): void {
-		this.closeCallback();
+		this.closeCallback?.();
 		const { contentEl } = this;
 		contentEl.empty();
 	}

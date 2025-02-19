@@ -1,17 +1,19 @@
-import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
-
-import MediaDbPlugin from '../main';
-import { FolderSuggest } from './suggesters/FolderSuggest';
-import { FileSuggest } from './suggesters/FileSuggest';
-import PropertyMappingModelsComponent from './PropertyMappingModelsComponent.svelte';
-import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './PropertyMapping';
+import type { App } from 'obsidian';
+import { Notice, PluginSettingTab, Setting } from 'obsidian';
+import { mount } from 'svelte';
+import type MediaDbPlugin from '../main';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
-import { MediaTypeModel } from '../models/MediaTypeModel';
 import { fragWithHTML } from '../utils/Utils';
+import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './PropertyMapping';
+import PropertyMappingModelsComponent from './PropertyMappingModelsComponent.svelte';
+import { FileSuggest } from './suggesters/FileSuggest';
+import { FolderSuggest } from './suggesters/FolderSuggest';
 
 export interface MediaDbPluginSettings {
 	OMDbKey: string;
 	MobyGamesKey: string;
+	GiantBombKey: string;
 	sfwFilter: boolean;
 	templates: boolean;
 	customDateFormat: string;
@@ -78,6 +80,7 @@ export interface MediaDbPluginSettings {
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
 	MobyGamesKey: '',
+	GiantBombKey: '',
 	sfwFilter: true,
 	templates: true,
 	customDateFormat: 'L',
@@ -204,6 +207,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
+			.setName('Giant Bomb Key')
+			.setDesc('API key for "www.giantbomb.com".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.GiantBombKey)
+					.onChange(data => {
+						this.plugin.settings.GiantBombKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
 			.setName('SFW filter')
 			.setDesc('Only shows SFW results for APIs that offer filtering.')
 			.addToggle(cb => {
@@ -240,7 +255,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.onChange(data => {
 						const newDateFormat = data ? data : DEFAULT_SETTINGS.customDateFormat;
 						this.plugin.settings.customDateFormat = newDateFormat;
-						document.getElementById('media-db-dateformat-preview').textContent = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
+						const previewEl = document.getElementById('media-db-dateformat-preview');
+						if (previewEl) {
+							previewEl.textContent = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
+						}
 						void this.plugin.saveSettings();
 					});
 			});
@@ -675,7 +693,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			Don't forget to save your changes using the save button for each individual category.
 		</p>`;
 
-			new PropertyMappingModelsComponent({
+			mount(PropertyMappingModelsComponent, {
 				target: this.containerEl,
 				props: {
 					models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),

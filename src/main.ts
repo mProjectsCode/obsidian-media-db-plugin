@@ -1,33 +1,29 @@
 import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder } from 'obsidian';
-import { getDefaultSettings, MediaDbPluginSettings, MediaDbSettingTab } from './settings/Settings';
+import type { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
-import { MediaTypeModel } from './models/MediaTypeModel';
-import {
-	CreateNoteOptions,
-	dateTimeToString,
-	markdownTable,
-	replaceIllegalFileNameCharactersInString,
-	unCamelCase,
-	hasTemplaterPlugin,
-	useTemplaterPluginInFile,
-} from './utils/Utils';
-import { OMDbAPI } from './api/apis/OMDbAPI';
+import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
+import { GiantBombAPI } from './api/apis/GiantBombAPI';
 import { MALAPI } from './api/apis/MALAPI';
 import { MALAPIManga } from './api/apis/MALAPIManga';
-import { WikipediaAPI } from './api/apis/WikipediaAPI';
-import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
-import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
-import { SteamAPI } from './api/apis/SteamAPI';
-import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
-import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { MobyGamesAPI } from './api/apis/MobyGamesAPI';
+import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
+import { OMDbAPI } from './api/apis/OMDbAPI';
+import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
+import { SteamAPI } from './api/apis/SteamAPI';
+import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { VNDBAPI } from './api/apis/VNDBAPI';
-import { PropertyMapper } from './settings/PropertyMapper';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
+import type { MediaTypeModel } from './models/MediaTypeModel';
+import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
-import { ModalHelper, ModalResultCode, SearchModalOptions } from './utils/ModalHelper';
+import type { MediaDbPluginSettings } from './settings/Settings';
+import { getDefaultSettings, MediaDbSettingTab } from './settings/Settings';
 import { DateFormatter } from './utils/DateFormatter';
-import { MediaType } from 'src/utils/MediaType';
+import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
+import type { SearchModalOptions } from './utils/ModalHelper';
+import { ModalHelper, ModalResultCode } from './utils/ModalHelper';
+import type { CreateNoteOptions } from './utils/Utils';
+import { dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
 
 export type Metadata = Record<string, unknown>;
 
@@ -38,12 +34,12 @@ export interface MediaTypeModelObj {
 }
 
 export default class MediaDbPlugin extends Plugin {
-	settings: MediaDbPluginSettings;
-	apiManager: APIManager;
-	mediaTypeManager: MediaTypeManager;
-	modelPropertyMapper: PropertyMapper;
-	modalHelper: ModalHelper;
-	dateFormatter: DateFormatter;
+	settings!: MediaDbPluginSettings;
+	apiManager!: APIManager;
+	mediaTypeManager!: MediaTypeManager;
+	modelPropertyMapper!: PropertyMapper;
+	modalHelper!: ModalHelper;
+	dateFormatter!: DateFormatter;
 
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
 
@@ -59,6 +55,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		this.apiManager.registerAPI(new OpenLibraryAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
+		this.apiManager.registerAPI(new GiantBombAPI(this));
 		this.apiManager.registerAPI(new VNDBAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
@@ -165,7 +162,7 @@ export default class MediaDbPlugin extends Plugin {
 	 *  - maybe custom link syntax
 	 */
 	async createLinkWithSearchModal(): Promise<void> {
-		const apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
+		const apiSearchResults = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
 			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
 		});
 
@@ -173,7 +170,7 @@ export default class MediaDbPlugin extends Plugin {
 			return;
 		}
 
-		const selectResults: MediaTypeModel[] = await this.modalHelper.openSelectModal({ elements: apiSearchResults, multiSelect: false }, async selectModalData => {
+		const selectResults = await this.modalHelper.openSelectModal({ elements: apiSearchResults, multiSelect: false }, async selectModalData => {
 			return await this.queryDetails(selectModalData.selected);
 		});
 
@@ -193,7 +190,7 @@ export default class MediaDbPlugin extends Plugin {
 
 	async createEntryWithSearchModal(searchModalOptions?: SearchModalOptions): Promise<void> {
 		let types: string[] = [];
-		let apiSearchResults: MediaTypeModel[] = await this.modalHelper.openSearchModal(searchModalOptions ?? {}, async searchModalData => {
+		let apiSearchResults = await this.modalHelper.openSearchModal(searchModalOptions ?? {}, async searchModalData => {
 			types = searchModalData.types;
 			const apis = this.apiManager.apis.filter(x => x.hasTypeOverlap(searchModalData.types)).map(x => x.apiName);
 			try {
@@ -214,12 +211,13 @@ export default class MediaDbPlugin extends Plugin {
 		apiSearchResults = apiSearchResults.filter(x => types.contains(x.type));
 
 		let selectResults: MediaTypeModel[];
-		let proceed: boolean;
+		let proceed: boolean = false;
 
 		while (!proceed) {
-			selectResults = await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
-				return await this.queryDetails(selectModalData.selected);
-			});
+			selectResults =
+				(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
+					return await this.queryDetails(selectModalData.selected);
+				})) ?? [];
 			if (!selectResults) {
 				return;
 			}
@@ -229,11 +227,11 @@ export default class MediaDbPlugin extends Plugin {
 			});
 		}
 
-		await this.createMediaDbNotes(selectResults);
+		await this.createMediaDbNotes(selectResults!);
 	}
 
 	async createEntryWithAdvancedSearchModal(): Promise<void> {
-		const apiSearchResults: MediaTypeModel[] = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
+		const apiSearchResults = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
 			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
 		});
 
@@ -243,12 +241,13 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		let selectResults: MediaTypeModel[];
-		let proceed: boolean;
+		let proceed: boolean = false;
 
 		while (!proceed) {
-			selectResults = await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
-				return await this.queryDetails(selectModalData.selected);
-			});
+			selectResults =
+				(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
+					return await this.queryDetails(selectModalData.selected);
+				})) ?? [];
 			if (!selectResults) {
 				return;
 			}
@@ -258,12 +257,12 @@ export default class MediaDbPlugin extends Plugin {
 			});
 		}
 
-		await this.createMediaDbNotes(selectResults);
+		await this.createMediaDbNotes(selectResults!);
 	}
 
 	async createEntryWithIdSearchModal(): Promise<void> {
-		let idSearchResult: MediaTypeModel;
-		let proceed: boolean;
+		let idSearchResult: MediaTypeModel | undefined = undefined;
+		let proceed: boolean = false;
 
 		while (!proceed) {
 			idSearchResult = await this.modalHelper.openIdSearchModal({}, async idSearchModalData => {
@@ -278,6 +277,9 @@ export default class MediaDbPlugin extends Plugin {
 			});
 		}
 
+		if (!idSearchResult) {
+			return;
+		}
 		await this.createMediaDbNoteFromModel(idSearchResult, { attachTemplate: true, openNote: true });
 	}
 
@@ -290,11 +292,9 @@ export default class MediaDbPlugin extends Plugin {
 	async queryDetails(models: MediaTypeModel[]): Promise<MediaTypeModel[]> {
 		const detailModels: MediaTypeModel[] = [];
 		for (const model of models) {
-			try {
-				detailModels.push(await this.apiManager.queryDetailedInfo(model));
-			} catch (e) {
-				console.warn(e);
-				new Notice(e.toString());
+			const res = await this.apiManager.queryDetailedInfo(model);
+			if (res) {
+				detailModels.push(res);
 			}
 		}
 		return detailModels;
@@ -319,7 +319,7 @@ export default class MediaDbPlugin extends Plugin {
 			}
 		} catch (e) {
 			console.warn(e);
-			new Notice(e.toString());
+			new Notice(`${e}`);
 		}
 	}
 
@@ -383,7 +383,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		// Updating a previous file
 		if (options.attachFile) {
-			const previousMetadata = this.app.metadataCache.getFileCache(options.attachFile).frontmatter;
+			const previousMetadata = this.app.metadataCache.getFileCache(options.attachFile)?.frontmatter ?? {};
 
 			// Use contents (below front matter) from previous file
 			fileContent = await this.app.vault.read(options.attachFile);
@@ -443,7 +443,7 @@ export default class MediaDbPlugin extends Plugin {
 		return { fileMetadata: fileMetadata, fileContent: fileContent };
 	}
 
-	async attachTemplate(fileMetadata: Metadata, fileContent: string, template: string): Promise<{ fileMetadata: Metadata; fileContent: string }> {
+	async attachTemplate(fileMetadata: Metadata, fileContent: string, template: string | undefined): Promise<{ fileMetadata: Metadata; fileContent: string }> {
 		if (!template) {
 			return { fileMetadata: fileMetadata, fileContent: fileContent };
 		}
@@ -486,7 +486,7 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	getMetadataFromFileCache(file: TFile): Metadata {
-		const metadata: Metadata | undefined = this.app.metadataCache.getFileCache(file).frontmatter;
+		const metadata: Metadata | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
 		return structuredClone(metadata ?? {});
 	}
 
@@ -500,6 +500,10 @@ export default class MediaDbPlugin extends Plugin {
 	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions): Promise<TFile> {
 		// find and possibly create the folder set in settings or passed in folder
 		const folder = options.folder ?? this.app.vault.getAbstractFileByPath('/');
+
+		if (!folder || !(folder instanceof TFolder)) {
+			throw new Error('MDB | invalid folder');
+		}
 
 		fileName = replaceIllegalFileNameCharactersInString(fileName);
 		const filePath = `${folder.path}/${fileName}.md`;
@@ -519,7 +523,7 @@ export default class MediaDbPlugin extends Plugin {
 			const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 			if (!activeLeaf) {
 				console.warn('MDB | no active leaf, not opening newly created note');
-				return;
+				return targetFile;
 			}
 			await activeLeaf.openFile(targetFile, { state: { mode: 'source' } });
 		}
@@ -532,7 +536,7 @@ export default class MediaDbPlugin extends Plugin {
 	 * Tries to read the type, id and dataSource of the active note. If successful it will query the api, delete the old note and create a new one.
 	 */
 	async updateActiveNote(onlyMetadata: boolean = false): Promise<void> {
-		const activeFile: TFile = this.app.workspace.getActiveFile();
+		const activeFile = this.app.workspace.getActiveFile() ?? undefined;
 		if (!activeFile) {
 			throw new Error('MDB | there is no active note');
 		}
@@ -560,9 +564,9 @@ export default class MediaDbPlugin extends Plugin {
 		// console.debug(newMediaTypeModel);
 
 		if (onlyMetadata) {
-			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent, openNote: true });
+			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent ?? undefined, openNote: true });
 		} else {
-			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachTemplate: true, folder: activeFile.parent, openNote: true });
+			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachTemplate: true, folder: activeFile.parent ?? undefined, openNote: true });
 		}
 	}
 
@@ -596,7 +600,7 @@ export default class MediaDbPlugin extends Plugin {
 				try {
 					results = await this.apiManager.query(title, [selectedAPI]);
 				} catch (e) {
-					erroredFiles.push({ filePath: file.path, error: e.toString() });
+					erroredFiles.push({ filePath: file.path, error: `${e}` });
 					continue;
 				}
 				if (!results || results.length === 0) {
@@ -631,7 +635,7 @@ export default class MediaDbPlugin extends Plugin {
 				}
 
 				const detailedResults = await this.queryDetails(selectModalResult.data.selected);
-				await this.createMediaDbNotes(detailedResults, appendContent ? file : null);
+				await this.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
 
 				selectModal.close();
 			}
@@ -661,7 +665,7 @@ export default class MediaDbPlugin extends Plugin {
 		// migrate the settings loaded from the disk to match the structure of the default settings
 		const newPropertyMappings: PropertyMappingModel[] = [];
 		for (const defaultPropertyMappingModel of defaultSettings.propertyMappingModels) {
-			const newPropertyMappingModel: PropertyMappingModel = loadedSettings.propertyMappingModels.find(x => x.type === defaultPropertyMappingModel.type);
+			const newPropertyMappingModel = loadedSettings.propertyMappingModels.find(x => x.type === defaultPropertyMappingModel.type);
 			if (newPropertyMappingModel === undefined) {
 				// if the propertyMappingModel exists in the default settings but not the loaded settings, add it
 				newPropertyMappings.push(defaultPropertyMappingModel);

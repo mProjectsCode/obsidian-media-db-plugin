@@ -1,6 +1,9 @@
-import { MediaTypeModel } from './MediaTypeModel';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
+import type { ModelToData } from '../utils/Utils';
+import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { MediaTypeModel } from './MediaTypeModel';
+
+export type BookData = ModelToData<BookModel>;
 
 export class BookModel extends MediaTypeModel {
 	author: string;
@@ -8,7 +11,6 @@ export class BookModel extends MediaTypeModel {
 	pages: number;
 	image: string;
 	onlineRating: number;
-	english_title: string;
 	isbn: number;
 	isbn13: number;
 
@@ -20,22 +22,23 @@ export class BookModel extends MediaTypeModel {
 		personalRating: number;
 	};
 
-	constructor(obj: any = {}) {
+	constructor(obj: BookData) {
 		super();
 
-		this.author = undefined;
-		this.pages = undefined;
-		this.image = undefined;
-		this.onlineRating = undefined;
-		this.isbn = undefined;
-		this.isbn13 = undefined;
+		this.author = '';
+		this.plot = '';
+		this.pages = 0;
+		this.image = '';
+		this.onlineRating = 0;
+		this.isbn = 0;
+		this.isbn13 = 0;
 
-		this.released = undefined;
+		this.released = false;
 
 		this.userData = {
-			read: undefined,
-			lastRead: undefined,
-			personalRating: undefined,
+			read: false,
+			lastRead: '',
+			personalRating: 0,
 		};
 
 		migrateObject(this, obj, this);

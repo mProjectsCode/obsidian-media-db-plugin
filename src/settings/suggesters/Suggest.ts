@@ -1,28 +1,34 @@
 // Credits go to Liam's Periodic Notes Plugin: https://github.com/liamcain/obsidian-periodic-notes
 
-import { App, ISuggestOwner, Scope } from 'obsidian';
-import { createPopper, Instance as PopperInstance } from '@popperjs/core';
+import type { Instance as PopperInstance } from '@popperjs/core';
+import { createPopper } from '@popperjs/core';
+import type { App, ISuggestOwner } from 'obsidian';
+import { Scope } from 'obsidian';
 import { wrapAround } from 'src/utils/Utils';
 
 export class Suggest<T> {
 	private owner: ISuggestOwner<T>;
 	private values: T[];
-	private suggestions: HTMLDivElement[];
+	private suggestions: HTMLElement[];
 	private selectedItem: number;
 	private containerEl: HTMLElement;
 
 	constructor(owner: ISuggestOwner<T>, containerEl: HTMLElement, scope: Scope) {
 		this.owner = owner;
 		this.containerEl = containerEl;
+		this.values = [];
+		this.suggestions = [];
+		this.selectedItem = 0;
 
-		containerEl.on('click', '.suggestion-item', this.onSuggestionClick.bind(this));
-		containerEl.on('mousemove', '.suggestion-item', this.onSuggestionMouseover.bind(this));
+		containerEl.on('click', '.suggestion-item', (e, el) => this.onSuggestionClick(e, el));
+		containerEl.on('mousemove', '.suggestion-item', (e, el) => this.onSuggestionMouseover(e, el));
 
 		scope.register([], 'ArrowUp', event => {
 			if (!event.isComposing) {
 				this.setSelectedItem(this.selectedItem - 1, true);
 				return false;
 			}
+			return undefined;
 		});
 
 		scope.register([], 'ArrowDown', event => {
@@ -30,6 +36,7 @@ export class Suggest<T> {
 				this.setSelectedItem(this.selectedItem + 1, true);
 				return false;
 			}
+			return undefined;
 		});
 
 		scope.register([], 'Enter', event => {
@@ -37,10 +44,11 @@ export class Suggest<T> {
 				this.useSelectedItem(event);
 				return false;
 			}
+			return undefined;
 		});
 	}
 
-	onSuggestionClick(event: MouseEvent, el: HTMLDivElement): void {
+	onSuggestionClick(event: MouseEvent, el: HTMLElement): void {
 		event.preventDefault();
 
 		const item = this.suggestions.indexOf(el);
@@ -48,7 +56,7 @@ export class Suggest<T> {
 		this.useSelectedItem(event);
 	}
 
-	onSuggestionMouseover(_event: MouseEvent, el: HTMLDivElement): void {
+	onSuggestionMouseover(_event: MouseEvent, el: HTMLElement): void {
 		const item = this.suggestions.indexOf(el);
 		this.setSelectedItem(item, false);
 	}
@@ -95,7 +103,7 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
 	protected app: App;
 	protected inputEl: HTMLInputElement;
 
-	private popper: PopperInstance;
+	private popper?: PopperInstance;
 	private scope: Scope;
 	private suggestEl: HTMLElement;
 	private suggest: Suggest<T>;
@@ -126,13 +134,13 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
 		if (suggestions.length > 0) {
 			this.suggest.setSuggestions(suggestions);
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			this.open((<any>this.app).dom.appContainerEl, this.inputEl);
+			this.open((this.app as any).dom.appContainerEl, this.inputEl);
 		}
 	}
 
 	open(container: HTMLElement, inputEl: HTMLElement): void {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		(<any>this.app).keymap.pushScope(this.scope);
+		(this.app as any).keymap.pushScope(this.scope);
 
 		container.appendChild(this.suggestEl);
 		this.popper = createPopper(inputEl, this.suggestEl, {
@@ -162,7 +170,7 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
 
 	close(): void {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		(<any>this.app).keymap.popScope(this.scope);
+		(this.app as any).keymap.popScope(this.scope);
 
 		this.suggest.setSuggestions([]);
 		this.popper?.destroy();

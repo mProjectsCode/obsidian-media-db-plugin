@@ -1,7 +1,9 @@
-import { ButtonComponent, DropdownComponent, Modal, Notice, Setting, TextComponent } from 'obsidian';
-import { MediaTypeModel } from '../models/MediaTypeModel';
-import MediaDbPlugin from '../main';
-import { ID_SEARCH_MODAL_DEFAULT_OPTIONS, IdSearchModalData, IdSearchModalOptions } from '../utils/ModalHelper';
+import type { ButtonComponent } from 'obsidian';
+import { DropdownComponent, Modal, Notice, Setting, TextComponent } from 'obsidian';
+import type MediaDbPlugin from '../main';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
+import type { IdSearchModalData, IdSearchModalOptions } from '../utils/ModalHelper';
+import { ID_SEARCH_MODAL_DEFAULT_OPTIONS } from '../utils/ModalHelper';
 
 export class MediaDbIdSearchModal extends Modal {
 	plugin: MediaDbPlugin;
@@ -11,7 +13,7 @@ export class MediaDbIdSearchModal extends Modal {
 	title: string;
 	selectedApi: string;
 
-	searchBtn: ButtonComponent;
+	searchBtn?: ButtonComponent;
 
 	submitCallback?: (res: IdSearchModalData, err?: Error) => void;
 	closeCallback?: (err?: Error) => void;
@@ -21,8 +23,10 @@ export class MediaDbIdSearchModal extends Modal {
 		super(plugin.app);
 
 		this.plugin = plugin;
-		this.title = idSearchModalOptions.modalTitle;
+		this.title = idSearchModalOptions.modalTitle ?? '';
 		this.selectedApi = idSearchModalOptions.preselectedAPI || plugin.apiManager.apis[0].apiName;
+		this.query = '';
+		this.isBusy = false;
 	}
 
 	setSubmitCallback(submitCallback: (res: IdSearchModalData, err?: Error) => void): void {
@@ -39,7 +43,7 @@ export class MediaDbIdSearchModal extends Modal {
 		}
 	}
 
-	async search(): Promise<MediaTypeModel> {
+	async search(): Promise<void> {
 		if (!this.query) {
 			new Notice('MDB | no Id entered');
 			return;
@@ -52,10 +56,10 @@ export class MediaDbIdSearchModal extends Modal {
 
 		if (!this.isBusy) {
 			this.isBusy = true;
-			this.searchBtn.setDisabled(false);
-			this.searchBtn.setButtonText('Searching...');
+			this.searchBtn?.setDisabled(false);
+			this.searchBtn?.setButtonText('Searching...');
 
-			this.submitCallback({ query: this.query, api: this.selectedApi });
+			this.submitCallback?.({ query: this.query, api: this.selectedApi });
 		}
 	}
 
@@ -109,7 +113,7 @@ export class MediaDbIdSearchModal extends Modal {
 	}
 
 	onClose(): void {
-		this.closeCallback();
+		this.closeCallback?.();
 		const { contentEl } = this;
 		contentEl.empty();
 	}

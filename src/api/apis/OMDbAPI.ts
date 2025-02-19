@@ -1,10 +1,11 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import { MovieModel } from '../../models/MovieModel';
-import MediaDbPlugin from '../../main';
-import { SeriesModel } from '../../models/SeriesModel';
+import { Notice } from 'obsidian';
+import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
+import { MovieModel } from '../../models/MovieModel';
+import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 export class OMDbAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -29,7 +30,7 @@ export class OMDbAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		if (!this.plugin.settings.OMDbKey) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`;
@@ -73,7 +74,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
-					} as MovieModel),
+					}),
 				);
 			} else if (type === 'series') {
 				ret.push(
@@ -84,7 +85,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
-					} as SeriesModel),
+					}),
 				);
 			} else if (type === 'game') {
 				ret.push(
@@ -95,7 +96,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
-					} as GameModel),
+					}),
 				);
 			}
 		}
@@ -161,7 +162,7 @@ export class OMDbAPI extends APIModel {
 					lastWatched: '',
 					personalRating: 0,
 				},
-			} as MovieModel);
+			});
 		} else if (type === 'series') {
 			return new SeriesModel({
 				type: type,
@@ -193,7 +194,7 @@ export class OMDbAPI extends APIModel {
 					lastWatched: '',
 					personalRating: 0,
 				},
-			} as SeriesModel);
+			});
 		} else if (type === 'game') {
 			return new GameModel({
 				type: type,
@@ -217,9 +218,9 @@ export class OMDbAPI extends APIModel {
 					played: false,
 					personalRating: 0,
 				},
-			} as GameModel);
+			});
 		}
 
-		return;
+		throw new Error(`MDB | Unknown media type for id ${id}`);
 	}
 }

@@ -1,17 +1,11 @@
-import { MediaTypeModel } from './MediaTypeModel';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaType } from '../utils/MediaType';
+import type { ModelToData } from '../utils/Utils';
+import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { MediaTypeModel } from './MediaTypeModel';
+
+export type WikiData = ModelToData<WikiModel>;
 
 export class WikiModel extends MediaTypeModel {
-	type: string;
-	subType: string;
-	title: string;
-	englishTitle: string;
-	year: string;
-	dataSource: string;
-	url: string;
-	id: string;
-
 	wikiUrl: string;
 	lastUpdated: string;
 	length: number;
@@ -19,13 +13,13 @@ export class WikiModel extends MediaTypeModel {
 
 	userData: Record<string, unknown>;
 
-	constructor(obj: any = {}) {
+	constructor(obj: WikiData) {
 		super();
 
-		this.wikiUrl = undefined;
-		this.lastUpdated = undefined;
-		this.length = undefined;
-		this.article = undefined;
+		this.wikiUrl = '';
+		this.lastUpdated = '';
+		this.length = 0;
+		this.article = '';
 		this.userData = {};
 
 		migrateObject(this, obj, this);

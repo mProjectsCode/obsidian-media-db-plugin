@@ -1,7 +1,9 @@
-import { ButtonComponent, Modal, Notice, Setting, TextComponent, ToggleComponent } from 'obsidian';
-import { MediaTypeModel } from '../models/MediaTypeModel';
-import MediaDbPlugin from '../main';
-import { ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS, AdvancedSearchModalData, AdvancedSearchModalOptions } from '../utils/ModalHelper';
+import type { ButtonComponent } from 'obsidian';
+import { Modal, Notice, Setting, TextComponent, ToggleComponent } from 'obsidian';
+import type MediaDbPlugin from '../main';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
+import type { AdvancedSearchModalData, AdvancedSearchModalOptions } from '../utils/ModalHelper';
+import { ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS } from '../utils/ModalHelper';
 
 export class MediaDbAdvancedSearchModal extends Modal {
 	plugin: MediaDbPlugin;
@@ -9,9 +11,9 @@ export class MediaDbAdvancedSearchModal extends Modal {
 	query: string;
 	isBusy: boolean;
 	title: string;
-	selectedApis: { name: string; selected: boolean }[];
+	selectedApis: string[];
 
-	searchBtn: ButtonComponent;
+	searchBtn?: ButtonComponent;
 
 	submitCallback?: (res: AdvancedSearchModalData) => void;
 	closeCallback?: (err?: Error) => void;
@@ -22,12 +24,9 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 		this.plugin = plugin;
 		this.selectedApis = [];
-		this.title = advancedSearchModalOptions.modalTitle;
-		this.query = advancedSearchModalOptions.prefilledSearchString;
-
-		for (const api of this.plugin.apiManager.apis) {
-			this.selectedApis.push({ name: api.apiName, selected: advancedSearchModalOptions.preselectedAPIs.contains(api.apiName) });
-		}
+		this.title = advancedSearchModalOptions.modalTitle ?? '';
+		this.query = advancedSearchModalOptions.prefilledSearchString ?? '';
+		this.isBusy = false;
 	}
 
 	setSubmitCallback(submitCallback: (res: AdvancedSearchModalData) => void): void {
@@ -44,13 +43,13 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		}
 	}
 
-	async search(): Promise<MediaTypeModel[]> {
+	async search(): Promise<void> {
 		if (!this.query || this.query.length < 3) {
 			new Notice('MDB | Query too short');
 			return;
 		}
 
-		const apis: string[] = this.selectedApis.filter(x => x.selected).map(x => x.name);
+		const apis: string[] = this.selectedApis;
 
 		if (apis.length === 0) {
 			new Notice('MDB | No API selected');
@@ -59,10 +58,10 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 		if (!this.isBusy) {
 			this.isBusy = true;
-			this.searchBtn.setDisabled(false);
-			this.searchBtn.setButtonText('Searching...');
+			this.searchBtn?.setDisabled(false);
+			this.searchBtn?.setButtonText('Searching...');
 
-			this.submitCallback({ query: this.query, apis: apis });
+			this.submitCallback?.({ query: this.query, apis: apis });
 		}
 	}
 
@@ -97,9 +96,13 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
 			apiToggleComponent.setTooltip(api.apiName);
-			apiToggleComponent.setValue(this.selectedApis.find(x => x.name === api.apiName).selected);
+			apiToggleComponent.setValue(this.selectedApis.some(x => x === api.apiName));
 			apiToggleComponent.onChange(value => {
-				this.selectedApis.find(x => x.name === api.apiName).selected = value;
+				if (value) {
+					this.selectedApis.push(api.apiName);
+				} else {
+					this.selectedApis = this.selectedApis.filter(x => x !== api.apiName);
+				}
 			});
 			apiToggleComponentWrapper.appendChild(apiToggleComponent.toggleEl);
 		}
@@ -124,7 +127,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 	}
 
 	onClose(): void {
-		this.closeCallback();
+		this.closeCallback?.();
 		const { contentEl } = this;
 		contentEl.empty();
 	}

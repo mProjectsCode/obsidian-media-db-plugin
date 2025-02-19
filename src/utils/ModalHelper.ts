@@ -1,12 +1,12 @@
+import { Notice } from 'obsidian';
+import { MediaDbPreviewModal } from 'src/modals/MediaDbPreviewModal';
+import type MediaDbPlugin from '../main';
 import { MediaDbAdvancedSearchModal } from '../modals/MediaDbAdvancedSearchModal';
 import { MediaDbIdSearchModal } from '../modals/MediaDbIdSearchModal';
-import { MediaTypeModel } from '../models/MediaTypeModel';
-import { MediaDbSearchResultModal } from '../modals/MediaDbSearchResultModal';
-import { Notice } from 'obsidian';
-import MediaDbPlugin from '../main';
-import { MediaDbPreviewModal } from 'src/modals/MediaDbPreviewModal';
 import { MediaDbSearchModal } from '../modals/MediaDbSearchModal';
-import { MediaType } from './MediaType';
+import { MediaDbSearchResultModal } from '../modals/MediaDbSearchResultModal';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
+import type { MediaType } from './MediaType';
 
 export enum ModalResultCode {
 	SUCCESS = 'SUCCESS',
@@ -15,60 +15,59 @@ export enum ModalResultCode {
 	ERROR = 'ERROR',
 }
 
+type ModalResult<T> =
+	| {
+			code: ModalResultCode.CLOSE;
+	  }
+	| {
+			code: ModalResultCode.ERROR;
+			error: Error;
+	  }
+	| {
+			code: ModalResultCode.SUCCESS;
+			data: T;
+	  };
+
+type SkippableModalResult<T> =
+	| ModalResult<T>
+	| {
+			code: ModalResultCode.SKIP;
+	  };
+
 /**
  * Object containing the data {@link ModalHelper.createSearchModal} returns.
  * On {@link ModalResultCode.SUCCESS} this contains {@link SearchModalData}.
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
-export interface SearchModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR;
-	data?: SearchModalData;
-	error?: Error;
-}
+export type SearchModalResult = ModalResult<SearchModalData>;
 
 /**
  * Object containing the data {@link ModalHelper.createAdvancedSearchModal} returns.
  * On {@link ModalResultCode.SUCCESS} this contains {@link AdvancedSearchModalData}.
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
-export interface AdvancedSearchModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR;
-	data?: AdvancedSearchModalData;
-	error?: Error;
-}
+export type AdvancedSearchModalResult = ModalResult<AdvancedSearchModalData>;
 
 /**
  * Object containing the data {@link ModalHelper.createIdSearchModal} returns.
  * On {@link ModalResultCode.SUCCESS} this contains {@link IdSearchModalData}.
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
-export interface IdSearchModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR;
-	data?: IdSearchModalData;
-	error?: Error;
-}
+export type IdSearchModalResult = ModalResult<IdSearchModalData>;
 
 /**
  * Object containing the data {@link ModalHelper.createSelectModal} returns.
  * On {@link ModalResultCode.SUCCESS} this contains {@link SelectModalData}.
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
-export interface SelectModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.SKIP | ModalResultCode.ERROR;
-	data?: SelectModalData;
-	error?: Error;
-}
+export type SelectModalResult = SkippableModalResult<SelectModalData>;
 
 /**
  * Object containing the data {@link ModalHelper.createPreviewModal} returns.
  * On {@link ModalResultCode.SUCCESS} this contains {@link PreviewModalData}.
  * On {@link ModalResultCode.ERROR} this contains a reference to that error.
  */
-export interface PreviewModalResult {
-	code: ModalResultCode.SUCCESS | ModalResultCode.CLOSE | ModalResultCode.ERROR;
-	data?: PreviewModalData;
-	error?: Error;
-}
+export type PreviewModalResult = ModalResult<PreviewModalData>;
 
 /**
  * The data the search modal returns.
@@ -248,7 +247,10 @@ export class ModalHelper {
 	 * @param submitCallback the callback that gets executed after the modal has been submitted, but after it has been closed
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
-	async openSearchModal(searchModalOptions: SearchModalOptions, submitCallback: (searchModalData: SearchModalData) => Promise<MediaTypeModel[]>): Promise<MediaTypeModel[]> {
+	async openSearchModal(
+		searchModalOptions: SearchModalOptions,
+		submitCallback: (searchModalData: SearchModalData) => Promise<MediaTypeModel[]>,
+	): Promise<MediaTypeModel[] | undefined> {
 		const { searchModalResult, searchModal } = await this.createSearchModal(searchModalOptions);
 		console.debug(`MDB | searchModal closed with code ${searchModalResult.code}`);
 
@@ -271,7 +273,7 @@ export class ModalHelper {
 			return callbackRes;
 		} catch (e) {
 			console.warn(e);
-			new Notice(e.toString());
+			new Notice(`${e}`);
 			searchModal.close();
 			return undefined;
 		}
@@ -314,7 +316,7 @@ export class ModalHelper {
 	async openAdvancedSearchModal(
 		advancedSearchModalOptions: AdvancedSearchModalOptions,
 		submitCallback: (advancedSearchModalData: AdvancedSearchModalData) => Promise<MediaTypeModel[]>,
-	): Promise<MediaTypeModel[]> {
+	): Promise<MediaTypeModel[] | undefined> {
 		const { advancedSearchModalResult, advancedSearchModal } = await this.createAdvancedSearchModal(advancedSearchModalOptions);
 		console.debug(`MDB | advencedSearchModal closed with code ${advancedSearchModalResult.code}`);
 
@@ -337,7 +339,7 @@ export class ModalHelper {
 			return callbackRes;
 		} catch (e) {
 			console.warn(e);
-			new Notice(e.toString());
+			new Notice(`${e}`);
 			advancedSearchModal.close();
 			return undefined;
 		}
@@ -377,8 +379,8 @@ export class ModalHelper {
 	 */
 	async openIdSearchModal(
 		idSearchModalOptions: IdSearchModalOptions,
-		submitCallback: (idSearchModalData: IdSearchModalData) => Promise<MediaTypeModel>,
-	): Promise<MediaTypeModel> {
+		submitCallback: (idSearchModalData: IdSearchModalData) => Promise<MediaTypeModel | undefined>,
+	): Promise<MediaTypeModel | undefined> {
 		const { idSearchModalResult, idSearchModal } = await this.createIdSearchModal(idSearchModalOptions);
 		console.debug(`MDB | idSearchModal closed with code ${idSearchModalResult.code}`);
 
@@ -396,12 +398,12 @@ export class ModalHelper {
 		}
 
 		try {
-			const callbackRes: MediaTypeModel = await submitCallback(idSearchModalResult.data);
+			const callbackRes = await submitCallback(idSearchModalResult.data);
 			idSearchModal.close();
 			return callbackRes;
 		} catch (e) {
 			console.warn(e);
-			new Notice(e.toString());
+			new Notice(`${e}`);
 			idSearchModal.close();
 			return undefined;
 		}
@@ -440,7 +442,10 @@ export class ModalHelper {
 	 * @param submitCallback the callback that gets executed after the modal has been submitted, but before it has been closed
 	 * @returns the user input or nothing and a reference to the modal.
 	 */
-	async openSelectModal(selectModalOptions: SelectModalOptions, submitCallback: (selectModalData: SelectModalData) => Promise<MediaTypeModel[]>): Promise<MediaTypeModel[]> {
+	async openSelectModal(
+		selectModalOptions: SelectModalOptions,
+		submitCallback: (selectModalData: SelectModalData) => Promise<MediaTypeModel[]>,
+	): Promise<MediaTypeModel[] | undefined> {
 		const { selectModalResult, selectModal } = await this.createSelectModal(selectModalOptions);
 		console.debug(`MDB | selectModal closed with code ${selectModalResult.code}`);
 
@@ -468,7 +473,7 @@ export class ModalHelper {
 			return callbackRes;
 		} catch (e) {
 			console.warn(e);
-			new Notice(e.toString());
+			new Notice(`${e}`);
 			selectModal.close();
 			return;
 		}
@@ -500,12 +505,12 @@ export class ModalHelper {
 			console.warn(previewModalResult.error);
 			new Notice(previewModalResult.error.toString());
 			previewModal.close();
-			return undefined;
+			return true;
 		}
 
 		if (previewModalResult.code === ModalResultCode.CLOSE) {
 			// modal is already being closed
-			return undefined;
+			return true;
 		}
 
 		try {
@@ -514,9 +519,9 @@ export class ModalHelper {
 			return callbackRes;
 		} catch (e) {
 			console.warn(e);
-			new Notice(e.toString());
+			new Notice(`${e}`);
 			previewModal.close();
-			return;
+			return true;
 		}
 	}
 }

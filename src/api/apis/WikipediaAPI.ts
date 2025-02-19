@@ -1,8 +1,8 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import MediaDbPlugin from '../../main';
+import type MediaDbPlugin from '../../main';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { WikiModel } from '../../models/WikiModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 export class WikipediaAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -42,7 +42,7 @@ export class WikipediaAPI extends APIModel {
 					year: '',
 					dataSource: this.apiName,
 					id: result.pageid,
-				} as WikiModel),
+				}),
 			);
 		}
 
@@ -73,10 +73,10 @@ export class WikipediaAPI extends APIModel {
 			id: result.pageid,
 
 			wikiUrl: result.fullurl,
-			lastUpdated: this.plugin.dateFormatter.format(result.touched, this.apiDateFormat),
+			lastUpdated: this.plugin.dateFormatter.format(result.touched, this.apiDateFormat) ?? undefined,
 			length: result.length,
 
 			userData: {},
-		} as WikiModel);
+		});
 	}
 }

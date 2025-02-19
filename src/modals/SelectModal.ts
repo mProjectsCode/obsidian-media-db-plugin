@@ -1,6 +1,7 @@
-import { App, ButtonComponent, Modal, Setting } from 'obsidian';
-import { SelectModalElement } from './SelectModalElement';
+import type { App, ButtonComponent } from 'obsidian';
+import { Modal, Setting } from 'obsidian';
 import { mod } from '../utils/Utils';
+import { SelectModalElement } from './SelectModalElement';
 
 export abstract class SelectModal<T> extends Modal {
 	allowMultiSelect: boolean;
@@ -142,7 +143,7 @@ export abstract class SelectModal<T> extends Modal {
 		}
 
 		// nothing is highlighted
-		this.selectModalElements.last().setHighlighted(true);
+		this.selectModalElements.last()?.setHighlighted(true);
 	}
 
 	highlightDown(): void {
@@ -154,20 +155,20 @@ export abstract class SelectModal<T> extends Modal {
 		}
 
 		// nothing is highlighted
-		this.selectModalElements.first().setHighlighted(true);
+		this.selectModalElements.first()?.setHighlighted(true);
 	}
 
 	private getNextSelectModalElement(selectModalElement: SelectModalElement<T>): SelectModalElement<T> {
 		let nextId = selectModalElement.id + 1;
 		nextId = mod(nextId, this.selectModalElements.length);
 
-		return this.selectModalElements.filter(x => x.id === nextId).first();
+		return this.selectModalElements.find(x => x.id === nextId)!;
 	}
 
 	private getPreviousSelectModalElement(selectModalElement: SelectModalElement<T>): SelectModalElement<T> {
 		let nextId = selectModalElement.id - 1;
 		nextId = mod(nextId, this.selectModalElements.length);
 
-		return this.selectModalElements.filter(x => x.id === nextId).first();
+		return this.selectModalElements.find(x => x.id === nextId)!;
 	}
 }

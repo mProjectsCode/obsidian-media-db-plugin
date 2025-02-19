@@ -1,4 +1,3 @@
-import { Notice } from 'obsidian';
 import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
@@ -6,27 +5,27 @@ import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 
-export class MobyGamesAPI extends APIModel {
+export class GiantBombAPI extends APIModel {
 	plugin: MediaDbPlugin;
-	apiDateFormat: string = 'YYYY-DD-MM';
+	apiDateFormat: string = 'YYYY-MM-DD';
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
 
 		this.plugin = plugin;
-		this.apiName = 'MobyGamesAPI';
+		this.apiName = 'GiantBombAPI';
 		this.apiDescription = 'A free API for games.';
-		this.apiUrl = 'https://api.mobygames.com/v1';
+		this.apiUrl = 'https://www.giantbomb.com/api';
 		this.types = [MediaType.Game];
 	}
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!this.plugin.settings.MobyGamesKey) {
-			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+		if (!this.plugin.settings.GiantBombKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${this.plugin.settings.MobyGamesKey}`;
+		const searchUrl = `${this.apiUrl}/games?api_key=${this.plugin.settings.GiantBombKey}&filter=name:${encodeURIComponent(title)}&format=json`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -46,16 +45,16 @@ export class MobyGamesAPI extends APIModel {
 		const data = await fetchData.json;
 		// console.debug(data);
 		const ret: MediaTypeModel[] = [];
-		for (const result of data.games) {
+		for (const result of data.results) {
 			ret.push(
 				new GameModel({
 					type: MediaType.Game,
-					title: result.title,
-					englishTitle: result.title,
-					year: new Date(result.platforms[0].first_release_date).getFullYear().toString(),
+					title: result.name,
+					englishTitle: result.name,
+					year: new Date(result.original_release_date).getFullYear().toString(),
 					dataSource: this.apiName,
-					id: result.game_id,
-				} as GameModel),
+					id: result.guid,
+				}),
 			);
 		}
 
@@ -65,11 +64,11 @@ export class MobyGamesAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!this.plugin.settings.MobyGamesKey) {
+		if (!this.plugin.settings.GiantBombKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${this.plugin.settings.MobyGamesKey}`;
+		const searchUrl = `${this.apiUrl}/game/${encodeURIComponent(id)}/?api_key=${this.plugin.settings.GiantBombKey}&format=json`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -81,24 +80,24 @@ export class MobyGamesAPI extends APIModel {
 
 		const data = await fetchData.json;
 		// console.debug(data);
-		const result = data.games[0];
+		const result = data.results;
 
 		return new GameModel({
 			type: MediaType.Game,
-			title: result.title,
-			englishTitle: result.title,
-			year: new Date(result.platforms[0].first_release_date).getFullYear().toString(),
+			title: result.name,
+			englishTitle: result.name,
+			year: new Date(result.original_release_date).getFullYear().toString(),
 			dataSource: this.apiName,
-			url: `https://www.mobygames.com/game/${result.game_id}`,
-			id: result.game_id,
-			developers: [],
-			publishers: [],
-			genres: result.genres?.map((x: any) => x.genre_name) ?? [],
-			onlineRating: result.moby_score,
-			image: result.sample_cover?.image ?? '',
+			url: result.site_detail_url,
+			id: result.guid,
+			developers: result.developers?.map((x: any) => x.name) ?? [],
+			publishers: result.publishers?.map((x: any) => x.name) ?? [],
+			genres: result.genres?.map((x: any) => x.name) ?? [],
+			onlineRating: 0,
+			image: result.image?.super_url ?? '',
 
 			released: true,
-			releaseDate: result.platforms[0].first_release_date ?? 'unknown',
+			releaseDate: result.original_release_date ?? 'unknown',
 
 			userData: {
 				played: false,

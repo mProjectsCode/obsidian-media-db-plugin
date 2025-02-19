@@ -1,5 +1,6 @@
-import { APIModel } from './APIModel';
-import { MediaTypeModel } from '../models/MediaTypeModel';
+import { Notice } from 'obsidian';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
+import type { APIModel } from './APIModel';
 
 export class APIManager {
 	apis: APIModel[];
@@ -23,7 +24,10 @@ export class APIManager {
 				try {
 					return await api.searchByTitle(query);
 				} catch (e) {
+					new Notice(`Error querying ${api.apiName}: ${e}`);
 					console.warn(e);
+
+					return [];
 				}
 			});
 
@@ -35,7 +39,7 @@ export class APIManager {
 	 *
 	 * @param item
 	 */
-	async queryDetailedInfo(item: MediaTypeModel): Promise<MediaTypeModel> {
+	async queryDetailedInfo(item: MediaTypeModel): Promise<MediaTypeModel | undefined> {
 		return await this.queryDetailedInfoById(item.id, item.dataSource);
 	}
 
@@ -45,22 +49,31 @@ export class APIManager {
 	 * @param id
 	 * @param apiName
 	 */
-	async queryDetailedInfoById(id: string, apiName: string): Promise<MediaTypeModel> {
+	async queryDetailedInfoById(id: string, apiName: string): Promise<MediaTypeModel | undefined> {
 		for (const api of this.apis) {
 			if (api.apiName === apiName) {
-				return api.getById(id);
+				try {
+					return api.getById(id);
+				} catch (e) {
+					new Notice(`Error querying ${api.apiName}: ${e}`);
+					console.warn(e);
+
+					return undefined;
+				}
 			}
 		}
+
+		return undefined;
 	}
 
-	getApiByName(name: string): APIModel {
+	getApiByName(name: string): APIModel | undefined {
 		for (const api of this.apis) {
 			if (api.apiName === name) {
 				return api;
 			}
 		}
 
-		return null;
+		return undefined;
 	}
 
 	registerAPI(api: APIModel): void {
