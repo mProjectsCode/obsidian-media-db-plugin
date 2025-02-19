@@ -12,7 +12,6 @@ import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
-//import { VNDBAPI } from './api/apis/VNDBAPI';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
@@ -58,7 +57,6 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new ComicVineAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
 		this.apiManager.registerAPI(new GiantBombAPI(this));
-		//this.apiManager.registerAPI(new VNDBAPI(this));
 		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager();
