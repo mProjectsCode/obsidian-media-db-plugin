@@ -19,13 +19,13 @@ export abstract class APIModel {
 	abstract getById(id: string): Promise<MediaTypeModel>;
 
 	hasType(type: MediaType): boolean {
-		// if (
-		// 	this.types.contains(type) &&
-		// 	(Boolean((this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type]) === true || (this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type] === undefined)
-		// ) {
-		// 	return true;
-		// }
-		return this.types.contains(type);
+		if (
+			this.types.contains(type) &&
+			(Boolean((this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type]) === true || (this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type] === undefined)
+		) {
+			return true;
+		}
+		return false;
 	}
 
 	hasTypeOverlap(types: MediaType[]): boolean {
