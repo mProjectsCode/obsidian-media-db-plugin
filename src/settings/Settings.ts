@@ -111,10 +111,10 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 			series: true,
 		},
 		MALAPIManga: {
-			comicManga: true
+			comicManga: true,
 		},
 		ComicVineAPI: {
-			comicManga: true
+			comicManga: true,
 		},
 		SteamAPI: {
 			game: true,
@@ -195,499 +195,498 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 }
 
 export class MediaDbSettingTab extends PluginSettingTab {
-    plugin: MediaDbPlugin;
+	plugin: MediaDbPlugin;
 
-    constructor(app: App, plugin: MediaDbPlugin) {
-        super(app, plugin);
-        this.plugin = plugin;
-    }
+	constructor(app: App, plugin: MediaDbPlugin) {
+		super(app, plugin);
+		this.plugin = plugin;
+	}
 
-    display(): void {
-        const { containerEl } = this;
+	display(): void {
+		const { containerEl } = this;
 
-        containerEl.empty();
+		containerEl.empty();
 
-        new Setting(containerEl)
-            .setName('OMDb API key')
-            .setDesc('API key for "www.omdbapi.com".')
+		new Setting(containerEl)
+			.setName('OMDb API key')
+			.setDesc('API key for "www.omdbapi.com".')
 			.addText(cb => {
-                cb.setPlaceholder('API key')
-                    .setValue(this.plugin.settings.OMDbKey)
-                    .onChange(data => {
-                        this.plugin.settings.OMDbKey = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.OMDbKey)
+					.onChange(data => {
+						this.plugin.settings.OMDbKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Moby Games key')
-            .setDesc('API key for "www.mobygames.com".')
-            .addText(cb => {
-                cb.setPlaceholder('API key')
-                    .setValue(this.plugin.settings.MobyGamesKey)
-                    .onChange(data => {
-                        this.plugin.settings.MobyGamesKey = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Moby Games key')
+			.setDesc('API key for "www.mobygames.com".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.MobyGamesKey)
+					.onChange(data => {
+						this.plugin.settings.MobyGamesKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Giant Bomb Key')
-            .setDesc('API key for "www.giantbomb.com".')
-            .addText(cb => {
-                cb.setPlaceholder('API key')
-                    .setValue(this.plugin.settings.GiantBombKey)
-                    .onChange(data => {
-                        this.plugin.settings.GiantBombKey = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
-        new Setting(containerEl)
-            .setName('Comic Vine Key')
-            .setDesc('API key for "www.comicvine.gamespot.com".')
-            .addText(cb => {
-                cb.setPlaceholder('API key')
-                    .setValue(this.plugin.settings.ComicVineKey)
-                    .onChange(data => {
-                        this.plugin.settings.ComicVineKey = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Giant Bomb Key')
+			.setDesc('API key for "www.giantbomb.com".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.GiantBombKey)
+					.onChange(data => {
+						this.plugin.settings.GiantBombKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
+		new Setting(containerEl)
+			.setName('Comic Vine Key')
+			.setDesc('API key for "www.comicvine.gamespot.com".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.ComicVineKey)
+					.onChange(data => {
+						this.plugin.settings.ComicVineKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('SFW filter')
-            .setDesc('Only shows SFW results for APIs that offer filtering.')
-            .addToggle(cb => {
-                cb.setValue(this.plugin.settings.sfwFilter).onChange(data => {
-                    this.plugin.settings.sfwFilter = data;
-                    void this.plugin.saveSettings();
-                });
-            });
+		new Setting(containerEl)
+			.setName('SFW filter')
+			.setDesc('Only shows SFW results for APIs that offer filtering.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.sfwFilter).onChange(data => {
+					this.plugin.settings.sfwFilter = data;
+					void this.plugin.saveSettings();
+				});
+			});
 
-        new Setting(containerEl)
-            .setName('Resolve {{ tags }} in templates')
-            .setDesc('Whether to resolve {{ tags }} in templates. The spaces inside the curly braces are important.')
-            .addToggle(cb => {
-                cb.setValue(this.plugin.settings.templates).onChange(data => {
-                    this.plugin.settings.templates = data;
-                    void this.plugin.saveSettings();
-                });
-            });
+		new Setting(containerEl)
+			.setName('Resolve {{ tags }} in templates')
+			.setDesc('Whether to resolve {{ tags }} in templates. The spaces inside the curly braces are important.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.templates).onChange(data => {
+					this.plugin.settings.templates = data;
+					void this.plugin.saveSettings();
+				});
+			});
 
-        new Setting(containerEl)
-            .setName('Date format')
-            .setDesc(
-                fragWithHTML(
-                    "Your custom date format. Use <em>'YYYY-MM-DD'</em> for example.<br>" +
-                        "For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
-                        "Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
-                        this.plugin.dateFormatter.getPreview() +
-                        '</a></b>',
-                ),
-            )
-            .addText(cb => {
-                cb.setPlaceholder(DEFAULT_SETTINGS.customDateFormat)
-                    .setValue(this.plugin.settings.customDateFormat === DEFAULT_SETTINGS.customDateFormat ? '' : this.plugin.settings.customDateFormat)
-                    .onChange(data => {
-                        const newDateFormat = data ? data : DEFAULT_SETTINGS.customDateFormat;
-                        this.plugin.settings.customDateFormat = newDateFormat;
-                        const previewEl = document.getElementById('media-db-dateformat-preview');
-                        if (previewEl) {
-                            previewEl.textContent = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
-                        }
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Date format')
+			.setDesc(
+				fragWithHTML(
+					"Your custom date format. Use <em>'YYYY-MM-DD'</em> for example.<br>" +
+						"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
+						"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
+						this.plugin.dateFormatter.getPreview() +
+						'</a></b>',
+				),
+			)
+			.addText(cb => {
+				cb.setPlaceholder(DEFAULT_SETTINGS.customDateFormat)
+					.setValue(this.plugin.settings.customDateFormat === DEFAULT_SETTINGS.customDateFormat ? '' : this.plugin.settings.customDateFormat)
+					.onChange(data => {
+						const newDateFormat = data ? data : DEFAULT_SETTINGS.customDateFormat;
+						this.plugin.settings.customDateFormat = newDateFormat;
+						const previewEl = document.getElementById('media-db-dateformat-preview');
+						if (previewEl) {
+							previewEl.textContent = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
+						}
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Open note in new tab')
-            .setDesc('Open the newly created note in a new tab.')
-            .addToggle(cb => {
-                cb.setValue(this.plugin.settings.openNoteInNewTab).onChange(data => {
-                    this.plugin.settings.openNoteInNewTab = data;
-                    void this.plugin.saveSettings();
-                });
-            });
+		new Setting(containerEl)
+			.setName('Open note in new tab')
+			.setDesc('Open the newly created note in a new tab.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.openNoteInNewTab).onChange(data => {
+					this.plugin.settings.openNoteInNewTab = data;
+					void this.plugin.saveSettings();
+				});
+			});
 
-        new Setting(containerEl)
-            .setName('Use default front matter')
-            .setDesc('Whether to use the default front matter. If disabled, the front matter from the template will be used. Same as mapping everything to remove.')
-            .addToggle(cb => {
-                cb.setValue(this.plugin.settings.useDefaultFrontMatter).onChange(data => {
-                    this.plugin.settings.useDefaultFrontMatter = data;
-                    void this.plugin.saveSettings();
-                    // Redraw settings to display/remove the property mappings
-                    this.display();
-                });
-            });
+		new Setting(containerEl)
+			.setName('Use default front matter')
+			.setDesc('Whether to use the default front matter. If disabled, the front matter from the template will be used. Same as mapping everything to remove.')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.useDefaultFrontMatter).onChange(data => {
+					this.plugin.settings.useDefaultFrontMatter = data;
+					void this.plugin.saveSettings();
+					// Redraw settings to display/remove the property mappings
+					this.display();
+				});
+			});
 
-        new Setting(containerEl)
-            .setName('Enable Templater integration')
-            .setDesc(
-                'Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.',
-            )
-            .addToggle(cb => {
-                cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
-                    this.plugin.settings.enableTemplaterIntegration = data;
-                    void this.plugin.saveSettings();
-                });
-            });
+		new Setting(containerEl)
+			.setName('Enable Templater integration')
+			.setDesc(
+				'Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.',
+			)
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
+					this.plugin.settings.enableTemplaterIntegration = data;
+					void this.plugin.saveSettings();
+				});
+			});
 
-        // Create a map to store APIs for each media type
-        const mediaTypeApiMap = new Map<string, string[]>();
+		// Create a map to store APIs for each media type
+		const mediaTypeApiMap = new Map<string, string[]>();
 
-        // Populate the map with APIs for each media type
-        Object.entries(this.plugin.settings.apiToggle).forEach(([apiName, api]) => {
-            Object.entries(api).forEach(([mediaType]) => {
-                    if (!mediaTypeApiMap.has(mediaType)) {
-                        mediaTypeApiMap.set(mediaType, []);
-                    }
-                    mediaTypeApiMap.get(mediaType)!.push(apiName);
-            });
-        });
+		// Populate the map with APIs for each media type
+		Object.entries(this.plugin.settings.apiToggle).forEach(([apiName, api]) => {
+			Object.entries(api).forEach(([mediaType]) => {
+				if (!mediaTypeApiMap.has(mediaType)) {
+					mediaTypeApiMap.set(mediaType, []);
+				}
+				mediaTypeApiMap.get(mediaType)!.push(apiName);
+			});
+		});
 
-        // Filter out media types with only one API
-        const filteredMediaTypes = Array.from(mediaTypeApiMap.entries()).filter(([_, apis]) => apis.length > 1);
+		// Filter out media types with only one API
+		const filteredMediaTypes = Array.from(mediaTypeApiMap.entries()).filter(([_, apis]) => apis.length > 1);
 
-        // Dynamically create settings based on the filtered media types and their APIs
-        filteredMediaTypes.forEach(([mediaType, apis]) => {
-            new Setting(containerEl).setName(`Select APIs for ${unCamelCase(mediaType)}`).setHeading();
-            apis.forEach(apiName => {
-                const apiToggle = this.plugin.settings.apiToggle[apiName as keyof typeof this.plugin.settings.apiToggle];
-                new Setting(containerEl)
-                    .setName(apiName)
-                    .setDesc(`Use ${apiName} API for ${unCamelCase(mediaType)}.`)
-                    .addToggle(cb => {
-                        cb.setValue((apiToggle as Record<string, boolean>)[mediaType])
-                            .onChange(data => {
-                                (apiToggle as Record<string, boolean>)[mediaType] = data;
-                                void this.plugin.saveSettings();
-                            });
-                    });
-            });
-        });
+		// Dynamically create settings based on the filtered media types and their APIs
+		filteredMediaTypes.forEach(([mediaType, apis]) => {
+			new Setting(containerEl).setName(`Select APIs for ${unCamelCase(mediaType)}`).setHeading();
+			apis.forEach(apiName => {
+				const apiToggle = this.plugin.settings.apiToggle[apiName as keyof typeof this.plugin.settings.apiToggle];
+				new Setting(containerEl)
+					.setName(apiName)
+					.setDesc(`Use ${apiName} API for ${unCamelCase(mediaType)}.`)
+					.addToggle(cb => {
+						cb.setValue((apiToggle as Record<string, boolean>)[mediaType]).onChange(data => {
+							(apiToggle as Record<string, boolean>)[mediaType] = data;
+							void this.plugin.saveSettings();
+						});
+					});
+			});
+		});
 
-        new Setting(containerEl).setName('New file location').setHeading();
-        // region new file location
-        new Setting(containerEl)
-            .setName('Movie folder')
-            .setDesc('Where newly imported movies should be placed.')
-            .addSearch(cb => {
-                new FolderSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder(DEFAULT_SETTINGS.movieFolder)
-                    .setValue(this.plugin.settings.movieFolder)
-                    .onChange(data => {
-                        this.plugin.settings.movieFolder = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl).setName('New file location').setHeading();
+		// region new file location
+		new Setting(containerEl)
+			.setName('Movie folder')
+			.setDesc('Where newly imported movies should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.movieFolder)
+					.setValue(this.plugin.settings.movieFolder)
+					.onChange(data => {
+						this.plugin.settings.movieFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Series folder')
-            .setDesc('Where newly imported series should be placed.')
-            .addSearch(cb => {
-                new FolderSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder(DEFAULT_SETTINGS.seriesFolder)
-                    .setValue(this.plugin.settings.seriesFolder)
-                    .onChange(data => {
-                        this.plugin.settings.seriesFolder = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Series folder')
+			.setDesc('Where newly imported series should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.seriesFolder)
+					.setValue(this.plugin.settings.seriesFolder)
+					.onChange(data => {
+						this.plugin.settings.seriesFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Comic and manga folder')
-            .setDesc('Where newly imported comics and manga should be placed.')
-            .addSearch(cb => {
-                new FolderSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder(DEFAULT_SETTINGS.mangaFolder)
-                    .setValue(this.plugin.settings.mangaFolder)
-                    .onChange(data => {
-                        this.plugin.settings.mangaFolder = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Comic and manga folder')
+			.setDesc('Where newly imported comics and manga should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.mangaFolder)
+					.setValue(this.plugin.settings.mangaFolder)
+					.onChange(data => {
+						this.plugin.settings.mangaFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Game folder')
-            .setDesc('Where newly imported games should be placed.')
-            .addSearch(cb => {
-                new FolderSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder(DEFAULT_SETTINGS.gameFolder)
-                    .setValue(this.plugin.settings.gameFolder)
-                    .onChange(data => {
-                        this.plugin.settings.gameFolder = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Game folder')
+			.setDesc('Where newly imported games should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.gameFolder)
+					.setValue(this.plugin.settings.gameFolder)
+					.onChange(data => {
+						this.plugin.settings.gameFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Wiki folder')
-            .setDesc('Where newly imported wiki articles should be placed.')
-            .addSearch(cb => {
-                new FolderSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder(DEFAULT_SETTINGS.wikiFolder)
-                    .setValue(this.plugin.settings.wikiFolder)
-                    .onChange(data => {
-                        this.plugin.settings.wikiFolder = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Wiki folder')
+			.setDesc('Where newly imported wiki articles should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.wikiFolder)
+					.setValue(this.plugin.settings.wikiFolder)
+					.onChange(data => {
+						this.plugin.settings.wikiFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Music folder')
-            .setDesc('Where newly imported music should be placed.')
-            .addSearch(cb => {
-                new FolderSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder(DEFAULT_SETTINGS.musicReleaseFolder)
-                    .setValue(this.plugin.settings.musicReleaseFolder)
-                    .onChange(data => {
-                        this.plugin.settings.musicReleaseFolder = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Music folder')
+			.setDesc('Where newly imported music should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.musicReleaseFolder)
+					.setValue(this.plugin.settings.musicReleaseFolder)
+					.onChange(data => {
+						this.plugin.settings.musicReleaseFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Board game folder')
-            .setDesc('Where newly imported board games should be places.')
-            .addSearch(cb => {
-                new FolderSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder(DEFAULT_SETTINGS.boardgameFolder)
-                    .setValue(this.plugin.settings.boardgameFolder)
-                    .onChange(data => {
-                        this.plugin.settings.boardgameFolder = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
-        new Setting(containerEl)
-            .setName('Book folder')
-            .setDesc('Where newly imported books should be placed.')
-            .addSearch(cb => {
-                new FolderSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder(DEFAULT_SETTINGS.bookFolder)
-                    .setValue(this.plugin.settings.bookFolder)
-                    .onChange(data => {
-                        this.plugin.settings.bookFolder = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Board game folder')
+			.setDesc('Where newly imported board games should be places.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.boardgameFolder)
+					.setValue(this.plugin.settings.boardgameFolder)
+					.onChange(data => {
+						this.plugin.settings.boardgameFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
+		new Setting(containerEl)
+			.setName('Book folder')
+			.setDesc('Where newly imported books should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.bookFolder)
+					.setValue(this.plugin.settings.bookFolder)
+					.onChange(data => {
+						this.plugin.settings.bookFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        // endregion
+		// endregion
 
-        new Setting(containerEl).setName('Template settings').setHeading();
-        // region templates
-        new Setting(containerEl)
-            .setName('Movie template')
-            .setDesc('Template file to be used when creating a new note for a movie.')
-            .addSearch(cb => {
-                new FileSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder('Example: movieTemplate.md')
-                    .setValue(this.plugin.settings.movieTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.movieTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl).setName('Template settings').setHeading();
+		// region templates
+		new Setting(containerEl)
+			.setName('Movie template')
+			.setDesc('Template file to be used when creating a new note for a movie.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: movieTemplate.md')
+					.setValue(this.plugin.settings.movieTemplate)
+					.onChange(data => {
+						this.plugin.settings.movieTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Series template')
-            .setDesc('Template file to be used when creating a new note for a series.')
-            .addSearch(cb => {
-                new FileSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder('Example: seriesTemplate.md')
-                    .setValue(this.plugin.settings.seriesTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.seriesTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Series template')
+			.setDesc('Template file to be used when creating a new note for a series.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: seriesTemplate.md')
+					.setValue(this.plugin.settings.seriesTemplate)
+					.onChange(data => {
+						this.plugin.settings.seriesTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Manga and Comics template')
-            .setDesc('Template file to be used when creating a new note for a manga or a comic.')
-            .addSearch(cb => {
-                new FileSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder('Example: mangaTemplate.md')
-                    .setValue(this.plugin.settings.mangaTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.mangaTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Manga and Comics template')
+			.setDesc('Template file to be used when creating a new note for a manga or a comic.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: mangaTemplate.md')
+					.setValue(this.plugin.settings.mangaTemplate)
+					.onChange(data => {
+						this.plugin.settings.mangaTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Game template')
-            .setDesc('Template file to be used when creating a new note for a game.')
-            .addSearch(cb => {
-                new FileSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder('Example: gameTemplate.md')
-                    .setValue(this.plugin.settings.gameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.gameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Game template')
+			.setDesc('Template file to be used when creating a new note for a game.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: gameTemplate.md')
+					.setValue(this.plugin.settings.gameTemplate)
+					.onChange(data => {
+						this.plugin.settings.gameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Wiki template')
-            .setDesc('Template file to be used when creating a new note for a wiki entry.')
-            .addSearch(cb => {
-                new FileSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder('Example: wikiTemplate.md')
-                    .setValue(this.plugin.settings.wikiTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.wikiTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Wiki template')
+			.setDesc('Template file to be used when creating a new note for a wiki entry.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: wikiTemplate.md')
+					.setValue(this.plugin.settings.wikiTemplate)
+					.onChange(data => {
+						this.plugin.settings.wikiTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Music release template')
-            .setDesc('Template file to be used when creating a new note for a music release.')
-            .addSearch(cb => {
-                new FileSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder('Example: musicReleaseTemplate.md')
-                    .setValue(this.plugin.settings.musicReleaseTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.musicReleaseTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Music release template')
+			.setDesc('Template file to be used when creating a new note for a music release.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: musicReleaseTemplate.md')
+					.setValue(this.plugin.settings.musicReleaseTemplate)
+					.onChange(data => {
+						this.plugin.settings.musicReleaseTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Board game template')
-            .setDesc('Template file to be used when creating a new note for a boardgame.')
-            .addSearch(cb => {
-                new FileSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder('Example: boardgameTemplate.md')
-                    .setValue(this.plugin.settings.boardgameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.boardgameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Board game template')
+			.setDesc('Template file to be used when creating a new note for a boardgame.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: boardgameTemplate.md')
+					.setValue(this.plugin.settings.boardgameTemplate)
+					.onChange(data => {
+						this.plugin.settings.boardgameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Book template')
-            .setDesc('Template file to be used when creating a new note for a book.')
-            .addSearch(cb => {
-                new FileSuggest(this.app, cb.inputEl);
-                cb.setPlaceholder('Example: bookTemplate.md')
-                    .setValue(this.plugin.settings.bookTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.bookTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Book template')
+			.setDesc('Template file to be used when creating a new note for a book.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: bookTemplate.md')
+					.setValue(this.plugin.settings.bookTemplate)
+					.onChange(data => {
+						this.plugin.settings.bookTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        // endregion
+		// endregion
 
-        new Setting(containerEl).setName('File name settings').setHeading();
-        // region file name templates
-        new Setting(containerEl)
-            .setName('Movie file name template')
-            .setDesc('Template for the file name used when creating a new note for a movie.')
-            .addText(cb => {
-                cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.movieFileNameTemplate}`)
-                    .setValue(this.plugin.settings.movieFileNameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.movieFileNameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl).setName('File name settings').setHeading();
+		// region file name templates
+		new Setting(containerEl)
+			.setName('Movie file name template')
+			.setDesc('Template for the file name used when creating a new note for a movie.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.movieFileNameTemplate}`)
+					.setValue(this.plugin.settings.movieFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.movieFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Series file name template')
-            .setDesc('Template for the file name used when creating a new note for a series.')
-            .addText(cb => {
-                cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.seriesFileNameTemplate}`)
-                    .setValue(this.plugin.settings.seriesFileNameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.seriesFileNameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Series file name template')
+			.setDesc('Template for the file name used when creating a new note for a series.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.seriesFileNameTemplate}`)
+					.setValue(this.plugin.settings.seriesFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.seriesFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Manga and comic file name template')
-            .setDesc('Template for the file name used when creating a new note for a manga or comic.')
-            .addText(cb => {
-                cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.mangaFileNameTemplate}`)
-                    .setValue(this.plugin.settings.mangaFileNameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.mangaFileNameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Manga and comic file name template')
+			.setDesc('Template for the file name used when creating a new note for a manga or comic.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.mangaFileNameTemplate}`)
+					.setValue(this.plugin.settings.mangaFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.mangaFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Game file name template')
-            .setDesc('Template for the file name used when creating a new note for a game.')
-            .addText(cb => {
-                cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.gameFileNameTemplate}`)
-                    .setValue(this.plugin.settings.gameFileNameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.gameFileNameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Game file name template')
+			.setDesc('Template for the file name used when creating a new note for a game.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.gameFileNameTemplate}`)
+					.setValue(this.plugin.settings.gameFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.gameFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Wiki file name template')
-            .setDesc('Template for the file name used when creating a new note for a wiki entry.')
-            .addText(cb => {
-                cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.wikiFileNameTemplate}`)
-                    .setValue(this.plugin.settings.wikiFileNameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.wikiFileNameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Wiki file name template')
+			.setDesc('Template for the file name used when creating a new note for a wiki entry.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.wikiFileNameTemplate}`)
+					.setValue(this.plugin.settings.wikiFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.wikiFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Music release file name template')
-            .setDesc('Template for the file name used when creating a new note for a music release.')
-            .addText(cb => {
-                cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.musicReleaseFileNameTemplate}`)
-                    .setValue(this.plugin.settings.musicReleaseFileNameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.musicReleaseFileNameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Music release file name template')
+			.setDesc('Template for the file name used when creating a new note for a music release.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.musicReleaseFileNameTemplate}`)
+					.setValue(this.plugin.settings.musicReleaseFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.musicReleaseFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Board game file name template')
-            .setDesc('Template for the file name used when creating a new note for a boardgame.')
-            .addText(cb => {
-                cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.boardgameFileNameTemplate}`)
-                    .setValue(this.plugin.settings.boardgameFileNameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.boardgameFileNameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Board game file name template')
+			.setDesc('Template for the file name used when creating a new note for a boardgame.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.boardgameFileNameTemplate}`)
+					.setValue(this.plugin.settings.boardgameFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.boardgameFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        new Setting(containerEl)
-            .setName('Book file name template')
-            .setDesc('Template for the file name used when creating a new note for a book.')
-            .addText(cb => {
-                cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.bookFileNameTemplate}`)
-                    .setValue(this.plugin.settings.bookFileNameTemplate)
-                    .onChange(data => {
-                        this.plugin.settings.bookFileNameTemplate = data;
-                        void this.plugin.saveSettings();
-                    });
-            });
+		new Setting(containerEl)
+			.setName('Book file name template')
+			.setDesc('Template for the file name used when creating a new note for a book.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.bookFileNameTemplate}`)
+					.setValue(this.plugin.settings.bookFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.bookFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
-        // endregion
+		// endregion
 
-        // region Property Mappings
-        if (this.plugin.settings.useDefaultFrontMatter) {
-            new Setting(containerEl).setName('Property mappings').setHeading();
+		// region Property Mappings
+		if (this.plugin.settings.useDefaultFrontMatter) {
+			new Setting(containerEl).setName('Property mappings').setHeading();
 
-            const propertyMappingExplanation = containerEl.createEl('div');
-            propertyMappingExplanation.innerHTML = `
+			const propertyMappingExplanation = containerEl.createEl('div');
+			propertyMappingExplanation.innerHTML = `
 		<p>Choose how metadata fields are mapped to property names. The options are:</p>
 		<ul>
 			<li><strong>default</strong>: keep the original name.</li>
@@ -698,29 +697,29 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			Don't forget to save your changes using the save button for each individual category.
 		</p>`;
 
-            mount(PropertyMappingModelsComponent, {
-                target: this.containerEl,
-                props: {
-                    models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),
-                    save: (model: PropertyMappingModel): void => {
-                        const propertyMappingModels: PropertyMappingModel[] = [];
+			mount(PropertyMappingModelsComponent, {
+				target: this.containerEl,
+				props: {
+					models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),
+					save: (model: PropertyMappingModel): void => {
+						const propertyMappingModels: PropertyMappingModel[] = [];
 
-                        for (const model2 of this.plugin.settings.propertyMappingModels) {
-                            if (model2.type === model.type) {
-                                propertyMappingModels.push(model);
-                            } else {
-                                propertyMappingModels.push(model2);
-                            }
-                        }
+						for (const model2 of this.plugin.settings.propertyMappingModels) {
+							if (model2.type === model.type) {
+								propertyMappingModels.push(model);
+							} else {
+								propertyMappingModels.push(model2);
+							}
+						}
 
-                        this.plugin.settings.propertyMappingModels = propertyMappingModels;
-                        new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
-                        void this.plugin.saveSettings();
-                    },
-                },
-            });
-        }
+						this.plugin.settings.propertyMappingModels = propertyMappingModels;
+						new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
+						void this.plugin.saveSettings();
+					},
+				},
+			});
+		}
 
-        // endregion
-    }
+		// endregion
+	}
 }
