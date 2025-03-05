@@ -193,7 +193,7 @@ export class VNDBAPI extends APIModel {
 					year: vn.released && vn.released !== 'TBA' ? new Date(vn.released).getFullYear().toString() : 'TBA',
 					dataSource: this.apiName,
 					id: vn.id,
-				} as GameModel),
+				}),
 			);
 		}
 
@@ -249,12 +249,12 @@ export class VNDBAPI extends APIModel {
 			image: this.plugin.settings.sfwFilter && (vn.image?.sexual ?? 0) > 0.5 ? 'NSFW' : vn.image?.url,
 
 			released: vn.devstatus === VNDevStatus.Finished,
-			releaseDate: releasedIsDate ? this.plugin.dateFormatter.format(vn.released, this.apiDateFormat) : vn.released,
+			releaseDate: releasedIsDate ? (this.plugin.dateFormatter.format(vn.released, this.apiDateFormat) ?? vn.released) : vn.released,
 
 			userData: {
 				played: false,
 				personalRating: 0,
 			},
-		} as GameModel);
+		});
 	}
 }
