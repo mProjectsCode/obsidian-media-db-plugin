@@ -5,6 +5,24 @@ import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 
+enum VNDevStatus {
+	Finished,
+	InDevelopment,
+	Cancelled,
+}
+
+enum TagSpoiler {
+	None,
+	Minor,
+	Major,
+}
+
+enum TagCategory {
+	Content = 'cont',
+	Sexual = 'ero',
+	Technical = 'tech',
+}
+
 /**
  * A partial `POST /vn` response payload; desired fields should be listed in the request body.
  */
@@ -20,7 +38,7 @@ interface VNJSONResponse {
 					lang: string;
 				},
 			];
-			devstatus: 0 | 1 | 2; // Released | In-development | Cancelled
+			devstatus: VNDevStatus;
 			released: string | 'TBA' | null; // eslint-disable-line @typescript-eslint/no-redundant-type-constituents
 			image: {
 				url: string;
@@ -31,9 +49,9 @@ interface VNJSONResponse {
 				{
 					id: string;
 					name: string;
-					category: 'cont' | 'ero' | 'tech';
+					category: TagCategory;
 					rating: number;
-					spoiler: 0 | 1 | 2; // None | Minor | Major
+					spoiler: TagSpoiler;
 				},
 			];
 			developers: [
@@ -223,14 +241,14 @@ export class VNDBAPI extends APIModel {
 				.map(p => p.name)
 				.unique(),
 			genres: vn.tags
-				.filter(t => t.category === 'cont' && t.spoiler === 0 && t.rating >= 2)
+				.filter(t => t.category === TagCategory.Content && t.spoiler === TagSpoiler.None && t.rating >= 2)
 				.sort((t1, t2) => t2.rating - t1.rating)
 				.map(t => t.name),
 			onlineRating: vn.rating ?? NaN,
 			// TODO: Ideally we should simply flag a sensitive image, then let the user handle it non-destructively
 			image: this.plugin.settings.sfwFilter && (vn.image?.sexual ?? 0) > 0.5 ? 'NSFW' : vn.image?.url,
 
-			released: vn.devstatus === 0,
+			released: vn.devstatus === VNDevStatus.Finished,
 			releaseDate: releasedIsDate ? this.plugin.dateFormatter.format(vn.released, this.apiDateFormat) : vn.released,
 
 			userData: {
