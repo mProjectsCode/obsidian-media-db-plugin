@@ -106,7 +106,7 @@ export class VNDBAPI extends APIModel {
 	 * @throws Error The request returned an unsuccessful or unexpected HTTP status code.
 	 * @see {@link https://api.vndb.org/kana#api-structure}
 	 */
-	async postQuery(endpoint: string, body: string): Promise<unknown> {
+	private async postQuery(endpoint: string, body: string): Promise<unknown> {
 		const fetchData = await requestUrl({
 			url: `${this.apiUrl}${endpoint}`,
 			method: 'POST',
@@ -140,7 +140,7 @@ export class VNDBAPI extends APIModel {
 	 * Queries visual novel entries.
 	 * @see {@link https://api.vndb.org/kana#post-vn}
 	 */
-	postVNQuery(body: string): Promise<VNJSONResponse> {
+	private postVNQuery(body: string): Promise<VNJSONResponse> {
 		return this.postQuery('/vn', body) as Promise<VNJSONResponse>;
 	}
 
@@ -149,7 +149,7 @@ export class VNDBAPI extends APIModel {
 	 * Queries release entries.
 	 * @see {@link https://api.vndb.org/kana#post-release}
 	 */
-	postReleaseQuery(body: string): Promise<ReleaseJSONResponse> {
+	private postReleaseQuery(body: string): Promise<ReleaseJSONResponse> {
 		return this.postQuery('/release', body) as Promise<ReleaseJSONResponse>;
 	}
 
