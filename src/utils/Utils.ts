@@ -193,6 +193,7 @@ export interface CreateNoteOptions {
 	attachFile?: TFile;
 	openNote?: boolean;
 	folder?: TFolder;
+	isUpdating?: boolean; // New property
 }
 
 export function migrateObject<T extends object>(object: T, oldData: any, defaultData: T): void {

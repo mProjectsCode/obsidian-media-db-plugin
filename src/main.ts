@@ -512,14 +512,15 @@ export default class MediaDbPlugin extends Plugin {
 		// look if file already exists and ask if it should be overwritten
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (file) {
-			const shouldOverwrite = await new Promise<boolean>(resolve => {
-				new ConfirmOverwriteModal(this.app, fileName, resolve).open();
-			});
+			if (!options.isUpdating) {
+				const shouldOverwrite = await new Promise<boolean>(resolve => {
+					new ConfirmOverwriteModal(this.app, fileName, resolve).open();
+				});
 
-			if (!shouldOverwrite) {
-				throw new Error('MDB | file creation cancelled by user');
+				if (!shouldOverwrite) {
+					throw new Error('MDB | file creation cancelled by user');
+				}
 			}
-
 			await this.app.vault.delete(file);
 		}
 
@@ -574,9 +575,9 @@ export default class MediaDbPlugin extends Plugin {
 		console.debug(`MDB | newMediaTypeModel after merge`, newMediaTypeModel);
 
 		if (onlyMetadata) {
-			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent ?? undefined, openNote: true });
+			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent ?? undefined, openNote: true, isUpdating: true });
 		} else {
-			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachTemplate: true, folder: activeFile.parent ?? undefined, openNote: true });
+			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachTemplate: true, folder: activeFile.parent ?? undefined, openNote: true, isUpdating: true });
 		}
 	}
 
