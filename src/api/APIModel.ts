@@ -10,7 +10,7 @@ export abstract class APIModel {
 	plugin!: MediaDbPlugin;
 
 	/**
-	 * This function should query the api and return a list of matches. The matches should be caped at 20.
+	 * This function should query the api and return a list of matches. The matches should be capped at 20.
 	 *
 	 * @param title the title to query for
 	 */
@@ -19,13 +19,8 @@ export abstract class APIModel {
 	abstract getById(id: string): Promise<MediaTypeModel>;
 
 	hasType(type: MediaType): boolean {
-		if (
-			this.types.contains(type) &&
-			(Boolean((this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type]) === true || (this.plugin.settings.apiToggle as any)?.[this.apiName]?.[type] === undefined)
-		) {
-			return true;
-		}
-		return false;
+		const disabledMediaTypes = this.plugin.settings[`${this.apiName}_disabledMediaTypes` as keyof typeof this.plugin.settings] as MediaType[];
+		return this.types.includes(type) && !disabledMediaTypes.includes(type);
 	}
 
 	hasTypeOverlap(types: MediaType[]): boolean {

@@ -21,32 +21,13 @@ export interface MediaDbPluginSettings {
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
-	apiToggle: {
-		OMDbAPI: {
-			movie: boolean;
-			series: boolean;
-			game: boolean;
-		};
-		MALAPI: {
-			movie: boolean;
-			series: boolean;
-		};
-		MALAPIManga: {
-			comicManga: boolean;
-		};
-		ComicVineAPI: {
-			comicManga: boolean;
-		};
-		SteamAPI: {
-			game: boolean;
-		};
-		MobyGamesAPI: {
-			game: boolean;
-		};
-		GiantBombAPI: {
-			game: boolean;
-		};
-	};
+	OMDbAPI_disabledMediaTypes: string[];
+	MALAPI_disabledMediaTypes: string[];
+	MALAPIManga_disabledMediaTypes: string[];
+	ComicVineAPI_disabledMediaTypes: string[];
+	SteamAPI_disabledMediaTypes: string[];
+	MobyGamesAPI_disabledMediaTypes: string[];
+	GiantBombAPI_disabledMediaTypes: string[];
 	movieTemplate: string;
 	seriesTemplate: string;
 	mangaTemplate: string;
@@ -97,32 +78,13 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
 	enableTemplaterIntegration: false,
-	apiToggle: {
-		OMDbAPI: {
-			movie: true,
-			series: true,
-			game: true,
-		},
-		MALAPI: {
-			movie: true,
-			series: true,
-		},
-		MALAPIManga: {
-			comicManga: true,
-		},
-		ComicVineAPI: {
-			comicManga: true,
-		},
-		SteamAPI: {
-			game: true,
-		},
-		MobyGamesAPI: {
-			game: true,
-		},
-		GiantBombAPI: {
-			game: true,
-		},
-	},
+	OMDbAPI_disabledMediaTypes: [],
+	MALAPI_disabledMediaTypes: [],
+	MALAPIManga_disabledMediaTypes: [],
+	ComicVineAPI_disabledMediaTypes: [],
+	SteamAPI_disabledMediaTypes: [],
+	MobyGamesAPI_disabledMediaTypes: [],
+	GiantBombAPI_disabledMediaTypes: [],
 	movieTemplate: '',
 	seriesTemplate: '',
 	mangaTemplate: '',
@@ -329,31 +291,53 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		// Create a map to store APIs for each media type
 		const mediaTypeApiMap = new Map<string, string[]>();
+		const apiMediaTypes = {
+			OMDbAPI: ['movie', 'series', 'game'],
+			MALAPI: ['movie', 'series'],
+			MALAPIManga: ['manga'],
+			ComicVineAPI: ['comic', 'manga'],
+			SteamAPI: ['game'],
+			MobyGamesAPI: ['game'],
+			GiantBombAPI: ['game'],
+		};
 
 		// Populate the map with APIs for each media type
-		for (const [apiName, api] of Object.entries(this.plugin.settings.apiToggle)) {
-			for (const mediaType of Object.keys(api)) {
+		for (const [api, mediaTypes] of Object.entries(apiMediaTypes)) {
+			for (const mediaType of mediaTypes) {
 				if (!mediaTypeApiMap.has(mediaType)) {
 					mediaTypeApiMap.set(mediaType, []);
 				}
-				mediaTypeApiMap.get(mediaType)!.push(apiName);
+				mediaTypeApiMap.get(mediaType)!.push(api);
 			}
 		}
 
+		// Log the populated map to verify its contents
+		console.log('mediaTypeApiMap:', mediaTypeApiMap);
+
 		// Filter out media types with only one API
 		const filteredMediaTypes = Array.from(mediaTypeApiMap.entries()).filter(([_, apis]) => apis.length > 1);
+
+		// Log the filtered media types to verify the filtering
+		console.log('filteredMediaTypes:', filteredMediaTypes);
 
 		// Dynamically create settings based on the filtered media types and their APIs
 		for (const [mediaType, apis] of filteredMediaTypes) {
 			new Setting(containerEl).setName(`Select APIs for ${unCamelCase(mediaType)}`).setHeading();
 			for (const apiName of apis) {
-				const apiToggle = this.plugin.settings.apiToggle[apiName as keyof typeof this.plugin.settings.apiToggle];
+				const disabledMediaTypes = this.plugin.settings[`${apiName}_disabledMediaTypes` as keyof typeof this.plugin.settings] as string[];
 				new Setting(containerEl)
 					.setName(apiName)
 					.setDesc(`Use ${apiName} API for ${unCamelCase(mediaType)}.`)
 					.addToggle(cb => {
-						cb.setValue((apiToggle as Record<string, boolean>)[mediaType]).onChange(data => {
-							(apiToggle as Record<string, boolean>)[mediaType] = data;
+						cb.setValue(!disabledMediaTypes.includes(mediaType)).onChange(data => {
+							if (data) {
+								const index = disabledMediaTypes.indexOf(mediaType);
+								if (index > -1) {
+									disabledMediaTypes.splice(index, 1);
+								}
+							} else {
+								disabledMediaTypes.push(mediaType);
+							}
 							void this.plugin.saveSettings();
 						});
 					});
