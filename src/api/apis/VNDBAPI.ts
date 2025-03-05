@@ -80,8 +80,14 @@ export class VNDBAPI extends APIModel {
 		this.types = [MediaType.Game];
 	}
 
-	postVNQuery = (body: string): Promise<VNJSONResponse> => this.postQuery('/vn', body);
-	postReleaseQuery = (body: string): Promise<ReleaseJSONResponse> => this.postQuery('/release', body);
+	/**
+	 * Make a `POST` request to the VNDB API.
+	 * @param endpoint The API endpoint to query. E.g. "/vn".
+	 * @param body A JSON object defining the query, following the VNDB API structure.
+	 * @returns A JSON object representing the query response.
+	 * @throws Error The request returned an unsuccessful or unexpected HTTP status code.
+	 * @see {@link https://api.vndb.org/kana#api-structure}
+	 */
 	async postQuery(endpoint: string, body: string): Promise<any> {
 		const fetchData = await requestUrl({
 			url: `${this.apiUrl}${endpoint}`,
@@ -109,6 +115,24 @@ export class VNDBAPI extends APIModel {
 		}
 
 		return fetchData.json;
+	}
+
+	/**
+	 * Make a `POST` request to the `/vn` endpoint.
+	 * Queries visual novel entries.
+	 * @see {@link https://api.vndb.org/kana#post-vn}
+	 */
+	postVNQuery(body: string): Promise<VNJSONResponse> {
+		return this.postQuery('/vn', body);
+	}
+
+	/**
+	 * Make a `POST` request to the `/release` endpoint.
+	 * Queries release entries.
+	 * @see {@link https://api.vndb.org/kana#post-release}
+	 */
+	postReleaseQuery(body: string): Promise<ReleaseJSONResponse> {
+		return this.postQuery('/release', body);
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
