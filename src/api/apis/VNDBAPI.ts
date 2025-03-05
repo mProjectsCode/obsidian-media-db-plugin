@@ -1,9 +1,9 @@
-import { APIModel } from '../APIModel';
-import { MediaTypeModel } from '../../models/MediaTypeModel';
-import MediaDbPlugin from '../../main';
-import { GameModel } from '../../models/GameModel';
 import { requestUrl } from 'obsidian';
+import type MediaDbPlugin from '../../main';
+import { GameModel } from '../../models/GameModel';
+import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { APIModel } from '../APIModel';
 
 /**
  * A partial `POST /vn` response payload; desired fields should be listed in the request body.
@@ -21,7 +21,7 @@ interface VNJSONResponse {
 				},
 			];
 			devstatus: 0 | 1 | 2; // Released | In-development | Cancelled
-			released: string | 'TBA' | null;
+			released: string | 'TBA' | null; // eslint-disable-line @typescript-eslint/no-redundant-type-constituents
 			image: {
 				url: string;
 				sexual: number;
@@ -88,7 +88,7 @@ export class VNDBAPI extends APIModel {
 	 * @throws Error The request returned an unsuccessful or unexpected HTTP status code.
 	 * @see {@link https://api.vndb.org/kana#api-structure}
 	 */
-	async postQuery(endpoint: string, body: string): Promise<any> {
+	async postQuery(endpoint: string, body: string): Promise<unknown> {
 		const fetchData = await requestUrl({
 			url: `${this.apiUrl}${endpoint}`,
 			method: 'POST',
@@ -123,7 +123,7 @@ export class VNDBAPI extends APIModel {
 	 * @see {@link https://api.vndb.org/kana#post-vn}
 	 */
 	postVNQuery(body: string): Promise<VNJSONResponse> {
-		return this.postQuery('/vn', body);
+		return this.postQuery('/vn', body) as Promise<VNJSONResponse>;
 	}
 
 	/**
@@ -132,7 +132,7 @@ export class VNDBAPI extends APIModel {
 	 * @see {@link https://api.vndb.org/kana#post-release}
 	 */
 	postReleaseQuery(body: string): Promise<ReleaseJSONResponse> {
-		return this.postQuery('/release', body);
+		return this.postQuery('/release', body) as Promise<ReleaseJSONResponse>;
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
