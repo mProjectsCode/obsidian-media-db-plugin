@@ -13,6 +13,7 @@ import { SteamAPI } from './api/apis/SteamAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
+import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
@@ -508,9 +509,17 @@ export default class MediaDbPlugin extends Plugin {
 		fileName = replaceIllegalFileNameCharactersInString(fileName);
 		const filePath = `${folder.path}/${fileName}.md`;
 
-		// find and delete file with the same name
+		// look if file already exists and ask if it should be overwritten
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (file) {
+			const shouldOverwrite = await new Promise<boolean>(resolve => {
+				new ConfirmOverwriteModal(this.app, fileName, resolve).open();
+			});
+
+			if (!shouldOverwrite) {
+				throw new Error('MDB | file creation cancelled by user');
+			}
+
 			await this.app.vault.delete(file);
 		}
 
@@ -518,7 +527,7 @@ export default class MediaDbPlugin extends Plugin {
 		const targetFile = await this.app.vault.create(filePath, fileContent);
 		console.debug(`MDB | created new file at ${filePath}`);
 
-		// open newly crated file
+		// open newly created file
 		if (options.openNote) {
 			const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 			if (!activeLeaf) {
