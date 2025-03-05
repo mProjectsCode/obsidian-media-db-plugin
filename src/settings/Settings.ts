@@ -294,8 +294,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		const apiMediaTypes = {
 			OMDbAPI: ['movie', 'series', 'game'],
 			MALAPI: ['movie', 'series'],
-			MALAPIManga: ['manga'],
-			ComicVineAPI: ['comic', 'manga'],
+			MALAPIManga: ['comicManga'],
+			ComicVineAPI: ['comicManga'],
 			SteamAPI: ['game'],
 			MobyGamesAPI: ['game'],
 			GiantBombAPI: ['game'],
@@ -311,14 +311,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			}
 		}
 
-		// Log the populated map to verify its contents
-		console.log('mediaTypeApiMap:', mediaTypeApiMap);
-
 		// Filter out media types with only one API
 		const filteredMediaTypes = Array.from(mediaTypeApiMap.entries()).filter(([_, apis]) => apis.length > 1);
-
-		// Log the filtered media types to verify the filtering
-		console.log('filteredMediaTypes:', filteredMediaTypes);
 
 		// Dynamically create settings based on the filtered media types and their APIs
 		for (const [mediaType, apis] of filteredMediaTypes) {
