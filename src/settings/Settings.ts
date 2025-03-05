@@ -331,22 +331,22 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		const mediaTypeApiMap = new Map<string, string[]>();
 
 		// Populate the map with APIs for each media type
-		Object.entries(this.plugin.settings.apiToggle).forEach(([apiName, api]) => {
-			Object.entries(api).forEach(([mediaType]) => {
+		for (const [apiName, api] of Object.entries(this.plugin.settings.apiToggle)) {
+			for (const mediaType of Object.keys(api)) {
 				if (!mediaTypeApiMap.has(mediaType)) {
 					mediaTypeApiMap.set(mediaType, []);
 				}
 				mediaTypeApiMap.get(mediaType)!.push(apiName);
-			});
-		});
+			}
+		}
 
 		// Filter out media types with only one API
 		const filteredMediaTypes = Array.from(mediaTypeApiMap.entries()).filter(([_, apis]) => apis.length > 1);
 
 		// Dynamically create settings based on the filtered media types and their APIs
-		filteredMediaTypes.forEach(([mediaType, apis]) => {
+		for (const [mediaType, apis] of filteredMediaTypes) {
 			new Setting(containerEl).setName(`Select APIs for ${unCamelCase(mediaType)}`).setHeading();
-			apis.forEach(apiName => {
+			for (const apiName of apis) {
 				const apiToggle = this.plugin.settings.apiToggle[apiName as keyof typeof this.plugin.settings.apiToggle];
 				new Setting(containerEl)
 					.setName(apiName)
@@ -357,8 +357,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 							void this.plugin.saveSettings();
 						});
 					});
-			});
-		});
+			}
+		}
 
 		new Setting(containerEl).setName('New file location').setHeading();
 		// region new file location
