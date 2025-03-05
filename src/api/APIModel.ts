@@ -19,9 +19,8 @@ export abstract class APIModel {
 	abstract getById(id: string): Promise<MediaTypeModel>;
 
 	hasType(type: MediaType): boolean {
-		const sanitizedApiName = this.apiName.replace(/\s+/g, '_');
-		const disabledMediaTypes = (this.plugin.settings[`${sanitizedApiName}_disabledMediaTypes` as keyof typeof this.plugin.settings] as MediaType[]) || [];
-		return (this.types || []).includes(type) && !disabledMediaTypes.includes(type);
+		const disabledMediaTypes = this.plugin.settings[`${this.apiName}_disabledMediaTypes` as keyof typeof this.plugin.settings] as MediaType[];
+		return this.types.includes(type) && !disabledMediaTypes.includes(type);
 	}
 
 	hasTypeOverlap(types: MediaType[]): boolean {
