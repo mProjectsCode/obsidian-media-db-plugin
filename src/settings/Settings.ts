@@ -46,9 +46,6 @@ export interface MediaDbPluginSettings {
 		GiantBombAPI: {
 			game: boolean;
 		};
-		VNDBAPI: {
-			game: boolean;
-		};
 	};
 	movieTemplate: string;
 	seriesTemplate: string;
@@ -123,9 +120,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 			game: true,
 		},
 		GiantBombAPI: {
-			game: true,
-		},
-		VNDBAPI: {
 			game: true,
 		},
 	},
