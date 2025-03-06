@@ -17,25 +17,23 @@ export class ConfirmOverwriteModal extends Modal {
 		contentEl.createEl('h2', { text: 'File already exists' });
 		contentEl.createEl('p', { text: `The file "${this.fileName}" already exists. Do you want to overwrite it?` });
 
-		const buttonContainer = contentEl.createDiv({ cls: 'modal-button-container' });
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
-		new Setting(buttonContainer)
-			.addButton(btn => {
-				btn.setButtonText('Yes');
-				btn.onClick(() => {
-					this.result = true;
-					this.close();
-				});
-				btn.buttonEl.addClass('media-db-plugin-button');
-			})
-			.addButton(btn => {
-				btn.setButtonText('No');
-				btn.onClick(() => {
-					this.result = false;
-					this.close();
-				});
-				btn.buttonEl.addClass('media-db-plugin-button');
+		const bottomSettingRow = new Setting(contentEl);
+		bottomSettingRow.addButton(btn => {
+			btn.setButtonText('Cancel');
+			btn.onClick(() => this.close());
+			btn.buttonEl.addClass('media-db-plugin-button');
+		});
+		bottomSettingRow.addButton(btn => {
+			btn.setButtonText('Ok');
+			btn.setCta();
+			btn.onClick(() => {
+				this.result = true;
+				this.close();
 			});
+			btn.buttonEl.addClass('media-db-plugin-button');
+		});
 	}
 
 	onClose() {
