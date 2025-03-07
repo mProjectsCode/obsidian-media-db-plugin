@@ -21,12 +21,12 @@ export class ConfirmOverwriteModal extends Modal {
 
 		const bottomSettingRow = new Setting(contentEl);
 		bottomSettingRow.addButton(btn => {
-			btn.setButtonText('Cancel');
+			btn.setButtonText('No');
 			btn.onClick(() => this.close());
 			btn.buttonEl.addClass('media-db-plugin-button');
 		});
 		bottomSettingRow.addButton(btn => {
-			btn.setButtonText('Ok');
+			btn.setButtonText('Yes');
 			btn.setCta();
 			btn.onClick(() => {
 				this.result = true;
