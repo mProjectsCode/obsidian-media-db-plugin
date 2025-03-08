@@ -109,4 +109,7 @@ export class SteamAPI extends APIModel {
 			},
 		});
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.SteamAPI_disabledMediaTypes as MediaType[];
+	}
 }

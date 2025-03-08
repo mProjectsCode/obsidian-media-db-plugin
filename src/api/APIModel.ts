@@ -18,8 +18,10 @@ export abstract class APIModel {
 
 	abstract getById(id: string): Promise<MediaTypeModel>;
 
+	abstract getDisabledMediaTypes(): MediaType[];
+
 	hasType(type: MediaType): boolean {
-		const disabledMediaTypes = this.plugin.settings[`${this.apiName}_disabledMediaTypes` as keyof typeof this.plugin.settings] as MediaType[];
+		const disabledMediaTypes = this.getDisabledMediaTypes();
 		return this.types.includes(type) && !disabledMediaTypes.includes(type);
 	}
 

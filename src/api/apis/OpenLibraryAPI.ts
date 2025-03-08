@@ -89,4 +89,7 @@ export class OpenLibraryAPI extends APIModel {
 			},
 		});
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.OpenLibraryAPI_disabledMediaTypes as MediaType[];
+	}
 }

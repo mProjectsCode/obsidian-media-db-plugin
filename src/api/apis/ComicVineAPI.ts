@@ -95,4 +95,7 @@ export class ComicVineAPI extends APIModel {
 			},
 		});
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.ComicVineAPI_disabledMediaTypes as MediaType[];
+	}
 }

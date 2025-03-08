@@ -99,4 +99,7 @@ export class MusicBrainzAPI extends APIModel {
 			},
 		});
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.MusicBrainzAPI_disabledMediaTypes as MediaType[];
+	}
 }

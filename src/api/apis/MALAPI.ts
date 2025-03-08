@@ -195,4 +195,7 @@ export class MALAPI extends APIModel {
 
 		throw new Error(`MDB | Unknown media type for id ${id}`);
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.MALAPI_disabledMediaTypes as MediaType[];
+	}
 }
