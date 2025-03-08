@@ -79,4 +79,7 @@ export class WikipediaAPI extends APIModel {
 			userData: {},
 		});
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.WikipediaAPI_disabledMediaTypes as MediaType[];
+	}
 }

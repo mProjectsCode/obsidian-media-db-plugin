@@ -117,4 +117,7 @@ export class BoardGameGeekAPI extends APIModel {
 			},
 		});
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.BoardgameGeekAPI_disabledMediaTypes as MediaType[];
+	}
 }

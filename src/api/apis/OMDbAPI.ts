@@ -223,4 +223,8 @@ export class OMDbAPI extends APIModel {
 
 		throw new Error(`MDB | Unknown media type for id ${id}`);
 	}
+
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.OMDbAPI_disabledMediaTypes as MediaType[];
+	}
 }

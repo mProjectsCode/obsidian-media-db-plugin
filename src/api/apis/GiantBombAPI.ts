@@ -106,4 +106,7 @@ export class GiantBombAPI extends APIModel {
 			},
 		});
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.GiantBombAPI_disabledMediaTypes as MediaType[];
+	}
 }
