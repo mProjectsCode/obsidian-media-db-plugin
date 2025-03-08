@@ -66,10 +66,6 @@ export class PropertyMapper {
 			obj.type = 'comicManga';
 			console.debug(`MDB | updated metadata type`, obj.type);
 		}
-		if (obj.dataSource === 'MALAPI Manga') {
-			obj.dataSource = 'MALAPIManga';
-			console.debug(`MDB | updated metadata dataSource`, obj.type);
-		}
 		if (MEDIA_TYPES.contains(obj.type as any)) {
 			return obj;
 		}

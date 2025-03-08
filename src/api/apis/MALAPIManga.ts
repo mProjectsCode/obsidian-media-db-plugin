@@ -12,7 +12,7 @@ export class MALAPIManga extends APIModel {
 		super();
 
 		this.plugin = plugin;
-		this.apiName = 'MALAPIManga';
+		this.apiName = 'MALAPI Manga';
 		this.apiDescription = 'A free API for Manga. Some results may take a long time to load.';
 		this.apiUrl = 'https://jikan.moe/';
 		this.types = [MediaType.ComicManga];
@@ -125,5 +125,8 @@ export class MALAPIManga extends APIModel {
 				personalRating: 0,
 			},
 		});
+	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.MALAPIManga_disabledMediaTypes as MediaType[];
 	}
 }
