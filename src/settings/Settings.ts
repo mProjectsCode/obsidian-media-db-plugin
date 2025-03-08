@@ -22,17 +22,17 @@ export interface MediaDbPluginSettings {
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
-	OMDbAPI_disabledMediaTypes: string[];
-	MALAPI_disabledMediaTypes: string[];
-	MALAPIManga_disabledMediaTypes: string[];
-	ComicVineAPI_disabledMediaTypes: string[];
-	SteamAPI_disabledMediaTypes: string[];
-	MobyGamesAPI_disabledMediaTypes: string[];
-	GiantBombAPI_disabledMediaTypes: string[];
-	WikipediaAPI_disabledMediaTypes: string[];
-	BoardgameGeekAPI_disabledMediaTypes: string[];
-	MusicBrainzAPI_disabledMediaTypes: string[];
-	OpenLibraryAPI_disabledMediaTypes: string[];
+	OMDbAPI_disabledMediaTypes: MediaType[];
+	MALAPI_disabledMediaTypes: MediaType[];
+	MALAPIManga_disabledMediaTypes: MediaType[];
+	ComicVineAPI_disabledMediaTypes: MediaType[];
+	SteamAPI_disabledMediaTypes: MediaType[];
+	MobyGamesAPI_disabledMediaTypes: MediaType[];
+	GiantBombAPI_disabledMediaTypes: MediaType[];
+	WikipediaAPI_disabledMediaTypes: MediaType[];
+	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
+	MusicBrainzAPI_disabledMediaTypes: MediaType[];
+	OpenLibraryAPI_disabledMediaTypes: MediaType[];
 	movieTemplate: string;
 	seriesTemplate: string;
 	mangaTemplate: string;
@@ -299,15 +299,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		// Create a map to store APIs for each media type
-		const mediaTypeApiMap = new Map<string, string[]>();
+		const mediaTypeApiMap = new Map<MediaType, string[]>();
 
 		// Populate the map with APIs for each media type dynamically
 		for (const api of this.plugin.apiManager.apis) {
-			for (const MediaType of api.types) {
-				if (!mediaTypeApiMap.has(MediaType)) {
-					mediaTypeApiMap.set(MediaType, []);
+			for (const mediaType of api.types) {
+				if (!mediaTypeApiMap.has(mediaType)) {
+					mediaTypeApiMap.set(mediaType, []);
 				}
-				mediaTypeApiMap.get(MediaType)!.push(api.apiName);
+				mediaTypeApiMap.get(mediaType)!.push(api.apiName);
 			}
 		}
 
@@ -315,24 +315,24 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		const filteredMediaTypes = Array.from(mediaTypeApiMap.entries()).filter(([_, apis]) => apis.length > 1);
 
 		// Dynamically create settings based on the filtered media types and their APIs
-		for (const [MediaType, apis] of filteredMediaTypes) {
-			new Setting(containerEl).setName(`Select APIs for ${unCamelCase(MediaType)}`).setHeading();
+		for (const [mediaType, apis] of filteredMediaTypes) {
+			new Setting(containerEl).setName(`Select APIs for ${unCamelCase(mediaType)}`).setHeading();
 			for (const apiName of apis) {
 				const api = this.plugin.apiManager.apis.find(api => api.apiName === apiName);
 				if (api) {
 					const disabledMediaTypes = api.getDisabledMediaTypes();
 					new Setting(containerEl)
 						.setName(apiName)
-						.setDesc(`Use ${apiName} API for ${unCamelCase(MediaType)}.`)
+						.setDesc(`Use ${apiName} API for ${unCamelCase(mediaType)}.`)
 						.addToggle(cb => {
-							cb.setValue(!disabledMediaTypes.includes(MediaType as MediaType)).onChange(data => {
+							cb.setValue(!disabledMediaTypes.includes(mediaType)).onChange(data => {
 								if (data) {
-									const index = disabledMediaTypes.indexOf(MediaType as MediaType);
+									const index = disabledMediaTypes.indexOf(mediaType);
 									if (index > -1) {
 										disabledMediaTypes.splice(index, 1);
 									}
 								} else {
-									disabledMediaTypes.push(MediaType as MediaType);
+									disabledMediaTypes.push(mediaType);
 								}
 								void this.plugin.saveSettings();
 							});
