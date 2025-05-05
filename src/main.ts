@@ -218,13 +218,17 @@ export default class MediaDbPlugin extends Plugin {
 				(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
 					return await this.queryDetails(selectModalData.selected);
 				})) ?? [];
-			if (!selectResults) {
+			if (!selectResults || selectResults.length < 1) {
 				return;
 			}
 
-			proceed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
+			const confirmed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
 				return previewModalData.confirmed;
 			});
+			if (!confirmed) {
+				return;
+			}
+			break;
 		}
 
 		await this.createMediaDbNotes(selectResults!);
@@ -248,13 +252,17 @@ export default class MediaDbPlugin extends Plugin {
 				(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
 					return await this.queryDetails(selectModalData.selected);
 				})) ?? [];
-			if (!selectResults) {
+			if (!selectResults || selectResults.length < 1) {
 				return;
 			}
 
-			proceed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
+			const confirmed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
 				return previewModalData.confirmed;
 			});
+			if (!confirmed) {
+				return;
+			}
+			break;
 		}
 
 		await this.createMediaDbNotes(selectResults!);
