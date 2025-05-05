@@ -148,6 +148,10 @@ Now you select the result you want and the plugin will cast it's magic and creat
         - e.g. for "Rogue One" the URL looks like this `https://www.imdb.com/title/tt3748528/` so the ID is `tt3748528`
 - [MusicBrainz](https://musicbrainz.org/)
     - the id of a release is not easily accessible, you are better off just searching by title
+    - the search is generally for albums but you can have a more granular search like so:
+        - search for albums by a specific `artist:"Lady Gaga" AND primarytype:"album"`
+        - search for a specific album by a specific artist `artist:"Lady Gaga" AND primarytype:"album" AND releasegroup:"The Fame"`
+        - search for a specific entry (song or album) by a specific `artist:"Lady Gaga" AND releasegroup:"Poker face"`
 - [Wikipedia](https://en.wikipedia.org/wiki/Main_Page)
     - [here](https://en.wikipedia.org/wiki/Wikipedia:Finding_a_Wikidata_ID) is a guide to finding the Wikipedia ID for an article
 - [Steam](https://store.steampowered.com/)
