@@ -1,6 +1,6 @@
 ## Obsidian Media DB Plugin
 
-A plugin that can query multiple APIs for movies, series, anime, manga, games, music and wiki articles, and import them into your vault.
+A plugin that can query multiple APIs for movies, series, anime, manga, books, games, music and wiki articles, and import them into your vault.
 
 ### Features
 
@@ -35,6 +35,9 @@ For arrays there are two special ways of displaying them.
 Available variables that can be used in template tags are the same variables from the metadata of the note.
 
 I also published my own templates [here](https://github.com/mProjectsCode/obsidian-media-db-templates).
+
+#### Download poster images
+Allows you to automatically download the poster images for a new media, ensuring offline access. The images are saved as `type_title (year)` e.g. `movie_The Perfect Storm (2000)` with a user chosen save location.
 
 #### Metadata field customization
 
