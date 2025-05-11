@@ -4,6 +4,7 @@ import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
+import { imageUrlExists } from '../../utils/Utils';
 
 export class SteamAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -85,6 +86,16 @@ export class SteamAPI extends APIModel {
 
 		// console.debug(result);
 
+		// Check if a poster version of the image exists, else use the header image
+		const imageUrl = `https://steamcdn-a.akamaihd.net/steam/apps/${result.steam_appid}/library_600x900_2x.jpg`;
+		const exists = await imageUrlExists(imageUrl);
+		let finalimageurl;
+		if (exists) {
+			finalimageurl = imageUrl;
+		} else {
+			finalimageurl = result.header_image ?? '';
+		}
+
 		return new GameModel({
 			type: MediaType.Game,
 			title: result.name,
@@ -98,7 +109,7 @@ export class SteamAPI extends APIModel {
 			publishers: result.publishers,
 			genres: result.genres?.map((x: any) => x.description) ?? [],
 			onlineRating: Number.parseFloat(result.metacritic?.score ?? 0),
-			image: result.header_image ?? '',
+			image: finalimageurl ?? '',
 
 			released: !result.release_date?.coming_soon,
 			releaseDate: this.plugin.dateFormatter.format(result.release_date?.date, this.apiDateFormat) ?? 'unknown',

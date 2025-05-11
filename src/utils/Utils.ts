@@ -234,3 +234,19 @@ export async function useTemplaterPluginInFile(app: App, file: TFile): Promise<v
 export type ModelToData<T> = {
 	[K in keyof T as T[K] extends Function ? never : K]?: T[K];
 };
+
+// Checks if a given URL points to an existing image (status 200), or returns false for 404/other errors.
+
+export async function imageUrlExists(url: string): Promise<boolean> {
+	try {
+		// @ts-ignore
+		const response = await requestUrl({
+			url,
+			method: 'HEAD',
+			throw: false,
+		});
+		return response.status === 200;
+	} catch {
+		return false;
+	}
+}
