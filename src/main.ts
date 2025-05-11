@@ -1,4 +1,5 @@
 import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder } from 'obsidian';
+import { requestUrl, normalizePath } from 'obsidian'; // Add requestUrl import
 import type { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
@@ -313,6 +314,31 @@ export default class MediaDbPlugin extends Plugin {
 			console.debug('MDB | creating new note');
 
 			options.openNote = this.settings.openNoteInNewTab;
+
+			if (mediaTypeModel.image && typeof mediaTypeModel.image === 'string' && mediaTypeModel.image.startsWith('http')) {
+				if (this.settings.imageDownload) {
+					try {
+						const imageurl = mediaTypeModel.image;
+						const imageext = imageurl.split('.').pop()?.split(/\#|\?/)[0] || 'jpg';
+						const imagefileName = `${replaceIllegalFileNameCharactersInString(`${mediaTypeModel.type}_${mediaTypeModel.title} (${mediaTypeModel.year})`)}.${imageext}`;
+						const imagepath = normalizePath(`${this.settings.imageFolder}/${imagefileName}`);
+
+						if (!this.app.vault.getAbstractFileByPath(this.settings.imageFolder)) {
+							await this.app.vault.createFolder(this.settings.imageFolder);
+						}
+
+						const response = await requestUrl({ url: imageurl, method: 'GET' });
+						await this.app.vault.createBinary(imagepath, response.arrayBuffer);
+						
+						// Update model to use local image path
+						mediaTypeModel.image = `[[${imagepath}]]`;
+					} catch (e) {
+						console.warn('MDB | Failed to download image:', e);
+					}
+				} else {
+					mediaTypeModel.image = mediaTypeModel.image;
+				}
+			}
 
 			const fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, options);
 

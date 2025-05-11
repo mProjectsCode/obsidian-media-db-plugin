@@ -69,6 +69,8 @@ export interface MediaDbPluginSettings {
 	boardgameFolder: string;
 	bookFolder: string;
 
+	imageDownload: boolean;
+	imageFolder: string;
 	propertyMappingModels: PropertyMappingModel[];
 }
 
@@ -130,6 +132,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
 
+	imageDownload: false,
+	imageFolder: 'Media DB/images',
 	propertyMappingModels: [],
 };
 
@@ -296,6 +300,29 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					this.plugin.settings.enableTemplaterIntegration = data;
 					void this.plugin.saveSettings();
 				});
+			});
+
+		new Setting(containerEl)
+			.setName('Download images')
+			.setDesc('Downloads images for new notes in the folder below')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.imageDownload).onChange(data => {
+					this.plugin.settings.imageDownload = data;
+					void this.plugin.saveSettings();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('Image folder')
+			.setDesc('Where downloaded images should be stored.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.imageFolder)
+					.setValue(this.plugin.settings.imageFolder)
+					.onChange(data => {
+						this.plugin.settings.imageFolder = data;
+						void this.plugin.saveSettings();
+					});
 			});
 
 		// Create a map to store APIs for each media type
