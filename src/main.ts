@@ -327,9 +327,11 @@ export default class MediaDbPlugin extends Plugin {
 							await this.app.vault.createFolder(this.settings.imageFolder);
 						}
 
-						const response = await requestUrl({ url: imageurl, method: 'GET' });
-						await this.app.vault.createBinary(imagepath, response.arrayBuffer);
-						
+						if (!this.app.vault.getAbstractFileByPath(imagepath)) {
+							const response = await requestUrl({ url: imageurl, method: 'GET' });
+							await this.app.vault.createBinary(imagepath, response.arrayBuffer);
+						}
+
 						// Update model to use local image path
 						mediaTypeModel.image = `[[${imagepath}]]`;
 					} catch (e) {

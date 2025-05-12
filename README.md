@@ -37,6 +37,7 @@ Available variables that can be used in template tags are the same variables fro
 I also published my own templates [here](https://github.com/mProjectsCode/obsidian-media-db-templates).
 
 #### Download poster images
+
 Allows you to automatically download the poster images for a new media, ensuring offline access. The images are saved as `type_title (year)` e.g. `movie_The Perfect Storm (2000)` with a user chosen save location.
 
 #### Metadata field customization
