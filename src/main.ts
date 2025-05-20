@@ -316,31 +316,8 @@ export default class MediaDbPlugin extends Plugin {
 
 			options.openNote = this.settings.openNoteInNewTab;
 
-			if (mediaTypeModel.image && typeof mediaTypeModel.image === 'string' && mediaTypeModel.image.startsWith('http')) {
-				if (this.settings.imageDownload) {
-					try {
-						const imageurl = mediaTypeModel.image;
-						const imageext = imageurl.split('.').pop()?.split(/\#|\?/)[0] || 'jpg';
-						const imagefileName = `${replaceIllegalFileNameCharactersInString(`${mediaTypeModel.type}_${mediaTypeModel.title} (${mediaTypeModel.year})`)}.${imageext}`;
-						const imagepath = normalizePath(`${this.settings.imageFolder}/${imagefileName}`);
-
-						if (!this.app.vault.getAbstractFileByPath(this.settings.imageFolder)) {
-							await this.app.vault.createFolder(this.settings.imageFolder);
-						}
-
-						if (!this.app.vault.getAbstractFileByPath(imagepath)) {
-							const response = await requestUrl({ url: imageurl, method: 'GET' });
-							await this.app.vault.createBinary(imagepath, response.arrayBuffer);
-						}
-
-						// Update model to use local image path
-						mediaTypeModel.image = `[[${imagepath}]]`;
-					} catch (e) {
-						console.warn('MDB | Failed to download image:', e);
-					}
-				} else {
-					mediaTypeModel.image = mediaTypeModel.image;
-				}
+			if (this.settings.imageDownload) {
+				await this.downloadImageForMediaModel(mediaTypeModel);
 			}
 
 			const fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, options);
@@ -358,6 +335,40 @@ export default class MediaDbPlugin extends Plugin {
 			console.warn(e);
 			new Notice(`${e}`);
 		}
+	}
+
+	/**
+	 * Tries to download the image for a media model.
+	 * 
+	 * @param mediaTypeModel 
+	 * @returns true if the image was downloaded, false otherwise
+	 */
+	private async downloadImageForMediaModel(mediaTypeModel: MediaTypeModel): Promise<boolean> {
+		if (mediaTypeModel.image && typeof mediaTypeModel.image === 'string' && mediaTypeModel.image.startsWith('http')) {
+			try {
+				const imageUrl = mediaTypeModel.image;
+				const imageExt = imageUrl.split('.').pop()?.split(/\#|\?/)[0] || 'jpg';
+				const imageFileName = `${replaceIllegalFileNameCharactersInString(`${mediaTypeModel.type}_${mediaTypeModel.title} (${mediaTypeModel.year})`)}.${imageExt}`;
+				const imagePath = normalizePath(`${this.settings.imageFolder}/${imageFileName}`);
+
+				if (!this.app.vault.getAbstractFileByPath(this.settings.imageFolder)) {
+					await this.app.vault.createFolder(this.settings.imageFolder);
+				}
+
+				if (!this.app.vault.getAbstractFileByPath(imagePath)) {
+					const response = await requestUrl({ url: imageUrl, method: 'GET' });
+					await this.app.vault.createBinary(imagePath, response.arrayBuffer);
+				}
+
+				// Update model to use local image path
+				mediaTypeModel.image = `[[${imagePath}]]`;
+				return true;
+			} catch (e) {
+				console.warn('MDB | Failed to download image:', e);
+			}
+		}
+
+		return false;
 	}
 
 	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
