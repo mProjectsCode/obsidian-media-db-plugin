@@ -107,4 +107,7 @@ export class MobyGamesAPI extends APIModel {
 			},
 		});
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.MobyGamesAPI_disabledMediaTypes as MediaType[];
+	}
 }

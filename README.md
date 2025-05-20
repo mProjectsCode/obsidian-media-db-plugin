@@ -1,6 +1,6 @@
 ## Obsidian Media DB Plugin
 
-A plugin that can query multiple APIs for movies, series, anime, manga, games, music and wiki articles, and import them into your vault.
+A plugin that can query multiple APIs for movies, series, anime, manga, books, games, music and wiki articles, and import them into your vault.
 
 ### Features
 
@@ -35,6 +35,10 @@ For arrays there are two special ways of displaying them.
 Available variables that can be used in template tags are the same variables from the metadata of the note.
 
 I also published my own templates [here](https://github.com/mProjectsCode/obsidian-media-db-templates).
+
+#### Download poster images
+
+Allows you to automatically download the poster images for a new media, ensuring offline access. The images are saved as `type_title (year)` e.g. `movie_The Perfect Storm (2000)` with a user chosen save location.
 
 #### Metadata field customization
 
@@ -113,7 +117,6 @@ Now you select the result you want and the plugin will cast it's magic and creat
 
 ### Currently supported APIs:
 
-
 | Name                                                 | Description                                                                                       | Supported formats                                     | Authentification                                                                                                                                                                   | Rate limiting                                                                                                                                                                                                                      | SFW filter support |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
 | [Jikan](https://jikan.moe/)                          | Jikan is an API that uses [My Anime List](https://myanimelist.net) and offers metadata for anime. | series, movies, specials, OVAs, manga, manwha, novels | No                                                                                                                                                                                 | 60 per minute and 3 per second                                                                                                                                                                                                     | Yes                |
@@ -124,7 +127,7 @@ Now you select the result you want and the plugin will cast it's magic and creat
 | [Open Library](https://openlibrary.org)              | The OpenLibrary API offers metadata for books                                                     | books                                                 | No                                                                                                                                                                                 | Cover access is rate-limited when not using CoverID or OLID by max 100 requests/IP every 5 minutes. This plugin uses OLID so there shouldn't be a rate limit.                                                                      | No                 |
 | [Moby Games](https://www.mobygames.com)              | The Moby Games API offers metadata for games for all platforms                                    | games                                                 | Yes, by making an account [here](https://www.mobygames.com/user/register/). NOTE: As of September 2024 the API key is no longer free so consider using Giant Bomb or steam instead | API requests are limited to 360 per hour (one every ten seconds). In addition, requests should be made no more frequently than one per second.                                                                                     | No                 |
 | [Giant Bomb](https://www.giantbomb.com)              | The Giant Bomb API offers metadata for games for all platforms                                    | games                                                 | Yes, by making an account [here](https://www.giantbomb.com/login-signup/)                                                                                                          | API requests are limited to 200 requests per resource, per hour. In addition, they implement velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources. | No                 |
-| Comic Vine                                           | The Comic Vine API offers metadata for comic books                                                | comicbooks                                            | Yes, by making an account [here](https://comicvine.gamespot.com/login-signup/) and going to the [api section](https://comicvine.gamespot.com/api/) of the site                     | 200 requests per resource, per hour. There is also a velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources.                                         | No                 
+| Comic Vine                                           | The Comic Vine API offers metadata for comic books                                                | comicbooks                                            | Yes, by making an account [here](https://comicvine.gamespot.com/login-signup/) and going to the [api section](https://comicvine.gamespot.com/api/) of the site                     | 200 requests per resource, per hour. There is also a velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources.                                         | No                 |
 
 #### Notes
 
@@ -149,6 +152,10 @@ Now you select the result you want and the plugin will cast it's magic and creat
         - e.g. for "Rogue One" the URL looks like this `https://www.imdb.com/title/tt3748528/` so the ID is `tt3748528`
 - [MusicBrainz](https://musicbrainz.org/)
     - the id of a release is not easily accessible, you are better off just searching by title
+    - the search is generally for albums but you can have a more granular search like so:
+        - search for albums by a specific `artist:"Lady Gaga" AND primarytype:"album"`
+        - search for a specific album by a specific artist `artist:"Lady Gaga" AND primarytype:"album" AND releasegroup:"The Fame"`
+        - search for a specific entry (song or album) by a specific `artist:"Lady Gaga" AND releasegroup:"Poker face"`
 - [Wikipedia](https://en.wikipedia.org/wiki/Main_Page)
     - [here](https://en.wikipedia.org/wiki/Wikipedia:Finding_a_Wikidata_ID) is a guide to finding the Wikipedia ID for an article
 - [Steam](https://store.steampowered.com/)

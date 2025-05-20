@@ -505,12 +505,12 @@ export class ModalHelper {
 			console.warn(previewModalResult.error);
 			new Notice(previewModalResult.error.toString());
 			previewModal.close();
-			return true;
+			return false;
 		}
 
 		if (previewModalResult.code === ModalResultCode.CLOSE) {
 			// modal is already being closed
-			return true;
+			return false;
 		}
 
 		try {

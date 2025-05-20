@@ -126,4 +126,7 @@ export class MALAPIManga extends APIModel {
 			},
 		});
 	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.MALAPIManga_disabledMediaTypes as MediaType[];
+	}
 }

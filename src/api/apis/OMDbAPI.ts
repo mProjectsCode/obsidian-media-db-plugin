@@ -151,7 +151,7 @@ export class OMDbAPI extends APIModel {
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', ') ?? [],
-				image: result.Poster ?? '',
+				image: result.Poster ? result.Poster.replace('_SX300', '_SX600') : '',
 
 				released: true,
 				streamingServices: [],
@@ -181,7 +181,7 @@ export class OMDbAPI extends APIModel {
 				duration: result.Runtime ?? 'unknown',
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', ') ?? [],
-				image: result.Poster ?? '',
+				image: result.Poster ? result.Poster.replace('_SX300', '_SX600') : '',
 
 				released: true,
 				streamingServices: [],
@@ -209,7 +209,7 @@ export class OMDbAPI extends APIModel {
 				publishers: [],
 				genres: result.Genre?.split(', ') ?? [],
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
-				image: result.Poster ?? '',
+				image: result.Poster ? result.Poster.replace('_SX300', '_SX600') : '',
 
 				released: true,
 				releaseDate: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
@@ -222,5 +222,9 @@ export class OMDbAPI extends APIModel {
 		}
 
 		throw new Error(`MDB | Unknown media type for id ${id}`);
+	}
+
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.OMDbAPI_disabledMediaTypes as MediaType[];
 	}
 }

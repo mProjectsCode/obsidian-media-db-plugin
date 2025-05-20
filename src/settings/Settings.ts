@@ -4,11 +4,12 @@ import { mount } from 'svelte';
 import type MediaDbPlugin from '../main';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
-import { fragWithHTML } from '../utils/Utils';
+import { fragWithHTML, unCamelCase } from '../utils/Utils';
 import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './PropertyMapping';
 import PropertyMappingModelsComponent from './PropertyMappingModelsComponent.svelte';
 import { FileSuggest } from './suggesters/FileSuggest';
 import { FolderSuggest } from './suggesters/FolderSuggest';
+import type { MediaType } from 'src/utils/MediaType';
 
 export interface MediaDbPluginSettings {
 	OMDbKey: string;
@@ -21,24 +22,17 @@ export interface MediaDbPluginSettings {
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
-	// TODO: disabled for now, as i currently don't have the time to fix this from the original PR that introduced it (#133)
-	// apiToggle: {
-	// 	OMDbAPI: {
-	// 		movie: boolean;
-	// 		series: boolean;
-	// 		game: boolean;
-	// 	};
-	// 	MALAPI: {
-	// 		movie: boolean;
-	// 		series: boolean;
-	// 	};
-	// 	SteamAPI: {
-	// 		game: boolean;
-	// 	};
-	// 	MobyGamesAPI: {
-	// 		game: boolean;
-	// 	};
-	// };
+	OMDbAPI_disabledMediaTypes: MediaType[];
+	MALAPI_disabledMediaTypes: MediaType[];
+	MALAPIManga_disabledMediaTypes: MediaType[];
+	ComicVineAPI_disabledMediaTypes: MediaType[];
+	SteamAPI_disabledMediaTypes: MediaType[];
+	MobyGamesAPI_disabledMediaTypes: MediaType[];
+	GiantBombAPI_disabledMediaTypes: MediaType[];
+	WikipediaAPI_disabledMediaTypes: MediaType[];
+	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
+	MusicBrainzAPI_disabledMediaTypes: MediaType[];
+	OpenLibraryAPI_disabledMediaTypes: MediaType[];
 	movieTemplate: string;
 	seriesTemplate: string;
 	mangaTemplate: string;
@@ -75,6 +69,8 @@ export interface MediaDbPluginSettings {
 	boardgameFolder: string;
 	bookFolder: string;
 
+	imageDownload: boolean;
+	imageFolder: string;
 	propertyMappingModels: PropertyMappingModel[];
 }
 
@@ -89,23 +85,17 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
 	enableTemplaterIntegration: false,
-	// apiToggle: {
-	// 	OMDbAPI: {
-	// 		movie: true,
-	// 		series: true,
-	// 		game: true,
-	// 	},
-	// 	MALAPI: {
-	// 		movie: true,
-	// 		series: true,
-	// 	},
-	// 	SteamAPI: {
-	// 		game: true,
-	// 	},
-	// 	MobyGamesAPI: {
-	// 		game: true,
-	// 	},
-	// },
+	OMDbAPI_disabledMediaTypes: [],
+	MALAPI_disabledMediaTypes: [],
+	MALAPIManga_disabledMediaTypes: [],
+	ComicVineAPI_disabledMediaTypes: [],
+	SteamAPI_disabledMediaTypes: [],
+	MobyGamesAPI_disabledMediaTypes: [],
+	GiantBombAPI_disabledMediaTypes: [],
+	WikipediaAPI_disabledMediaTypes: [],
+	BoardgameGeekAPI_disabledMediaTypes: [],
+	MusicBrainzAPI_disabledMediaTypes: [],
+	OpenLibraryAPI_disabledMediaTypes: [],
 	movieTemplate: '',
 	seriesTemplate: '',
 	mangaTemplate: '',
@@ -142,6 +132,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
 
+	imageDownload: false,
+	imageFolder: 'Media DB/images',
 	propertyMappingModels: [],
 };
 
@@ -310,82 +302,72 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				});
 			});
 
-		// containerEl.createEl('h3', { text: 'APIs per media type' });
-		// containerEl.createEl('h5', { text: 'Movies' });
-		// new Setting(containerEl)
-		// 	.setName('OMDb API')
-		// 	.setDesc('Use OMDb API for movies.')
-		// 	.addToggle(cb => {
-		// 		cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.movie).onChange(data => {
-		// 			this.plugin.settings.apiToggle.OMDbAPI.movie = data;
-		// 			void this.plugin.saveSettings();
-		// 		});
-		// 	});
-		// new Setting(containerEl)
-		// 	.setName('MAL API')
-		// 	.setDesc('Use MAL API for movies.')
-		// 	.addToggle(cb => {
-		// 		cb.setValue(this.plugin.settings.apiToggle.MALAPI.movie).onChange(data => {
-		// 			this.plugin.settings.apiToggle.MALAPI.movie = data;
-		// 			void this.plugin.saveSettings();
-		// 		});
-		// 	});
-		// containerEl.createEl('h5', { text: 'Series' });
-		// new Setting(containerEl)
-		// 	.setName('OMDb API')
-		// 	.setDesc('Use OMDb API for series.')
-		// 	.addToggle(cb => {
-		// 		cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.series).onChange(data => {
-		// 			this.plugin.settings.apiToggle.OMDbAPI.series = data;
-		// 			void this.plugin.saveSettings();
-		// 		});
-		// 	});
-		// new Setting(containerEl)
-		// 	.setName('MAL API')
-		// 	.setDesc('Use MAL API for series.')
-		// 	.addToggle(cb => {
-		// 		cb.setValue(this.plugin.settings.apiToggle.MALAPI.series).onChange(data => {
-		// 			this.plugin.settings.apiToggle.MALAPI.series = data;
-		// 			void this.plugin.saveSettings();
-		// 		});
-		// 	});
-		// containerEl.createEl('h5', { text: 'Games' });
-		// new Setting(containerEl)
-		// 	.setName('OMDb API')
-		// 	.setDesc('Use OMDb API for games.')
-		// 	.addToggle(cb => {
-		// 		cb.setValue(this.plugin.settings.apiToggle.OMDbAPI.game).onChange(data => {
-		// 			this.plugin.settings.apiToggle.OMDbAPI.game = data;
-		// 			void this.plugin.saveSettings();
-		// 		});
-		// 	});
-		// new Setting(containerEl)
-		// 	.setName('Steam API')
-		// 	.setDesc('Use OMDb API for games.')
-		// 	.addToggle(cb => {
-		// 		cb.setValue(this.plugin.settings.apiToggle.SteamAPI.game).onChange(data => {
-		// 			this.plugin.settings.apiToggle.SteamAPI.game = data;
-		// 			void this.plugin.saveSettings();
-		// 		});
-		// 	});
-		// new Setting(containerEl)
-		// 	.setName('MobyGames API')
-		// 	.setDesc('Use MobyGames API for games.')
-		// 	.addToggle(cb => {
-		// 		cb.setValue(this.plugin.settings.apiToggle.MobyGamesAPI.game).onChange(data => {
-		// 			this.plugin.settings.apiToggle.MobyGamesAPI.game = data;
-		// 			void this.plugin.saveSettings();
-		// 		});
-		// 	});
-		//	new Setting(containerEl)
-		//	.setName('Giantbomb API')
-		//	.setDesc('Use Giantbomb API for games.')
-		//	.addToggle(cb => {
-		//		cb.setValue(this.plugin.settings.apiToggle.GiantBombAPI.game).onChange(data => {
-		//			this.plugin.settings.apiToggle.GiantBombAPI.game = data;
-		//			void this.plugin.saveSettings();
-		//		});
-		//	});
+		new Setting(containerEl)
+			.setName('Download images')
+			.setDesc('Downloads images for new notes in the folder below')
+			.addToggle(cb => {
+				cb.setValue(this.plugin.settings.imageDownload).onChange(data => {
+					this.plugin.settings.imageDownload = data;
+					void this.plugin.saveSettings();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('Image folder')
+			.setDesc('Where downloaded images should be stored.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.imageFolder)
+					.setValue(this.plugin.settings.imageFolder)
+					.onChange(data => {
+						this.plugin.settings.imageFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+		// Create a map to store APIs for each media type
+		const mediaTypeApiMap = new Map<MediaType, string[]>();
+
+		// Populate the map with APIs for each media type dynamically
+		for (const api of this.plugin.apiManager.apis) {
+			for (const mediaType of api.types) {
+				if (!mediaTypeApiMap.has(mediaType)) {
+					mediaTypeApiMap.set(mediaType, []);
+				}
+				mediaTypeApiMap.get(mediaType)!.push(api.apiName);
+			}
+		}
+
+		// Filter out media types with only one API
+		const filteredMediaTypes = Array.from(mediaTypeApiMap.entries()).filter(([_, apis]) => apis.length > 1);
+
+		// Dynamically create settings based on the filtered media types and their APIs
+		for (const [mediaType, apis] of filteredMediaTypes) {
+			new Setting(containerEl).setName(`Select APIs for ${unCamelCase(mediaType)}`).setHeading();
+			for (const apiName of apis) {
+				const api = this.plugin.apiManager.apis.find(api => api.apiName === apiName);
+				if (api) {
+					const disabledMediaTypes = api.getDisabledMediaTypes();
+					new Setting(containerEl)
+						.setName(apiName)
+						.setDesc(`Use ${apiName} API for ${unCamelCase(mediaType)}.`)
+						.addToggle(cb => {
+							cb.setValue(!disabledMediaTypes.includes(mediaType)).onChange(data => {
+								if (data) {
+									const index = disabledMediaTypes.indexOf(mediaType);
+									if (index > -1) {
+										disabledMediaTypes.splice(index, 1);
+									}
+								} else {
+									disabledMediaTypes.push(mediaType);
+								}
+								void this.plugin.saveSettings();
+							});
+						});
+				}
+			}
+		}
+
 		new Setting(containerEl).setName('New file location').setHeading();
 		// region new file location
 		new Setting(containerEl)
