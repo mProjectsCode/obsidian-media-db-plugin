@@ -339,8 +339,8 @@ export default class MediaDbPlugin extends Plugin {
 
 	/**
 	 * Tries to download the image for a media model.
-	 * 
-	 * @param mediaTypeModel 
+	 *
+	 * @param mediaTypeModel
 	 * @returns true if the image was downloaded, false otherwise
 	 */
 	private async downloadImageForMediaModel(mediaTypeModel: MediaTypeModel): Promise<boolean> {
