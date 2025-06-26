@@ -6,7 +6,7 @@ A plugin that can query multiple APIs for movies, series, anime, manga, books, c
 
 #### Search by Title
 
-Search a movie, series, anime, manga, book, comic, game, music or wiki articles by its name across multiple APIs.
+Search a movie, series, anime, manga, book, comic, game, music release or wiki articles by its name across multiple APIs.
 
 #### Search by ID
 
