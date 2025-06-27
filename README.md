@@ -1,12 +1,12 @@
 ## Obsidian Media DB Plugin
 
-A plugin that can query multiple APIs for movies, series, anime, manga, books, games, music and wiki articles, and import them into your vault.
+A plugin that can query multiple APIs for movies, series, anime, manga, books, comics, games, music and wiki articles, and import them into your vault.
 
 ### Features
 
 #### Search by Title
 
-Search a movie, series, anime, game, music release or wiki article by its name across multiple APIs.
+Search a movie, series, anime, manga, book, comic, game, music release or wiki articles by its name across multiple APIs.
 
 #### Search by ID
 
@@ -162,9 +162,11 @@ Now you select the result you want and the plugin will cast it's magic and creat
     - you can find this ID in the URL
         - e.g. for "Factorio" the URL looks like this `https://store.steampowered.com/app/427520/Factorio/` so the ID is `427520`
 - [Open Library](https://openlibrary.org)
-    - The ID you need is the "work" ID and not the "book" ID, it needs to start with `/works/`. You can find this ID in the URL
-        - e.g. for "Fantastic Mr. Fox" the URL looks like this `https://openlibrary.org/works/OL45804W` so the ID is `/works/OL45804W`
-        - This URL is located near the top of the page above the title, see `An edition of Fantastic Mr Fox (1970) `
+    - The ID can either be the "/work/" ID, the "/book/" ID, or the "/isbn/" ID it needs to start with `/works/`. You can find this ID in the URL
+        - e.g. for "Fantastic Mr. Fox" the "/works/" URL looks like this `https://openlibrary.org/works/OL45804W` so the ID is `/works/OL45804W`
+            - This URL is located near the top of the page above the title, see `An edition of Fantastic Mr Fox (1970) `
+        - For a specific edition of "Fantastic Mr. Fox" the "/books/" URL looks like this `https://openlibrary.org/books/OL3567303M/` so the ID is `/books/OL3567303M`
+            - This URL is located in the editions section`
 - [Moby Games](https://www.mobygames.com)
     - you can find this ID in the URL
         - e.g. for "Bioshock 2" the URL looks like this `https://www.mobygames.com/game/45089/bioshock-2/` so the ID is `45089`

@@ -52,7 +52,7 @@ export class OpenLibraryAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://openlibrary.org/search.json?q=key:${encodeURIComponent(id)}`;
+		const searchUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(id)}&fields=key,title,author_name,number_of_pages_median,first_publish_year,isbn,ratings_score,first_sentence,title_suggest,rating*,cover_edition_key`;
 		const fetchData = await fetch(searchUrl);
 		// console.debug(fetchData);
 
@@ -68,8 +68,8 @@ export class OpenLibraryAPI extends APIModel {
 			title: result.title,
 			year: result.first_publish_year,
 			dataSource: this.apiName,
-			url: `https://openlibrary.org` + result.key,
-			id: result.key,
+			url: `https://openlibrary.org` + data.q,
+			id: data.q,
 			isbn: (result.isbn ?? []).find((el: string | any[]) => el.length <= 10) ?? 'unknown',
 			isbn13: (result.isbn ?? []).find((el: string | any[]) => el.length == 13) ?? 'unknown',
 			englishTitle: result.title_english ?? result.title,
