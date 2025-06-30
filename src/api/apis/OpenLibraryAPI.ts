@@ -3,6 +3,7 @@ import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
+import { requestUrl } from 'obsidian';
 
 export class OpenLibraryAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -53,14 +54,24 @@ export class OpenLibraryAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const searchUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(id)}&fields=key,title,author_name,number_of_pages_median,first_publish_year,isbn,ratings_score,first_sentence,title_suggest,rating*,cover_edition_key`;
-		const fetchData = await fetch(searchUrl);
+		const fetchData = await requestUrl({
+			url: searchUrl,
+		});
+		const descriptionUrl = `https://openlibrary.org/${encodeURIComponent(id)}.json`;
+		const fetchDescription = await requestUrl({
+			url: descriptionUrl,
+		});
 		// console.debug(fetchData);
 
 		if (fetchData.status !== 200) {
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
+		if (fetchDescription.status !== 200) {
+			throw Error(`MDB | Received status code ${fetchDescription.status} from ${this.apiName}.`);
+		}
 
-		const data = await fetchData.json();
+		const data = await fetchData.json;
+		const resultdesc = await fetchDescription.json;
 		// console.debug(data);
 		const result = data.docs[0];
 
@@ -75,7 +86,7 @@ export class OpenLibraryAPI extends APIModel {
 			englishTitle: result.title_english ?? result.title,
 
 			author: result.author_name ?? 'unknown',
-			plot: result.description ?? 'unknown',
+			plot: resultdesc.description?.value ?? 'unknown',
 			pages: result.number_of_pages_median ?? 'unknown',
 			onlineRating: Number.parseFloat(Number(result.ratings_average ?? 0).toFixed(2)),
 			image: `https://covers.openlibrary.org/b/OLID/` + result.cover_edition_key + `-L.jpg`,
