@@ -13,6 +13,7 @@ import { FolderSuggest } from './suggesters/FolderSuggest';
 
 export interface MediaDbPluginSettings {
 	OMDbKey: string;
+	TMDBKey: string;
 	MobyGamesKey: string;
 	GiantBombKey: string;
 	ComicVineKey: string;
@@ -23,6 +24,8 @@ export interface MediaDbPluginSettings {
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
 	OMDbAPI_disabledMediaTypes: MediaType[];
+	TMDBSeriesAPI_disabledMediaTypes: MediaType[];
+	TMDBMovieAPI_disabledMediaTypes: MediaType[];
 	MALAPI_disabledMediaTypes: MediaType[];
 	MALAPIManga_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
@@ -76,6 +79,7 @@ export interface MediaDbPluginSettings {
 
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
+	TMDBKey: '',
 	MobyGamesKey: '',
 	GiantBombKey: '',
 	ComicVineKey: '',
@@ -86,6 +90,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	useDefaultFrontMatter: true,
 	enableTemplaterIntegration: false,
 	OMDbAPI_disabledMediaTypes: [],
+  TMDBSeriesAPI_disabledMediaTypes: [],
+  TMDBMovieAPI_disabledMediaTypes: [],
 	MALAPI_disabledMediaTypes: [],
 	MALAPIManga_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
@@ -184,6 +190,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.OMDbKey)
 					.onChange(data => {
 						this.plugin.settings.OMDbKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('TMDB API key')
+			.setDesc('API key for "www.themoviedb.org".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.TMDBKey)
+					.onChange(data => {
+						this.plugin.settings.TMDBKey = data;
 						void this.plugin.saveSettings();
 					});
 			});
