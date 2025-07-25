@@ -1,22 +1,14 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { PropertyMappingModel, PropertyMappingOption, propertyMappingOptions } from './PropertyMapping';
 	import { capitalizeFirstLetter } from '../utils/Utils';
 	import Icon from './Icon.svelte';
 
-	interface Props {
-		model: PropertyMappingModel;
-		save: (model: PropertyMappingModel) => void;
-	}
+	export let model: PropertyMappingModel;
+	export let save: (model: PropertyMappingModel) => void;
 
-	let { model, save }: Props = $props();
+	let validationResult: { res: boolean; err?: Error } | undefined;
 
-	let validationResult: { res: boolean; err?: Error } | undefined = $state();
-
-	$effect(() => {
-		validationResult = model.validate();
-	});
+	$: validationResult = model.validate();
 </script>
 
 <div class="media-db-plugin-property-mappings-model-container">
