@@ -119,6 +119,9 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
+				country: [],
+				boxOffice: '',
+				ageRating: result.rating ?? '',
 				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
 				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
@@ -151,6 +154,9 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
+				country: [],
+				boxOffice: '',
+				ageRating: result.rating ?? '',
 				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
 				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
 
@@ -181,6 +187,8 @@ export class MALAPI extends APIModel {
 				image: result.images?.jpg?.image_url ?? '',
 
 				released: true,
+				country: [],
+				ageRating: result.rating ?? '',
 				airedFrom: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
 				airedTo: this.plugin.dateFormatter.format(result.aired?.to, this.apiDateFormat) ?? 'unknown',
 				airing: result.airing,

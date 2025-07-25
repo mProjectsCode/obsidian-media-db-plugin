@@ -17,6 +17,8 @@ export class SeriesModel extends MediaTypeModel {
 	image: string;
 
 	released: boolean;
+	country: string[];
+	ageRating: string;
 	streamingServices: string[];
 	airing: boolean;
 	airedFrom: string;
@@ -42,6 +44,8 @@ export class SeriesModel extends MediaTypeModel {
 		this.image = '';
 
 		this.released = false;
+		this.country = [];
+		this.ageRating = '';
 		this.streamingServices = [];
 		this.airing = false;
 		this.airedFrom = '';

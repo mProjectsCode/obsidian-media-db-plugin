@@ -154,6 +154,9 @@ export class OMDbAPI extends APIModel {
 				image: result.Poster ? result.Poster.replace('_SX300', '_SX600') : '',
 
 				released: true,
+				country: result.Country?.split(', ') ?? [],
+				boxOffice: result.BoxOffice,
+				ageRating: result.Rated,
 				streamingServices: [],
 				premiere: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
 
@@ -184,6 +187,8 @@ export class OMDbAPI extends APIModel {
 				image: result.Poster ? result.Poster.replace('_SX300', '_SX600') : '',
 
 				released: true,
+				country: result.Country?.split(', ') ?? [],
+				ageRating: result.Rated,
 				streamingServices: [],
 				airing: false,
 				airedFrom: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat) ?? 'unknown',
