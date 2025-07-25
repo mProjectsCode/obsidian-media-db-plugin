@@ -8,6 +8,7 @@ import { APIModel } from '../APIModel';
 
 export class MusicBrainzAPI extends APIModel {
 	plugin: MediaDbPlugin;
+	apiDateFormat: string = 'YYYY-MM-DD';
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -48,6 +49,7 @@ export class MusicBrainzAPI extends APIModel {
 					title: result.title,
 					englishTitle: result.title,
 					year: new Date(result['first-release-date']).getFullYear().toString(),
+					releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
 					dataSource: this.apiName,
 					url: 'https://musicbrainz.org/release-group/' + result.id,
 					id: result.id,
@@ -84,6 +86,7 @@ export class MusicBrainzAPI extends APIModel {
 			title: result.title,
 			englishTitle: result.title,
 			year: new Date(result['first-release-date']).getFullYear().toString(),
+			releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
 			dataSource: this.apiName,
 			url: 'https://musicbrainz.org/release-group/' + result.id,
 			id: result.id,
