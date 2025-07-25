@@ -51,7 +51,7 @@ export class MusicBrainzAPI extends APIModel {
 					dataSource: this.apiName,
 					url: 'https://musicbrainz.org/release-group/' + result.id,
 					id: result.id,
-					image: 'https://coverartarchive.org/release-group/' + result.id + '/front.jpg',
+					image: 'https://coverartarchive.org/release-group/' + result.id + '/front-500.jpg',
 
 					artists: result['artist-credit'].map((a: any) => a.name),
 					subType: result['primary-type'],
@@ -87,7 +87,7 @@ export class MusicBrainzAPI extends APIModel {
 			dataSource: this.apiName,
 			url: 'https://musicbrainz.org/release-group/' + result.id,
 			id: result.id,
-			image: 'https://coverartarchive.org/release-group/' + result.id + '/front.jpg',
+			image: 'https://coverartarchive.org/release-group/' + result.id + '/front-500.jpg',
 
 			artists: result['artist-credit'].map((a: any) => a.name),
 			genres: result.genres.map((g: any) => g.name),
