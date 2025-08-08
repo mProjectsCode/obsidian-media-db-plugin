@@ -100,6 +100,8 @@ export class OpenLibraryAPI extends APIModel {
 			docs: SearchResponse[];
 		};
 
+		// TODO: maybe description.
+
 		// console.debug(data);
 		const result = data.docs[0];
 
