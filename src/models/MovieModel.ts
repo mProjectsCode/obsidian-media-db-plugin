@@ -17,6 +17,9 @@ export class MovieModel extends MediaTypeModel {
 	image: string;
 
 	released: boolean;
+	country: string[];
+	boxOffice: string;
+	ageRating: string;
 	streamingServices: string[];
 	premiere: string;
 
@@ -40,6 +43,9 @@ export class MovieModel extends MediaTypeModel {
 		this.image = '';
 
 		this.released = false;
+		this.country = [];
+		this.boxOffice = '';
+		this.ageRating = '';
 		this.streamingServices = [];
 		this.premiere = '';
 

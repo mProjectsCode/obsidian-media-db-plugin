@@ -10,6 +10,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 	artists: string[];
 	image: string;
 	rating: number;
+	releaseDate: string;
 
 	userData: {
 		personalRating: number;
@@ -22,6 +23,8 @@ export class MusicReleaseModel extends MediaTypeModel {
 		this.artists = [];
 		this.image = '';
 		this.rating = 0;
+		this.releaseDate = '';
+
 		this.userData = {
 			personalRating: 0,
 		};

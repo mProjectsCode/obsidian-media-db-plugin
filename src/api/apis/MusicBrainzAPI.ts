@@ -75,6 +75,7 @@ interface IdResponse {
 
 export class MusicBrainzAPI extends APIModel {
 	plugin: MediaDbPlugin;
+	apiDateFormat: string = 'YYYY-MM-DD';
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
@@ -117,10 +118,11 @@ export class MusicBrainzAPI extends APIModel {
 					title: result.title,
 					englishTitle: result.title,
 					year: new Date(result['first-release-date']).getFullYear().toString(),
+					releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
 					dataSource: this.apiName,
 					url: 'https://musicbrainz.org/release-group/' + result.id,
 					id: result.id,
-					image: 'https://coverartarchive.org/release-group/' + result.id + '/front',
+					image: 'https://coverartarchive.org/release-group/' + result.id + '/front-500.jpg',
 
 					artists: result['artist-credit'].map(a => a.name),
 					subType: result['primary-type'],
@@ -153,10 +155,11 @@ export class MusicBrainzAPI extends APIModel {
 			title: result.title,
 			englishTitle: result.title,
 			year: new Date(result['first-release-date']).getFullYear().toString(),
+			releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
 			dataSource: this.apiName,
 			url: 'https://musicbrainz.org/release-group/' + result.id,
 			id: result.id,
-			image: 'https://coverartarchive.org/release-group/' + result.id + '/front',
+			image: 'https://coverartarchive.org/release-group/' + result.id + '/front-500.jpg',
 
 			artists: result['artist-credit'].map(a => a.name),
 			genres: result.genres.map(g => g.name),
