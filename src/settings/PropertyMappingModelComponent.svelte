@@ -10,17 +10,16 @@
 
 	let { model, save }: Props = $props();
 
-	let validationResult: { res: boolean; err?: Error } | undefined = $state();
+	let validationResult: { res: boolean; err?: Error } | undefined = $derived(model.validate());
 
-	$effect(() => {
-		validationResult = model.validate();
-	});
+	// Use $state as a variable declaration initializer
+	let propertyStates = $state(model.properties.map(p => ({ ...p })));
 </script>
 
 <div class="media-db-plugin-property-mappings-model-container">
 	<div class="setting-item-name">{capitalizeFirstLetter(model.type)}</div>
 	<div class="media-db-plugin-property-mappings-container">
-		{#each model.properties as property}
+		{#each propertyStates as property, i}
 			<div class="media-db-plugin-property-mapping-element">
 				<div class="media-db-plugin-property-mapping-element-property-name-wrapper">
 					<pre class="media-db-plugin-property-mapping-element-property-name"><code>{property.property}</code></pre>
@@ -54,6 +53,10 @@
 	<button
 		class="media-db-plugin-property-mappings-save-button {validationResult?.res ? 'mod-cta' : 'mod-muted'}"
 		onclick={() => {
+			// Sync propertyStates back to model.properties
+			model.properties.forEach((p, i) => {
+				Object.assign(p, propertyStates[i]);
+			});
 			if (model.validate().res) save(model);
 		}}
 		>Save
