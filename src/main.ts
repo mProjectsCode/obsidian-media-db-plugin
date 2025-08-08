@@ -12,6 +12,8 @@ import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
+import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
+import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
@@ -54,6 +56,8 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
 		this.apiManager.registerAPI(new SteamAPI(this));
+		this.apiManager.registerAPI(new TMDBSeriesAPI(this));
+		this.apiManager.registerAPI(new TMDBMovieAPI(this));
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		this.apiManager.registerAPI(new OpenLibraryAPI(this));
 		this.apiManager.registerAPI(new ComicVineAPI(this));
