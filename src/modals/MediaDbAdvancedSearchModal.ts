@@ -1,7 +1,6 @@
 import type { ButtonComponent } from 'obsidian';
 import { Modal, Notice, Setting, TextComponent, ToggleComponent } from 'obsidian';
 import type MediaDbPlugin from '../main';
-import type { MediaTypeModel } from '../models/MediaTypeModel';
 import type { AdvancedSearchModalData, AdvancedSearchModalOptions } from '../utils/ModalHelper';
 import { ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS } from '../utils/ModalHelper';
 
@@ -39,7 +38,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 	keyPressCallback(event: KeyboardEvent): void {
 		if (event.key === 'Enter') {
-			this.search();
+			void this.search();
 		}
 	}
 
@@ -119,7 +118,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 				btn.setButtonText('Ok');
 				btn.setCta();
 				btn.onClick(() => {
-					this.search();
+					void this.search();
 				});
 				btn.buttonEl.addClass('media-db-plugin-button');
 				this.searchBtn = btn;

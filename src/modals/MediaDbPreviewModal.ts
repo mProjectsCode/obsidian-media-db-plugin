@@ -1,4 +1,3 @@
-import type { ButtonComponent } from 'obsidian';
 import { Component, MarkdownRenderer, Modal, Setting } from 'obsidian';
 import type MediaDbPlugin from 'src/main';
 import type { MediaTypeModel } from 'src/models/MediaTypeModel';

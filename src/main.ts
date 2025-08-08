@@ -3,6 +3,7 @@ import { requestUrl, normalizePath } from 'obsidian'; // Add requestUrl import
 import type { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
+import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { GiantBombAPI } from './api/apis/GiantBombAPI';
 import { MALAPI } from './api/apis/MALAPI';
 import { MALAPIManga } from './api/apis/MALAPIManga';
@@ -12,9 +13,8 @@ import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
-import { ComicVineAPI } from './api/apis/ComicVineAPI';
-import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
+import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
@@ -123,7 +123,7 @@ export default class MediaDbPlugin extends Plugin {
 					return false;
 				}
 				if (!checking) {
-					this.updateActiveNote(false);
+					void this.updateActiveNote(false);
 				}
 				return true;
 			},
@@ -136,7 +136,7 @@ export default class MediaDbPlugin extends Plugin {
 					return false;
 				}
 				if (!checking) {
-					this.updateActiveNote(true);
+					void this.updateActiveNote(true);
 				}
 				return true;
 			},
@@ -150,7 +150,7 @@ export default class MediaDbPlugin extends Plugin {
 					return false;
 				}
 				if (!checking) {
-					this.createLinkWithSearchModal();
+					void this.createLinkWithSearchModal();
 				}
 				return true;
 			},
@@ -213,7 +213,7 @@ export default class MediaDbPlugin extends Plugin {
 		apiSearchResults = apiSearchResults.filter(x => types.contains(x.type));
 
 		let selectResults: MediaTypeModel[];
-		let proceed: boolean = false;
+		const proceed: boolean = false;
 
 		while (!proceed) {
 			selectResults =
@@ -247,7 +247,7 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		let selectResults: MediaTypeModel[];
-		let proceed: boolean = false;
+		const proceed: boolean = false;
 
 		while (!proceed) {
 			selectResults =
@@ -322,9 +322,7 @@ export default class MediaDbPlugin extends Plugin {
 
 			const fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, options);
 
-			if (!options.folder) {
-				options.folder = await this.mediaTypeManager.getFolder(mediaTypeModel, this.app);
-			}
+			options.folder ??= await this.mediaTypeManager.getFolder(mediaTypeModel, this.app);
 
 			const targetFile = await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
 
@@ -347,7 +345,7 @@ export default class MediaDbPlugin extends Plugin {
 		if (mediaTypeModel.image && typeof mediaTypeModel.image === 'string' && mediaTypeModel.image.startsWith('http')) {
 			try {
 				const imageUrl = mediaTypeModel.image;
-				const imageExt = imageUrl.split('.').pop()?.split(/\#|\?/)[0] || 'jpg';
+				const imageExt = imageUrl.split('.').pop()?.split(/#|\?/)[0] ?? 'jpg';
 				const imageFileName = `${replaceIllegalFileNameCharactersInString(`${mediaTypeModel.type}_${mediaTypeModel.title} (${mediaTypeModel.year})`)}.${imageExt}`;
 				const imagePath = normalizePath(`${this.settings.imageFolder}/${imageFileName}`);
 
@@ -441,7 +439,7 @@ export default class MediaDbPlugin extends Plugin {
 
 			// Update updated front matter with entries from the old front matter, if it isn't defined in the new front matter
 			Object.keys(previousMetadata).forEach(key => {
-				const value = previousMetadata[key];
+				const value: unknown = previousMetadata[key];
 
 				if (!frontMatter[key] && value) {
 					frontMatter[key] = value;
@@ -450,17 +448,9 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		// Ensure that id, type, and dataSource are defined
-		if (!frontMatter.id) {
-			frontMatter.id = mediaTypeModel.id;
-		}
-
-		if (!frontMatter.type) {
-			frontMatter.type = mediaTypeModel.type;
-		}
-
-		if (!frontMatter.dataSource) {
-			frontMatter.dataSource = mediaTypeModel.dataSource;
-		}
+		frontMatter.id ??= mediaTypeModel.id;
+		frontMatter.type ??= mediaTypeModel.type;
+		frontMatter.dataSource ??= mediaTypeModel.dataSource;
 
 		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
 			// Only support stringifyYaml for templater plugin
@@ -478,7 +468,7 @@ export default class MediaDbPlugin extends Plugin {
 			return { fileMetadata: fileMetadata, fileContent: fileContent };
 		}
 
-		const attachFileMetadata: any = this.getMetadataFromFileCache(fileToAttach);
+		const attachFileMetadata = this.getMetadataFromFileCache(fileToAttach);
 		// TODO: better object merging
 		fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
 
@@ -496,7 +486,7 @@ export default class MediaDbPlugin extends Plugin {
 			return { fileMetadata: fileMetadata, fileContent: fileContent };
 		}
 
-		const templateMetadata: Metadata = this.getMetaDataFromFileContent(template);
+		const templateMetadata = this.getMetaDataFromFileContent(template);
 		// TODO: better object merging
 		fileMetadata = Object.assign(templateMetadata, fileMetadata);
 
@@ -522,7 +512,7 @@ export default class MediaDbPlugin extends Plugin {
 		frontMatter = frontMatter.substring(4);
 		frontMatter = frontMatter.substring(0, frontMatter.length - 3);
 
-		metadata = parseYaml(frontMatter);
+		metadata = parseYaml(frontMatter) as Metadata;
 
 		if (!metadata) {
 			metadata = {};
@@ -645,11 +635,11 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
-				const metadata: any = this.getMetadataFromFileCache(file);
+				const metadata = this.getMetadataFromFileCache(file);
 
 				const title = metadata[titleFieldName];
-				if (!title) {
-					erroredFiles.push({ filePath: file.path, error: `metadata field '${titleFieldName}' not found or empty` });
+				if (!title || typeof title !== 'string') {
+					erroredFiles.push({ filePath: file.path, error: `metadata field '${titleFieldName}' not found, empty, or not a string` });
 					continue;
 				}
 
@@ -715,7 +705,7 @@ export default class MediaDbPlugin extends Plugin {
 
 	async loadSettings(): Promise<void> {
 		// console.log(DEFAULT_SETTINGS);
-		const diskSettings: MediaDbPluginSettings = await this.loadData();
+		const diskSettings: MediaDbPluginSettings = (await this.loadData()) as MediaDbPluginSettings;
 		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
 		const loadedSettings: MediaDbPluginSettings = Object.assign({}, defaultSettings, diskSettings);
 

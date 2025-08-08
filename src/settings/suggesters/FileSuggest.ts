@@ -1,12 +1,11 @@
 import type { TAbstractFile } from 'obsidian';
-import { TFile } from 'obsidian';
-import { TextInputSuggest } from './Suggest';
+import { AbstractInputSuggest, TFile } from 'obsidian';
 
-export class FileSuggest extends TextInputSuggest<TFile> {
-	getSuggestions(inputStr: string): TFile[] {
+export class FileSuggest extends AbstractInputSuggest<TFile> {
+	protected getSuggestions(query: string): TFile[] | Promise<TFile[]> {
 		const abstractFiles = this.app.vault.getAllLoadedFiles();
 		const files: TFile[] = [];
-		const lowerCaseInputStr = inputStr.toLowerCase();
+		const lowerCaseInputStr = query.toLowerCase();
 
 		abstractFiles.forEach((file: TAbstractFile) => {
 			if (file instanceof TFile && file.name.toLowerCase().contains(lowerCaseInputStr)) {
@@ -17,13 +16,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
 		return files;
 	}
 
-	renderSuggestion(file: TFile, el: HTMLElement): void {
-		el.setText(file.path);
-	}
-
-	selectSuggestion(file: TFile): void {
-		this.inputEl.value = file.path;
-		this.inputEl.trigger('input');
-		this.close();
+	renderSuggestion(value: TFile, el: HTMLElement): void {
+		el.setText(value.path);
 	}
 }

@@ -3,8 +3,128 @@ import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
-import { APIModel } from '../APIModel';
 import { imageUrlExists } from '../../utils/Utils';
+import { APIModel } from '../APIModel';
+
+interface SearchResponse {
+	appid: string;
+	name: string;
+	icon: string;
+	logo: string;
+}
+
+type IdResponse = Record<
+	string,
+	{
+		success: boolean;
+		data: GameDetails;
+	}
+>;
+
+interface GameDetails {
+	type: string;
+	name: string;
+	steam_appid: number;
+	required_age: string;
+	is_free: boolean;
+	controller_support: string;
+	dlc: number[];
+	detailed_description: string;
+	about_the_game: string;
+	short_description: string;
+	supported_languages: string;
+	reviews: string;
+	header_image: string;
+	capsule_image: string;
+	capsule_imagev5: string;
+	website: string;
+	pc_requirements: Requirements;
+	mac_requirements: Requirements;
+	linux_requirements: Requirements;
+	legal_notice: string;
+	drm_notice: string;
+	developers: string[];
+	publishers: string[];
+	price_overview: PriceOverview;
+	packages: number[];
+	platforms: Platforms;
+	metacritic?: {
+		score: number;
+		url: string;
+	};
+	categories: Category[];
+	genres: Genre[];
+	recommendations: {
+		total: number;
+	};
+	achievements: {
+		total: number;
+		highlighted: Achievement[];
+	};
+	release_date: {
+		coming_soon: boolean;
+		date: string;
+	};
+	support_info: {
+		url: string;
+		email: string;
+	};
+	background: string;
+	background_raw: string;
+	content_descriptors: {
+		ids: number[];
+		notes: string;
+	};
+	ratings: Ratings;
+}
+
+interface Requirements {
+	minimum: string;
+	recommended: string;
+}
+
+interface PriceOverview {
+	currency: string;
+	initial: number;
+	final: number;
+	discount_percent: number;
+	initial_formatted: string;
+	final_formatted: string;
+}
+
+interface Platforms {
+	windows: boolean;
+	mac: boolean;
+	linux: boolean;
+}
+
+interface Category {
+	id: number;
+	description: string;
+}
+
+interface Genre {
+	id: string;
+	description: string;
+}
+
+interface Achievement {
+	name: string;
+	path: string;
+}
+
+type Ratings = Record<
+	string,
+	{
+		rating: string;
+		descriptors: string;
+		use_age_gate: string;
+		required_age: string;
+		rating_id?: string;
+		banned?: string;
+		rating_generated?: string;
+	}
+>;
 
 export class SteamAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -35,7 +155,7 @@ export class SteamAPI extends APIModel {
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json;
+		const data = (await fetchData.json) as SearchResponse[];
 
 		// console.debug(data);
 
@@ -70,14 +190,13 @@ export class SteamAPI extends APIModel {
 		}
 
 		// console.debug(await fetchData.json);
+		const data = (await fetchData.json) as IdResponse;
 
-		let result: any;
-		for (const [key, value] of Object.entries(await fetchData.json)) {
-			// console.log(typeof key, key)
-			// console.log(typeof id, id)
+		let result: GameDetails | undefined = undefined;
+		for (const [key, value] of Object.entries(data)) {
 			// after some testing I found out that id is somehow a number despite that it's defined as string...
 			if (key === String(id)) {
-				result = (value as any).data;
+				result = value.data;
 			}
 		}
 		if (!result) {
@@ -103,16 +222,16 @@ export class SteamAPI extends APIModel {
 			year: new Date(result.release_date.date).getFullYear().toString(),
 			dataSource: this.apiName,
 			url: `https://store.steampowered.com/app/${result.steam_appid}`,
-			id: result.steam_appid,
+			id: result.steam_appid.toString(),
 
 			developers: result.developers,
 			publishers: result.publishers,
-			genres: result.genres?.map((x: any) => x.description) ?? [],
-			onlineRating: Number.parseFloat(result.metacritic?.score ?? 0),
-			image: finalimageurl ?? '',
+			genres: result.genres?.map(x => x.description),
+			onlineRating: result.metacritic?.score,
+			image: finalimageurl,
 
 			released: !result.release_date?.coming_soon,
-			releaseDate: this.plugin.dateFormatter.format(result.release_date?.date, this.apiDateFormat) ?? 'unknown',
+			releaseDate: this.plugin.dateFormatter.format(result.release_date?.date, this.apiDateFormat),
 
 			userData: {
 				played: false,
@@ -121,6 +240,6 @@ export class SteamAPI extends APIModel {
 		});
 	}
 	getDisabledMediaTypes(): MediaType[] {
-		return this.plugin.settings.SteamAPI_disabledMediaTypes as MediaType[];
+		return this.plugin.settings.SteamAPI_disabledMediaTypes;
 	}
 }

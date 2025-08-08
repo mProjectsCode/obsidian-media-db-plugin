@@ -1,10 +1,15 @@
-import { Notice } from 'obsidian';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+
 import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
+
+// sadly no open api schema available
+
+// TODO: maybe we should remove this API, as it can no longer be tested without paying for an API key
 
 export class MobyGamesAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -19,6 +24,7 @@ export class MobyGamesAPI extends APIModel {
 		this.apiUrl = 'https://api.mobygames.com/v1';
 		this.types = [MediaType.Game];
 	}
+
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
@@ -108,6 +114,6 @@ export class MobyGamesAPI extends APIModel {
 		});
 	}
 	getDisabledMediaTypes(): MediaType[] {
-		return this.plugin.settings.MobyGamesAPI_disabledMediaTypes as MediaType[];
+		return this.plugin.settings.MobyGamesAPI_disabledMediaTypes;
 	}
 }

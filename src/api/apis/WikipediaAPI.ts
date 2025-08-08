@@ -4,6 +4,35 @@ import { WikiModel } from '../../models/WikiModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 
+interface SearchResponse {
+	query: {
+		search: {
+			title: string;
+			pageid: number;
+		}[];
+	};
+}
+
+interface IdResponse {
+	query: {
+		pages: Record<string, WikipediaPage>;
+	};
+}
+
+interface WikipediaPage {
+	pageid: number;
+	title: string;
+	contentmodel: string;
+	pagelanguage: string;
+	pagelanguagehtmlcode: string;
+	pagelanguagedir: string;
+	touched: string; // ISO date string
+	lastrevid: number;
+	length: number;
+	fullurl: string;
+	editurl: string;
+	canonicalurl: string;
+}
 export class WikipediaAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	apiDateFormat: string = 'YYYY-MM-DDTHH:mm:ssZ'; // ISO
@@ -29,7 +58,7 @@ export class WikipediaAPI extends APIModel {
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json();
+		const data = (await fetchData.json()) as SearchResponse;
 		console.debug(data);
 		const ret: MediaTypeModel[] = [];
 
@@ -41,7 +70,7 @@ export class WikipediaAPI extends APIModel {
 					englishTitle: result.title,
 					year: '',
 					dataSource: this.apiName,
-					id: result.pageid,
+					id: result.pageid.toString(),
 				}),
 			);
 		}
@@ -59,27 +88,25 @@ export class WikipediaAPI extends APIModel {
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json();
+		const data = (await fetchData.json()) as IdResponse;
 		// console.debug(data);
-		const result: any = Object.entries(data?.query?.pages)[0][1];
+		const result = Object.values(data?.query?.pages)[0];
 
 		return new WikiModel({
-			type: 'wiki',
 			title: result.title,
 			englishTitle: result.title,
-			year: '',
 			dataSource: this.apiName,
 			url: result.fullurl,
-			id: result.pageid,
+			id: result.pageid.toString(),
 
 			wikiUrl: result.fullurl,
-			lastUpdated: this.plugin.dateFormatter.format(result.touched, this.apiDateFormat) ?? undefined,
+			lastUpdated: this.plugin.dateFormatter.format(result.touched, this.apiDateFormat),
 			length: result.length,
 
 			userData: {},
 		});
 	}
 	getDisabledMediaTypes(): MediaType[] {
-		return this.plugin.settings.WikipediaAPI_disabledMediaTypes as MediaType[];
+		return this.plugin.settings.WikipediaAPI_disabledMediaTypes;
 	}
 }

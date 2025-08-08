@@ -1,9 +1,9 @@
-import type { App, TAbstractFile, TFile } from 'obsidian';
+import type { App, TFile } from 'obsidian';
 import { TFolder } from 'obsidian';
 import { BoardGameModel } from '../models/BoardGameModel';
 import { BookModel } from '../models/BookModel';
-import { GameModel } from '../models/GameModel';
 import { ComicMangaModel } from '../models/ComicMangaModel';
+import { GameModel } from '../models/GameModel';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MovieModel } from '../models/MovieModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
@@ -104,9 +104,7 @@ export class MediaTypeManager {
 	async getFolder(mediaTypeModel: MediaTypeModel, app: App): Promise<TFolder> {
 		let folderPath = this.mediaFolderMap.get(mediaTypeModel.getMediaType());
 
-		if (!folderPath) {
-			folderPath = `/`;
-		}
+		folderPath ??= `/`;
 		// console.log(folderPath);
 
 		if (!(await app.vault.adapter.exists(folderPath))) {
@@ -115,7 +113,7 @@ export class MediaTypeManager {
 		const folder = app.vault.getAbstractFileByPath(folderPath);
 
 		if (!(folder instanceof TFolder)) {
-			throw Error(`Expected ${folder} to be instance of TFolder`);
+			throw Error(`Expected ${folder?.path} to be instance of TFolder`);
 		}
 
 		return folder;
@@ -127,7 +125,7 @@ export class MediaTypeManager {
 	 * @param obj
 	 * @param mediaType
 	 */
-	createMediaTypeModelFromMediaType(obj: any, mediaType: MediaType): MediaTypeModel {
+	createMediaTypeModelFromMediaType(obj: object, mediaType: MediaType): MediaTypeModel {
 		if (mediaType === MediaType.Movie) {
 			return new MovieModel(obj);
 		} else if (mediaType === MediaType.Series) {

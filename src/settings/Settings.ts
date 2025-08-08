@@ -1,5 +1,6 @@
 import type { App } from 'obsidian';
 import { Notice, PluginSettingTab, Setting } from 'obsidian';
+import type { MediaType } from 'src/utils/MediaType';
 import { mount } from 'svelte';
 import type MediaDbPlugin from '../main';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
@@ -9,7 +10,6 @@ import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './
 import PropertyMappingModelsComponent from './PropertyMappingModelsComponent.svelte';
 import { FileSuggest } from './suggesters/FileSuggest';
 import { FolderSuggest } from './suggesters/FolderSuggest';
-import type { MediaType } from 'src/utils/MediaType';
 
 export interface MediaDbPluginSettings {
 	OMDbKey: string;

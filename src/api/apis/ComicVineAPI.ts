@@ -1,9 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+
 import { requestUrl } from 'obsidian';
 import { ComicMangaModel } from 'src/models/ComicMangaModel';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
+
+// sadly no open api schema available
 
 export class ComicVineAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -41,7 +45,7 @@ export class ComicVineAPI extends APIModel {
 					year: result.start_year,
 					dataSource: this.apiName,
 					id: `4050-${result.id}`,
-					publishers: result.publisher?.name ?? [],
+					publishers: result.publisher?.name,
 				}),
 			);
 		}
@@ -64,8 +68,13 @@ export class ComicVineAPI extends APIModel {
 		}
 
 		const data = await fetchData.json;
-		// console.debug(data);
 		const result = data.results;
+
+		const authors = result.people as
+			| {
+					name: string;
+			  }[]
+			| undefined;
 
 		return new ComicMangaModel({
 			type: MediaType.ComicManga,
@@ -73,19 +82,18 @@ export class ComicVineAPI extends APIModel {
 			englishTitle: result.name,
 			alternateTitles: result.aliases,
 			plot: result.deck,
-			year: result.start_year ?? '',
+			year: result.start_year,
 			dataSource: this.apiName,
 			url: result.site_detail_url,
 			id: `4050-${result.id}`,
 
-			authors: result.people?.map((x: any) => x.name) ?? [],
+			authors: authors?.map(x => x.name),
 			chapters: result.count_of_issues,
-			image: result.image?.original_url ?? '',
+			image: result.image?.original_url,
 
 			released: true,
-			publishers: result.publisher?.name ?? [],
-			publishedFrom: result.start_year ?? 'unknown',
-			publishedTo: 'unknown',
+			publishers: result.publisher?.name,
+			publishedFrom: result.start_year,
 			status: result.status,
 
 			userData: {
@@ -96,6 +104,6 @@ export class ComicVineAPI extends APIModel {
 		});
 	}
 	getDisabledMediaTypes(): MediaType[] {
-		return this.plugin.settings.ComicVineAPI_disabledMediaTypes as MediaType[];
+		return this.plugin.settings.ComicVineAPI_disabledMediaTypes;
 	}
 }

@@ -5,6 +5,8 @@ import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 
+// sadly no open api schema available
+
 export class BoardGameGeekAPI extends APIModel {
 	plugin: MediaDbPlugin;
 
@@ -118,6 +120,6 @@ export class BoardGameGeekAPI extends APIModel {
 		});
 	}
 	getDisabledMediaTypes(): MediaType[] {
-		return this.plugin.settings.BoardgameGeekAPI_disabledMediaTypes as MediaType[];
+		return this.plugin.settings.BoardgameGeekAPI_disabledMediaTypes;
 	}
 }

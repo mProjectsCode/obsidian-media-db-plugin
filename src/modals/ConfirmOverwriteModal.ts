@@ -12,7 +12,7 @@ export class ConfirmOverwriteModal extends Modal {
 		this.onSubmit = onSubmit;
 	}
 
-	onOpen() {
+	onOpen(): void {
 		const { contentEl } = this;
 		contentEl.createEl('h2', { text: 'File already exists' });
 		contentEl.createEl('p', { text: `The file "${this.fileName}" already exists. Do you want to overwrite it?` });
@@ -36,7 +36,7 @@ export class ConfirmOverwriteModal extends Modal {
 		});
 	}
 
-	onClose() {
+	onClose(): void {
 		const { contentEl } = this;
 		contentEl.empty();
 		this.onSubmit(this.result);

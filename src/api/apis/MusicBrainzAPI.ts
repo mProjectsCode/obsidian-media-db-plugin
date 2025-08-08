@@ -6,6 +6,73 @@ import { MediaType } from '../../utils/MediaType';
 import { contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
+// sadly no open api schema available
+
+interface Tag {
+	name: string;
+	count: number;
+}
+interface Genre {
+	name: string;
+	count: number;
+	id: string;
+	disambiguation: string;
+}
+interface Release {
+	id: string;
+	'status-id': string;
+	title: string;
+	status: string;
+}
+
+interface SearchResponse {
+	id: string;
+	'type-id': string;
+	score: number;
+	'primary-type-id': string;
+	'artists-credit-id': string;
+	count: number;
+	title: string;
+	'first-release-date': string;
+	'primary-type': string;
+	'artist-credit': {
+		name: string;
+		artist: {
+			id: string;
+			name: string;
+			'short-name': string;
+		};
+	}[];
+	releases: Release[];
+	tags: Tag[];
+}
+
+interface IdResponse {
+	id: string;
+	tags: Tag[];
+	'primary-type-id': string;
+	'artist-credit': {
+		name: string;
+		artist: {
+			tags: Tag[];
+			type: string;
+			id: string;
+			name: string;
+			'short-name': string;
+			country: string;
+		};
+	}[];
+	title: string;
+	genres: Genre[];
+	'first-release-date': string;
+	releases: Release[];
+	'primary-type': string;
+	rating: {
+		value: number;
+		'votes-count': number;
+	};
+}
+
 export class MusicBrainzAPI extends APIModel {
 	plugin: MediaDbPlugin;
 
@@ -37,7 +104,9 @@ export class MusicBrainzAPI extends APIModel {
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json;
+		const data = (await fetchData.json) as {
+			'release-groups': SearchResponse[];
+		};
 		// console.debug(data);
 		const ret: MediaTypeModel[] = [];
 
@@ -53,7 +122,7 @@ export class MusicBrainzAPI extends APIModel {
 					id: result.id,
 					image: 'https://coverartarchive.org/release-group/' + result.id + '/front',
 
-					artists: result['artist-credit'].map((a: any) => a.name),
+					artists: result['artist-credit'].map(a => a.name),
 					subType: result['primary-type'],
 				}),
 			);
@@ -77,7 +146,7 @@ export class MusicBrainzAPI extends APIModel {
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
-		const result = await fetchData.json;
+		const result = (await fetchData.json) as IdResponse;
 
 		return new MusicReleaseModel({
 			type: 'musicRelease',
@@ -89,8 +158,8 @@ export class MusicBrainzAPI extends APIModel {
 			id: result.id,
 			image: 'https://coverartarchive.org/release-group/' + result.id + '/front',
 
-			artists: result['artist-credit'].map((a: any) => a.name),
-			genres: result.genres.map((g: any) => g.name),
+			artists: result['artist-credit'].map(a => a.name),
+			genres: result.genres.map(g => g.name),
 			subType: result['primary-type'],
 			rating: result.rating.value * 2,
 
@@ -100,6 +169,6 @@ export class MusicBrainzAPI extends APIModel {
 		});
 	}
 	getDisabledMediaTypes(): MediaType[] {
-		return this.plugin.settings.MusicBrainzAPI_disabledMediaTypes as MediaType[];
+		return this.plugin.settings.MusicBrainzAPI_disabledMediaTypes;
 	}
 }

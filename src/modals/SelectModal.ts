@@ -54,7 +54,7 @@ export abstract class SelectModal<T> extends Modal {
 		this.scope.register([], 'Enter', () => this.submit());
 	}
 
-	abstract renderElement(value: T, el: HTMLElement): any;
+	abstract renderElement(value: T, el: HTMLElement): void;
 
 	abstract submit(): void;
 
@@ -76,7 +76,7 @@ export abstract class SelectModal<T> extends Modal {
 		}
 	}
 
-	async onOpen(): Promise<void> {
+	onOpen(): void {
 		const { contentEl, titleEl } = this;
 
 		titleEl.createEl('h2', { text: this.title });

@@ -1,4 +1,5 @@
 import type { TFile, TFolder, App } from 'obsidian';
+import { requestUrl } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
@@ -42,7 +43,8 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 			return ignoreUndefined ? '' : '{{ INVALID TEMPLATE TAG - object undefined }}';
 		}
 
-		return obj;
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
+		return obj?.toString() ?? 'null';
 	} else if (parts.length === 2) {
 		const operator = parts[0];
 
@@ -58,7 +60,8 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 			if (!Array.isArray(obj)) {
 				return '{{ INVALID TEMPLATE TAG - operator LIST is only applicable on an array }}';
 			}
-			return obj.map((e: any) => `- ${e}`).join('\n');
+
+			return obj.map((e: unknown) => `- ${e}`).join('\n');
 		} else if (operator === 'ENUM') {
 			if (!Array.isArray(obj)) {
 				return '{{ INVALID TEMPLATE TAG - operator ENUM is only applicable on an array }}';
@@ -68,12 +71,16 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 			if (!Array.isArray(obj)) {
 				return '{{ INVALID TEMPLATE TAG - operator FIRST is only applicable on an array }}';
 			}
-			return obj[0];
+
+			const first = obj[0] as unknown;
+			return first?.toString() ?? 'null';
 		} else if (operator === 'LAST') {
 			if (!Array.isArray(obj)) {
 				return '{{ INVALID TEMPLATE TAG - operator LAST is only applicable on an array }}';
 			}
-			return obj[obj.length - 1];
+
+			const last = obj[obj.length - 1] as unknown;
+			return last?.toString() ?? 'null';
 		}
 
 		return `{{ INVALID TEMPLATE TAG - unknown operator ${operator} }}`;
@@ -82,12 +89,12 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 	return '{{ INVALID TEMPLATE TAG }}';
 }
 
-function traverseMetaData(path: string[], mediaTypeModel: MediaTypeModel): any {
-	let o: any = mediaTypeModel;
+function traverseMetaData(path: string[], mediaTypeModel: MediaTypeModel): unknown {
+	let o: unknown = mediaTypeModel;
 
 	for (const part of path) {
 		if (o !== undefined) {
-			o = o[part];
+			o = (o as Record<string, unknown>)[part];
 		}
 	}
 
@@ -195,9 +202,9 @@ export interface CreateNoteOptions {
 	folder?: TFolder;
 }
 
-export function migrateObject<T extends object>(object: T, oldData: any, defaultData: T): void {
+export function migrateObject<T extends object>(object: T, oldData: Record<string, unknown>, defaultData: T): void {
 	for (const key in object) {
-		object[key] = oldData.hasOwnProperty(key) ? oldData[key] : defaultData[key];
+		object[key] = Object.hasOwn(oldData, key) && oldData[key] !== undefined && oldData[key] !== null ? (oldData[key] as T[typeof key]) : defaultData[key];
 	}
 }
 
@@ -215,6 +222,8 @@ export function unCamelCase(str: string): string {
 	);
 }
 
+/* eslint-disable */
+
 export function hasTemplaterPlugin(app: App): boolean {
 	const templater = (app as any).plugins.plugins['templater-obsidian'];
 
@@ -224,15 +233,17 @@ export function hasTemplaterPlugin(app: App): boolean {
 // Copied from https://github.com/anpigon/obsidian-book-search-plugin
 // Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
 export async function useTemplaterPluginInFile(app: App, file: TFile): Promise<void> {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const templater = (app as any).plugins.plugins['templater-obsidian'];
 	if (templater && !templater?.settings.trigger_on_file_creation) {
 		await templater.templater.overwrite_file_commands(file);
 	}
 }
 
+/* eslint-enable */
+
 export type ModelToData<T> = {
-	[K in keyof T as T[K] extends Function ? never : K]?: T[K];
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+	[K in keyof T as T[K] extends Function ? never : K]?: T[K] | null;
 };
 
 // Checks if a given URL points to an existing image (status 200), or returns false for 404/other errors.
@@ -249,4 +260,39 @@ export async function imageUrlExists(url: string): Promise<boolean> {
 	} catch {
 		return false;
 	}
+}
+
+export function isTruthy<T>(value: T): value is Exclude<T, false | 0 | '' | null | undefined> {
+	return Boolean(value);
+}
+
+/**
+ * Wraps Obsidians `requestUrl` in a fetch like API.
+ */
+export async function obsidianFetch(input: Request): Promise<Response> {
+	const obs_headers: Record<string, string> = {};
+	input.headers.forEach((header, value) => {
+		obs_headers[header] = value;
+	});
+
+	const res = await requestUrl({
+		url: input.url,
+		method: input.method,
+		headers: obs_headers,
+		throw: false, // Do not throw on error, handle it manually
+	});
+
+	const responseHeaders: Headers = new Headers();
+	for (const [key, value] of Object.entries(res.headers)) {
+		responseHeaders.append(key, value);
+	}
+
+	return {
+		ok: res.status >= 200 && res.status < 300,
+		status: res.status,
+		headers: responseHeaders,
+		// eslint-disable-next-line
+		json: async () => res.json,
+		text: async () => res.text,
+	} as Response;
 }

@@ -1,8 +1,26 @@
+import createClient from 'openapi-fetch';
 import { BookModel } from 'src/models/BookModel';
+import { obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
+import type { paths } from '../schemas/OpenLibrary';
+
+interface SearchResponse {
+	cover_i: number;
+	has_fulltext: boolean;
+	edition_count: number;
+	title: string;
+	author_name: string[];
+	first_publish_year: number;
+	key: string;
+
+	number_of_pages_median?: number;
+	cover_edition_key?: string;
+	isbn?: string[];
+	ratings_average?: number;
+}
 
 export class OpenLibraryAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -20,14 +38,24 @@ export class OpenLibraryAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}`;
+		const client = createClient<paths>({ baseUrl: 'https://openlibrary.org/' });
 
-		const fetchData = await fetch(searchUrl);
-		// console.debug(fetchData);
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		const response = await client.GET('/search.json', {
+			params: {
+				query: {
+					q: title,
+				},
+			},
+			fetch: obsidianFetch,
+		});
+
+		if (response.error !== undefined) {
+			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
 		}
-		const data = await fetchData.json();
+
+		const data = response.data as {
+			docs: SearchResponse[];
+		};
 
 		// console.debug(data);
 
@@ -37,11 +65,11 @@ export class OpenLibraryAPI extends APIModel {
 			ret.push(
 				new BookModel({
 					title: result.title,
-					englishTitle: result.title_english ?? result.title,
-					year: result.first_publish_year,
+					englishTitle: result.title,
+					year: result.first_publish_year.toString(),
 					dataSource: this.apiName,
 					id: result.key,
-					author: result.author_name ?? 'unknown',
+					author: result.author_name.join(', '),
 				}),
 			);
 		}
@@ -52,33 +80,47 @@ export class OpenLibraryAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://openlibrary.org/search.json?q=key:${encodeURIComponent(id)}`;
-		const fetchData = await fetch(searchUrl);
-		// console.debug(fetchData);
+		const client = createClient<paths>({ baseUrl: 'https://openlibrary.org/' });
 
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		const response = await client.GET('/search.json', {
+			params: {
+				query: {
+					q: `key:${id}`,
+					fields: 'key,title,author_name,number_of_pages_median,first_publish_year,isbn,ratings_score,first_sentence,title_suggest,rating*,cover_edition_key',
+				},
+			},
+			fetch: obsidianFetch,
+		});
+
+		if (response.error !== undefined) {
+			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json();
+		const data = response.data as {
+			docs: SearchResponse[];
+		};
+
 		// console.debug(data);
 		const result = data.docs[0];
 
+		const pages = Number(result.number_of_pages_median);
+		const isbn = Number((result.isbn ?? []).find((el: string) => el.length <= 10));
+		const isbn13 = Number((result.isbn ?? []).find((el: string) => el.length == 13));
+
 		return new BookModel({
 			title: result.title,
-			year: result.first_publish_year,
+			year: result.first_publish_year.toString(),
 			dataSource: this.apiName,
 			url: `https://openlibrary.org` + result.key,
 			id: result.key,
-			isbn: (result.isbn ?? []).find((el: string | any[]) => el.length <= 10) ?? 'unknown',
-			isbn13: (result.isbn ?? []).find((el: string | any[]) => el.length == 13) ?? 'unknown',
-			englishTitle: result.title_english ?? result.title,
+			isbn: Number.isNaN(isbn) ? undefined : isbn,
+			isbn13: Number.isNaN(isbn13) ? undefined : isbn13,
+			englishTitle: result.title,
 
-			author: result.author_name ?? 'unknown',
-			plot: result.description ?? 'unknown',
-			pages: result.number_of_pages_median ?? 'unknown',
-			onlineRating: Number.parseFloat(Number(result.ratings_average ?? 0).toFixed(2)),
-			image: `https://covers.openlibrary.org/b/OLID/` + result.cover_edition_key + `-L.jpg`,
+			author: result.author_name.join(', '),
+			pages: Number.isNaN(pages) ? undefined : pages,
+			onlineRating: result.ratings_average,
+			image: result.cover_edition_key ? `https://covers.openlibrary.org/b/OLID/` + result.cover_edition_key + `-L.jpg` : undefined,
 
 			released: true,
 
@@ -90,6 +132,6 @@ export class OpenLibraryAPI extends APIModel {
 		});
 	}
 	getDisabledMediaTypes(): MediaType[] {
-		return this.plugin.settings.OpenLibraryAPI_disabledMediaTypes as MediaType[];
+		return this.plugin.settings.OpenLibraryAPI_disabledMediaTypes;
 	}
 }

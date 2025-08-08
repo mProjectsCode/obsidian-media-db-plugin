@@ -1,3 +1,4 @@
+import type { MediaType } from 'src/utils/MediaType';
 import type MediaDbPlugin from '../main';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { PropertyMappingOption } from './PropertyMapping';
@@ -16,7 +17,7 @@ export class PropertyMapper {
 	 * @param obj
 	 */
 	convertObject(obj: Record<string, unknown>): Record<string, unknown> {
-		if (!obj.hasOwnProperty('type')) {
+		if (!Object.hasOwn(obj, 'type')) {
 			return obj;
 		}
 
@@ -58,7 +59,7 @@ export class PropertyMapper {
 	 * @param obj
 	 */
 	convertObjectBack(obj: Record<string, unknown>): Record<string, unknown> {
-		if (!obj.hasOwnProperty('type')) {
+		if (!Object.hasOwn(obj, 'type')) {
 			return obj;
 		}
 
@@ -66,7 +67,7 @@ export class PropertyMapper {
 			obj.type = 'comicManga';
 			console.debug(`MDB | updated metadata type`, obj.type);
 		}
-		if (MEDIA_TYPES.contains(obj.type as any)) {
+		if (MEDIA_TYPES.contains(obj.type as MediaType)) {
 			return obj;
 		}
 
