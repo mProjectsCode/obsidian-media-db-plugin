@@ -11,6 +11,12 @@ export class MusicReleaseModel extends MediaTypeModel {
 	image: string;
 	rating: number;
 	releaseDate: string;
+	tracks: {
+		number: number;
+		title: string;
+		duration: string;
+		featuredArtists: string[];
+	}[];
 
 	userData: {
 		personalRating: number;
@@ -36,6 +42,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 		}
 
 		this.type = this.getMediaType();
+		this.tracks = obj.tracks ?? [];
 	}
 
 	getTags(): string[] {

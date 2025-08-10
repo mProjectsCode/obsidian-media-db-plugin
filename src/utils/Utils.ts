@@ -296,3 +296,25 @@ export async function obsidianFetch(input: Request): Promise<Response> {
 		text: async () => res.text,
 	} as Response;
 }
+export function extractTracksFromMedia(media: any[]): {
+	number: number;
+	title: string;
+	duration: string;
+	featuredArtists: string[];
+}[] {
+	if (!media || media.length === 0 || !media[0].tracks) return [];
+
+	return media[0].tracks.map((track: any, index: number) => {
+		const title = track.title || track.recording?.title || 'Unknown Title';
+		const rawLength = track.length || track.recording?.length;
+		const duration = rawLength ? new Date(rawLength).toISOString().substr(14, 5) : 'unknown';
+		const featuredArtists = track['artist-credit']?.map((ac: { name: string }) => ac.name) ?? [];
+
+		return {
+			number: index + 1,
+			title,
+			duration,
+			featuredArtists,
+		};
+	});
+}

@@ -3,7 +3,7 @@ import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MusicReleaseModel } from '../../models/MusicReleaseModel';
 import { MediaType } from '../../utils/MediaType';
-import { contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { contactEmail, extractTracksFromMedia, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 // sadly no open api schema available
@@ -136,19 +136,44 @@ export class MusicBrainzAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
-		const fetchData = await requestUrl({
-			url: searchUrl,
+		// Fetch release group
+		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
+		const groupResponse = await requestUrl({
+			url: groupUrl,
 			headers: {
 				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
 			},
 		});
 
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		if (groupResponse.status !== 200) {
+			throw Error(`MDB | Received status code ${groupResponse.status} from ${this.apiName}.`);
 		}
 
-		const result = (await fetchData.json) as IdResponse;
+		const result = (await groupResponse.json) as IdResponse;
+
+		// Get ID of the first release
+		const firstRelease = result.releases?.[0];
+		if (!firstRelease) {
+			throw Error('MDB | No releases found in release group.');
+		}
+
+		// Fetch recordings for the first release
+		const releaseUrl = `https://musicbrainz.org/ws/2/release/${firstRelease.id}?inc=recordings+artists&fmt=json`;
+		console.log(`MDB | Fetching release recordings from: ${releaseUrl}`);
+
+		const releaseResponse = await requestUrl({
+			url: releaseUrl,
+			headers: {
+				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+			},
+		});
+
+		if (releaseResponse.status !== 200) {
+			throw Error(`MDB | Received status code ${releaseResponse.status} from ${this.apiName}.`);
+		}
+
+		const releaseData = await releaseResponse.json;
+		const tracks = extractTracksFromMedia(releaseData.media);
 
 		return new MusicReleaseModel({
 			type: 'musicRelease',
@@ -164,6 +189,7 @@ export class MusicBrainzAPI extends APIModel {
 			artists: result['artist-credit'].map(a => a.name),
 			genres: result.genres.map(g => g.name),
 			subType: result['primary-type'],
+			tracks: tracks,
 			rating: result.rating.value * 2,
 
 			userData: {
