@@ -1,6 +1,7 @@
 import type { TFile, TFolder, App } from 'obsidian';
 import { requestUrl } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
+import { iso6392 } from 'iso-639-2';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -317,4 +318,9 @@ export function extractTracksFromMedia(media: any[]): {
 			featuredArtists,
 		};
 	});
+}
+export function getLanguageName(code: string): string | null {
+	const language = iso6392.find(lang => lang.iso6392B === code || lang.iso6392T === code);
+
+	return language?.name ?? null;
 }

@@ -1,6 +1,6 @@
 import { MediaType } from '../utils/MediaType';
 import type { ModelToData } from '../utils/Utils';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { mediaDbTag, migrateObject, getLanguageName } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
 export type MusicReleaseData = ModelToData<MusicReleaseModel>;
@@ -8,9 +8,11 @@ export type MusicReleaseData = ModelToData<MusicReleaseModel>;
 export class MusicReleaseModel extends MediaTypeModel {
 	genres: string[];
 	artists: string[];
+	language: string;
 	image: string;
 	rating: number;
 	releaseDate: string;
+	trackCount: number;
 	tracks: {
 		number: number;
 		title: string;
@@ -42,7 +44,9 @@ export class MusicReleaseModel extends MediaTypeModel {
 		}
 
 		this.type = this.getMediaType();
+		this.trackCount = obj.trackCount ?? 0;
 		this.tracks = obj.tracks ?? [];
+		this.language = obj.language ?? '';
 	}
 
 	getTags(): string[] {

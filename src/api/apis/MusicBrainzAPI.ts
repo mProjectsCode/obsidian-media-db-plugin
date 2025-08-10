@@ -3,8 +3,9 @@ import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MusicReleaseModel } from '../../models/MusicReleaseModel';
 import { MediaType } from '../../utils/MediaType';
-import { contactEmail, extractTracksFromMedia, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { contactEmail, extractTracksFromMedia, getLanguageName, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
+import { iso6392 } from 'iso-639-2';
 
 // sadly no open api schema available
 
@@ -187,8 +188,10 @@ export class MusicBrainzAPI extends APIModel {
 			image: 'https://coverartarchive.org/release-group/' + result.id + '/front-500.jpg',
 
 			artists: result['artist-credit'].map(a => a.name),
+			language: releaseData['text-representation'].language ? getLanguageName(releaseData['text-representation'].language) : 'Unknown',
 			genres: result.genres.map(g => g.name),
 			subType: result['primary-type'],
+			trackCount: releaseData.media[0]['track-count'] ?? 0,
 			tracks: tracks,
 			rating: result.rating.value * 2,
 
