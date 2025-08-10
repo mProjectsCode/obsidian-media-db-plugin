@@ -1,5 +1,4 @@
-import createClient from 'openapi-fetch';
-import { obsidianFetch } from 'src/utils/Utils';
+import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
@@ -7,7 +6,11 @@ import { MovieModel } from '../../models/MovieModel';
 import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
-import type { paths } from '../schemas/OMDb';
+
+interface ErrorResponse {
+	Response: 'False';
+	Error: string;
+}
 
 type SearchResponse =
 	| {
@@ -21,10 +24,7 @@ type SearchResponse =
 				Type: string;
 			}[];
 	  }
-	| {
-			Response: 'False';
-			Error: string;
-	  };
+	| ErrorResponse;
 
 type IdResponse =
 	| {
@@ -53,10 +53,7 @@ type IdResponse =
 			Production: string;
 			Website: string;
 	  }
-	| {
-			Response: 'False';
-			Error: string;
-	  };
+	| ErrorResponse;
 
 export class OMDbAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -84,26 +81,19 @@ export class OMDbAPI extends APIModel {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const client = createClient<paths>({ baseUrl: 'https://www.omdbapi.com/' });
-
-		const response = await client.GET('/?s', {
-			params: {
-				query: {
-					s: title,
-					apikey: this.plugin.settings.OMDbKey,
-				},
-			},
-			fetch: obsidianFetch,
+		const response = await requestUrl({
+			url: `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`,
+			method: 'GET',
 		});
 
-		if (response.response.status === 401) {
+		if (response.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
-		if (response.response.status !== 200) {
-			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
+		if (response.status !== 200) {
+			throw Error(`MDB | Received status code ${response.status} from ${this.apiName}.`);
 		}
 
-		const data = response.data as SearchResponse | undefined;
+		const data = response.json as SearchResponse | undefined;
 
 		if (!data) {
 			throw Error(`MDB | No data received from ${this.apiName}.`);
@@ -175,26 +165,19 @@ export class OMDbAPI extends APIModel {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const client = createClient<paths>({ baseUrl: 'https://www.omdbapi.com/' });
-
-		const response = await client.GET('/?i', {
-			params: {
-				query: {
-					i: id,
-					apikey: this.plugin.settings.OMDbKey,
-				},
-			},
-			fetch: obsidianFetch,
+		const response = await requestUrl({
+			url: `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${this.plugin.settings.OMDbKey}`,
+			method: 'GET',
 		});
 
-		if (response.response.status === 401) {
+		if (response.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
-		if (response.response.status !== 200) {
-			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
+		if (response.status !== 200) {
+			throw Error(`MDB | Received status code ${response.status} from ${this.apiName}.`);
 		}
 
-		const result = response.data as IdResponse | undefined;
+		const result = response.json as IdResponse | undefined;
 
 		if (!result) {
 			throw Error(`MDB | No data received from ${this.apiName}.`);

@@ -8,7 +8,7 @@ async function fetchSchema() {
 	await $('bun openapi-typescript ./src/api/schemas/GiantBomb.json -o ./src/api/schemas/GiantBomb.ts');
 
 	// https://www.omdbapi.com/swagger.json
-	await $('bun openapi-typescript ./src/api/schemas/OMDb.json -o ./src/api/schemas/OMDb.ts');
+	// await $('bun openapi-typescript ./src/api/schemas/OMDb.json -o ./src/api/schemas/OMDb.ts');
 
 	// https://github.com/internetarchive/openlibrary-api/blob/main/swagger.yaml
 	await $('bun openapi-typescript ./src/api/schemas/OpenLibrary.json -o ./src/api/schemas/OpenLibrary.ts');

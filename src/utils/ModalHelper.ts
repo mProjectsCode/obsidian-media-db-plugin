@@ -189,7 +189,7 @@ export const ADVANCED_SEARCH_MODAL_DEFAULT_OPTIONS: AdvancedSearchModalOptions =
 
 export const ID_SEARCH_MODAL_DEFAULT_OPTIONS: IdSearchModalOptions = {
 	modalTitle: 'Media DB Id Search',
-	preselectedAPI: '',
+	preselectedAPI: undefined,
 	prefilledSearchString: '',
 };
 
