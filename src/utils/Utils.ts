@@ -1,6 +1,7 @@
 import type { TFile, TFolder, App } from 'obsidian';
 import { requestUrl } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
+import { iso6392 } from 'iso-639-2';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -295,4 +296,31 @@ export async function obsidianFetch(input: Request): Promise<Response> {
 		json: async () => res.json,
 		text: async () => res.text,
 	} as Response;
+}
+export function extractTracksFromMedia(media: any[]): {
+	number: number;
+	title: string;
+	duration: string;
+	featuredArtists: string[];
+}[] {
+	if (!media || media.length === 0 || !media[0].tracks) return [];
+
+	return media[0].tracks.map((track: any, index: number) => {
+		const title = track.title || track.recording?.title || 'Unknown Title';
+		const rawLength = track.length || track.recording?.length;
+		const duration = rawLength ? new Date(rawLength).toISOString().substr(14, 5) : 'unknown';
+		const featuredArtists = track['artist-credit']?.map((ac: { name: string }) => ac.name) ?? [];
+
+		return {
+			number: index + 1,
+			title,
+			duration,
+			featuredArtists,
+		};
+	});
+}
+export function getLanguageName(code: string): string | null {
+	const language = iso6392.find(lang => lang.iso6392B === code || lang.iso6392T === code);
+
+	return language?.name ?? null;
 }
