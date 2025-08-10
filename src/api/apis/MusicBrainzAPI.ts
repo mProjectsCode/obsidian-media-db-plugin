@@ -138,7 +138,7 @@ export class MusicBrainzAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		// Fetch release group
-		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
+		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres+tags&fmt=json`;
 		const groupResponse = await requestUrl({
 			url: groupUrl,
 			headers: {
@@ -189,7 +189,7 @@ export class MusicBrainzAPI extends APIModel {
 
 			artists: result['artist-credit'].map(a => a.name),
 			language: releaseData['text-representation'].language ? getLanguageName(releaseData['text-representation'].language) : 'Unknown',
-			genres: result.genres.map(g => g.name),
+			genres: result.tags.map(g => g.name),
 			subType: result['primary-type'],
 			trackCount: releaseData.media[0]['track-count'] ?? 0,
 			tracks: tracks,
