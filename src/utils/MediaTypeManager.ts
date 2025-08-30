@@ -77,7 +77,7 @@ export class MediaTypeManager {
 
 	cleanFileName(fileName: string) {
 		const invalidCharsRegex = /\™|\®|,|#|\[|\]|\||\^|\<|\>|\?|\*|\\|\//g;
-		return fileName.replaceAll(invalidCharsRegex, '').replaceAll(/"/g, "'").replaceAll(/:/g, ' -');
+		return fileName.replaceAll(invalidCharsRegex, '').replaceAll('"', "'").replaceAll(':', ' -');
 	}
 
 	async getTemplate(mediaTypeModel: MediaTypeModel, app: App): Promise<string> {
