@@ -33,7 +33,7 @@ export class GiantBombAPI extends APIModel {
 			params: {
 				query: {
 					api_key: this.plugin.settings.GiantBombKey,
-					filter: `name:${encodeURIComponent(title)}`,
+					filter: `name:${title}`,
 					format: 'json',
 					limit: 20,
 				},
