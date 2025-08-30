@@ -621,9 +621,14 @@ export default class MediaDbPlugin extends Plugin {
 		const erroredFiles: { filePath: string; error: string }[] = [];
 		let canceled: boolean = false;
 
-		const { selectedAPI, titleFieldName, appendContent } = await new Promise<{ selectedAPI: string; titleFieldName: string; appendContent: boolean }>(resolve => {
-			new MediaDbFolderImportModal(this.app, this, (selectedAPI: string, titleFieldName: string, appendContent: boolean) => {
-				resolve({ selectedAPI, titleFieldName, appendContent });
+		const { selectedAPI, titleFieldName, idFieldName, appendContent } = await new Promise<{
+			selectedAPI: string;
+			titleFieldName: string;
+			idFieldName: string;
+			appendContent: boolean;
+		}>(resolve => {
+			new MediaDbFolderImportModal(this.app, this, (selectedAPI: string, titleFieldName: string, idFieldName: string, appendContent: boolean) => {
+				resolve({ selectedAPI, titleFieldName, idFieldName, appendContent });
 			}).open();
 		});
 
@@ -637,54 +642,75 @@ export default class MediaDbPlugin extends Plugin {
 
 				const metadata = this.getMetadataFromFileCache(file);
 
-				const title = metadata[titleFieldName];
-				if (!title || typeof title !== 'string') {
-					erroredFiles.push({ filePath: file.path, error: `metadata field '${titleFieldName}' not found, empty, or not a string` });
-					continue;
-				}
+				// Querying by ID takes priority, doesn't require user to select from multiple matches
+				const id = metadata[idFieldName];
+				if (id && typeof id === 'string') {
+					try {
+						const model = await this.apiManager.queryDetailedInfoById(id, selectedAPI);
+						if (model) {
+							await this.createMediaDbNotes([model], appendContent ? file : undefined);
+						} else {
+							erroredFiles.push({ filePath: file.path, error: `Failed to query API with id: ${id}` });
+						}
+					} catch (e) {
+						erroredFiles.push({ filePath: file.path, error: `${e}` });
+						continue;
+					}
+				} else {
+					// Query API with title instead, requires user to select best match
+					const title = metadata[titleFieldName];
+					if (!title || typeof title !== 'string') {
+						erroredFiles.push({ filePath: file.path, error: `metadata field '${titleFieldName}' not found, empty, or not a string` });
+						continue;
+					}
 
-				let results: MediaTypeModel[] = [];
-				try {
-					results = await this.apiManager.query(title, [selectedAPI]);
-				} catch (e) {
-					erroredFiles.push({ filePath: file.path, error: `${e}` });
-					continue;
-				}
-				if (!results || results.length === 0) {
-					erroredFiles.push({ filePath: file.path, error: `no search results` });
-					continue;
-				}
+					let results: MediaTypeModel[] = [];
+					try {
+						results = await this.apiManager.query(title, [selectedAPI]);
+					} catch (e) {
+						erroredFiles.push({ filePath: file.path, error: `${e}` });
+						continue;
+					}
+					if (!results || results.length === 0) {
+						erroredFiles.push({ filePath: file.path, error: `no search results` });
+						continue;
+					}
 
-				const { selectModalResult, selectModal } = await this.modalHelper.createSelectModal({ elements: results, skipButton: true, modalTitle: `Results for '${title}'` });
+					const { selectModalResult, selectModal } = await this.modalHelper.createSelectModal({
+						elements: results,
+						skipButton: true,
+						modalTitle: `Results for '${title}'`,
+					});
 
-				if (selectModalResult.code === ModalResultCode.ERROR) {
-					erroredFiles.push({ filePath: file.path, error: selectModalResult.error.message });
+					if (selectModalResult.code === ModalResultCode.ERROR) {
+						erroredFiles.push({ filePath: file.path, error: selectModalResult.error.message });
+						selectModal.close();
+						continue;
+					}
+
+					if (selectModalResult.code === ModalResultCode.CLOSE) {
+						erroredFiles.push({ filePath: file.path, error: 'user canceled' });
+						selectModal.close();
+						canceled = true;
+						continue;
+					}
+
+					if (selectModalResult.code === ModalResultCode.SKIP) {
+						erroredFiles.push({ filePath: file.path, error: 'user skipped' });
+						selectModal.close();
+						continue;
+					}
+
+					if (selectModalResult.data.selected.length === 0) {
+						erroredFiles.push({ filePath: file.path, error: `no search results selected` });
+						continue;
+					}
+
+					const detailedResults = await this.queryDetails(selectModalResult.data.selected);
+					await this.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
+
 					selectModal.close();
-					continue;
 				}
-
-				if (selectModalResult.code === ModalResultCode.CLOSE) {
-					erroredFiles.push({ filePath: file.path, error: 'user canceled' });
-					selectModal.close();
-					canceled = true;
-					continue;
-				}
-
-				if (selectModalResult.code === ModalResultCode.SKIP) {
-					erroredFiles.push({ filePath: file.path, error: 'user skipped' });
-					selectModal.close();
-					continue;
-				}
-
-				if (selectModalResult.data.selected.length === 0) {
-					erroredFiles.push({ filePath: file.path, error: `no search results selected` });
-					continue;
-				}
-
-				const detailedResults = await this.queryDetails(selectModalResult.data.selected);
-				await this.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
-
-				selectModal.close();
 			}
 		}
 

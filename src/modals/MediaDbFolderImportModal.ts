@@ -4,23 +4,25 @@ import type MediaDbPlugin from '../main';
 
 export class MediaDbFolderImportModal extends Modal {
 	plugin: MediaDbPlugin;
-	onSubmit: (selectedAPI: string, titleFieldName: string, appendContent: boolean) => void;
+	onSubmit: (selectedAPI: string, titleFieldName: string, idFieldName: string, appendContent: boolean) => void;
 	selectedApi: string;
 	searchBtn?: ButtonComponent;
 	titleFieldName: string;
+	idFieldName: string;
 	appendContent: boolean;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit: (selectedAPI: string, titleFieldName: string, appendContent: boolean) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, onSubmit: (selectedAPI: string, titleFieldName: string, idFieldName: string, appendContent: boolean) => void) {
 		super(app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
 		this.selectedApi = plugin.apiManager.apis[0].apiName;
 		this.titleFieldName = '';
+		this.idFieldName = '';
 		this.appendContent = false;
 	}
 
 	submit(): void {
-		this.onSubmit(this.selectedApi, this.titleFieldName, this.appendContent);
+		this.onSubmit(this.selectedApi, this.titleFieldName, this.idFieldName, this.appendContent);
 		this.close();
 	}
 
@@ -43,7 +45,7 @@ export class MediaDbFolderImportModal extends Modal {
 		apiSelectorWrapper.appendChild(apiSelectorComponent.selectEl);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
-		contentEl.createEl('h3', { text: 'Append note content to Media DB entry.' });
+		contentEl.createEl('h3', { text: 'Append note content to Media DB entry?' });
 
 		const appendContentToggleElementWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
 		const appendContentToggleTextWrapper = appendContentToggleElementWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
@@ -60,7 +62,7 @@ export class MediaDbFolderImportModal extends Modal {
 		appendContentToggleComponentWrapper.appendChild(appendContentToggle.toggleEl);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
-		contentEl.createEl('h3', { text: 'The name of the metadata field that should be used as the title to query.' });
+		contentEl.createEl('h3', { text: "Name of 'title' metadata field to use in API query." });
 
 		const placeholder = 'title';
 		const titleFieldNameComponent = new TextComponent(contentEl);
@@ -73,6 +75,20 @@ export class MediaDbFolderImportModal extends Modal {
 			}
 		});
 		contentEl.appendChild(titleFieldNameComponent.inputEl);
+
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
+		contentEl.createEl('h3', { text: "Name of 'id' metadata field to use in API query (if present, will be used instead of title)." });
+
+		const idFieldNameComponent = new TextComponent(contentEl);
+		idFieldNameComponent.inputEl.style.width = '100%';
+		idFieldNameComponent.setPlaceholder('id');
+		idFieldNameComponent.onChange(value => (this.idFieldName = value));
+		idFieldNameComponent.inputEl.addEventListener('keydown', ke => {
+			if (ke.key === 'Enter') {
+				this.submit();
+			}
+		});
+		contentEl.appendChild(idFieldNameComponent.inputEl);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
