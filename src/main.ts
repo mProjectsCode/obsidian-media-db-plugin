@@ -359,7 +359,7 @@ export default class MediaDbPlugin extends Plugin {
 				}
 
 				// Update model to use local image path
-				mediaTypeModel.image = `[[${imagePath}]]`;
+				mediaTypeModel.image = `"[[${imagePath}]]"`;
 				return true;
 			} catch (e) {
 				console.warn('MDB | Failed to download image:', e);
