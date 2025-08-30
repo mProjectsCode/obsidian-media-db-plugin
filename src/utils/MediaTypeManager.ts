@@ -71,7 +71,13 @@ export class MediaTypeManager {
 
 	getFileName(mediaTypeModel: MediaTypeModel): string {
 		// Ignore undefined tags since some search APIs do not return all properties in the model and produce clean file names even if errors occur
-		return replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType())!, mediaTypeModel, true);
+		let fileName = replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType())!, mediaTypeModel, true);
+		return this.cleanFileName(fileName);
+	}
+
+	cleanFileName(fileName: string) {
+		const invalidCharsRegex = /\™|\®|,|#|\[|\]|\||\^|\<|\>|\?|\*|\\|\//g;
+		return fileName.replaceAll(invalidCharsRegex, '').replaceAll(/"/g, "'").replaceAll(/:/g, ' -');
 	}
 
 	async getTemplate(mediaTypeModel: MediaTypeModel, app: App): Promise<string> {
