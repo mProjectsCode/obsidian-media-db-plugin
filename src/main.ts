@@ -1,5 +1,5 @@
 import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder } from 'obsidian';
-import { requestUrl, normalizePath } from 'obsidian'; // Add requestUrl import
+import { requestUrl, normalizePath } from 'obsidian';
 import type { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
@@ -59,7 +59,6 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new ComicVineAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
 		this.apiManager.registerAPI(new GiantBombAPI(this));
-		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager();
 		this.modelPropertyMapper = new PropertyMapper(this);
@@ -157,12 +156,6 @@ export default class MediaDbPlugin extends Plugin {
 		});
 	}
 
-	/**
-	 * first very simple approach
-	 * TODO:
-	 *  - replace the detail query
-	 *  - maybe custom link syntax
-	 */
 	async createLinkWithSearchModal(): Promise<void> {
 		const apiSearchResults = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
 			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
@@ -381,18 +374,7 @@ export default class MediaDbPlugin extends Plugin {
 	 * @param options
 	 */
 	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<string> {
-		const template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
-
-		return this.generateContentWithDefaultFrontMatter(mediaTypeModel, options, template);
-
-		// if (this.settings.useDefaultFrontMatter || !template) {
-		// 	return this.generateContentWithDefaultFrontMatter(mediaTypeModel, options, template);
-		// } else {
-		// 	return this.generateContentWithCustomFrontMatter(mediaTypeModel, options, template);
-		// }
-	}
-
-	async generateContentWithDefaultFrontMatter(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions, template?: string): Promise<string> {
+		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
 		let fileMetadata: Record<string, unknown>;
 
 		if (this.settings.useDefaultFrontMatter) {
@@ -416,48 +398,6 @@ export default class MediaDbPlugin extends Plugin {
 			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
 		} else {
 			fileContent = `---\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
-		}
-
-		return fileContent;
-	}
-
-	async generateContentWithCustomFrontMatter(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions, template: string): Promise<string> {
-		const regExp = new RegExp(this.frontMatterRexExpPattern);
-
-		const frontMatter = this.getMetaDataFromFileContent(template);
-		let fileContent: string = template.replace(regExp, '');
-
-		// Updating a previous file
-		if (options.attachFile) {
-			const previousMetadata = this.app.metadataCache.getFileCache(options.attachFile)?.frontmatter ?? {};
-
-			// Use contents (below front matter) from previous file
-			fileContent = await this.app.vault.read(options.attachFile);
-
-			fileContent = fileContent.replace(regExp, '');
-			fileContent = fileContent.startsWith('\n') ? fileContent.substring(1) : fileContent;
-
-			// Update updated front matter with entries from the old front matter, if it isn't defined in the new front matter
-			Object.keys(previousMetadata).forEach(key => {
-				const value: unknown = previousMetadata[key];
-
-				if (!frontMatter[key] && value) {
-					frontMatter[key] = value;
-				}
-			});
-		}
-
-		// Ensure that id, type, and dataSource are defined
-		frontMatter.id ??= mediaTypeModel.id;
-		frontMatter.type ??= mediaTypeModel.type;
-		frontMatter.dataSource ??= mediaTypeModel.dataSource;
-
-		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
-			// Only support stringifyYaml for templater plugin
-			// Include the media variable in all templater commands by using a top level JavaScript execution command.
-			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
-		} else {
-			fileContent = `---\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
 		}
 
 		return fileContent;

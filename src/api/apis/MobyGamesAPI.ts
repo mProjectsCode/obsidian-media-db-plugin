@@ -61,7 +61,7 @@ export class MobyGamesAPI extends APIModel {
 					year: new Date(result.platforms[0].first_release_date).getFullYear().toString(),
 					dataSource: this.apiName,
 					id: result.game_id,
-				} as GameModel),
+				}),
 			);
 		}
 

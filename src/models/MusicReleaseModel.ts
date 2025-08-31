@@ -1,6 +1,6 @@
 import { MediaType } from '../utils/MediaType';
 import type { ModelToData } from '../utils/Utils';
-import { mediaDbTag, migrateObject, getLanguageName } from '../utils/Utils';
+import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
 export type MusicReleaseData = ModelToData<MusicReleaseModel>;
