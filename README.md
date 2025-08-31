@@ -15,43 +15,39 @@ Allows you to search by an ID that varies from API to API. Concrete information 
 #### Templates
 
 The plugin allows you to set a template note that gets added to the end of any note created by this plugin.  
-The plugin also offers simple "template tgs". E.g. if the template includes `{{ title }}`, it will be replaced by the title of the movie, show or game.  
-Note that "template tags" are surrounded with two curly braces and that the spaces inside the curly braces are important.
+The plugin also offers simple template tags, for example `{{ title }}`, which will be replaced by the title of the media you are importing.  
+Note that template tags are surrounded with two curly braces and spaces. The spaces inside the curly braces are important!
 
-For arrays there are two special ways of displaying them.
+For arrays there are two special ways of displaying them:
 
-- using `{{ LIST:variable_name }}` will result in
+- using `{{ LIST:variable_name }}` will result in:
     ```
       - element 1
       - element 2
       - element 3
       - ...
     ```
-- using `{{ ENUM:variable_name }}` will result in
+- using `{{ ENUM:variable_name }}` will result in:
     ```
       element 1, element 2, element 3, ...
     ```
 
-Available variables that can be used in template tags are the same variables from the metadata of the note.
+Available variables that can be used in template tags are any front-matter properties.
 
 I also published my own templates [here](https://github.com/mProjectsCode/obsidian-media-db-templates).
 
 #### Download poster images
 
-Allows you to automatically download the poster images for a new media, ensuring offline access. The images are saved as `type_title (year)` e.g. `movie_The Perfect Storm (2000)` with a user chosen save location.
+The plugin offers a setting to automatically download the poster images for a new media, ensuring offline access. The images are saved as `type_title (year)` e.g. `movie_The Perfect Storm (2000)` in a user chosen folder.
 
 #### Metadata field customization
 
-Allows you to rename the metadata fields this plugin generates through mappings.
+Allows you to rename the metadata fields this plugin generates through mappings. The mappings can be set in the plugins settings.
+The three options for mapping are:
 
-A mapping has to follow this syntax `[origional property name] -> [new property name]`.
-Multiple mappings are separated by a new line.
-So e.g.:
-
-```
-title -> name
-year -> releaseYear
-```
+- `default`: Keep the original name
+- `remap`: Rename the property
+- `remove`: Removes the property entirely
 
 #### Bulk Import
 
@@ -94,8 +90,6 @@ The folder structure should look like this:
 ```
 
 ### How to use
-
-(pictures are coming)
 
 Once you have installed this plugin, you will find a database icon in the left ribbon.  
 When using this or the `Add new Media DB entry` command, a popup will open.  
@@ -193,4 +187,3 @@ Contributions are always welcome. If you have an idea, feel free to open a featu
 Credits go to:
 
 - https://github.com/anpigon/obsidian-book-search-plugin for some inspiration and the idea to make this plugin
-- https://github.com/liamcain/obsidian-periodic-notes for 99% of `Suggest.ts` and `FolderSuggest.ts`
