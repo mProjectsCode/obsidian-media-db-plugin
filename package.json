@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-media-db-plugin",
 	"version": "0.8.0",
-	"description": "A plugin that can query multiple APIs for movies, series, anime, games, music and wiki articles, and import them into your vault.",
+	"description": "A plugin that can query multiple APIs for movies, series, anime, manga, books, comics, games, music and wiki articles, and import them into your vault.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "bun run automation/build/esbuild.dev.config.ts",
@@ -34,6 +34,7 @@
 		"eslint": "^9.32.0",
 		"eslint-plugin-import": "^2.32.0",
 		"eslint-plugin-only-warn": "^1.1.0",
+		"iso-639-2": "^3.0.2",
 		"obsidian": "latest",
 		"openapi-fetch": "^0.14.0",
 		"openapi-typescript": "^7.8.0",
