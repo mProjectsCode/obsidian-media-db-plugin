@@ -26,6 +26,7 @@ import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper, ModalResultCode } from './utils/ModalHelper';
 import type { CreateNoteOptions } from './utils/Utils';
 import { dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
+import { BulkImportLookupMethod } from 'src/utils/BulkImportLookupMethod';
 
 export type Metadata = Record<string, unknown>;
 
@@ -561,9 +562,14 @@ export default class MediaDbPlugin extends Plugin {
 		const erroredFiles: { filePath: string; error: string }[] = [];
 		let canceled: boolean = false;
 
-		const { selectedAPI, titleFieldName, appendContent } = await new Promise<{ selectedAPI: string; titleFieldName: string; appendContent: boolean }>(resolve => {
-			new MediaDbFolderImportModal(this.app, this, (selectedAPI: string, titleFieldName: string, appendContent: boolean) => {
-				resolve({ selectedAPI, titleFieldName, appendContent });
+		const { selectedAPI, lookupMethod, fieldName, appendContent } = await new Promise<{
+			selectedAPI: string;
+			lookupMethod: string;
+			fieldName: string;
+			appendContent: boolean;
+		}>(resolve => {
+			new MediaDbFolderImportModal(this.app, this, (selectedAPI: string, lookupMethod: string, fieldName: string, appendContent: boolean) => {
+				resolve({ selectedAPI, lookupMethod, fieldName, appendContent });
 			}).open();
 		});
 
@@ -576,55 +582,74 @@ export default class MediaDbPlugin extends Plugin {
 				}
 
 				const metadata = this.getMetadataFromFileCache(file);
+				const lookupValue = metadata[fieldName];
 
-				const title = metadata[titleFieldName];
-				if (!title || typeof title !== 'string') {
-					erroredFiles.push({ filePath: file.path, error: `metadata field '${titleFieldName}' not found, empty, or not a string` });
+				if (!lookupValue || typeof lookupValue !== 'string') {
+					erroredFiles.push({ filePath: file.path, error: `metadata field '${fieldName}' not found, empty, or not a string` });
 					continue;
-				}
+				} else if (lookupMethod === BulkImportLookupMethod.ID) {
+					try {
+						const model = await this.apiManager.queryDetailedInfoById(lookupValue, selectedAPI);
+						if (model) {
+							await this.createMediaDbNotes([model], appendContent ? file : undefined);
+						} else {
+							erroredFiles.push({ filePath: file.path, error: `Failed to query API with id: ${lookupValue}` });
+						}
+					} catch (e) {
+						erroredFiles.push({ filePath: file.path, error: `${e}` });
+						continue;
+					}
+				} else if (lookupMethod === BulkImportLookupMethod.TITLE) {
+					let results: MediaTypeModel[] = [];
+					try {
+						results = await this.apiManager.query(lookupValue, [selectedAPI]);
+					} catch (e) {
+						erroredFiles.push({ filePath: file.path, error: `${e}` });
+						continue;
+					}
+					if (!results || results.length === 0) {
+						erroredFiles.push({ filePath: file.path, error: `no search results` });
+						continue;
+					}
 
-				let results: MediaTypeModel[] = [];
-				try {
-					results = await this.apiManager.query(title, [selectedAPI]);
-				} catch (e) {
-					erroredFiles.push({ filePath: file.path, error: `${e}` });
-					continue;
-				}
-				if (!results || results.length === 0) {
-					erroredFiles.push({ filePath: file.path, error: `no search results` });
-					continue;
-				}
+					const { selectModalResult, selectModal } = await this.modalHelper.createSelectModal({
+						elements: results,
+						skipButton: true,
+						modalTitle: `Results for '${lookupValue}'`,
+					});
 
-				const { selectModalResult, selectModal } = await this.modalHelper.createSelectModal({ elements: results, skipButton: true, modalTitle: `Results for '${title}'` });
+					if (selectModalResult.code === ModalResultCode.ERROR) {
+						erroredFiles.push({ filePath: file.path, error: selectModalResult.error.message });
+						selectModal.close();
+						continue;
+					}
 
-				if (selectModalResult.code === ModalResultCode.ERROR) {
-					erroredFiles.push({ filePath: file.path, error: selectModalResult.error.message });
+					if (selectModalResult.code === ModalResultCode.CLOSE) {
+						erroredFiles.push({ filePath: file.path, error: 'user canceled' });
+						selectModal.close();
+						canceled = true;
+						continue;
+					}
+
+					if (selectModalResult.code === ModalResultCode.SKIP) {
+						erroredFiles.push({ filePath: file.path, error: 'user skipped' });
+						selectModal.close();
+						continue;
+					}
+
+					if (selectModalResult.data.selected.length === 0) {
+						erroredFiles.push({ filePath: file.path, error: `no search results selected` });
+						continue;
+					}
+
+					const detailedResults = await this.queryDetails(selectModalResult.data.selected);
+					await this.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
+
 					selectModal.close();
+				} else {
+					erroredFiles.push({ filePath: file.path, error: `invalid lookup type` });
 					continue;
 				}
-
-				if (selectModalResult.code === ModalResultCode.CLOSE) {
-					erroredFiles.push({ filePath: file.path, error: 'user canceled' });
-					selectModal.close();
-					canceled = true;
-					continue;
-				}
-
-				if (selectModalResult.code === ModalResultCode.SKIP) {
-					erroredFiles.push({ filePath: file.path, error: 'user skipped' });
-					selectModal.close();
-					continue;
-				}
-
-				if (selectModalResult.data.selected.length === 0) {
-					erroredFiles.push({ filePath: file.path, error: `no search results selected` });
-					continue;
-				}
-
-				const detailedResults = await this.queryDetails(selectModalResult.data.selected);
-				await this.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
-
-				selectModal.close();
 			}
 		}
 
