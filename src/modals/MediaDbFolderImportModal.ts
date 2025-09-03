@@ -1,28 +1,29 @@
 import type { App, ButtonComponent } from 'obsidian';
 import { DropdownComponent, Modal, Setting, TextComponent, ToggleComponent } from 'obsidian';
 import type MediaDbPlugin from '../main';
+import type { APIModel } from 'src/api/APIModel';
 
 export class MediaDbFolderImportModal extends Modal {
 	plugin: MediaDbPlugin;
-	onSubmit: (selectedAPI: string, titleFieldName: string, idFieldName: string, appendContent: boolean) => void;
+	onSubmit: (selectedAPI: string, lookupMethod: string, fieldName: string, appendContent: boolean) => void;
 	selectedApi: string;
 	searchBtn?: ButtonComponent;
-	titleFieldName: string;
-	idFieldName: string;
+	lookupMethod: string;
+	fieldName: string;
 	appendContent: boolean;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit: (selectedAPI: string, titleFieldName: string, idFieldName: string, appendContent: boolean) => void) {
+	constructor(app: App, plugin: MediaDbPlugin, onSubmit: (selectedAPI: string, lookupMethod: string, fieldName: string, appendContent: boolean) => void) {
 		super(app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
 		this.selectedApi = plugin.apiManager.apis[0].apiName;
-		this.titleFieldName = '';
-		this.idFieldName = '';
+		this.lookupMethod = '';
+		this.fieldName = '';
 		this.appendContent = false;
 	}
 
 	submit(): void {
-		this.onSubmit(this.selectedApi, this.titleFieldName, this.idFieldName, this.appendContent);
+		this.onSubmit(this.selectedApi, this.lookupMethod, this.fieldName, this.appendContent);
 		this.close();
 	}
 
@@ -31,18 +32,14 @@ export class MediaDbFolderImportModal extends Modal {
 
 		contentEl.createEl('h2', { text: 'Import folder as Media DB entries' });
 
-		const apiSelectorWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
-		const apiSelectorTextWrapper = apiSelectorWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
-		apiSelectorTextWrapper.createEl('span', { text: 'API to search', cls: 'media-db-plugin-list-text' });
-
-		const apiSelectorComponent = new DropdownComponent(apiSelectorWrapper);
-		apiSelectorComponent.onChange((value: string) => {
+		const onAPIChange = (value: string) => {
 			this.selectedApi = value;
+		};
+		const apiOptions = this.plugin.apiManager.apis.map((api: APIModel) => {
+			return { value: api.apiName, display: api.apiName };
 		});
-		for (const api of this.plugin.apiManager.apis) {
-			apiSelectorComponent.addOption(api.apiName, api.apiName);
-		}
-		apiSelectorWrapper.appendChild(apiSelectorComponent.selectEl);
+
+		this.createDropdownEl(contentEl, 'API to search', onAPIChange, apiOptions);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 		contentEl.createEl('h3', { text: 'Append note content to Media DB entry?' });
@@ -62,33 +59,35 @@ export class MediaDbFolderImportModal extends Modal {
 		appendContentToggleComponentWrapper.appendChild(appendContentToggle.toggleEl);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
-		contentEl.createEl('h3', { text: "Name of 'title' metadata field to use in API query." });
-
-		const placeholder = 'title';
-		const titleFieldNameComponent = new TextComponent(contentEl);
-		titleFieldNameComponent.inputEl.style.width = '100%';
-		titleFieldNameComponent.setPlaceholder(placeholder);
-		titleFieldNameComponent.onChange(value => (this.titleFieldName = value));
-		titleFieldNameComponent.inputEl.addEventListener('keydown', ke => {
-			if (ke.key === 'Enter') {
-				this.submit();
-			}
+		contentEl.createEl('h3', { text: 'Media lookup method' });
+		contentEl.createEl('p', {
+			text: 'Choose whether to search the API by title (can return multiple results) or lookup directly using an ID (returns at most one result), and specify the name of the frontmatter property which contains the title or ID of the media.',
 		});
-		contentEl.appendChild(titleFieldNameComponent.inputEl);
+
+		const onlookupMethodChange = (value: string) => {
+			this.lookupMethod = value;
+		};
+		const lookupMethodOptions = [
+			{ value: 'title', display: 'Title' },
+			{ value: 'id', display: 'ID' },
+		];
+		this.createDropdownEl(contentEl, 'Lookup media by', onlookupMethodChange, lookupMethodOptions);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
-		contentEl.createEl('h3', { text: "Name of 'id' metadata field to use in API query (if present, will be used instead of title)." });
 
-		const idFieldNameComponent = new TextComponent(contentEl);
-		idFieldNameComponent.inputEl.style.width = '100%';
-		idFieldNameComponent.setPlaceholder('id');
-		idFieldNameComponent.onChange(value => (this.idFieldName = value));
-		idFieldNameComponent.inputEl.addEventListener('keydown', ke => {
+		const fieldNameWrapperEl = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
+		const fieldNameLabelWrapperEl = fieldNameWrapperEl.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
+		fieldNameLabelWrapperEl.createEl('span', { text: 'Using the property named', cls: 'media-db-plugin-list-text' });
+
+		const fieldNameComponent = new TextComponent(fieldNameWrapperEl);
+		fieldNameComponent.setPlaceholder('title / id');
+		fieldNameComponent.onChange(value => (this.fieldName = value));
+		fieldNameComponent.inputEl.addEventListener('keydown', ke => {
 			if (ke.key === 'Enter') {
 				this.submit();
 			}
 		});
-		contentEl.appendChild(idFieldNameComponent.inputEl);
+		contentEl.appendChild(fieldNameWrapperEl);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
@@ -107,6 +106,19 @@ export class MediaDbFolderImportModal extends Modal {
 				btn.buttonEl.addClass('media-db-plugin-button');
 				this.searchBtn = btn;
 			});
+	}
+
+	createDropdownEl(parentEl: HTMLElement, label: string, onChange: { (value: string): void }, options: { value: string; display: string }[]): void {
+		const wrapperEl = parentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
+		const labelWrapperEl = wrapperEl.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
+		labelWrapperEl.createEl('span', { text: label, cls: 'media-db-plugin-list-text' });
+
+		const dropDownComponent = new DropdownComponent(wrapperEl);
+		dropDownComponent.onChange(onChange);
+		for (const option of options) {
+			dropDownComponent.addOption(option.value, option.display);
+		}
+		wrapperEl.appendChild(dropDownComponent.selectEl);
 	}
 
 	onClose(): void {

@@ -621,14 +621,14 @@ export default class MediaDbPlugin extends Plugin {
 		const erroredFiles: { filePath: string; error: string }[] = [];
 		let canceled: boolean = false;
 
-		const { selectedAPI, titleFieldName, idFieldName, appendContent } = await new Promise<{
+		const { selectedAPI, lookupMethod, fieldName, appendContent } = await new Promise<{
 			selectedAPI: string;
-			titleFieldName: string;
-			idFieldName: string;
+			lookupMethod: string;
+			fieldName: string;
 			appendContent: boolean;
 		}>(resolve => {
-			new MediaDbFolderImportModal(this.app, this, (selectedAPI: string, titleFieldName: string, idFieldName: string, appendContent: boolean) => {
-				resolve({ selectedAPI, titleFieldName, idFieldName, appendContent });
+			new MediaDbFolderImportModal(this.app, this, (selectedAPI: string, lookupMethod: string, fieldName: string, appendContent: boolean) => {
+				resolve({ selectedAPI, lookupMethod, fieldName, appendContent });
 			}).open();
 		});
 
@@ -641,32 +641,27 @@ export default class MediaDbPlugin extends Plugin {
 				}
 
 				const metadata = this.getMetadataFromFileCache(file);
+				const lookupValue = metadata[fieldName];
 
-				// Querying by ID takes priority, doesn't require user to select from multiple matches
-				const id = metadata[idFieldName];
-				if (id && typeof id === 'string') {
+				if (!lookupValue || typeof lookupValue !== 'string') {
+					erroredFiles.push({ filePath: file.path, error: `metadata field '${fieldName}' not found, empty, or not a string` });
+					continue;
+				} else if (lookupMethod == 'id') {
 					try {
-						const model = await this.apiManager.queryDetailedInfoById(id, selectedAPI);
+						const model = await this.apiManager.queryDetailedInfoById(lookupValue, selectedAPI);
 						if (model) {
 							await this.createMediaDbNotes([model], appendContent ? file : undefined);
 						} else {
-							erroredFiles.push({ filePath: file.path, error: `Failed to query API with id: ${id}` });
+							erroredFiles.push({ filePath: file.path, error: `Failed to query API with id: ${lookupValue}` });
 						}
 					} catch (e) {
 						erroredFiles.push({ filePath: file.path, error: `${e}` });
 						continue;
 					}
-				} else {
-					// Query API with title instead, requires user to select best match
-					const title = metadata[titleFieldName];
-					if (!title || typeof title !== 'string') {
-						erroredFiles.push({ filePath: file.path, error: `metadata field '${titleFieldName}' not found, empty, or not a string` });
-						continue;
-					}
-
+				} else if (lookupMethod == 'title') {
 					let results: MediaTypeModel[] = [];
 					try {
-						results = await this.apiManager.query(title, [selectedAPI]);
+						results = await this.apiManager.query(lookupValue, [selectedAPI]);
 					} catch (e) {
 						erroredFiles.push({ filePath: file.path, error: `${e}` });
 						continue;
@@ -679,7 +674,7 @@ export default class MediaDbPlugin extends Plugin {
 					const { selectModalResult, selectModal } = await this.modalHelper.createSelectModal({
 						elements: results,
 						skipButton: true,
-						modalTitle: `Results for '${title}'`,
+						modalTitle: `Results for '${lookupValue}'`,
 					});
 
 					if (selectModalResult.code === ModalResultCode.ERROR) {
