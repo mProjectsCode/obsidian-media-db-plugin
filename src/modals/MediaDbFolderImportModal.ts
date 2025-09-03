@@ -2,6 +2,7 @@ import type { App, ButtonComponent } from 'obsidian';
 import { DropdownComponent, Modal, Setting, TextComponent, ToggleComponent } from 'obsidian';
 import type MediaDbPlugin from '../main';
 import type { APIModel } from 'src/api/APIModel';
+import { BulkImportLookupMethod } from 'src/utils/BulkImportLookupMethod';
 
 export class MediaDbFolderImportModal extends Modal {
 	plugin: MediaDbPlugin;
@@ -17,7 +18,7 @@ export class MediaDbFolderImportModal extends Modal {
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
 		this.selectedApi = plugin.apiManager.apis[0].apiName;
-		this.lookupMethod = '';
+		this.lookupMethod = BulkImportLookupMethod.TITLE;
 		this.fieldName = '';
 		this.appendContent = false;
 	}
@@ -32,14 +33,16 @@ export class MediaDbFolderImportModal extends Modal {
 
 		contentEl.createEl('h2', { text: 'Import folder as Media DB entries' });
 
-		const onAPIChange = (value: string) => {
-			this.selectedApi = value;
-		};
-		const apiOptions = this.plugin.apiManager.apis.map((api: APIModel) => {
-			return { value: api.apiName, display: api.apiName };
-		});
-
-		this.createDropdownEl(contentEl, 'API to search', onAPIChange, apiOptions);
+		this.createDropdownEl(
+			contentEl,
+			'API to search',
+			(value: string) => {
+				this.selectedApi = value;
+			},
+			this.plugin.apiManager.apis.map((api: APIModel) => {
+				return { value: api.apiName, display: api.apiName };
+			}),
+		);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 		contentEl.createEl('h3', { text: 'Append note content to Media DB entry?' });
@@ -64,14 +67,17 @@ export class MediaDbFolderImportModal extends Modal {
 			text: 'Choose whether to search the API by title (can return multiple results) or lookup directly using an ID (returns at most one result), and specify the name of the frontmatter property which contains the title or ID of the media.',
 		});
 
-		const onlookupMethodChange = (value: string) => {
-			this.lookupMethod = value;
-		};
-		const lookupMethodOptions = [
-			{ value: 'title', display: 'Title' },
-			{ value: 'id', display: 'ID' },
-		];
-		this.createDropdownEl(contentEl, 'Lookup media by', onlookupMethodChange, lookupMethodOptions);
+		this.createDropdownEl(
+			contentEl,
+			'Lookup media by',
+			(value: string) => {
+				this.lookupMethod = value;
+			},
+			[
+				{ value: BulkImportLookupMethod.TITLE, display: 'Title' },
+				{ value: BulkImportLookupMethod.ID, display: 'ID' },
+			],
+		);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
@@ -108,7 +114,7 @@ export class MediaDbFolderImportModal extends Modal {
 			});
 	}
 
-	createDropdownEl(parentEl: HTMLElement, label: string, onChange: { (value: string): void }, options: { value: string; display: string }[]): void {
+	createDropdownEl(parentEl: HTMLElement, label: string, onChange: (value: string) => void, options: { value: string; display: string }[]): void {
 		const wrapperEl = parentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
 		const labelWrapperEl = wrapperEl.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
 		labelWrapperEl.createEl('span', { text: label, cls: 'media-db-plugin-list-text' });

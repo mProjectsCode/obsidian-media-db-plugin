@@ -26,6 +26,7 @@ import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper, ModalResultCode } from './utils/ModalHelper';
 import type { CreateNoteOptions } from './utils/Utils';
 import { dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
+import { BulkImportLookupMethod } from 'src/utils/BulkImportLookupMethod';
 
 export type Metadata = Record<string, unknown>;
 
@@ -646,7 +647,7 @@ export default class MediaDbPlugin extends Plugin {
 				if (!lookupValue || typeof lookupValue !== 'string') {
 					erroredFiles.push({ filePath: file.path, error: `metadata field '${fieldName}' not found, empty, or not a string` });
 					continue;
-				} else if (lookupMethod == 'id') {
+				} else if (lookupMethod === BulkImportLookupMethod.ID) {
 					try {
 						const model = await this.apiManager.queryDetailedInfoById(lookupValue, selectedAPI);
 						if (model) {
@@ -658,7 +659,7 @@ export default class MediaDbPlugin extends Plugin {
 						erroredFiles.push({ filePath: file.path, error: `${e}` });
 						continue;
 					}
-				} else if (lookupMethod == 'title') {
+				} else if (lookupMethod === BulkImportLookupMethod.TITLE) {
 					let results: MediaTypeModel[] = [];
 					try {
 						results = await this.apiManager.query(lookupValue, [selectedAPI]);
@@ -705,6 +706,9 @@ export default class MediaDbPlugin extends Plugin {
 					await this.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
 
 					selectModal.close();
+				} else {
+					erroredFiles.push({ filePath: file.path, error: `invalid lookup type` });
+					continue;
 				}
 			}
 		}
