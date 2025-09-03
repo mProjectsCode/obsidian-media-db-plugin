@@ -12,6 +12,7 @@ import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
 import { MediaType } from './MediaType';
 import { replaceTags } from './Utils';
+import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
 
 export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Movie,
@@ -75,9 +76,10 @@ export class MediaTypeManager {
 		return this.cleanFileName(fileName);
 	}
 
-	cleanFileName(fileName: string) {
-		const invalidCharsRegex = /\™|\®|,|#|\[|\]|\||\^|\<|\>|\?|\*|\\|\//g;
-		return fileName.replaceAll(invalidCharsRegex, '').replaceAll('"', "'").replaceAll(':', ' -');
+	cleanFileName(fileName: string): string {
+		const cleanedFileName = ILLEGAL_FILENAME_CHARACTERS.reduce((str, char) => str.replaceAll(char[0], char[1]), fileName);
+		// Remove all duplicate whitespace in the file name
+		return cleanedFileName.replaceAll(/ +/g, ' ');
 	}
 
 	async getTemplate(mediaTypeModel: MediaTypeModel, app: App): Promise<string> {
