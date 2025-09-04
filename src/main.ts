@@ -1,4 +1,5 @@
-import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder } from 'obsidian';
+import type { TFile } from 'obsidian';
+import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFolder } from 'obsidian';
 import { requestUrl, normalizePath } from 'obsidian';
 import type { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
@@ -14,19 +15,18 @@ import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
-import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
 import { getDefaultSettings, MediaDbSettingTab } from './settings/Settings';
+import { BulkImportHelper } from './utils/BulkImportHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
 import type { SearchModalOptions } from './utils/ModalHelper';
-import { ModalHelper, ModalResultCode } from './utils/ModalHelper';
+import { ModalHelper } from './utils/ModalHelper';
 import type { CreateNoteOptions } from './utils/Utils';
-import { dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
-import { BulkImportLookupMethod } from 'src/utils/BulkImportLookupMethod';
+import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
 
 export type Metadata = Record<string, unknown>;
 
@@ -42,6 +42,7 @@ export default class MediaDbPlugin extends Plugin {
 	mediaTypeManager!: MediaTypeManager;
 	modelPropertyMapper!: PropertyMapper;
 	modalHelper!: ModalHelper;
+	bulkImportHelper!: BulkImportHelper;
 	dateFormatter!: DateFormatter;
 
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
@@ -64,6 +65,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.mediaTypeManager = new MediaTypeManager();
 		this.modelPropertyMapper = new PropertyMapper(this);
 		this.modalHelper = new ModalHelper(this);
+		this.bulkImportHelper = new BulkImportHelper(this);
 		this.dateFormatter = new DateFormatter();
 
 		await this.loadSettings();
@@ -84,7 +86,7 @@ export default class MediaDbPlugin extends Plugin {
 					menu.addItem(item => {
 						item.setTitle('Import folder as Media DB entries')
 							.setIcon('database')
-							.onClick(() => this.createEntriesFromFolder(file));
+							.onClick(() => this.bulkImportHelper.import(file));
 					});
 				}
 			}),
@@ -556,116 +558,6 @@ export default class MediaDbPlugin extends Plugin {
 		} else {
 			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachTemplate: true, folder: activeFile.parent ?? undefined, openNote: true });
 		}
-	}
-
-	async createEntriesFromFolder(folder: TFolder): Promise<void> {
-		const erroredFiles: { filePath: string; error: string }[] = [];
-		let canceled: boolean = false;
-
-		const { selectedAPI, lookupMethod, fieldName, appendContent } = await new Promise<{
-			selectedAPI: string;
-			lookupMethod: string;
-			fieldName: string;
-			appendContent: boolean;
-		}>(resolve => {
-			new MediaDbFolderImportModal(this.app, this, (selectedAPI: string, lookupMethod: string, fieldName: string, appendContent: boolean) => {
-				resolve({ selectedAPI, lookupMethod, fieldName, appendContent });
-			}).open();
-		});
-
-		for (const child of folder.children) {
-			if (child instanceof TFile) {
-				const file: TFile = child;
-				if (canceled) {
-					erroredFiles.push({ filePath: file.path, error: 'user canceled' });
-					continue;
-				}
-
-				const metadata = this.getMetadataFromFileCache(file);
-				const lookupValue = metadata[fieldName];
-
-				if (!lookupValue || typeof lookupValue !== 'string') {
-					erroredFiles.push({ filePath: file.path, error: `metadata field '${fieldName}' not found, empty, or not a string` });
-					continue;
-				} else if (lookupMethod === BulkImportLookupMethod.ID) {
-					try {
-						const model = await this.apiManager.queryDetailedInfoById(lookupValue, selectedAPI);
-						if (model) {
-							await this.createMediaDbNotes([model], appendContent ? file : undefined);
-						} else {
-							erroredFiles.push({ filePath: file.path, error: `Failed to query API with id: ${lookupValue}` });
-						}
-					} catch (e) {
-						erroredFiles.push({ filePath: file.path, error: `${e}` });
-						continue;
-					}
-				} else if (lookupMethod === BulkImportLookupMethod.TITLE) {
-					let results: MediaTypeModel[] = [];
-					try {
-						results = await this.apiManager.query(lookupValue, [selectedAPI]);
-					} catch (e) {
-						erroredFiles.push({ filePath: file.path, error: `${e}` });
-						continue;
-					}
-					if (!results || results.length === 0) {
-						erroredFiles.push({ filePath: file.path, error: `no search results` });
-						continue;
-					}
-
-					const { selectModalResult, selectModal } = await this.modalHelper.createSelectModal({
-						elements: results,
-						skipButton: true,
-						modalTitle: `Results for '${lookupValue}'`,
-					});
-
-					if (selectModalResult.code === ModalResultCode.ERROR) {
-						erroredFiles.push({ filePath: file.path, error: selectModalResult.error.message });
-						selectModal.close();
-						continue;
-					}
-
-					if (selectModalResult.code === ModalResultCode.CLOSE) {
-						erroredFiles.push({ filePath: file.path, error: 'user canceled' });
-						selectModal.close();
-						canceled = true;
-						continue;
-					}
-
-					if (selectModalResult.code === ModalResultCode.SKIP) {
-						erroredFiles.push({ filePath: file.path, error: 'user skipped' });
-						selectModal.close();
-						continue;
-					}
-
-					if (selectModalResult.data.selected.length === 0) {
-						erroredFiles.push({ filePath: file.path, error: `no search results selected` });
-						continue;
-					}
-
-					const detailedResults = await this.queryDetails(selectModalResult.data.selected);
-					await this.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
-
-					selectModal.close();
-				} else {
-					erroredFiles.push({ filePath: file.path, error: `invalid lookup type` });
-					continue;
-				}
-			}
-		}
-
-		if (erroredFiles.length > 0) {
-			await this.createErroredFilesReport(erroredFiles);
-		}
-	}
-
-	async createErroredFilesReport(erroredFiles: { filePath: string; error: string }[]): Promise<void> {
-		const title = `MDB - bulk import error report ${dateTimeToString(new Date())}`;
-		const filePath = `${title}.md`;
-
-		const table = [['file', 'error']].concat(erroredFiles.map(x => [x.filePath, x.error]));
-
-		const fileContent = `# ${title}\n\n${markdownTable(table)}`;
-		await this.app.vault.create(filePath, fileContent);
 	}
 
 	async loadSettings(): Promise<void> {

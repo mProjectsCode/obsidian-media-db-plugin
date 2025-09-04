@@ -10,9 +10,9 @@ import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { SeriesModel } from '../models/SeriesModel';
 import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
+import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
 import { MediaType } from './MediaType';
 import { replaceTags } from './Utils';
-import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
 
 export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Movie,
@@ -72,7 +72,7 @@ export class MediaTypeManager {
 
 	getFileName(mediaTypeModel: MediaTypeModel): string {
 		// Ignore undefined tags since some search APIs do not return all properties in the model and produce clean file names even if errors occur
-		let fileName = replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType())!, mediaTypeModel, true);
+		const fileName = replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType())!, mediaTypeModel, true);
 		return this.cleanFileName(fileName);
 	}
 

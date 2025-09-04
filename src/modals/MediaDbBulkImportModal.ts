@@ -1,20 +1,20 @@
-import type { App, ButtonComponent } from 'obsidian';
+import type { ButtonComponent } from 'obsidian';
 import { DropdownComponent, Modal, Setting, TextComponent, ToggleComponent } from 'obsidian';
-import type MediaDbPlugin from '../main';
 import type { APIModel } from 'src/api/APIModel';
-import { BulkImportLookupMethod } from 'src/utils/BulkImportLookupMethod';
+import { BulkImportLookupMethod } from 'src/utils/BulkImportHelper';
+import type MediaDbPlugin from '../main';
 
-export class MediaDbFolderImportModal extends Modal {
+export class MediaDbBulkImportModal extends Modal {
 	plugin: MediaDbPlugin;
-	onSubmit: (selectedAPI: string, lookupMethod: string, fieldName: string, appendContent: boolean) => void;
+	onSubmit: (selectedAPI: string, lookupMethod: BulkImportLookupMethod, fieldName: string, appendContent: boolean) => void;
 	selectedApi: string;
 	searchBtn?: ButtonComponent;
-	lookupMethod: string;
+	lookupMethod: BulkImportLookupMethod;
 	fieldName: string;
 	appendContent: boolean;
 
-	constructor(app: App, plugin: MediaDbPlugin, onSubmit: (selectedAPI: string, lookupMethod: string, fieldName: string, appendContent: boolean) => void) {
-		super(app);
+	constructor(plugin: MediaDbPlugin, onSubmit: (selectedAPI: string, lookupMethod: BulkImportLookupMethod, fieldName: string, appendContent: boolean) => void) {
+		super(plugin.app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
 		this.selectedApi = plugin.apiManager.apis[0].apiName;
@@ -71,7 +71,7 @@ export class MediaDbFolderImportModal extends Modal {
 			contentEl,
 			'Lookup media by',
 			(value: string) => {
-				this.lookupMethod = value;
+				this.lookupMethod = value as BulkImportLookupMethod;
 			},
 			[
 				{ value: BulkImportLookupMethod.TITLE, display: 'Title' },
