@@ -13,6 +13,7 @@ import { FolderSuggest } from './suggesters/FolderSuggest';
 
 export interface MediaDbPluginSettings {
 	OMDbKey: string;
+	TMDBKey: string;
 	MobyGamesKey: string;
 	GiantBombKey: string;
 	ComicVineKey: string;
@@ -23,6 +24,9 @@ export interface MediaDbPluginSettings {
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
 	OMDbAPI_disabledMediaTypes: MediaType[];
+	TMDBSeriesAPI_disabledMediaTypes: MediaType[];
+	TMDBSeasonAPI_disabledMediaTypes: MediaType[];
+	TMDBMovieAPI_disabledMediaTypes: MediaType[];
 	MALAPI_disabledMediaTypes: MediaType[];
 	MALAPIManga_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
@@ -35,6 +39,7 @@ export interface MediaDbPluginSettings {
 	OpenLibraryAPI_disabledMediaTypes: MediaType[];
 	movieTemplate: string;
 	seriesTemplate: string;
+	seasonTemplate: string;
 	mangaTemplate: string;
 	gameTemplate: string;
 	wikiTemplate: string;
@@ -44,6 +49,7 @@ export interface MediaDbPluginSettings {
 
 	movieFileNameTemplate: string;
 	seriesFileNameTemplate: string;
+	seasonFileNameTemplate: string;
 	mangaFileNameTemplate: string;
 	gameFileNameTemplate: string;
 	wikiFileNameTemplate: string;
@@ -53,6 +59,7 @@ export interface MediaDbPluginSettings {
 
 	moviePropertyConversionRules: string;
 	seriesPropertyConversionRules: string;
+	seasonPropertyConversionRules: string;
 	mangaPropertyConversionRules: string;
 	gamePropertyConversionRules: string;
 	wikiPropertyConversionRules: string;
@@ -62,6 +69,7 @@ export interface MediaDbPluginSettings {
 
 	movieFolder: string;
 	seriesFolder: string;
+	seasonFolder: string;
 	mangaFolder: string;
 	gameFolder: string;
 	wikiFolder: string;
@@ -76,6 +84,7 @@ export interface MediaDbPluginSettings {
 
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
+	TMDBKey: '',
 	MobyGamesKey: '',
 	GiantBombKey: '',
 	ComicVineKey: '',
@@ -86,6 +95,9 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	useDefaultFrontMatter: true,
 	enableTemplaterIntegration: false,
 	OMDbAPI_disabledMediaTypes: [],
+	TMDBSeriesAPI_disabledMediaTypes: [],
+	TMDBSeasonAPI_disabledMediaTypes: [],
+	TMDBMovieAPI_disabledMediaTypes: [],
 	MALAPI_disabledMediaTypes: [],
 	MALAPIManga_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
@@ -98,6 +110,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OpenLibraryAPI_disabledMediaTypes: [],
 	movieTemplate: '',
 	seriesTemplate: '',
+	seasonTemplate: '',
 	mangaTemplate: '',
 	gameTemplate: '',
 	wikiTemplate: '',
@@ -107,6 +120,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	movieFileNameTemplate: '{{ title }} ({{ year }})',
 	seriesFileNameTemplate: '{{ title }} ({{ year }})',
+	seasonFileNameTemplate: '{{ title }} ({{ year }})',
 	mangaFileNameTemplate: '{{ title }} ({{ year }})',
 	gameFileNameTemplate: '{{ title }} ({{ year }})',
 	wikiFileNameTemplate: '{{ title }}',
@@ -116,6 +130,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	moviePropertyConversionRules: '',
 	seriesPropertyConversionRules: '',
+	seasonPropertyConversionRules: '',
 	mangaPropertyConversionRules: '',
 	gamePropertyConversionRules: '',
 	wikiPropertyConversionRules: '',
@@ -125,6 +140,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	movieFolder: 'Media DB/movies',
 	seriesFolder: 'Media DB/series',
+	seasonFolder: 'Media DB/series',
 	mangaFolder: 'Media DB/comics',
 	gameFolder: 'Media DB/games',
 	wikiFolder: 'Media DB/wiki',
@@ -397,6 +413,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
+			.setName('Season folder')
+			.setDesc('Where newly imported seasons should be placed.')
+			.addSearch(cb => {
+				new FolderSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder(DEFAULT_SETTINGS.seasonFolder)
+					.setValue(this.plugin.settings.seriesFolder)
+					.onChange(data => {
+						this.plugin.settings.seasonFolder = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
 			.setName('Comic and manga folder')
 			.setDesc('Where newly imported comics and manga should be placed.')
 			.addSearch(cb => {
@@ -504,6 +533,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
+			.setName('Season template')
+			.setDesc('Template file to be used when creating a new note for a season.')
+			.addSearch(cb => {
+				new FileSuggest(this.app, cb.inputEl);
+				cb.setPlaceholder('Example: seasonTemplate.md')
+					.setValue(this.plugin.settings.seasonTemplate)
+					.onChange(data => {
+						this.plugin.settings.seasonTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
 			.setName('Manga and Comics template')
 			.setDesc('Template file to be used when creating a new note for a manga or a comic.')
 			.addSearch(cb => {
@@ -605,6 +647,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.seriesFileNameTemplate)
 					.onChange(data => {
 						this.plugin.settings.seriesFileNameTemplate = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Season  file name template')
+			.setDesc('Template for the file name used when creating a new note for a season.')
+			.addText(cb => {
+				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.seasonFileNameTemplate}`)
+					.setValue(this.plugin.settings.seasonFileNameTemplate)
+					.onChange(data => {
+						this.plugin.settings.seasonFileNameTemplate = data;
 						void this.plugin.saveSettings();
 					});
 			});
