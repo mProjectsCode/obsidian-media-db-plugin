@@ -3,7 +3,8 @@
 A plugin that can query multiple APIs for movies, series, anime, manga, books, comics, games, music, and wiki articles, and import them into your vault.
 
 > [!WARNING]
-> This README refers to the in-development version of the plugin. The README for the latest release can be found [here](https://github.com/mProjectsCode/obsidian-media-db-plugin/blob/release/README.md).
+> Please make sure you are looking at the README on the [release branch](https://github.com/mProjectsCode/obsidian-media-db-plugin/blob/release/README.md).
+> The README on the master branch refers to the current in-development version of the plugin.
 
 ### Features
 
