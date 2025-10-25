@@ -248,13 +248,15 @@ export default class MediaDbPlugin extends Plugin {
 					new Notice('No seasons found for this series.');
 					return;
 				}
+				// Pass the original series title from the search result
+				const seriesName = selectResults[0]?.englishTitle || selectResults[0]?.title || '';
 				const modal = new MediaDbSeasonSelectModal(this, allSeasons.map(s => ({
 					season_number: s.seasonNumber,
 					name: s.seasonTitle || s.title,
 					episode_count: s.episodes || 0,
 					air_date: s.year,
 					poster_path: s.image,
-				})), true);
+				})), true, seriesName);
 				const selectedSeasons: any[] = await new Promise(resolve => {
 					modal.setSubmitCallback(resolve);
 					modal.open();

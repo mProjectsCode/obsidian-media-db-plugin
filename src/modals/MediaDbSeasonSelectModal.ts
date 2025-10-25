@@ -12,11 +12,13 @@ export class MediaDbSeasonSelectModal extends SelectModal<SeasonSelectModalEleme
 	plugin: MediaDbPlugin;
 	submitCallback?: (selectedSeasons: SeasonSelectModalElement[]) => void;
 	closeCallback?: (err?: Error) => void;
+	seriesName?: string;
 
-	constructor(plugin: MediaDbPlugin, seasons: SeasonSelectModalElement[], multiSelect = true) {
+	constructor(plugin: MediaDbPlugin, seasons: SeasonSelectModalElement[], multiSelect = true, seriesName?: string) {
 		super(plugin.app, seasons, multiSelect);
 		this.plugin = plugin;
-		this.title = 'Select Season(s)';
+		this.seriesName = seriesName;
+		this.title = `Select Season(s) for${seriesName ? `: ${seriesName}` : ''}`;
 		this.description = 'Select one or more seasons to create notes for.';
 	}
 
