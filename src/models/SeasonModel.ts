@@ -75,6 +75,6 @@ export class SeasonModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		return 'Season ' + this.seasonNumber + '(' + this.year + ')';
+		return this.seasonNumber + ' seasons';
 	}
 }

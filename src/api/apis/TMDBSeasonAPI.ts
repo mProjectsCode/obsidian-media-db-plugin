@@ -48,62 +48,67 @@ export class TMDBSeasonAPI extends APIModel {
 		for (const result of searchData.results) {
 			if (ret.length >= 20) break;
 
-			const tvId = result.id;
-			const seriesUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(tvId)}?api_key=${this.plugin.settings.TMDBKey}&append_to_response=credits`;
-			const seriesResp = await fetch(seriesUrl);
-
-			if (seriesResp.status === 401) {
-				throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
-			}
-			if (seriesResp.status !== 200) {
-				console.warn(`MDB | Skipping series ${tvId} due to status ${seriesResp.status}`);
-				continue;
-			}
-
-			const seriesData = await seriesResp.json();
-			const seriesName = seriesData?.name ?? result?.name ?? result?.original_name ?? '';
-
-			if (Array.isArray(seriesData?.seasons)) {
-				for (const season of seriesData.seasons) {
-					if (ret.length >= 20) break;
-
-					const seasonNumber = season.season_number ?? 0;
-					const seasonDetailsUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(tvId)}/season/${encodeURIComponent(seasonNumber)}?api_key=${this.plugin.settings.TMDBKey}`;
-					const seasonDetailsResp = await fetch(seasonDetailsUrl);
-
-					if (seasonDetailsResp.status === 401) {
-						throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			// Fetch series details to get the total number of seasons
+			let totalSeasons = 0;
+			try {
+				const detailsUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(result.id)}?api_key=${this.plugin.settings.TMDBKey}`;
+				const detailsResp = await fetch(detailsUrl);
+				if (detailsResp.status === 200) {
+					const detailsData = await detailsResp.json();
+					if (Array.isArray(detailsData.seasons)) {
+						totalSeasons = detailsData.seasons.length;
 					}
-					if (seasonDetailsResp.status !== 200) {
-						console.warn(`MDB | Skipping season ${tvId}/season/${seasonNumber} due to status ${seasonDetailsResp.status}`);
-						continue;
-					}
-
-					const seasonData = await seasonDetailsResp.json();
-
-					// Get airedTo as the air_date of the last episode, if available
-					let airedTo = 'unknown';
-					if (Array.isArray(seasonData.episodes) && seasonData.episodes.length > 0) {
-						const lastEp = seasonData.episodes[seasonData.episodes.length - 1];
-						if (lastEp?.air_date) airedTo = lastEp.air_date;
-					}
-
-					const titleText = `${seriesName} - Season ${seasonNumber}`;
-					ret.push(
-						new SeasonModel({
-							title: titleText,
-							englishTitle: titleText,
-							year: seasonData.air_date ? new Date(seasonData.air_date).getFullYear().toString() : 'unknown',
-							dataSource: this.apiName,
-							id: `${tvId}/season/${seasonNumber}`,
-							seasonTitle: seasonData.name ?? titleText,
-							seasonNumber: seasonNumber,
-						}),
-					);
 				}
-			}
+			} catch {}
+			ret.push(
+				new SeasonModel({
+					title: `${result.name ?? result.original_name ?? ''}`,
+					englishTitle: result.name ?? result.original_name ?? '',
+					year: result.first_air_date ? new Date(result.first_air_date).getFullYear().toString() : 'unknown',
+					dataSource: this.apiName,
+					id: result.id.toString(),
+					seasonTitle: result.name ?? result.original_name ?? '',
+					seasonNumber: totalSeasons,
+				})
+			);
 		}
 
+		return ret;
+	}
+
+	//Fetch all seasons for a given series
+	async getSeasonsForSeries(tvId: string): Promise<SeasonModel[]> {
+		if (!this.plugin.settings.TMDBKey) {
+			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+		}
+		const seriesUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(tvId)}?api_key=${this.plugin.settings.TMDBKey}`;
+		const seriesResp = await fetch(seriesUrl);
+		if (seriesResp.status === 401) {
+			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+		}
+		if (seriesResp.status !== 200) {
+			throw Error(`MDB | Received status code ${seriesResp.status} from ${this.apiName}.`);
+		}
+		const seriesData = await seriesResp.json();
+		const seriesName = seriesData?.name ?? '';
+		const ret: SeasonModel[] = [];
+		if (Array.isArray(seriesData?.seasons)) {
+			for (const season of seriesData.seasons) {
+				const seasonNumber = season.season_number ?? 0;
+				const titleText = `${seriesName} - Season ${seasonNumber}`;
+				ret.push(
+					new SeasonModel({
+						title: titleText,
+						englishTitle: titleText,
+						year: season.air_date ? new Date(season.air_date).getFullYear().toString() : 'unknown',
+						dataSource: this.apiName,
+						id: `${tvId}/season/${seasonNumber}`,
+						seasonTitle: season.name ?? titleText,
+						seasonNumber: seasonNumber,
+					})
+				);
+			}
+		}
 		return ret;
 	}
 

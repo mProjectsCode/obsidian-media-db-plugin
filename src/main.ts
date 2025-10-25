@@ -218,11 +218,64 @@ export default class MediaDbPlugin extends Plugin {
 		const proceed: boolean = false;
 
 		while (!proceed) {
-			selectResults =
-				(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
-					return await this.queryDetails(selectModalData.selected);
-				})) ?? [];
+			if (types.length === 1 && types[0] === 'season') {
+				selectResults =
+					(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
+						return selectModalData.selected;
+					})) ?? [];
+			} else {
+				selectResults =
+					(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
+						return await this.queryDetails(selectModalData.selected);
+					})) ?? [];
+			}
 			if (!selectResults || selectResults.length < 1) {
+				return;
+			}
+
+			// Only show the season select modal if the user searches for seasons
+			if (types.length === 1 && types[0] === 'season' && selectResults.length === 1 && selectResults[0].dataSource === 'TMDBSeasonAPI') {
+				// Dynamically import the modal
+				const { MediaDbSeasonSelectModal } = await import('./modals/MediaDbSeasonSelectModal');
+				const TMDBSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+				if (!TMDBSeasonAPI) {
+					new Notice('TMDBSeasonAPI not found.');
+					return;
+				}
+				// Fetch all seasons for the selected series
+				const allSeasons = await TMDBSeasonAPI.getSeasonsForSeries(selectResults[0].id);
+				if (!allSeasons || allSeasons.length === 0) {
+					new Notice('No seasons found for this series.');
+					return;
+				}
+				const modal = new MediaDbSeasonSelectModal(this, allSeasons.map(s => ({
+					season_number: s.seasonNumber,
+					name: s.seasonTitle || s.title,
+					episode_count: s.episodes || 0,
+					air_date: s.year,
+					poster_path: s.image,
+				})), true);
+				const selectedSeasons: any[] = await new Promise(resolve => {
+					modal.setSubmitCallback(resolve);
+					modal.open();
+				});
+				if (!selectedSeasons || selectedSeasons.length === 0) {
+					return;
+				}
+				// Fetch full metadata for each selected seasond and create the note
+				await Promise.all(selectedSeasons.map(async season => {
+					const orig = allSeasons.find(s => s.seasonNumber === season.season_number);
+					if (orig) {
+						// Fetch full metadata using getById
+						const TMDBSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+						if (TMDBSeasonAPI) {
+							const fullMeta = await TMDBSeasonAPI.getById(orig.id);
+							await this.createMediaDbNotes([fullMeta]);
+						} else {
+							await this.createMediaDbNotes([orig]);
+						}
+					}
+				}));
 				return;
 			}
 
