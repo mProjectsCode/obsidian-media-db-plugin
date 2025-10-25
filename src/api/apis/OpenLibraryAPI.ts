@@ -66,10 +66,10 @@ export class OpenLibraryAPI extends APIModel {
 				new BookModel({
 					title: result.title,
 					englishTitle: result.title,
-					year: result.first_publish_year.toString(),
+					year: result.first_publish_year?.toString() ?? 'unknown',
 					dataSource: this.apiName,
 					id: result.key,
-					author: result.author_name.join(', '),
+					author: result.author_name?.join(', '),
 				}),
 			);
 		}
@@ -111,7 +111,7 @@ export class OpenLibraryAPI extends APIModel {
 
 		return new BookModel({
 			title: result.title,
-			year: result.first_publish_year.toString(),
+			year: result.first_publish_year?.toString() ?? 'unknown',
 			dataSource: this.apiName,
 			url: `https://openlibrary.org` + result.key,
 			id: result.key,
@@ -119,7 +119,7 @@ export class OpenLibraryAPI extends APIModel {
 			isbn13: Number.isNaN(isbn13) ? undefined : isbn13,
 			englishTitle: result.title,
 
-			author: result.author_name.join(', '),
+			author: result.author_name?.join(', '),
 			pages: Number.isNaN(pages) ? undefined : pages,
 			onlineRating: result.ratings_average,
 			image: result.cover_edition_key ? `https://covers.openlibrary.org/b/OLID/` + result.cover_edition_key + `-L.jpg` : undefined,
