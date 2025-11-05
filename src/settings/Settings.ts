@@ -195,10 +195,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('TMDB API key')
-			.setDesc('API key for "www.themoviedb.org".')
+			.setName('TMDB API Token')
+			.setDesc('API Read Access Token for "www.themoviedb.org".')
 			.addText(cb => {
-				cb.setPlaceholder('API key')
+				cb.setPlaceholder('API Token')
 					.setValue(this.plugin.settings.TMDBKey)
 					.onChange(data => {
 						this.plugin.settings.TMDBKey = data;

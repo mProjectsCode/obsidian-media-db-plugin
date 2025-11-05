@@ -1,9 +1,10 @@
-import { Notice, renderResults } from 'obsidian';
+import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
+import type { paths } from '../schemas/TMDB';
 
 export class TMDBSeriesAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -29,26 +30,34 @@ export class TMDBSeriesAPI extends APIModel {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `https://api.themoviedb.org/3/search/tv?api_key=${this.plugin.settings.TMDBKey}&query=${encodeURIComponent(title)}&include_adult=${this.plugin.settings.sfwFilter ? 'false' : 'true'}`;
-		const fetchData = await fetch(searchUrl);
+		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
+		const response = await client.GET('/3/search/tv', {
+			headers: {
+				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`
+			},
+			params: {
+				query: {
+					query: encodeURIComponent(title),
+					include_adult: this.plugin.settings.sfwFilter ? false : true
+				},
+			},
+			fetch: fetch,
+		});
 
-		if (fetchData.status === 401) {
+		if (response.response.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		if (response.response.status !== 200) {
+			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json();
+		const data = response.data
 
-		if (data.total_results === 0) {
-			if (data.Error === 'Series not found!') {
-				return [];
-			}
-
-			throw Error(`MDB | Received error from ${this.apiName}: \n${JSON.stringify(data, undefined, 4)}`);
+		if(!data) {
+			throw Error(`MDB | No data received from ${this.apiName}.`);
 		}
-		if (!data.results) {
+
+		if ( data.total_results === 0 || !data.results ) {
 			return [];
 		}
 
@@ -64,7 +73,7 @@ export class TMDBSeriesAPI extends APIModel {
 					englishTitle: result.name,
 					year: result.first_air_date ? new Date(result.first_air_date).getFullYear().toString() : 'unknown',
 					dataSource: this.apiName,
-					id: result.id,
+					id: result.id.toString(),
 				}),
 			);
 		}
@@ -79,17 +88,32 @@ export class TMDBSeriesAPI extends APIModel {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(id)}?api_key=${this.plugin.settings.TMDBKey}&append_to_response=credits`;
-		const fetchData = await fetch(searchUrl);
+		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
+		const response = await client.GET('/3/tv/{series_id}', {
+			headers: {
+				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`
+			},
+			params: {
+				path: { series_id: parseInt(id) },
+				query: {
+					append_to_response: 'credits'
+				},
+			},
+			fetch: fetch,
+		});
 
-		if (fetchData.status === 401) {
+		if (response.response.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		if (response.response.status !== 200) {
+			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
-		const result = await fetchData.json();
+		const result = response.data
+
+		if (!result) {
+			throw Error(`MDB | No data received from ${this.apiName}.`);
+		}
 		// console.debug(result);
 
 		return new SeriesModel({
@@ -99,23 +123,25 @@ export class TMDBSeriesAPI extends APIModel {
 			year: result.first_air_date ? new Date(result.first_air_date).getFullYear().toString() : 'unknown',
 			dataSource: this.apiName,
 			url: `https://www.themoviedb.org/tv/${result.id}`,
-			id: result.id,
+			id: result.id.toString(),
 
 			plot: result.overview ?? '',
-			genres: result.genres.map((g: any) => g.name) ?? [],
-			writer: result.created_by.map((c: any) => c.name) ?? [],
-			studio: result.production_companies.map((s: any) => s.name) ?? [],
+			genres: result.genres?.map((g: any) => g.name) ?? [],
+			writer: result.created_by?.map((c: any) => c.name) ?? [],
+			studio: result.production_companies?.map((s: any) => s.name) ?? [],
 			episodes: result.number_of_episodes,
-			duration: result.episode_run_time[0] ?? 'unknown',
+			duration: result.episode_run_time?.[0]?.toString() ?? 'unknown',
 			onlineRating: result.vote_average,
-			actors: result.credits.cast.map((c: any) => c.name).slice(0, 5) ?? [],
-			image: `https://image.tmdb.org/t/p/w780${result.poster_path}`,
+			// TMDB's spec allows for 'append_to_response' but doesn't seem to account for it in the type
+			// @ts-ignore
+			actors: result.credits?.cast.map((c: any) => c.name).slice(0, 5) ?? [],
+			image: result.poster_path ? `https://image.tmdb.org/t/p/w780${result.poster_path}` : null,
 
-			released:['Returning Series','Cancelled','Ended'].includes(result.status),
+			released:['Returning Series','Cancelled','Ended'].includes(result.status!),
 			streamingServices: [],
-			airing: ['Returning Series'].includes(result.status),
+			airing: ['Returning Series'].includes(result.status!),
 			airedFrom: this.plugin.dateFormatter.format(result.first_air_date, this.apiDateFormat) ?? 'unknown',
-			airedTo: ['Returning Series'].includes(result.status) ? 'unknown' : this.plugin.dateFormatter.format(result.last_air_date, this.apiDateFormat) ?? 'unknown',
+			airedTo: ['Returning Series'].includes(result.status!) ? 'unknown' : this.plugin.dateFormatter.format(result.last_air_date, this.apiDateFormat) ?? 'unknown',
 
 			userData: {
 				watched: false,
@@ -127,6 +153,6 @@ export class TMDBSeriesAPI extends APIModel {
 	}
 
 	getDisabledMediaTypes(): MediaType[] {
-		return this.plugin.settings.TMDBSeriesAPI_disabledMediaTypes as MediaType[];
+		return this.plugin.settings.TMDBSeriesAPI_disabledMediaTypes;
 	}
 }
