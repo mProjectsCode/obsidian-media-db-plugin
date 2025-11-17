@@ -31,6 +31,10 @@ export class BoardGameGeekAPI extends APIModel {
 			},
 		});
 
+		if (fetchData.status === 401) {
+			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+		}
+
 		if (fetchData.status !== 200) {
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
