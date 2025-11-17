@@ -16,7 +16,7 @@ export class BoardGameGeekAPI extends APIModel {
 		this.plugin = plugin;
 		this.apiName = 'BoardGameGeekAPI';
 		this.apiDescription = 'A free API for BoardGameGeek things.';
-		this.apiUrl = 'https://api.geekdo.com/xmlapi';
+		this.apiUrl = 'https://boardgamegeek.com/xmlapi/';
 		this.types = [MediaType.BoardGame];
 	}
 
@@ -26,6 +26,9 @@ export class BoardGameGeekAPI extends APIModel {
 		const searchUrl = `${this.apiUrl}/search?search=${encodeURIComponent(title)}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
+			headers: {
+				Authorization: `Bearer ${this.plugin.settings.BoardgameGeekKey}`,
+			},
 		});
 
 		if (fetchData.status !== 200) {
@@ -64,7 +67,14 @@ export class BoardGameGeekAPI extends APIModel {
 		const searchUrl = `${this.apiUrl}/boardgame/${encodeURIComponent(id)}?stats=1`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
+			headers: {
+				Authorization: `Bearer ${this.plugin.settings.BoardgameGeekKey}`,
+			},
 		});
+
+		if (fetchData.status === 401) {
+			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+		}
 
 		if (fetchData.status !== 200) {
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);

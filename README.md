@@ -102,7 +102,8 @@ Now you select the result you want and the plugin will cast it's magic and creat
 
 - movies (including specials)
 - series (including OVAs)
-- games
+- videogames
+- boardgames
 - music releases
 - wiki articles
 - books
@@ -121,6 +122,7 @@ Now you select the result you want and the plugin will cast it's magic and creat
 | [Open Library](https://openlibrary.org)              | The OpenLibrary API offers metadata for books                                                     | books                                                 | No                                                                                                                                                                                 | Cover access is rate-limited when not using CoverID or OLID by max 100 requests/IP every 5 minutes. This plugin uses OLID so there shouldn't be a rate limit.                                                                      | No                 |
 | [Moby Games](https://www.mobygames.com)              | The Moby Games API offers metadata for games for all platforms                                    | games                                                 | Yes, by making an account [here](https://www.mobygames.com/user/register/). NOTE: As of September 2024 the API key is no longer free so consider using Giant Bomb or steam instead | API requests are limited to 360 per hour (one every ten seconds). In addition, requests should be made no more frequently than one per second.                                                                                     | No                 |
 | [Giant Bomb](https://www.giantbomb.com)              | The Giant Bomb API offers metadata for games for all platforms                                    | games                                                 | Yes, by making an account [here](https://www.giantbomb.com/login-signup/)                                                                                                          | API requests are limited to 200 requests per resource, per hour. In addition, they implement velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources. | No                 |
+| [Boardgame Geek](https://boardgamegeek.com)          | The Boardgame Geek API offers metadata for boardgames                                             | boardgames                                            | Yes, by making an account [here](https://boardgamegeek.com/join/) and then [requesting an application token](https://boardgamegeek.com/applications)                               | Exact usage limits are still undetermined                                                                                                                                                                                          | No                 |
 | Comic Vine                                           | The Comic Vine API offers metadata for comic books                                                | comicbooks                                            | Yes, by making an account [here](https://comicvine.gamespot.com/login-signup/) and going to the [api section](https://comicvine.gamespot.com/api/) of the site                     | 200 requests per resource, per hour. There is also a velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources.                                         | No                 |
 
 #### Notes
