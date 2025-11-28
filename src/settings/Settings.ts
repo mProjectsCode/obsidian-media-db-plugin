@@ -332,6 +332,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FolderSuggest(this.app, cb.inputEl);
 				suggester.onSelect((folder, evt) => {
 					cb.setValue(folder.path);
+					this.plugin.settings.imageFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.imageFolder)
 					.setValue(this.plugin.settings.imageFolder)
@@ -393,6 +396,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FolderSuggest(this.app, cb.inputEl);
 				suggester.onSelect((folder, evt) => {
 					cb.setValue(folder.path);
+					this.plugin.settings.movieFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.movieFolder)
 					.setValue(this.plugin.settings.movieFolder)
@@ -409,6 +415,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FolderSuggest(this.app, cb.inputEl);
 				suggester.onSelect((folder, evt) => {
 					cb.setValue(folder.path);
+					this.plugin.settings.seriesFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.seriesFolder)
 					.setValue(this.plugin.settings.seriesFolder)
@@ -425,6 +434,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FolderSuggest(this.app, cb.inputEl);
 				suggester.onSelect((folder, evt) => {
 					cb.setValue(folder.path);
+					this.plugin.settings.mangaFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.mangaFolder)
 					.setValue(this.plugin.settings.mangaFolder)
@@ -441,6 +453,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FolderSuggest(this.app, cb.inputEl);
 				suggester.onSelect((folder, evt) => {
 					cb.setValue(folder.path);
+					this.plugin.settings.gameFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.gameFolder)
 					.setValue(this.plugin.settings.gameFolder)
@@ -457,6 +472,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FolderSuggest(this.app, cb.inputEl);
 				suggester.onSelect((folder, evt) => {
 					cb.setValue(folder.path);
+					this.plugin.settings.wikiFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.wikiFolder)
 					.setValue(this.plugin.settings.wikiFolder)
@@ -473,6 +491,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FolderSuggest(this.app, cb.inputEl);
 				suggester.onSelect((folder, evt) => {
 					cb.setValue(folder.path);
+					this.plugin.settings.musicReleaseFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.musicReleaseFolder)
 					.setValue(this.plugin.settings.musicReleaseFolder)
@@ -489,6 +510,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FolderSuggest(this.app, cb.inputEl);
 				suggester.onSelect((folder, evt) => {
 					cb.setValue(folder.path);
+					this.plugin.settings.boardgameFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.boardgameFolder)
 					.setValue(this.plugin.settings.boardgameFolder)
@@ -504,6 +528,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FolderSuggest(this.app, cb.inputEl);
 				suggester.onSelect((folder, evt) => {
 					cb.setValue(folder.path);
+					this.plugin.settings.bookFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.bookFolder)
 					.setValue(this.plugin.settings.bookFolder)
@@ -524,6 +551,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FileSuggest(this.app, cb.inputEl);
 				suggester.onSelect((file, evt) => {
 					cb.setValue(file.path);
+					this.plugin.settings.movieTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder('Example: movieTemplate.md')
 					.setValue(this.plugin.settings.movieTemplate)
@@ -540,6 +570,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FileSuggest(this.app, cb.inputEl);
 				suggester.onSelect((file, evt) => {
 					cb.setValue(file.path);
+					this.plugin.settings.seriesTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder('Example: seriesTemplate.md')
 					.setValue(this.plugin.settings.seriesTemplate)
@@ -556,6 +589,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FileSuggest(this.app, cb.inputEl);
 				suggester.onSelect((file, evt) => {
 					cb.setValue(file.path);
+					this.plugin.settings.mangaTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder('Example: mangaTemplate.md')
 					.setValue(this.plugin.settings.mangaTemplate)
@@ -572,6 +608,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FileSuggest(this.app, cb.inputEl);
 				suggester.onSelect((file, evt) => {
 					cb.setValue(file.path);
+					this.plugin.settings.gameTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder('Example: gameTemplate.md')
 					.setValue(this.plugin.settings.gameTemplate)
@@ -588,6 +627,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FileSuggest(this.app, cb.inputEl);
 				suggester.onSelect((file, evt) => {
 					cb.setValue(file.path);
+					this.plugin.settings.wikiTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder('Example: wikiTemplate.md')
 					.setValue(this.plugin.settings.wikiTemplate)
@@ -604,6 +646,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FileSuggest(this.app, cb.inputEl);
 				suggester.onSelect((file, evt) => {
 					cb.setValue(file.path);
+					this.plugin.settings.musicReleaseTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder('Example: musicReleaseTemplate.md')
 					.setValue(this.plugin.settings.musicReleaseTemplate)
@@ -620,6 +665,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FileSuggest(this.app, cb.inputEl);
 				suggester.onSelect((file, evt) => {
 					cb.setValue(file.path);
+					this.plugin.settings.boardgameTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder('Example: boardgameTemplate.md')
 					.setValue(this.plugin.settings.boardgameTemplate)
@@ -636,6 +684,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				const suggester = new FileSuggest(this.app, cb.inputEl);
 				suggester.onSelect((file, evt) => {
 					cb.setValue(file.path);
+					this.plugin.settings.bookTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
 				});
 				cb.setPlaceholder('Example: bookTemplate.md')
 					.setValue(this.plugin.settings.bookTemplate)
