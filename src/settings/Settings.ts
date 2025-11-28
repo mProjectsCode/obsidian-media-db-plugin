@@ -329,7 +329,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Image folder')
 			.setDesc('Where downloaded images should be stored.')
 			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
+				const suggester = new FolderSuggest(this.app, cb.inputEl);
+				suggester.onSelect((folder, evt) => {
+					cb.setValue(folder.path);
+					this.plugin.settings.imageFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.imageFolder)
 					.setValue(this.plugin.settings.imageFolder)
 					.onChange(data => {
@@ -387,7 +393,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Movie folder')
 			.setDesc('Where newly imported movies should be placed.')
 			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
+				const suggester = new FolderSuggest(this.app, cb.inputEl);
+				suggester.onSelect((folder, evt) => {
+					cb.setValue(folder.path);
+					this.plugin.settings.movieFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.movieFolder)
 					.setValue(this.plugin.settings.movieFolder)
 					.onChange(data => {
@@ -400,7 +412,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Series folder')
 			.setDesc('Where newly imported series should be placed.')
 			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
+				const suggester = new FolderSuggest(this.app, cb.inputEl);
+				suggester.onSelect((folder, evt) => {
+					cb.setValue(folder.path);
+					this.plugin.settings.seriesFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.seriesFolder)
 					.setValue(this.plugin.settings.seriesFolder)
 					.onChange(data => {
@@ -413,7 +431,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Comic and manga folder')
 			.setDesc('Where newly imported comics and manga should be placed.')
 			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
+				const suggester = new FolderSuggest(this.app, cb.inputEl);
+				suggester.onSelect((folder, evt) => {
+					cb.setValue(folder.path);
+					this.plugin.settings.mangaFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.mangaFolder)
 					.setValue(this.plugin.settings.mangaFolder)
 					.onChange(data => {
@@ -426,7 +450,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Game folder')
 			.setDesc('Where newly imported games should be placed.')
 			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
+				const suggester = new FolderSuggest(this.app, cb.inputEl);
+				suggester.onSelect((folder, evt) => {
+					cb.setValue(folder.path);
+					this.plugin.settings.gameFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.gameFolder)
 					.setValue(this.plugin.settings.gameFolder)
 					.onChange(data => {
@@ -439,7 +469,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Wiki folder')
 			.setDesc('Where newly imported wiki articles should be placed.')
 			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
+				const suggester = new FolderSuggest(this.app, cb.inputEl);
+				suggester.onSelect((folder, evt) => {
+					cb.setValue(folder.path);
+					this.plugin.settings.wikiFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.wikiFolder)
 					.setValue(this.plugin.settings.wikiFolder)
 					.onChange(data => {
@@ -452,7 +488,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Music folder')
 			.setDesc('Where newly imported music should be placed.')
 			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
+				const suggester = new FolderSuggest(this.app, cb.inputEl);
+				suggester.onSelect((folder, evt) => {
+					cb.setValue(folder.path);
+					this.plugin.settings.musicReleaseFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.musicReleaseFolder)
 					.setValue(this.plugin.settings.musicReleaseFolder)
 					.onChange(data => {
@@ -465,7 +507,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Board game folder')
 			.setDesc('Where newly imported board games should be places.')
 			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
+				const suggester = new FolderSuggest(this.app, cb.inputEl);
+				suggester.onSelect((folder, evt) => {
+					cb.setValue(folder.path);
+					this.plugin.settings.boardgameFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.boardgameFolder)
 					.setValue(this.plugin.settings.boardgameFolder)
 					.onChange(data => {
@@ -477,7 +525,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Book folder')
 			.setDesc('Where newly imported books should be placed.')
 			.addSearch(cb => {
-				new FolderSuggest(this.app, cb.inputEl);
+				const suggester = new FolderSuggest(this.app, cb.inputEl);
+				suggester.onSelect((folder, evt) => {
+					cb.setValue(folder.path);
+					this.plugin.settings.bookFolder = folder.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder(DEFAULT_SETTINGS.bookFolder)
 					.setValue(this.plugin.settings.bookFolder)
 					.onChange(data => {
@@ -494,7 +548,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Movie template')
 			.setDesc('Template file to be used when creating a new note for a movie.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
+				const suggester = new FileSuggest(this.app, cb.inputEl);
+				suggester.onSelect((file, evt) => {
+					cb.setValue(file.path);
+					this.plugin.settings.movieTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder('Example: movieTemplate.md')
 					.setValue(this.plugin.settings.movieTemplate)
 					.onChange(data => {
@@ -507,7 +567,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Series template')
 			.setDesc('Template file to be used when creating a new note for a series.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
+				const suggester = new FileSuggest(this.app, cb.inputEl);
+				suggester.onSelect((file, evt) => {
+					cb.setValue(file.path);
+					this.plugin.settings.seriesTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder('Example: seriesTemplate.md')
 					.setValue(this.plugin.settings.seriesTemplate)
 					.onChange(data => {
@@ -520,7 +586,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Manga and Comics template')
 			.setDesc('Template file to be used when creating a new note for a manga or a comic.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
+				const suggester = new FileSuggest(this.app, cb.inputEl);
+				suggester.onSelect((file, evt) => {
+					cb.setValue(file.path);
+					this.plugin.settings.mangaTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder('Example: mangaTemplate.md')
 					.setValue(this.plugin.settings.mangaTemplate)
 					.onChange(data => {
@@ -533,7 +605,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Game template')
 			.setDesc('Template file to be used when creating a new note for a game.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
+				const suggester = new FileSuggest(this.app, cb.inputEl);
+				suggester.onSelect((file, evt) => {
+					cb.setValue(file.path);
+					this.plugin.settings.gameTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder('Example: gameTemplate.md')
 					.setValue(this.plugin.settings.gameTemplate)
 					.onChange(data => {
@@ -546,7 +624,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Wiki template')
 			.setDesc('Template file to be used when creating a new note for a wiki entry.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
+				const suggester = new FileSuggest(this.app, cb.inputEl);
+				suggester.onSelect((file, evt) => {
+					cb.setValue(file.path);
+					this.plugin.settings.wikiTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder('Example: wikiTemplate.md')
 					.setValue(this.plugin.settings.wikiTemplate)
 					.onChange(data => {
@@ -559,7 +643,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Music release template')
 			.setDesc('Template file to be used when creating a new note for a music release.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
+				const suggester = new FileSuggest(this.app, cb.inputEl);
+				suggester.onSelect((file, evt) => {
+					cb.setValue(file.path);
+					this.plugin.settings.musicReleaseTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder('Example: musicReleaseTemplate.md')
 					.setValue(this.plugin.settings.musicReleaseTemplate)
 					.onChange(data => {
@@ -572,7 +662,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Board game template')
 			.setDesc('Template file to be used when creating a new note for a boardgame.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
+				const suggester = new FileSuggest(this.app, cb.inputEl);
+				suggester.onSelect((file, evt) => {
+					cb.setValue(file.path);
+					this.plugin.settings.boardgameTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder('Example: boardgameTemplate.md')
 					.setValue(this.plugin.settings.boardgameTemplate)
 					.onChange(data => {
@@ -585,7 +681,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			.setName('Book template')
 			.setDesc('Template file to be used when creating a new note for a book.')
 			.addSearch(cb => {
-				new FileSuggest(this.app, cb.inputEl);
+				const suggester = new FileSuggest(this.app, cb.inputEl);
+				suggester.onSelect((file, evt) => {
+					cb.setValue(file.path);
+					this.plugin.settings.bookTemplate = file.path;
+					void this.plugin.saveSettings();
+					suggester.close();
+				});
 				cb.setPlaceholder('Example: bookTemplate.md')
 					.setValue(this.plugin.settings.bookTemplate)
 					.onChange(data => {

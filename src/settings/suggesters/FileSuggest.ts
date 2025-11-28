@@ -8,7 +8,8 @@ export class FileSuggest extends AbstractInputSuggest<TFile> {
 		const lowerCaseInputStr = query.toLowerCase();
 
 		abstractFiles.forEach((file: TAbstractFile) => {
-			if (file instanceof TFile && file.name.toLowerCase().contains(lowerCaseInputStr)) {
+			// Match against full path instead of just name
+			if (file instanceof TFile && file.path.toLowerCase().contains(lowerCaseInputStr)) {
 				files.push(file);
 			}
 		});
