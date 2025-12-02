@@ -1,20 +1,13 @@
-import type { TAbstractFile } from 'obsidian';
 import { AbstractInputSuggest, TFile } from 'obsidian';
 
 export class FileSuggest extends AbstractInputSuggest<TFile> {
 	protected getSuggestions(query: string): TFile[] | Promise<TFile[]> {
-		const abstractFiles = this.app.vault.getAllLoadedFiles();
-		const files: TFile[] = [];
 		const lowerCaseInputStr = query.toLowerCase();
 
-		abstractFiles.forEach((file: TAbstractFile) => {
-			// Match against full path instead of just name
-			if (file instanceof TFile && file.path.toLowerCase().contains(lowerCaseInputStr)) {
-				files.push(file);
-			}
-		});
-
-		return files;
+		// we do two filters because otherwise TS type inference does convert the array to TFile[]
+		return this.app.vault.getAllLoadedFiles()
+			.filter(file => file instanceof TFile)
+			.filter(file => file.path.toLowerCase().contains(lowerCaseInputStr));
 	}
 
 	renderSuggestion(value: TFile, el: HTMLElement): void {
