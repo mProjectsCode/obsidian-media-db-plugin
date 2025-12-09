@@ -27,20 +27,27 @@
 				{#if property.locked}
 					<div class="media-db-plugin-property-binding-text">property cannot be remapped</div>
 				{:else}
-					<select class="dropdown" bind:value={property.mapping}>
-						{#each propertyMappingOptions as remappingOption}
-							<option value={remappingOption}>
-								{remappingOption}
-							</option>
-						{/each}
-					</select>
-
-					{#if property.mapping === PropertyMappingOption.Map}
-						<Icon iconName="arrow-right" />
-						<div class="media-db-plugin-property-mapping-to">
-							<input type="text" spellcheck="false" bind:value={property.newProperty} />
-						</div>
-					{/if}
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<select class="dropdown" bind:value={property.mapping}>
+							{#each propertyMappingOptions as remappingOption}
+								<option value={remappingOption}>
+									{remappingOption}
+								</option>
+							{/each}
+						</select>
+						{#if property.mapping === PropertyMappingOption.Map}
+							<Icon iconName="arrow-right" />
+							<div class="media-db-plugin-property-mapping-to">
+								<input type="text" spellcheck="false" bind:value={property.newProperty} />
+							</div>
+						{/if}
+						<!-- Wikilink checkbox -->
+						<label class="media-db-plugin-property-mapping-wikilink-label" title="Convert value to wikilink ([[value]])">
+							<input type="checkbox" bind:checked={property.wikilink} />
+							<Icon iconName="link" />
+							<span>Wikilink</span>
+						</label>
+					</div>
 				{/if}
 			</div>
 		{/each}
@@ -64,4 +71,11 @@
 </div>
 
 <style>
+.media-db-plugin-property-mapping-wikilink-label {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 0.95em;
+	cursor: pointer;
+}
 </style>

@@ -35,14 +35,24 @@ export class PropertyMapper {
 		for (const [key, value] of Object.entries(obj)) {
 			for (const propertyMapping of propertyMappings) {
 				if (propertyMapping.property === key) {
+					let finalValue = value;
+					if (propertyMapping.wikilink) {
+						if (typeof value === 'string') {
+							finalValue = `[[${value}]]`;
+						} else if (Array.isArray(value)) {
+							finalValue = value.map(v =>
+								typeof v === 'string' ? `[[${v}]]` : v
+							);
+						}
+					}
 					if (propertyMapping.mapping === PropertyMappingOption.Map) {
 						// @ts-ignore
-						newObj[propertyMapping.newProperty] = value;
+						newObj[propertyMapping.newProperty] = finalValue;
 					} else if (propertyMapping.mapping === PropertyMappingOption.Remove) {
 						// do nothing
 					} else if (propertyMapping.mapping === PropertyMappingOption.Default) {
 						// @ts-ignore
-						newObj[key] = value;
+						newObj[key] = finalValue;
 					}
 					break;
 				}
