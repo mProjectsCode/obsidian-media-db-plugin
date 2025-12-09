@@ -155,14 +155,52 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 		const propertyMappingModel: PropertyMappingModel = new PropertyMappingModel(mediaType);
 
 		for (const key of Object.keys(metadataObj)) {
-			propertyMappingModel.properties.push(new PropertyMapping(key, '', PropertyMappingOption.Default, lockedPropertyMappings.contains(key)));
+			propertyMappingModel.properties.push(
+				new PropertyMapping(
+					key,
+					'',
+					PropertyMappingOption.Default,
+					lockedPropertyMappings.contains(key),
+					false, // wikilink default
+				)
+			);
 		}
 
 		propertyMappingModels.push(propertyMappingModel);
 	}
 
+	// MIGRATION: Ensure all property mappings have wikilink defined (for settings loaded from disk)
+	if (defaultSettings.propertyMappingModels && Array.isArray(defaultSettings.propertyMappingModels)) {
+		for (const model of defaultSettings.propertyMappingModels) {
+			if (model.properties && Array.isArray(model.properties)) {
+				for (const prop of model.properties) {
+					if (typeof prop.wikilink === 'undefined') {
+						prop.wikilink = false;
+					}
+				}
+			}
+		}
+	}
+
 	defaultSettings.propertyMappingModels = propertyMappingModels;
 	return defaultSettings;
+}
+
+/**
+ * Ensures all property mappings in loaded settings have the wikilink property defined.
+ */
+export function ensureWikilinkOnPropertyMappings(settings: MediaDbPluginSettings): void {
+	if (settings.propertyMappingModels && Array.isArray(settings.propertyMappingModels)) {
+		for (const model of settings.propertyMappingModels) {
+			if (model.properties && Array.isArray(model.properties)) {
+				for (const prop of model.properties) {
+					if (typeof prop.wikilink === 'undefined') {
+						prop.wikilink = false;
+					}
+				}
+			}
+		}
+	}
 }
 
 export class MediaDbSettingTab extends PluginSettingTab {
@@ -779,8 +817,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.boardgameFileNameTemplate}`)
 					.setValue(this.plugin.settings.boardgameFileNameTemplate)
 					.onChange(data => {
-						this.plugin.settings.boardgameFileNameTemplate = data;
-						void this.plugin.saveSettings();
+					 this.plugin.settings.boardgameFileNameTemplate = data;
+					 void this.plugin.saveSettings();
 					});
 			});
 

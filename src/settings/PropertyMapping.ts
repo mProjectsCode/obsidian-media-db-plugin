@@ -75,7 +75,7 @@ export class PropertyMappingModel {
 	copy(): PropertyMappingModel {
 		const copy = new PropertyMappingModel(this.type);
 		for (const property of this.properties) {
-			const propertyCopy = new PropertyMapping(property.property, property.newProperty, property.mapping, property.locked);
+			const propertyCopy = new PropertyMapping(property.property, property.newProperty, property.mapping, property.locked, property.wikilink);
 			copy.properties.push(propertyCopy);
 		}
 		return copy;
@@ -87,12 +87,14 @@ export class PropertyMapping {
 	newProperty: string;
 	locked: boolean;
 	mapping: PropertyMappingOption;
+	wikilink: boolean;
 
-	constructor(property: string, newProperty: string, mapping: PropertyMappingOption, locked?: boolean) {
+	constructor(property: string, newProperty: string, mapping: PropertyMappingOption, locked?: boolean, wikilink?: boolean) {
 		this.property = property;
 		this.newProperty = newProperty;
 		this.mapping = mapping;
 		this.locked = locked ?? false;
+		this.wikilink = wikilink ?? false;
 	}
 
 	validate(): { res: boolean; err?: Error } {
