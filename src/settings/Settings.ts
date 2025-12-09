@@ -162,7 +162,7 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 					PropertyMappingOption.Default,
 					lockedPropertyMappings.contains(key),
 					false, // wikilink default
-				)
+				),
 			);
 		}
 
@@ -817,8 +817,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.boardgameFileNameTemplate}`)
 					.setValue(this.plugin.settings.boardgameFileNameTemplate)
 					.onChange(data => {
-					 this.plugin.settings.boardgameFileNameTemplate = data;
-					 void this.plugin.saveSettings();
+						this.plugin.settings.boardgameFileNameTemplate = data;
+						void this.plugin.saveSettings();
 					});
 			});
 

@@ -71,11 +71,11 @@
 </div>
 
 <style>
-.media-db-plugin-property-mapping-wikilink-label {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	font-size: 0.95em;
-	cursor: pointer;
-}
+	.media-db-plugin-property-mapping-wikilink-label {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 0.95em;
+		cursor: pointer;
+	}
 </style>
