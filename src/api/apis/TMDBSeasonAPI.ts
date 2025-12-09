@@ -69,7 +69,7 @@ export class TMDBSeasonAPI extends APIModel {
 					id: result.id.toString(),
 					seasonTitle: result.name ?? result.original_name ?? '',
 					seasonNumber: totalSeasons,
-				})
+				}),
 			);
 		}
 
@@ -105,7 +105,7 @@ export class TMDBSeasonAPI extends APIModel {
 						id: `${tvId}/season/${seasonNumber}`,
 						seasonTitle: season.name ?? titleText,
 						seasonNumber: seasonNumber,
-					})
+					}),
 				);
 			}
 		}

@@ -250,13 +250,18 @@ export default class MediaDbPlugin extends Plugin {
 				}
 				// Pass the original series title from the search result
 				const seriesName = selectResults[0]?.englishTitle || selectResults[0]?.title || '';
-				const modal = new MediaDbSeasonSelectModal(this, allSeasons.map(s => ({
-					season_number: s.seasonNumber,
-					name: s.seasonTitle || s.title,
-					episode_count: s.episodes || 0,
-					air_date: s.year,
-					poster_path: s.image,
-				})), true, seriesName);
+				const modal = new MediaDbSeasonSelectModal(
+					this,
+					allSeasons.map(s => ({
+						season_number: s.seasonNumber,
+						name: s.seasonTitle || s.title,
+						episode_count: s.episodes || 0,
+						air_date: s.year,
+						poster_path: s.image,
+					})),
+					true,
+					seriesName,
+				);
 				const selectedSeasons: any[] = await new Promise(resolve => {
 					modal.setSubmitCallback(resolve);
 					modal.open();
@@ -265,19 +270,21 @@ export default class MediaDbPlugin extends Plugin {
 					return;
 				}
 				// Fetch full metadata for each selected seasond and create the note
-				await Promise.all(selectedSeasons.map(async season => {
-					const orig = allSeasons.find(s => s.seasonNumber === season.season_number);
-					if (orig) {
-						// Fetch full metadata using getById
-						const TMDBSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
-						if (TMDBSeasonAPI) {
-							const fullMeta = await TMDBSeasonAPI.getById(orig.id);
-							await this.createMediaDbNotes([fullMeta]);
-						} else {
-							await this.createMediaDbNotes([orig]);
+				await Promise.all(
+					selectedSeasons.map(async season => {
+						const orig = allSeasons.find(s => s.seasonNumber === season.season_number);
+						if (orig) {
+							// Fetch full metadata using getById
+							const TMDBSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+							if (TMDBSeasonAPI) {
+								const fullMeta = await TMDBSeasonAPI.getById(orig.id);
+								await this.createMediaDbNotes([fullMeta]);
+							} else {
+								await this.createMediaDbNotes([orig]);
+							}
 						}
-					}
-				}));
+					}),
+				);
 				return;
 			}
 
