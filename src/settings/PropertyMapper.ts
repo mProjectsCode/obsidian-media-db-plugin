@@ -40,9 +40,7 @@ export class PropertyMapper {
 						if (typeof value === 'string') {
 							finalValue = `[[${value}]]`;
 						} else if (Array.isArray(value)) {
-							finalValue = value.map(v =>
-								typeof v === 'string' ? `[[${v}]]` : v
-							);
+							finalValue = value.map(v => (typeof v === 'string' ? `[[${v}]]` : v));
 						}
 					}
 					if (propertyMapping.mapping === PropertyMappingOption.Map) {
