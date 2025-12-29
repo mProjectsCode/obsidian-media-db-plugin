@@ -40,6 +40,7 @@ export class PropertyMapper {
 						if (typeof value === 'string') {
 							finalValue = `[[${value}]]`;
 						} else if (Array.isArray(value)) {
+							// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 							finalValue = value.map(v => (typeof v === 'string' ? `[[${v}]]` : v));
 						}
 					}
