@@ -12,6 +12,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 	image: string;
 	rating: number;
 	releaseDate: string;
+	albumDuration: string;
 	trackCount: number;
 	tracks: {
 		number: number;
@@ -44,6 +45,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 		}
 
 		this.type = this.getMediaType();
+		this.albumDuration = obj.albumDuration ?? '0:00';
 		this.trackCount = obj.trackCount ?? 0;
 		this.tracks = obj.tracks ?? [];
 		this.language = obj.language ?? '';

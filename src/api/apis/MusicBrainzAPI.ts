@@ -191,6 +191,14 @@ export class MusicBrainzAPI extends APIModel {
 		const releaseData = (await releaseResponse.json) as MediaResponse;
 		const tracks = extractTracksFromMedia(releaseData.media);
 
+		// Calculate total album length for the first release
+		const totalrawLength =
+			releaseData.media[0]?.tracks.reduce((sum, track) => {
+				const len = track.length ?? track.recording?.length;
+				return typeof len === 'number' && !isNaN(len) ? sum + len : sum;
+			}, 0) ?? 0;
+		const albumLengthCalc = millisecondsToMinutes(totalrawLength);
+
 		console.log(releaseData);
 
 		return new MusicReleaseModel({
@@ -208,7 +216,8 @@ export class MusicBrainzAPI extends APIModel {
 			language: releaseData['text-representation'].language ? getLanguageName(releaseData['text-representation'].language) : 'Unknown',
 			genres: result.genres.map(g => g.name),
 			subType: result['primary-type'],
-			trackCount: releaseData.media[0]['track-count'] ?? 0,
+			albumDuration: albumLengthCalc,
+			trackCount: releaseData.media[0]?.['track-count'] ?? 0,
 			tracks: tracks,
 			rating: result.rating.value * 2,
 
