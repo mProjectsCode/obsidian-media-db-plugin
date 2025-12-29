@@ -584,7 +584,9 @@ export default class MediaDbPlugin extends Plugin {
 						newProperties.push(defaultProperty);
 					} else {
 						// newProperty is just an object and take locked status from default property
-						newProperties.push(new PropertyMapping(newProperty.property, newProperty.newProperty, newProperty.mapping, defaultProperty.locked));
+						newProperties.push(
+							new PropertyMapping(newProperty.property, newProperty.newProperty, newProperty.mapping, defaultProperty.locked, newProperty.wikilink ?? false),
+						);
 					}
 				}
 
