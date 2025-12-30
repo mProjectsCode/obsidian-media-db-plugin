@@ -5,6 +5,62 @@ import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 import { SeasonModel } from '../../models/SeasonModel';
 
+interface TMDBSearchTVResult {
+	id: number;
+	name?: string;
+	original_name?: string;
+	first_air_date?: string;
+}
+
+interface TMDBSearchTVResponse {
+	page: number;
+	results: TMDBSearchTVResult[];
+	total_results: number;
+	total_pages: number;
+}
+
+interface TMDBSeason {
+	season_number: number;
+	name?: string;
+	air_date?: string;
+	episodes?: TMDBEpisode[];
+	overview?: string;
+	poster_path?: string;
+	vote_average?: number;
+}
+
+interface TMDBEpisode {
+	air_date?: string;
+	episode_number?: number;
+	name?: string;
+	overview?: string;
+}
+
+interface TMDBSeriesDetails {
+	id: number;
+	name?: string;
+	seasons?: TMDBSeason[];
+	genres?: { id: number; name: string }[];
+	created_by?: { id: number; name: string }[];
+	production_companies?: { id: number; name: string }[];
+	episode_run_time?: number[];
+	status?: string;
+	credits?: {
+		cast?: { name: string }[];
+	};
+}
+
+interface TMDBSeasonDetails {
+	id: number;
+	season_number: number;
+	name?: string;
+	air_date?: string;
+	episodes?: TMDBEpisode[];
+	overview?: string;
+	poster_path?: string;
+	vote_average?: number;
+}
+
 export class TMDBSeasonAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	typeMappings: Map<string, string>;
@@ -38,7 +94,7 @@ export class TMDBSeasonAPI extends APIModel {
 			throw Error(`MDB | Received status code ${searchResp.status} from ${this.apiName}.`);
 		}
 
-		const searchData = await searchResp.json();
+		const searchData = (await searchResp.json()) as TMDBSearchTVResponse;
 		if (!searchData.results || searchData.total_results === 0) {
 			return [];
 		}
@@ -54,7 +110,7 @@ export class TMDBSeasonAPI extends APIModel {
 				const detailsUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(result.id)}?api_key=${this.plugin.settings.TMDBKey}`;
 				const detailsResp = await fetch(detailsUrl);
 				if (detailsResp.status === 200) {
-					const detailsData = await detailsResp.json();
+					const detailsData = (await detailsResp.json()) as TMDBSeriesDetails;
 					if (Array.isArray(detailsData.seasons)) {
 						totalSeasons = detailsData.seasons.length;
 					}
@@ -89,7 +145,7 @@ export class TMDBSeasonAPI extends APIModel {
 		if (seriesResp.status !== 200) {
 			throw Error(`MDB | Received status code ${seriesResp.status} from ${this.apiName}.`);
 		}
-		const seriesData = await seriesResp.json();
+		const seriesData = (await seriesResp.json()) as TMDBSeriesDetails;
 		const seriesName = seriesData?.name ?? '';
 		const ret: SeasonModel[] = [];
 		if (Array.isArray(seriesData?.seasons)) {
@@ -138,7 +194,7 @@ export class TMDBSeasonAPI extends APIModel {
 			throw Error(`MDB | Received status code ${seasonResp.status} from ${this.apiName}.`);
 		}
 
-		const seasonData = await seasonResp.json();
+		const seasonData = (await seasonResp.json()) as TMDBSeasonDetails;
 
 		// Fetch parent series to build consistent titles and inherit fields
 		const seriesUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(tvId)}?api_key=${this.plugin.settings.TMDBKey}&append_to_response=credits`;
@@ -151,7 +207,7 @@ export class TMDBSeasonAPI extends APIModel {
 			throw Error(`MDB | Received status code ${seriesResp.status} from ${this.apiName}.`);
 		}
 
-		const seriesData = await seriesResp.json();
+		const seriesData = (await seriesResp.json()) as TMDBSeriesDetails;
 		const seriesName = seriesData?.name ?? '';
 
 		const airDate = seasonData.air_date ?? '';
@@ -184,9 +240,9 @@ export class TMDBSeasonAPI extends APIModel {
 			duration: seriesData.episode_run_time?.[0]?.toString() ?? '',
 			onlineRating: seasonData.vote_average ?? 0,
 			actors: seriesData.credits?.cast?.map((c: any) => c.name).slice(0, 5) ?? [],
-			released: ['Returning Series', 'Cancelled', 'Ended'].includes(seriesData.status),
+			released: ['Returning Series', 'Cancelled', 'Ended'].includes(seriesData.status ?? ''),
 			streamingServices: [],
-			airing: ['Returning Series'].includes(seriesData.status),
+			airing: ['Returning Series'].includes(seriesData.status ?? ''),
 			userData: { watched: false, lastWatched: '', personalRating: 0 },
 		});
 	}
