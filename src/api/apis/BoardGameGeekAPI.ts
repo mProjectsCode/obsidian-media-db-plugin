@@ -95,6 +95,7 @@ export class BoardGameGeekAPI extends APIModel {
 
 		const title = boardgame.querySelector('name[primary=true]')?.textContent;
 		const year = boardgame.querySelector('yearpublished')?.textContent ?? '';
+		const subType = boardgame.querySelector('boardgamesubdomain')?.textContent ?? '';
 		const image = boardgame.querySelector('image')?.textContent ?? undefined;
 		const onlineRating = Number.parseFloat(boardgame.querySelector('statistics ratings average')?.textContent ?? '0');
 		const genres = Array.from(boardgame.querySelectorAll('boardgamecategory'))
@@ -104,25 +105,59 @@ export class BoardGameGeekAPI extends APIModel {
 		const minPlayers = Number.parseFloat(boardgame.querySelector('minplayers')?.textContent ?? '0');
 		const maxPlayers = Number.parseFloat(boardgame.querySelector('maxplayers')?.textContent ?? '0');
 		const playtime = (boardgame.querySelector('playingtime')?.textContent ?? 'unknown') + ' minutes';
+		const age = Number.parseFloat(boardgame.querySelector('age')?.textContent ?? '0');
 		const publishers = Array.from(boardgame.querySelectorAll('boardgamepublisher'))
 			.map(n => n.textContent)
 			.filter(n => n !== null);
+		const boardGameFamilies = Array.from(boardgame.querySelectorAll('boardgamefamily'))
+			.map(n => n.textContent)
+			.filter(n => n !== null);
+		const boardGameMechanics = Array.from(boardgame.querySelectorAll('boardgamemechanic'))
+			.map(n => n.textContent)
+			.filter(n => n !== null);
+		const awards = Array.from(boardgame.querySelectorAll('boardgamehonor'))
+			.map(n => n.textContent)
+			.filter(n => n !== null);
+		const description = boardgame.querySelector('description')?.textContent.replace(/<[^>]*>/g, '') ?? '';
+
+		let languageDependenceMostVotes = 0;
+		let languageDependence = '';
+		for (const result of Array.from(response.querySelectorAll('poll[name=language_dependence] results result'))) {
+			const votes = Number.parseInt(result.attributes.getNamedItem('numvotes')?.value ?? '0');
+			if (votes > languageDependenceMostVotes) {
+				languageDependenceMostVotes = votes;
+				languageDependence = result.attributes.getNamedItem('value')?.value ?? '';
+			}
+		}
+
+		const bestWithPlayers =
+			response.querySelector('poll-summary[name=suggested_numplayers] result[name=bestwith]')?.attributes.getNamedItem('value')?.value ?? '';
+		const recommendedWithPlayers =
+			response.querySelector('poll-summary[name=suggested_numplayers] result[name=recommmendedwith]')?.attributes.getNamedItem('value')?.value ?? '';
 
 		return new BoardGameModel({
-			title: title ?? undefined,
-			englishTitle: title ?? undefined,
+			title: title ?? '',
+			englishTitle: title ?? '',
 			year: year === '0' ? '' : year,
 			dataSource: this.apiName,
 			url: `https://boardgamegeek.com/boardgame/${id}`,
 			id: id,
-
+			subType: subType,
 			genres: genres,
 			onlineRating: onlineRating,
 			complexityRating: complexityRating,
 			minPlayers: minPlayers,
 			maxPlayers: maxPlayers,
 			playtime: playtime,
+			age: age,
 			publishers: publishers,
+			boardGameFamilies: boardGameFamilies,
+			boardGameMechanics: boardGameMechanics,
+			awards: awards,
+			description: description.replace(/<[^>]*>/g, ''),
+			languageDependence: languageDependence,
+			bestWithPlayers: bestWithPlayers,
+			recommendedWithPlayers: recommendedWithPlayers,
 			image: image,
 
 			released: true,
