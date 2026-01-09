@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PropertyMappingModel, PropertyMappingOption, propertyMappingOptions } from './PropertyMapping';
+	import { PropertyMappingModel, PropertyMapping, PropertyMappingOption, propertyMappingOptions } from './PropertyMapping';
 	import { capitalizeFirstLetter } from '../utils/Utils';
 	import Icon from './Icon.svelte';
 
@@ -10,11 +10,15 @@
 
 	let { model, save }: Props = $props();
 
-	let validationResult: { res: boolean; err?: Error } | undefined = $derived(model.validate());
+	// Wrap in $state for reactivity on nested mutations
+	let reactiveModel = $state(model);
+	let properties = $state(model.properties);
+
+	// Validation computed on demand in button
 </script>
 
 <div class="media-db-plugin-property-mappings-model-container">
-	<div class="setting-item-name">{capitalizeFirstLetter(model.type)}</div>
+	<div class="setting-item-name">{capitalizeFirstLetter(reactiveModel.type)}</div>
 
 	<table class="media-db-plugin-property-mappings-table">
 		<thead>
@@ -26,7 +30,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each model.properties as property}
+			{#each properties as property}
 				<tr>
 					<td class="col-property">
 						<code>{property.property}</code>
@@ -38,7 +42,10 @@
 						</td>
 					{:else}
 						<td class="col-mapping">
-							<select class="dropdown" bind:value={property.mapping}>
+							<select class="dropdown" value={property.mapping} onchange={(e) => {
+								property.mapping = e.currentTarget.value as PropertyMappingOption;
+								properties = JSON.parse(JSON.stringify(properties)); // deep clone to plain objects for reactivity
+							}}>
 								{#each propertyMappingOptions as remappingOption}
 									<option value={remappingOption}>
 										{remappingOption}
@@ -51,7 +58,7 @@
 							{#if property.mapping === PropertyMappingOption.Map}
 								<div class="media-db-plugin-property-mapping-to">
 									<Icon iconName="arrow-right" />
-									<input class="media-db-plugin-property-mapping-input" type="text" spellcheck="false" bind:value={property.newProperty} />
+									<input class="media-db-plugin-property-mapping-input" type="text" spellcheck="false" bind:value={property.newProperty} placeholder="New property name" oninput={() => properties = JSON.parse(JSON.stringify(properties))} />
 								</div>
 							{:else}
 								<span class="media-db-plugin-property-mapping-to-disabled">—</span>
@@ -59,9 +66,9 @@
 						</td>
 
 						<td class="col-wikilink">
-							<label class="media-db-plugin-property-mapping-wikilink-label" title="Convert value to wikilink ([[value]])">
-								<input type="checkbox" bind:checked={property.wikilink} />
-							</label>
+								<label class="media-db-plugin-property-mapping-wikilink-label" title="Convert value to wikilink ([[value]])">
+									<input type="checkbox" bind:checked={property.wikilink} onchange={() => properties = JSON.parse(JSON.stringify(properties))} />
+								</label>
 						</td>
 					{/if}
 				</tr>
@@ -69,16 +76,12 @@
 		</tbody>
 	</table>
 
-	{#if !validationResult?.res}
-		<div class="media-db-plugin-property-mapping-validation">
-			{validationResult?.err?.message}
-		</div>
-	{/if}
-
 	<button
-		class="media-db-plugin-property-mappings-save-button {validationResult?.res ? 'mod-cta' : 'mod-muted'}"
+		class="media-db-plugin-property-mappings-save-button"
 		onclick={() => {
-			if (model.validate().res) save(model);
+			reactiveModel.properties = properties.map(p => new PropertyMapping(p.property, p.newProperty, p.mapping, p.locked, p.wikilink));
+			const validation = reactiveModel.validate();
+			if (validation.res) save(reactiveModel);
 		}}
 	>
 		Save
@@ -90,7 +93,7 @@
 		width: 100%;
 		border-collapse: collapse;
 		border-spacing: 0;
-		table-layout: fixed; /* prevent overflow from wide cells */
+		/* removed table-layout: fixed to allow proper width calculation for flex inputs */
 	}
 
 	/* remove excessive left padding and keep within container */
@@ -113,6 +116,7 @@
 
 	.col-new-name {
 		width: 40%;
+		min-width: 150px; /* ensure minimum width for input */
 	}
 
 	.col-wikilink {
@@ -120,12 +124,25 @@
 		text-align: center;
 	}
 
-	/* ensure inner controls don't push table wider than container */
+	/* ensure inner controls fit within table cell */
 	.media-db-plugin-property-mapping-to {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		min-width: 0;
+		position: relative;
+		width: 100%;
+	}
+
+	/* position icon absolutely */
+	.media-db-plugin-property-mapping-to > :first-child {
+		position: absolute;
+		left: 4px;
+		top: 50%;
+		transform: translateY(-50%);
+		z-index: 1;
+	}
+
+	.media-db-plugin-property-mapping-input {
+		width: 100%;
+		padding-left: 28px; /* make room for icon (20px icon + 4px gap + 4px padding) */
+		box-sizing: border-box;
 	}
 
 	.media-db-plugin-property-mapping-input,
@@ -133,6 +150,7 @@
 		width: 100%;
 		max-width: 100%;
 		box-sizing: border-box;
+		min-width: 50px; /* ensure minimum width for input visibility */
 	}
 
 	.media-db-plugin-property-mapping-wikilink-label {
