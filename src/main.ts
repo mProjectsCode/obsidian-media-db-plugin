@@ -18,6 +18,7 @@ import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
 import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
+import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
@@ -253,15 +254,14 @@ export default class MediaDbPlugin extends Plugin {
 	// Season select modal
 	private async handleSeasonSelectModal(types: string[], selectResults: MediaTypeModel[]): Promise<boolean> {
 		if (types.length === 1 && types[0] === 'season' && selectResults.length === 1 && selectResults[0].dataSource === 'TMDBSeasonAPI') {
-			// Dynamically import the modal
-			const { MediaDbSeasonSelectModal } = await import('./modals/MediaDbSeasonSelectModal');
-			const TMDBSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
-			if (!TMDBSeasonAPI) {
+			// Use static import for the modal
+			const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+			if (!tmdbSeasonAPI) {
 				new Notice('TMDBSeasonAPI not found.');
 				return true;
 			}
 			// Fetch all seasons for the selected series
-			const allSeasons = await TMDBSeasonAPI.getSeasonsForSeries(selectResults[0].id);
+			const allSeasons = await tmdbSeasonAPI.getSeasonsForSeries(selectResults[0].id);
 			if (!allSeasons || allSeasons.length === 0) {
 				new Notice('No seasons found for this series.');
 				return true;
@@ -293,9 +293,9 @@ export default class MediaDbPlugin extends Plugin {
 					const orig = allSeasons.find(s => s.seasonNumber === season.season_number);
 					if (orig) {
 						// Fetch full metadata using getById
-						const TMDBSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
-						if (TMDBSeasonAPI) {
-							const fullMeta = await TMDBSeasonAPI.getById(orig.id);
+						const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+						if (tmdbSeasonAPI) {
+							const fullMeta = await tmdbSeasonAPI.getById(orig.id);
 							await this.createMediaDbNotes([fullMeta]);
 						} else {
 							await this.createMediaDbNotes([orig]);
