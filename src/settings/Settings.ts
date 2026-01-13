@@ -203,6 +203,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void this.plugin.saveSettings();
 					});
 			});
+		new Setting(containerEl)
+			.setName('TMDB API key')
+			.setDesc('API key for "https://www.themoviedb.org".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.TMDBKey)
+					.onChange(data => {
+						this.plugin.settings.TMDBKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
 		new Setting(containerEl)
 			.setName('Moby Games key')
