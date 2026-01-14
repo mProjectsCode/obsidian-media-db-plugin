@@ -20,9 +20,9 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		super(plugin.app, selectModalOptions.elements ?? [], selectModalOptions.multiSelect);
 		this.plugin = plugin;
 		this.title = selectModalOptions.modalTitle ?? '';
-		this.description = 'Select one or multiple search results.';
+		this.description = selectModalOptions.description ?? 'Select one or multiple search results.';
 		this.addSkipButton = selectModalOptions.skipButton ?? false;
-		this.submitButtonText = 'Ok';
+		this.submitButtonText = selectModalOptions.submitButtonText ?? 'Ok';
 		this.busy = false;
 		this.sendCallback = false;
 	}

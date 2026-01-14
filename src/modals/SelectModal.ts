@@ -116,7 +116,7 @@ export abstract class SelectModal<T> extends Modal {
 				this.skipButton = btn;
 			});
 		}
-		bottomSettingRow.addButton((btn) => {
+		bottomSettingRow.addButton(btn => {
 			btn.setButtonText(this.submitButtonText);
 			btn.setCta();
 			btn.onClick(() => this.submit());

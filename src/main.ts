@@ -221,14 +221,26 @@ export default class MediaDbPlugin extends Plugin {
 		while (!proceed) {
 			if (types.length === 1 && types[0] === 'season') {
 				selectResults =
-					(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
-						return selectModalData.selected;
-					})) ?? [];
+					(await this.modalHelper.openSelectModal(
+						{
+							elements: apiSearchResults,
+							description: 'Select one search result to proceed.',
+							submitButtonText: 'Ok',
+						},
+						async selectModalData => {
+							return selectModalData.selected;
+						},
+					)) ?? [];
 			} else {
 				selectResults =
-					(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
-						return await this.queryDetails(selectModalData.selected);
-					})) ?? [];
+					(await this.modalHelper.openSelectModal(
+						{
+							elements: apiSearchResults,
+						},
+						async selectModalData => {
+							return await this.queryDetails(selectModalData.selected);
+						},
+					)) ?? [];
 			}
 			if (!selectResults || selectResults.length < 1) {
 				return;
