@@ -12,6 +12,9 @@ async function fetchSchema() {
 
 	// https://github.com/internetarchive/openlibrary-api/blob/main/swagger.yaml
 	await $('bun openapi-typescript ./src/api/schemas/OpenLibrary.json -o ./src/api/schemas/OpenLibrary.ts');
+
+	// https://developer.themoviedb.org/openapi
+	await $('bun openapi-typescript https://developer.themoviedb.org/openapi/tmdb-api.json -o ./src/api/schemas/TMDB.ts');
 }
 
 await fetchSchema();

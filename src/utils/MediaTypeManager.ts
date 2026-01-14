@@ -8,6 +8,7 @@ import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MovieModel } from '../models/MovieModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { SeriesModel } from '../models/SeriesModel';
+import { SeasonModel } from '../models/SeasonModel';
 import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
 import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
@@ -17,6 +18,7 @@ import { replaceTags } from './Utils';
 export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Movie,
 	MediaType.Series,
+	MediaType.Season,
 	MediaType.ComicManga,
 	MediaType.Game,
 	MediaType.Wiki,
@@ -40,6 +42,7 @@ export class MediaTypeManager {
 		this.mediaFileNameTemplateMap = new Map<MediaType, string>();
 		this.mediaFileNameTemplateMap.set(MediaType.Movie, settings.movieFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Series, settings.seriesFileNameTemplate);
+		this.mediaFileNameTemplateMap.set(MediaType.Season, settings.seasonFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.ComicManga, settings.mangaFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Game, settings.gameFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Wiki, settings.wikiFileNameTemplate);
@@ -50,6 +53,7 @@ export class MediaTypeManager {
 		this.mediaTemplateMap = new Map<MediaType, string>();
 		this.mediaTemplateMap.set(MediaType.Movie, settings.movieTemplate);
 		this.mediaTemplateMap.set(MediaType.Series, settings.seriesTemplate);
+		this.mediaTemplateMap.set(MediaType.Season, settings.seasonTemplate);
 		this.mediaTemplateMap.set(MediaType.ComicManga, settings.mangaTemplate);
 		this.mediaTemplateMap.set(MediaType.Game, settings.gameTemplate);
 		this.mediaTemplateMap.set(MediaType.Wiki, settings.wikiTemplate);
@@ -62,6 +66,7 @@ export class MediaTypeManager {
 		this.mediaFolderMap = new Map<MediaType, string>();
 		this.mediaFolderMap.set(MediaType.Movie, settings.movieFolder);
 		this.mediaFolderMap.set(MediaType.Series, settings.seriesFolder);
+		this.mediaFolderMap.set(MediaType.Season, settings.seasonFolder);
 		this.mediaFolderMap.set(MediaType.ComicManga, settings.mangaFolder);
 		this.mediaFolderMap.set(MediaType.Game, settings.gameFolder);
 		this.mediaFolderMap.set(MediaType.Wiki, settings.wikiFolder);
@@ -138,6 +143,8 @@ export class MediaTypeManager {
 			return new MovieModel(obj);
 		} else if (mediaType === MediaType.Series) {
 			return new SeriesModel(obj);
+		} else if (mediaType === MediaType.Season) {
+			return new SeasonModel(obj);
 		} else if (mediaType === MediaType.ComicManga) {
 			return new ComicMangaModel(obj);
 		} else if (mediaType === MediaType.Game) {
