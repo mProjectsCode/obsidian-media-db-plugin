@@ -205,6 +205,13 @@ export const PREVIEW_MODAL_DEFAULT_OPTIONS: PreviewModalOptions = {
 	elements: [],
 };
 
+export const SELECTMODALOPTIONSDEFAULT: SelectModalOptions = {
+	elements: [],
+	multiSelect: true,
+	modalTitle: '',
+	skipButton: false,
+};
+
 /**
  * A class providing multiple usefull functions for dealing with the plugins modals.
  */

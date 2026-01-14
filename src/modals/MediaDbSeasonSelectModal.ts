@@ -18,8 +18,9 @@ export class MediaDbSeasonSelectModal extends SelectModal<SeasonSelectModalEleme
 		super(plugin.app, seasons, multiSelect);
 		this.plugin = plugin;
 		this.seriesName = seriesName;
-		this.title = `Select Season(s) for${seriesName ? `: ${seriesName}` : ''}`;
+		this.title = `Select seasons for${seriesName ? ` ${seriesName}` : ''}`;
 		this.description = 'Select one or more seasons to create notes for.';
+		this.submitButtonText = 'Create Entry';
 	}
 
 	renderElement(season: SeasonSelectModalElement, el: HTMLElement): void {

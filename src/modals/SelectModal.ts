@@ -12,6 +12,7 @@ export abstract class SelectModal<T> extends Modal {
 	cancelButton?: ButtonComponent;
 	skipButton?: ButtonComponent;
 	submitButton?: ButtonComponent;
+	submitButtonText: string;
 
 	elementWrapper?: HTMLDivElement;
 
@@ -25,6 +26,7 @@ export abstract class SelectModal<T> extends Modal {
 		this.title = '';
 		this.description = '';
 		this.addSkipButton = false;
+		this.submitButtonText = 'Ok';
 		this.cancelButton = undefined;
 		this.skipButton = undefined;
 		this.submitButton = undefined;
@@ -114,8 +116,8 @@ export abstract class SelectModal<T> extends Modal {
 				this.skipButton = btn;
 			});
 		}
-		bottomSettingRow.addButton(btn => {
-			btn.setButtonText('Ok');
+		bottomSettingRow.addButton((btn) => {
+			btn.setButtonText(this.submitButtonText);
 			btn.setCta();
 			btn.onClick(() => this.submit());
 			btn.buttonEl.addClass('media-db-plugin-button');

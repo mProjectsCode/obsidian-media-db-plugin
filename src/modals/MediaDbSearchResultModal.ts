@@ -1,7 +1,7 @@
 import type MediaDbPlugin from '../main';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import type { SelectModalData, SelectModalOptions } from '../utils/ModalHelper';
-import { SELECT_MODAL_OPTIONS_DEFAULT } from '../utils/ModalHelper';
+import { SELECTMODALOPTIONSDEFAULT } from '../utils/ModalHelper';
 import { SelectModal } from './SelectModal';
 
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
@@ -13,18 +13,17 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	submitCallback?: (res: SelectModalData) => void;
 	closeCallback?: (err?: Error) => void;
 	skipCallback?: () => void;
+	submitButtonText: string;
 
 	constructor(plugin: MediaDbPlugin, selectModalOptions: SelectModalOptions) {
-		selectModalOptions = Object.assign({}, SELECT_MODAL_OPTIONS_DEFAULT, selectModalOptions);
+		selectModalOptions = Object.assign({}, SELECTMODALOPTIONSDEFAULT, selectModalOptions);
 		super(plugin.app, selectModalOptions.elements ?? [], selectModalOptions.multiSelect);
 		this.plugin = plugin;
-
 		this.title = selectModalOptions.modalTitle ?? '';
 		this.description = 'Select one or multiple search results.';
 		this.addSkipButton = selectModalOptions.skipButton ?? false;
-
+		this.submitButtonText = 'Ok';
 		this.busy = false;
-
 		this.sendCallback = false;
 	}
 
