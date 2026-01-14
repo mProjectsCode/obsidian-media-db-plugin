@@ -38,7 +38,13 @@
 						</td>
 					{:else}
 						<td class="col-mapping">
-							<select class="dropdown" bind:value={property.mapping}>
+							<select
+								class="dropdown"
+								bind:value={property.mapping}
+								onchange={() => {
+									model = model.copy();
+								}}
+							>
 								{#each propertyMappingOptions as remappingOption}
 									<option value={remappingOption}>
 										{remappingOption}
