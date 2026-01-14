@@ -1,65 +1,10 @@
-import { Notice, renderResults } from 'obsidian';
+import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 import { SeasonModel } from '../../models/SeasonModel';
-
-interface TMDBSearchTVResult {
-	id: number;
-	name?: string;
-	original_name?: string;
-	first_air_date?: string;
-}
-
-interface TMDBSearchTVResponse {
-	page: number;
-	results: TMDBSearchTVResult[];
-	total_results: number;
-	total_pages: number;
-}
-
-interface TMDBSeason {
-	season_number: number;
-	name?: string;
-	air_date?: string;
-	episodes?: TMDBEpisode[];
-	overview?: string;
-	poster_path?: string;
-	vote_average?: number;
-}
-
-interface TMDBEpisode {
-	air_date?: string;
-	episode_number?: number;
-	name?: string;
-	overview?: string;
-}
-
-interface TMDBSeriesDetails {
-	id: number;
-	name?: string;
-	seasons?: TMDBSeason[];
-	genres?: { id: number; name: string }[];
-	created_by?: { id: number; name: string }[];
-	production_companies?: { id: number; name: string }[];
-	episode_run_time?: number[];
-	status?: string;
-	credits?: {
-		cast?: { name: string }[];
-	};
-}
-
-interface TMDBSeasonDetails {
-	id: number;
-	season_number: number;
-	name?: string;
-	air_date?: string;
-	episodes?: TMDBEpisode[];
-	overview?: string;
-	poster_path?: string;
-	vote_average?: number;
-}
+import type { paths } from '../schemas/TMDB';
 
 export class TMDBSeasonAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -68,6 +13,7 @@ export class TMDBSeasonAPI extends APIModel {
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
+
 		this.plugin = plugin;
 		this.apiName = 'TMDBSeasonAPI';
 		this.apiDescription = 'A community built Series DB (seasons).';
@@ -84,18 +30,31 @@ export class TMDBSeasonAPI extends APIModel {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `https://api.themoviedb.org/3/search/tv?api_key=${this.plugin.settings.TMDBKey}&query=${encodeURIComponent(title)}&include_adult=${this.plugin.settings.sfwFilter ? 'false' : 'true'}`;
-		const searchResp = await fetch(searchUrl);
+		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
+		const searchResponse = await client.GET('/3/search/tv', {
+			headers: {
+				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
+			},
+			params: {
+				query: {
+					query: encodeURIComponent(title),
+					include_adult: this.plugin.settings.sfwFilter ? false : true,
+				},
+			},
+			fetch: fetch,
+		});
 
-		if (searchResp.status === 401) {
+		if (searchResponse.response.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
-		if (searchResp.status !== 200) {
-			throw Error(`MDB | Received status code ${searchResp.status} from ${this.apiName}.`);
+
+		if (searchResponse.response.status !== 200) {
+			throw Error(`MDB | Received status code ${searchResponse.response.status} from ${this.apiName}.`);
 		}
 
-		const searchData = (await searchResp.json()) as TMDBSearchTVResponse;
-		if (!searchData.results || searchData.total_results === 0) {
+		const searchData = searchResponse.data;
+
+		if (!searchData?.results || searchData.total_results === 0) {
 			return [];
 		}
 
@@ -107,22 +66,31 @@ export class TMDBSeasonAPI extends APIModel {
 			// Fetch series details to get the total number of seasons
 			let totalSeasons = 0;
 			try {
-				const detailsUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(result.id)}?api_key=${this.plugin.settings.TMDBKey}`;
-				const detailsResp = await fetch(detailsUrl);
-				if (detailsResp.status === 200) {
-					const detailsData = (await detailsResp.json()) as TMDBSeriesDetails;
+				const detailsResponse = await client.GET('/3/tv/{series_id}', {
+					headers: {
+						Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
+					},
+					params: {
+						path: { series_id: result.id ?? 0 },
+					},
+					fetch: fetch,
+				});
+
+				if (detailsResponse.response.status === 200 && detailsResponse.data) {
+					const detailsData = detailsResponse.data;
 					if (Array.isArray(detailsData.seasons)) {
 						totalSeasons = detailsData.seasons.length;
 					}
 				}
 			} catch {}
+
 			ret.push(
 				new SeasonModel({
 					title: `${result.name ?? result.original_name ?? ''}`,
 					englishTitle: result.name ?? result.original_name ?? '',
 					year: result.first_air_date ? new Date(result.first_air_date).getFullYear().toString() : 'unknown',
 					dataSource: this.apiName,
-					id: result.id.toString(),
+					id: result.id?.toString() ?? '',
 					seasonTitle: result.name ?? result.original_name ?? '',
 					seasonNumber: totalSeasons,
 				}),
@@ -132,26 +100,41 @@ export class TMDBSeasonAPI extends APIModel {
 		return ret;
 	}
 
-	//Fetch all seasons for a given series
+	// Fetch all seasons for a given series
 	async getSeasonsForSeries(tvId: string): Promise<SeasonModel[]> {
 		if (!this.plugin.settings.TMDBKey) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
-		const seriesUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(tvId)}?api_key=${this.plugin.settings.TMDBKey}`;
-		const seriesResp = await fetch(seriesUrl);
-		if (seriesResp.status === 401) {
+
+		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
+		const seriesResponse = await client.GET('/3/tv/{series_id}', {
+			headers: {
+				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
+			},
+			params: {
+				path: { series_id: parseInt(tvId) },
+			},
+			fetch: fetch,
+		});
+
+		if (seriesResponse.response.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
-		if (seriesResp.status !== 200) {
-			throw Error(`MDB | Received status code ${seriesResp.status} from ${this.apiName}.`);
+
+		if (seriesResponse.response.status !== 200) {
+			throw Error(`MDB | Received status code ${seriesResponse.response.status} from ${this.apiName}.`);
 		}
-		const seriesData = (await seriesResp.json()) as TMDBSeriesDetails;
+
+		const seriesData = seriesResponse.data;
 		const seriesName = seriesData?.name ?? '';
+
 		const ret: SeasonModel[] = [];
+
 		if (Array.isArray(seriesData?.seasons)) {
 			for (const season of seriesData.seasons) {
 				const seasonNumber = season.season_number ?? 0;
 				const titleText = `${seriesName} - Season ${seasonNumber}`;
+
 				ret.push(
 					new SeasonModel({
 						title: titleText,
@@ -165,6 +148,7 @@ export class TMDBSeasonAPI extends APIModel {
 				);
 			}
 		}
+
 		return ret;
 	}
 
@@ -178,38 +162,69 @@ export class TMDBSeasonAPI extends APIModel {
 		// Expect season ids like "12345/season/2"
 		const m = /^(\d+)\/season\/(\d+)$/.exec(id);
 		if (!m) {
-			throw Error(`MDB | Invalid season id "${id}". Expected format "<tvId>/season/<seasonNumber>".`);
+			throw Error(`MDB | Invalid season id "${id}". Expected format "<series_id>/season/<season_number>".`);
 		}
 
 		const tvId = m[1];
 		const seasonNumber = m[2];
 
-		const seasonUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(tvId)}/season/${encodeURIComponent(seasonNumber)}?api_key=${this.plugin.settings.TMDBKey}`;
-		const seasonResp = await fetch(seasonUrl);
+		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
 
-		if (seasonResp.status === 401) {
+		// Fetch season details
+		const seasonResponse = await client.GET('/3/tv/{series_id}/season/{season_number}', {
+			headers: {
+				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
+			},
+			params: {
+				path: {
+					series_id: parseInt(tvId),
+					season_number: parseInt(seasonNumber),
+				},
+			},
+			fetch: fetch,
+		});
+
+		if (seasonResponse.response.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
-		if (seasonResp.status !== 200) {
-			throw Error(`MDB | Received status code ${seasonResp.status} from ${this.apiName}.`);
+
+		if (seasonResponse.response.status !== 200) {
+			throw Error(`MDB | Received status code ${seasonResponse.response.status} from ${this.apiName}.`);
 		}
 
-		const seasonData = (await seasonResp.json()) as TMDBSeasonDetails;
-
+		const seasonData = seasonResponse.data;
+		if (!seasonData) {
+			throw Error(`MDB | No data received from ${this.apiName}.`);
+		}
 		// Fetch parent series to build consistent titles and inherit fields
-		const seriesUrl = `https://api.themoviedb.org/3/tv/${encodeURIComponent(tvId)}?api_key=${this.plugin.settings.TMDBKey}&append_to_response=credits`;
-		const seriesResp = await fetch(seriesUrl);
+		const seriesResponse = await client.GET('/3/tv/{series_id}', {
+			headers: {
+				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
+			},
+			params: {
+				path: { series_id: parseInt(tvId) },
+				query: {
+					append_to_response: 'credits',
+				},
+			},
+			fetch: fetch,
+		});
 
-		if (seriesResp.status === 401) {
+		if (seriesResponse.response.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
-		if (seriesResp.status !== 200) {
-			throw Error(`MDB | Received status code ${seriesResp.status} from ${this.apiName}.`);
+
+		if (seriesResponse.response.status !== 200) {
+			throw Error(`MDB | Received status code ${seriesResponse.response.status} from ${this.apiName}.`);
 		}
 
-		const seriesData = (await seriesResp.json()) as TMDBSeriesDetails;
-		const seriesName = seriesData?.name ?? '';
+		const seriesData = seriesResponse.data;
 
+		if (!seriesData) {
+			throw Error(`MDB | No data received from ${this.apiName}.`);
+		}
+
+		const seriesName = seriesData?.name ?? '';
 		const airDate = seasonData.air_date ?? '';
 		const titleText = `${seriesName} - Season ${seasonData.season_number}`;
 
@@ -229,16 +244,17 @@ export class TMDBSeasonAPI extends APIModel {
 			id: `${tvId}/season/${seasonData.season_number}`,
 			seasonTitle: seasonData.name ?? titleText,
 			seasonNumber: seasonData.season_number ?? Number(seasonNumber),
-			episodes: Array.isArray(seasonData.episodes) ? seasonData.episodes.length : (seasonData.episodes ?? 0),
+			episodes: Array.isArray(seasonData.episodes) ? seasonData.episodes.length : 0,
 			airedFrom: this.plugin.dateFormatter.format(airDate, this.apiDateFormat) ?? 'unknown',
 			airedTo: airedTo,
 			plot: seasonData.overview ?? '',
 			image: seasonData.poster_path ? `https://image.tmdb.org/t/p/w780${seasonData.poster_path}` : '',
-			genres: seriesData.genres?.map((g: any) => g.name) ?? [],
-			writer: seriesData.created_by?.map((c: any) => c.name) ?? [],
-			studio: seriesData.production_companies?.map((s: any) => s.name) ?? [],
+			genres: seriesData.genres?.map(g => g.name ?? '').filter(name => name !== '') ?? [],
+			writer: seriesData.created_by?.map(c => c.name ?? '').filter(name => name !== '') ?? [],
+			studio: seriesData.production_companies?.map(s => s.name ?? '').filter(name => name !== '') ?? [],
 			duration: seriesData.episode_run_time?.[0]?.toString() ?? '',
 			onlineRating: seasonData.vote_average ?? 0,
+			// @ts-ignore - append_to_response credits not reflected in base schema
 			actors: seriesData.credits?.cast?.map((c: any) => c.name).slice(0, 5) ?? [],
 			released: ['Returning Series', 'Cancelled', 'Ended'].includes(seriesData.status ?? ''),
 			streamingServices: [],
@@ -247,7 +263,6 @@ export class TMDBSeasonAPI extends APIModel {
 		});
 	}
 
-	// Settings didn’t define TMDBSeasonAPIdisabledMediaTypes yet; return an empty list for now
 	getDisabledMediaTypes(): MediaType[] {
 		return [];
 	}
