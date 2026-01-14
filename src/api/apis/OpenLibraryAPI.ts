@@ -23,6 +23,7 @@ interface SearchResponse {
 	author_name?: string[];
 	first_publish_year?: number;
 	key: string;
+	description?: string;
 
 	number_of_pages_median?: number;
 	isbn?: string[];
@@ -93,7 +94,7 @@ export class OpenLibraryAPI extends APIModel {
 			params: {
 				query: {
 					q: `${id}`,
-					fields: 'key,title,author_name,number_of_pages_median,first_publish_year,isbn,ratings_score,first_sentence,title_suggest,rating*,cover*,editions',
+					fields: 'key,title,author_name,number_of_pages_median,first_publish_year,isbn,ratings_score,first_sentence,title_suggest,rating*,cover*,editions,description',
 				},
 			},
 			fetch: obsidianFetch,
@@ -140,6 +141,7 @@ export class OpenLibraryAPI extends APIModel {
 			englishTitle: title,
 
 			author: result.author_name?.join(', '),
+			plot: result.description ?? undefined,
 			pages: Number.isNaN(pages) ? undefined : pages,
 			onlineRating: result.ratings_average,
 			image: cover_i ? `https://covers.openlibrary.org/b/id/` + cover_i + `-L.jpg` : undefined,
