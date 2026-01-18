@@ -15,6 +15,9 @@ export interface MediaDbPluginSettings {
 	OMDbKey: string;
 	MobyGamesKey: string;
 	GiantBombKey: string;
+	IGDBClientId: string;
+	IGDBClientSecret: string;
+	RAWGAPIKey: string;
 	ComicVineKey: string;
 	BoardgameGeekKey: string;
 	sfwFilter: boolean;
@@ -30,6 +33,8 @@ export interface MediaDbPluginSettings {
 	SteamAPI_disabledMediaTypes: MediaType[];
 	MobyGamesAPI_disabledMediaTypes: MediaType[];
 	GiantBombAPI_disabledMediaTypes: MediaType[];
+	IGDBAPI_disabledMediaTypes: MediaType[];
+	RAWGAPI_disabledMediaTypes: MediaType[];
 	WikipediaAPI_disabledMediaTypes: MediaType[];
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	MusicBrainzAPI_disabledMediaTypes: MediaType[];
@@ -79,6 +84,9 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
 	MobyGamesKey: '',
 	GiantBombKey: '',
+	IGDBClientId: '',
+	IGDBClientSecret: '',
+	RAWGAPIKey: '',
 	ComicVineKey: '',
 	BoardgameGeekKey: '',
 	sfwFilter: true,
@@ -94,6 +102,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	SteamAPI_disabledMediaTypes: [],
 	MobyGamesAPI_disabledMediaTypes: [],
 	GiantBombAPI_disabledMediaTypes: [],
+	IGDBAPI_disabledMediaTypes: [],
+	RAWGAPI_disabledMediaTypes: [],
 	WikipediaAPI_disabledMediaTypes: [],
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	MusicBrainzAPI_disabledMediaTypes: [],
@@ -248,6 +258,41 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.GiantBombKey)
 					.onChange(data => {
 						this.plugin.settings.GiantBombKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
+		new Setting(containerEl)
+			.setName('IGDB Client ID')
+			.setDesc('Client ID for IGDB API (Required for Twitch OAuth).')
+			.addText(cb => {
+				cb.setPlaceholder('Client ID')
+					.setValue(this.plugin.settings.IGDBClientId)
+					.onChange(data => {
+						this.plugin.settings.IGDBClientId = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('IGDB Client Secret')
+			.setDesc('Client Secret for IGDB API.')
+			.addText(cb => {
+				cb.setPlaceholder('Client Secret')
+					.setValue(this.plugin.settings.IGDBClientSecret)
+					.onChange(data => {
+						this.plugin.settings.IGDBClientSecret = data;
+						void this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('RAWG API Key')
+			.setDesc('API key for "rawg.io".')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.RAWGAPIKey)
+					.onChange(data => {
+						this.plugin.settings.RAWGAPIKey = data;
 						void this.plugin.saveSettings();
 					});
 			});
