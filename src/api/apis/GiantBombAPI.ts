@@ -1,9 +1,11 @@
-import { requestUrl } from 'obsidian';
+import createClient from 'openapi-fetch';
+import { obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
+import type { paths } from '../schemas/GiantBomb';
 
 export class GiantBombAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -18,6 +20,7 @@ export class GiantBombAPI extends APIModel {
 		this.apiUrl = 'https://www.giantbomb.com/api';
 		this.types = [MediaType.Game];
 	}
+
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
@@ -25,35 +28,42 @@ export class GiantBombAPI extends APIModel {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/games?api_key=${this.plugin.settings.GiantBombKey}&filter=name:${encodeURIComponent(title)}&format=json`;
-		const fetchData = await requestUrl({
-			url: searchUrl,
+		const client = createClient<paths>({ baseUrl: 'https://www.giantbomb.com/api/' });
+		const response = await client.GET('/games', {
+			params: {
+				query: {
+					api_key: this.plugin.settings.GiantBombKey,
+					filter: `name:${title}`,
+					format: 'json',
+					limit: 20,
+				},
+			},
+			fetch: obsidianFetch,
 		});
 
-		// console.debug(fetchData);
-
-		if (fetchData.status === 401) {
+		if (response.response.status === 401) {
 			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
 		}
-		if (fetchData.status === 429) {
+		if (response.response.status === 429) {
 			throw Error(`MDB | Too many requests for ${this.apiName}, you've exceeded your API quota.`);
 		}
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		if (response.response.status !== 200) {
+			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json;
-		// console.debug(data);
+		const data = response.data?.results;
+
 		const ret: MediaTypeModel[] = [];
-		for (const result of data.results) {
+		for (const result of data ?? []) {
+			const year = result.original_release_date ? new Date(result.original_release_date).getFullYear().toString() : undefined;
+
 			ret.push(
 				new GameModel({
-					type: MediaType.Game,
 					title: result.name,
 					englishTitle: result.name,
-					year: new Date(result.original_release_date).getFullYear().toString(),
+					year: year,
 					dataSource: this.apiName,
-					id: result.guid,
+					id: result.guid?.toString(),
 				}),
 			);
 		}
@@ -68,36 +78,79 @@ export class GiantBombAPI extends APIModel {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/game/${encodeURIComponent(id)}/?api_key=${this.plugin.settings.GiantBombKey}&format=json`;
-		const fetchData = await requestUrl({
-			url: searchUrl,
+		const client = createClient<paths>({ baseUrl: 'https://www.giantbomb.com/api/' });
+		const response = await client.GET('/game/{guid}', {
+			params: {
+				path: {
+					guid: id,
+				},
+				query: {
+					api_key: this.plugin.settings.GiantBombKey,
+					format: 'json',
+				},
+			},
+			fetch: obsidianFetch,
 		});
-		console.debug(fetchData);
 
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		if (response.response.status === 401) {
+			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+		}
+		if (response.response.status === 429) {
+			throw Error(`MDB | Too many requests for ${this.apiName}, you've exceeded your API quota.`);
+		}
+		if (response.response.status !== 200) {
+			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json;
-		// console.debug(data);
-		const result = data.results;
+		const result = response.data?.results;
+
+		if (!result) {
+			throw Error(`MDB | No results found for ID ${id} in ${this.apiName}.`);
+		}
+
+		console.log(result);
+
+		// sadly the only OpenAPI definition I could find doesn't have the right types
+		const year = result.original_release_date ? new Date(result.original_release_date).getFullYear().toString() : undefined;
+		const developers = result.developers as
+			| {
+					name: string;
+			  }[]
+			| undefined;
+		const publishers = result.publishers as
+			| {
+					name: string;
+			  }[]
+			| undefined;
+		const genres = result.genres as
+			| {
+					name: string;
+			  }[]
+			| undefined;
+		const image = result.image as
+			| {
+					small_url: string;
+					medium_url: string;
+					super_url: string;
+			  }
+			| undefined;
 
 		return new GameModel({
 			type: MediaType.Game,
 			title: result.name,
 			englishTitle: result.name,
-			year: new Date(result.original_release_date).getFullYear().toString(),
+			year: year,
 			dataSource: this.apiName,
 			url: result.site_detail_url,
-			id: result.guid,
-			developers: result.developers?.map((x: any) => x.name) ?? [],
-			publishers: result.publishers?.map((x: any) => x.name) ?? [],
-			genres: result.genres?.map((x: any) => x.name) ?? [],
+			id: result.guid?.toString(),
+			developers: developers?.map(x => x.name),
+			publishers: publishers?.map(x => x.name),
+			genres: genres?.map(x => x.name),
 			onlineRating: 0,
-			image: result.image?.super_url ?? '',
+			image: image?.super_url,
 
 			released: true,
-			releaseDate: result.original_release_date ?? 'unknown',
+			releaseDate: result.original_release_date,
 
 			userData: {
 				played: false,
@@ -105,5 +158,8 @@ export class GiantBombAPI extends APIModel {
 				personalRating: 0,
 			},
 		});
+	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.GiantBombAPI_disabledMediaTypes;
 	}
 }

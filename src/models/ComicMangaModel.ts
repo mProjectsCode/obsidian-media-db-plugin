@@ -53,7 +53,7 @@ export class ComicMangaModel extends MediaTypeModel {
 
 		migrateObject(this, obj, this);
 
-		if (!obj.hasOwnProperty('userData')) {
+		if (!Object.hasOwn(obj, 'userData')) {
 			migrateObject(this.userData, obj, this.userData);
 		}
 

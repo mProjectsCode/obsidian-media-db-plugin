@@ -1,7 +1,6 @@
 import type { ButtonComponent } from 'obsidian';
 import { DropdownComponent, Modal, Notice, Setting, TextComponent } from 'obsidian';
 import type MediaDbPlugin from '../main';
-import type { MediaTypeModel } from '../models/MediaTypeModel';
 import type { IdSearchModalData, IdSearchModalOptions } from '../utils/ModalHelper';
 import { ID_SEARCH_MODAL_DEFAULT_OPTIONS } from '../utils/ModalHelper';
 
@@ -24,7 +23,7 @@ export class MediaDbIdSearchModal extends Modal {
 
 		this.plugin = plugin;
 		this.title = idSearchModalOptions.modalTitle ?? '';
-		this.selectedApi = idSearchModalOptions.preselectedAPI || plugin.apiManager.apis[0].apiName;
+		this.selectedApi = idSearchModalOptions.preselectedAPI ?? plugin.apiManager.apis[0].apiName;
 		this.query = '';
 		this.isBusy = false;
 	}
@@ -39,7 +38,7 @@ export class MediaDbIdSearchModal extends Modal {
 
 	keyPressCallback(event: KeyboardEvent): void {
 		if (event.key === 'Enter') {
-			this.search();
+			void this.search();
 		}
 	}
 
@@ -105,7 +104,7 @@ export class MediaDbIdSearchModal extends Modal {
 				btn.setButtonText('Ok');
 				btn.setCta();
 				btn.onClick(() => {
-					this.search();
+					void this.search();
 				});
 				btn.buttonEl.addClass('media-db-plugin-button');
 				this.searchBtn = btn;

@@ -1,31 +1,17 @@
-// Credits go to Liam's Periodic Notes Plugin: https://github.com/liamcain/obsidian-periodic-notes
+import { AbstractInputSuggest, TFolder } from 'obsidian';
 
-import type { TAbstractFile } from 'obsidian';
-import { TFolder } from 'obsidian';
-import { TextInputSuggest } from './Suggest';
+export class FolderSuggest extends AbstractInputSuggest<TFolder> {
+	protected getSuggestions(query: string): TFolder[] | Promise<TFolder[]> {
+		const lowerCaseInputStr = query.toLowerCase();
 
-export class FolderSuggest extends TextInputSuggest<TFolder> {
-	getSuggestions(inputStr: string): TFolder[] {
-		const abstractFiles = this.app.vault.getAllLoadedFiles();
-		const folders: TFolder[] = [];
-		const lowerCaseInputStr = inputStr.toLowerCase();
-
-		abstractFiles.forEach((folder: TAbstractFile) => {
-			if (folder instanceof TFolder && folder.path.toLowerCase().contains(lowerCaseInputStr)) {
-				folders.push(folder);
-			}
-		});
-
-		return folders;
+		// we do two filters because otherwise TS type inference does convert the array to TFolder[]
+		return this.app.vault
+			.getAllLoadedFiles()
+			.filter(file => file instanceof TFolder)
+			.filter(file => file.path.toLowerCase().contains(lowerCaseInputStr));
 	}
 
-	renderSuggestion(file: TFolder, el: HTMLElement): void {
-		el.setText(file.path);
-	}
-
-	selectSuggestion(file: TFolder): void {
-		this.inputEl.value = file.path;
-		this.inputEl.trigger('input');
-		this.close();
+	renderSuggestion(value: TFolder, el: HTMLElement): void {
+		el.setText(value.path);
 	}
 }

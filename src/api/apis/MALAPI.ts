@@ -1,9 +1,12 @@
+import createClient from 'openapi-fetch';
+import { isTruthy, obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
 import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
+import type { paths } from '../schemas/MALAPI';
 
 export class MALAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -28,30 +31,42 @@ export class MALAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(title)}&limit=20${this.plugin.settings.sfwFilter ? '&sfw' : ''}`;
+		const client = createClient<paths>({ baseUrl: 'https://api.jikan.moe/v4/' });
 
-		const fetchData = await fetch(searchUrl);
-		// console.debug(fetchData);
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		const response = await client.GET('/anime', {
+			params: {
+				query: {
+					q: title,
+					limit: 20,
+					sfw: this.plugin.settings.sfwFilter ? true : false,
+				},
+			},
+			fetch: obsidianFetch,
+		});
+
+		if (response.error !== undefined) {
+			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
 		}
-		const data = await fetchData.json();
 
-		// console.debug(data);
+		const data = response.data?.data;
 
 		const ret: MediaTypeModel[] = [];
 
-		for (const result of data.data) {
-			const type = this.typeMappings.get(result.type?.toLowerCase());
+		for (const result of data ?? []) {
+			const resType = result.type?.toLowerCase();
+			const type = resType ? this.typeMappings.get(resType) : undefined;
+			const year = result.year?.toString() ?? result.aired?.prop?.from?.year?.toString() ?? '';
+			const id = result.mal_id?.toString();
+
 			if (type === undefined) {
 				ret.push(
 					new MovieModel({
 						subType: '',
 						title: result.title,
 						englishTitle: result.title_english ?? result.title,
-						year: result.year ?? result.aired?.prop?.from?.year ?? '',
+						year,
 						dataSource: this.apiName,
-						id: result.mal_id,
+						id,
 					}),
 				);
 			}
@@ -61,9 +76,9 @@ export class MALAPI extends APIModel {
 						subType: type,
 						title: result.title,
 						englishTitle: result.title_english ?? result.title,
-						year: result.year ?? result.aired?.prop?.from?.year ?? '',
+						year,
 						dataSource: this.apiName,
-						id: result.mal_id,
+						id,
 					}),
 				);
 			} else if (type === 'series' || type === 'ova') {
@@ -72,9 +87,9 @@ export class MALAPI extends APIModel {
 						subType: type,
 						title: result.title,
 						englishTitle: result.title_english ?? result.title,
-						year: result.year ?? result.aired?.prop?.from?.year ?? '',
+						year,
 						dataSource: this.apiName,
-						id: result.mal_id,
+						id,
 					}),
 				);
 			}
@@ -86,41 +101,53 @@ export class MALAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://api.jikan.moe/v4/anime/${encodeURIComponent(id)}/full`;
-		const fetchData = await fetch(searchUrl);
+		const client = createClient<paths>({ baseUrl: 'https://api.jikan.moe/v4/' });
 
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		const response = await client.GET('/anime/{id}/full', {
+			params: {
+				path: {
+					id: id as unknown as number, // This is fine
+				},
+			},
+			fetch: obsidianFetch,
+		});
+
+		if (response.error !== undefined) {
+			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
-		const data = await fetchData.json();
-		// console.debug(data);
-		const result = data.data;
+		const result = response.data?.data;
 
-		const type = this.typeMappings.get(result.type?.toLowerCase());
+		if (result === undefined) {
+			throw Error(`MDB | No data found for ID ${id} in ${this.apiName}.`);
+		}
+
+		const resType = result.type?.toLowerCase();
+		const type = resType ? this.typeMappings.get(resType) : undefined;
+		const year = result.year?.toString() ?? result.aired?.prop?.from?.year?.toString();
+		const new_id = result.mal_id?.toString();
+
 		if (type === undefined) {
 			return new MovieModel({
-				subType: '',
+				subType: undefined,
 				title: result.title,
 				englishTitle: result.title_english ?? result.title,
-				year: result.year ?? result.aired?.prop?.from?.year ?? '',
+				year: year,
 				dataSource: this.apiName,
 				url: result.url,
-				id: result.mal_id,
+				id: new_id,
 
 				plot: result.synopsis,
-				genres: result.genres?.map((x: any) => x.name) ?? [],
-				director: [],
-				writer: [],
-				studio: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
-				duration: result.duration ?? 'unknown',
-				onlineRating: result.score ?? 0,
-				actors: [],
-				image: result.images?.jpg?.image_url ?? '',
+				genres: result.genres?.map(x => x.name).filter(isTruthy),
+				studio: result.studios?.map(x => x.name).filter(isTruthy),
+				duration: result.duration,
+				onlineRating: result.score,
+				image: result.images?.jpg?.image_url,
 
 				released: true,
-				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
-				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
+				ageRating: result.rating,
+				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat),
+				streamingServices: result.streaming?.map(x => x.name).filter(isTruthy),
 
 				userData: {
 					watched: false,
@@ -135,24 +162,22 @@ export class MALAPI extends APIModel {
 				subType: type,
 				title: result.title,
 				englishTitle: result.title_english ?? result.title,
-				year: result.year ?? result.aired?.prop?.from?.year ?? '',
+				year: year,
 				dataSource: this.apiName,
 				url: result.url,
-				id: result.mal_id,
+				id: new_id,
 
 				plot: result.synopsis,
-				genres: result.genres?.map((x: any) => x.name) ?? [],
-				director: [],
-				writer: [],
-				studio: result.studios?.map((x: any) => x.name).join(', ') ?? 'unknown',
-				duration: result.duration ?? 'unknown',
-				onlineRating: result.score ?? 0,
-				actors: [],
-				image: result.images?.jpg?.image_url ?? '',
+				genres: result.genres?.map(x => x.name).filter(isTruthy),
+				studio: result.studios?.map(x => x.name).filter(isTruthy),
+				duration: result.duration,
+				onlineRating: result.score,
+				image: result.images?.jpg?.image_url,
 
 				released: true,
-				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
-				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
+				ageRating: result.rating,
+				premiere: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat),
+				streamingServices: result.streaming?.map(x => x.name).filter(isTruthy),
 
 				userData: {
 					watched: false,
@@ -165,24 +190,24 @@ export class MALAPI extends APIModel {
 				subType: type,
 				title: result.title,
 				englishTitle: result.title_english ?? result.title,
-				year: result.year ?? result.aired?.prop?.from?.year ?? '',
+				year: year,
 				dataSource: this.apiName,
 				url: result.url,
-				id: result.mal_id,
+				id: new_id,
 
 				plot: result.synopsis,
-				genres: result.genres?.map((x: any) => x.name) ?? [],
-				writer: [],
-				studio: result.studios?.map((x: any) => x.name) ?? [],
+				genres: result.genres?.map(x => x.name).filter(isTruthy),
+				studio: result.studios?.map(x => x.name).filter(isTruthy),
 				episodes: result.episodes,
-				duration: result.duration ?? 'unknown',
-				onlineRating: result.score ?? 0,
-				streamingServices: result.streaming?.map((x: any) => x.name) ?? [],
-				image: result.images?.jpg?.image_url ?? '',
+				duration: result.duration,
+				onlineRating: result.score,
+				streamingServices: result.streaming?.map(x => x.name).filter(isTruthy),
+				image: result.images?.jpg?.image_url,
 
 				released: true,
-				airedFrom: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat) ?? 'unknown',
-				airedTo: this.plugin.dateFormatter.format(result.aired?.to, this.apiDateFormat) ?? 'unknown',
+				ageRating: result.rating,
+				airedFrom: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat),
+				airedTo: this.plugin.dateFormatter.format(result.aired?.to, this.apiDateFormat),
 				airing: result.airing,
 
 				userData: {
@@ -194,5 +219,8 @@ export class MALAPI extends APIModel {
 		}
 
 		throw new Error(`MDB | Unknown media type for id ${id}`);
+	}
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.MALAPI_disabledMediaTypes;
 	}
 }

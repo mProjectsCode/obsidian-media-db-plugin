@@ -17,9 +17,7 @@ export class DateFormatter {
 	getPreview(format?: string): string {
 		const today = moment();
 
-		if (!format) {
-			format = this.toFormat;
-		}
+		format ??= this.toFormat;
 
 		return today.locale(this.locale).format(format);
 	}
@@ -35,7 +33,7 @@ export class DateFormatter {
 	 * from the locale of this machine.
 	 * @returns formatted date string or null if `dateString` is not a valid date
 	 */
-	format(dateString: string, dateFormat?: string, locale: string = 'en'): string | null {
+	format(dateString: string | null | undefined, dateFormat?: string, locale: string = 'en'): string | null {
 		if (!dateString) {
 			return null;
 		}

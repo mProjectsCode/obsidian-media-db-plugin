@@ -9,6 +9,7 @@ export abstract class MediaTypeModel {
 	dataSource: string;
 	url: string;
 	id: string;
+	image?: string;
 
 	userData: object;
 
@@ -21,6 +22,8 @@ export abstract class MediaTypeModel {
 		this.dataSource = '';
 		this.url = '';
 		this.id = '';
+		this.image = '';
+
 		this.userData = {};
 	}
 

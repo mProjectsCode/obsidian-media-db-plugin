@@ -3,22 +3,23 @@ import type { ModelToData } from '../utils/Utils';
 import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
-export type SeriesData = ModelToData<SeriesModel>;
+export type SeasonData = ModelToData<SeasonModel>;
 
-export class SeriesModel extends MediaTypeModel {
+export class SeasonModel extends MediaTypeModel {
+	seasonNumber: number;
+	seasonTitle: string;
+	episodes: number;
+
 	plot: string;
 	genres: string[];
 	writer: string[];
 	studio: string[];
-	episodes: number;
 	duration: string;
 	onlineRating: number;
 	actors: string[];
 	image: string;
 
 	released: boolean;
-	country: string[];
-	ageRating: string;
 	streamingServices: string[];
 	airing: boolean;
 	airedFrom: string;
@@ -30,22 +31,21 @@ export class SeriesModel extends MediaTypeModel {
 		personalRating: number;
 	};
 
-	constructor(obj: SeriesData) {
+	constructor(obj: SeasonData) {
 		super();
-
+		this.seasonTitle = '';
+		this.seasonNumber = 0;
+		this.episodes = 0;
 		this.plot = '';
 		this.genres = [];
 		this.writer = [];
 		this.studio = [];
-		this.episodes = 0;
 		this.duration = '';
 		this.onlineRating = 0;
 		this.actors = [];
 		this.image = '';
 
 		this.released = false;
-		this.country = [];
-		this.ageRating = '';
 		this.streamingServices = [];
 		this.airing = false;
 		this.airedFrom = '';
@@ -59,7 +59,7 @@ export class SeriesModel extends MediaTypeModel {
 
 		migrateObject(this, obj, this);
 
-		if (!Object.hasOwn(obj, 'userData')) {
+		if (!obj.hasOwnProperty('userData')) {
 			migrateObject(this.userData, obj, this.userData);
 		}
 
@@ -67,14 +67,14 @@ export class SeriesModel extends MediaTypeModel {
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'tv', 'series'];
+		return [mediaDbTag, 'tv', 'season'];
 	}
 
 	getMediaType(): MediaType {
-		return MediaType.Series;
+		return MediaType.Season;
 	}
 
 	getSummary(): string {
-		return this.title + ' (' + this.year + ')';
+		return this.seasonNumber + ' seasons';
 	}
 }

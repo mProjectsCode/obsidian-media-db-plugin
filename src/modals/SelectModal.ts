@@ -12,6 +12,7 @@ export abstract class SelectModal<T> extends Modal {
 	cancelButton?: ButtonComponent;
 	skipButton?: ButtonComponent;
 	submitButton?: ButtonComponent;
+	submitButtonText: string;
 
 	elementWrapper?: HTMLDivElement;
 
@@ -25,6 +26,7 @@ export abstract class SelectModal<T> extends Modal {
 		this.title = '';
 		this.description = '';
 		this.addSkipButton = false;
+		this.submitButtonText = 'Ok';
 		this.cancelButton = undefined;
 		this.skipButton = undefined;
 		this.submitButton = undefined;
@@ -54,7 +56,7 @@ export abstract class SelectModal<T> extends Modal {
 		this.scope.register([], 'Enter', () => this.submit());
 	}
 
-	abstract renderElement(value: T, el: HTMLElement): any;
+	abstract renderElement(value: T, el: HTMLElement): void;
 
 	abstract submit(): void;
 
@@ -76,7 +78,7 @@ export abstract class SelectModal<T> extends Modal {
 		}
 	}
 
-	async onOpen(): Promise<void> {
+	onOpen(): void {
 		const { contentEl, titleEl } = this;
 
 		titleEl.createEl('h2', { text: this.title });
@@ -115,7 +117,7 @@ export abstract class SelectModal<T> extends Modal {
 			});
 		}
 		bottomSettingRow.addButton(btn => {
-			btn.setButtonText('Ok');
+			btn.setButtonText(this.submitButtonText);
 			btn.setCta();
 			btn.onClick(() => this.submit());
 			btn.buttonEl.addClass('media-db-plugin-button');

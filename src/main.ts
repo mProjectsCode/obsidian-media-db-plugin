@@ -1,7 +1,10 @@
-import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder } from 'obsidian';
+import type { TFile } from 'obsidian';
+import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFolder } from 'obsidian';
+import { requestUrl, normalizePath } from 'obsidian';
 import type { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
+import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { GiantBombAPI } from './api/apis/GiantBombAPI';
 import { MALAPI } from './api/apis/MALAPI';
 import { MALAPIManga } from './api/apis/MALAPIManga';
@@ -10,21 +13,27 @@ import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
+import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
+import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
+import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { VNDBAPI } from './api/apis/VNDBAPI';
 import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
+import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
+import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
 import { getDefaultSettings, MediaDbSettingTab } from './settings/Settings';
+import { BulkImportHelper } from './utils/BulkImportHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
 import type { SearchModalOptions } from './utils/ModalHelper';
-import { ModalHelper, ModalResultCode } from './utils/ModalHelper';
+import { ModalHelper } from './utils/ModalHelper';
 import type { CreateNoteOptions } from './utils/Utils';
-import { dateTimeToString, markdownTable, replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
+import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
 
 export type Metadata = Record<string, unknown>;
 
@@ -40,6 +49,7 @@ export default class MediaDbPlugin extends Plugin {
 	mediaTypeManager!: MediaTypeManager;
 	modelPropertyMapper!: PropertyMapper;
 	modalHelper!: ModalHelper;
+	bulkImportHelper!: BulkImportHelper;
 	dateFormatter!: DateFormatter;
 
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
@@ -53,17 +63,20 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
 		this.apiManager.registerAPI(new SteamAPI(this));
+		this.apiManager.registerAPI(new TMDBSeriesAPI(this));
+		this.apiManager.registerAPI(new TMDBSeasonAPI(this));
+		this.apiManager.registerAPI(new TMDBMovieAPI(this));
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		this.apiManager.registerAPI(new OpenLibraryAPI(this));
 		this.apiManager.registerAPI(new ComicVineAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
 		this.apiManager.registerAPI(new GiantBombAPI(this));
 		this.apiManager.registerAPI(new VNDBAPI(this));
-		// this.apiManager.registerAPI(new LocGovAPI(this)); // TODO: parse data
 
 		this.mediaTypeManager = new MediaTypeManager();
 		this.modelPropertyMapper = new PropertyMapper(this);
 		this.modalHelper = new ModalHelper(this);
+		this.bulkImportHelper = new BulkImportHelper(this);
 		this.dateFormatter = new DateFormatter();
 
 		await this.loadSettings();
@@ -84,7 +97,7 @@ export default class MediaDbPlugin extends Plugin {
 					menu.addItem(item => {
 						item.setTitle('Import folder as Media DB entries')
 							.setIcon('database')
-							.onClick(() => this.createEntriesFromFolder(file));
+							.onClick(() => this.bulkImportHelper.import(file));
 					});
 				}
 			}),
@@ -123,7 +136,7 @@ export default class MediaDbPlugin extends Plugin {
 					return false;
 				}
 				if (!checking) {
-					this.updateActiveNote(false);
+					void this.updateActiveNote(false);
 				}
 				return true;
 			},
@@ -136,7 +149,7 @@ export default class MediaDbPlugin extends Plugin {
 					return false;
 				}
 				if (!checking) {
-					this.updateActiveNote(true);
+					void this.updateActiveNote(true);
 				}
 				return true;
 			},
@@ -150,19 +163,13 @@ export default class MediaDbPlugin extends Plugin {
 					return false;
 				}
 				if (!checking) {
-					this.createLinkWithSearchModal();
+					void this.createLinkWithSearchModal();
 				}
 				return true;
 			},
 		});
 	}
 
-	/**
-	 * first very simple approach
-	 * TODO:
-	 *  - replace the detail query
-	 *  - maybe custom link syntax
-	 */
 	async createLinkWithSearchModal(): Promise<void> {
 		const apiSearchResults = await this.modalHelper.openAdvancedSearchModal({}, async advancedSearchModalData => {
 			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
@@ -213,23 +220,108 @@ export default class MediaDbPlugin extends Plugin {
 		apiSearchResults = apiSearchResults.filter(x => types.contains(x.type));
 
 		let selectResults: MediaTypeModel[];
-		let proceed: boolean = false;
+		const proceed: boolean = false;
 
 		while (!proceed) {
-			selectResults =
-				(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
-					return await this.queryDetails(selectModalData.selected);
-				})) ?? [];
-			if (!selectResults) {
+			if (types.length === 1 && types[0] === 'season') {
+				selectResults =
+					(await this.modalHelper.openSelectModal(
+						{
+							elements: apiSearchResults,
+							description: 'Select one search result to proceed.',
+							submitButtonText: 'Ok',
+						},
+						async selectModalData => {
+							return selectModalData.selected;
+						},
+					)) ?? [];
+			} else {
+				selectResults =
+					(await this.modalHelper.openSelectModal(
+						{
+							elements: apiSearchResults,
+						},
+						async selectModalData => {
+							return await this.queryDetails(selectModalData.selected);
+						},
+					)) ?? [];
+			}
+			if (!selectResults || selectResults.length < 1) {
 				return;
 			}
 
-			proceed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
+			// Only show the season select modal if the user searches for seasons
+			if (await this.handleSeasonSelectModal(types, selectResults)) {
+				return;
+			}
+
+			const confirmed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
 				return previewModalData.confirmed;
 			});
+			if (!confirmed) {
+				return;
+			}
+			break;
 		}
 
 		await this.createMediaDbNotes(selectResults!);
+	}
+
+	// Season select modal
+	private async handleSeasonSelectModal(types: string[], selectResults: MediaTypeModel[]): Promise<boolean> {
+		if (types.length === 1 && types[0] === 'season' && selectResults.length === 1 && selectResults[0].dataSource === 'TMDBSeasonAPI') {
+			// Use static import for the modal
+			const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+			if (!tmdbSeasonAPI) {
+				new Notice('TMDBSeasonAPI not found.');
+				return true;
+			}
+			// Fetch all seasons for the selected series
+			const allSeasons = await tmdbSeasonAPI.getSeasonsForSeries(selectResults[0].id);
+			if (!allSeasons || allSeasons.length === 0) {
+				new Notice('No seasons found for this series.');
+				return true;
+			}
+			// Pass the original series title from the search result
+			const seriesName = selectResults[0]?.englishTitle || selectResults[0]?.title || '';
+			const modal = new MediaDbSeasonSelectModal(
+				this,
+				allSeasons.map(s => ({
+					season_number: s.seasonNumber,
+					name: s.seasonTitle || s.title,
+					episode_count: s.episodes || 0,
+					air_date: s.year,
+					poster_path: s.image,
+				})),
+				true,
+				seriesName,
+			);
+			const selectedSeasons: any[] = await new Promise(resolve => {
+				modal.setSubmitCallback(resolve);
+				modal.open();
+			});
+			if (!selectedSeasons || selectedSeasons.length === 0) {
+				return true;
+			}
+			// Fetch full metadata for each selected season and create the note
+			await Promise.all(
+				selectedSeasons.map(async season => {
+					const orig = allSeasons.find(s => s.seasonNumber === season.season_number);
+					if (orig) {
+						// Fetch full metadata using getById
+						const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+						if (tmdbSeasonAPI) {
+							const fullMeta = await tmdbSeasonAPI.getById(orig.id);
+							await this.createMediaDbNotes([fullMeta]);
+						} else {
+							await this.createMediaDbNotes([orig]);
+						}
+					}
+				}),
+			);
+			return true;
+		}
+		return false;
 	}
 
 	async createEntryWithAdvancedSearchModal(): Promise<void> {
@@ -243,20 +335,24 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		let selectResults: MediaTypeModel[];
-		let proceed: boolean = false;
+		const proceed: boolean = false;
 
 		while (!proceed) {
 			selectResults =
 				(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
 					return await this.queryDetails(selectModalData.selected);
 				})) ?? [];
-			if (!selectResults) {
+			if (!selectResults || selectResults.length < 1) {
 				return;
 			}
 
-			proceed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
+			const confirmed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
 				return previewModalData.confirmed;
 			});
+			if (!confirmed) {
+				return;
+			}
+			break;
 		}
 
 		await this.createMediaDbNotes(selectResults!);
@@ -308,11 +404,13 @@ export default class MediaDbPlugin extends Plugin {
 
 			options.openNote = this.settings.openNoteInNewTab;
 
+			if (this.settings.imageDownload) {
+				await this.downloadImageForMediaModel(mediaTypeModel);
+			}
+
 			const fileContent = await this.generateMediaDbNoteContents(mediaTypeModel, options);
 
-			if (!options.folder) {
-				options.folder = await this.mediaTypeManager.getFolder(mediaTypeModel, this.app);
-			}
+			options.folder ??= await this.mediaTypeManager.getFolder(mediaTypeModel, this.app);
 
 			const targetFile = await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
 
@@ -323,6 +421,40 @@ export default class MediaDbPlugin extends Plugin {
 			console.warn(e);
 			new Notice(`${e}`);
 		}
+	}
+
+	/**
+	 * Tries to download the image for a media model.
+	 *
+	 * @param mediaTypeModel
+	 * @returns true if the image was downloaded, false otherwise
+	 */
+	private async downloadImageForMediaModel(mediaTypeModel: MediaTypeModel): Promise<boolean> {
+		if (mediaTypeModel.image && typeof mediaTypeModel.image === 'string' && mediaTypeModel.image.startsWith('http')) {
+			try {
+				const imageUrl = mediaTypeModel.image;
+				const imageExt = imageUrl.split('.').pop()?.split(/#|\?/)[0] ?? 'jpg';
+				const imageFileName = `${replaceIllegalFileNameCharactersInString(`${mediaTypeModel.type}_${mediaTypeModel.title} (${mediaTypeModel.year})`)}.${imageExt}`;
+				const imagePath = normalizePath(`${this.settings.imageFolder}/${imageFileName}`);
+
+				if (!this.app.vault.getAbstractFileByPath(this.settings.imageFolder)) {
+					await this.app.vault.createFolder(this.settings.imageFolder);
+				}
+
+				if (!this.app.vault.getAbstractFileByPath(imagePath)) {
+					const response = await requestUrl({ url: imageUrl, method: 'GET' });
+					await this.app.vault.createBinary(imagePath, response.arrayBuffer);
+				}
+
+				// Update model to use local image path
+				mediaTypeModel.image = `[[${imagePath}]]`;
+				return true;
+			} catch (e) {
+				console.warn('MDB | Failed to download image:', e);
+			}
+		}
+
+		return false;
 	}
 
 	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
@@ -337,18 +469,7 @@ export default class MediaDbPlugin extends Plugin {
 	 * @param options
 	 */
 	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<string> {
-		const template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
-
-		return this.generateContentWithDefaultFrontMatter(mediaTypeModel, options, template);
-
-		// if (this.settings.useDefaultFrontMatter || !template) {
-		// 	return this.generateContentWithDefaultFrontMatter(mediaTypeModel, options, template);
-		// } else {
-		// 	return this.generateContentWithCustomFrontMatter(mediaTypeModel, options, template);
-		// }
-	}
-
-	async generateContentWithDefaultFrontMatter(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions, template?: string): Promise<string> {
+		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
 		let fileMetadata: Record<string, unknown>;
 
 		if (this.settings.useDefaultFrontMatter) {
@@ -377,62 +498,12 @@ export default class MediaDbPlugin extends Plugin {
 		return fileContent;
 	}
 
-	async generateContentWithCustomFrontMatter(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions, template: string): Promise<string> {
-		const regExp = new RegExp(this.frontMatterRexExpPattern);
-
-		const frontMatter = this.getMetaDataFromFileContent(template);
-		let fileContent: string = template.replace(regExp, '');
-
-		// Updating a previous file
-		if (options.attachFile) {
-			const previousMetadata = this.app.metadataCache.getFileCache(options.attachFile)?.frontmatter ?? {};
-
-			// Use contents (below front matter) from previous file
-			fileContent = await this.app.vault.read(options.attachFile);
-
-			fileContent = fileContent.replace(regExp, '');
-			fileContent = fileContent.startsWith('\n') ? fileContent.substring(1) : fileContent;
-
-			// Update updated front matter with entries from the old front matter, if it isn't defined in the new front matter
-			Object.keys(previousMetadata).forEach(key => {
-				const value = previousMetadata[key];
-
-				if (!frontMatter[key] && value) {
-					frontMatter[key] = value;
-				}
-			});
-		}
-
-		// Ensure that id, type, and dataSource are defined
-		if (!frontMatter.id) {
-			frontMatter.id = mediaTypeModel.id;
-		}
-
-		if (!frontMatter.type) {
-			frontMatter.type = mediaTypeModel.type;
-		}
-
-		if (!frontMatter.dataSource) {
-			frontMatter.dataSource = mediaTypeModel.dataSource;
-		}
-
-		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
-			// Only support stringifyYaml for templater plugin
-			// Include the media variable in all templater commands by using a top level JavaScript execution command.
-			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
-		} else {
-			fileContent = `---\n${stringifyYaml(frontMatter)}---\n${fileContent}`;
-		}
-
-		return fileContent;
-	}
-
 	async attachFile(fileMetadata: Metadata, fileContent: string, fileToAttach?: TFile): Promise<{ fileMetadata: Metadata; fileContent: string }> {
 		if (!fileToAttach) {
 			return { fileMetadata: fileMetadata, fileContent: fileContent };
 		}
 
-		const attachFileMetadata: any = this.getMetadataFromFileCache(fileToAttach);
+		const attachFileMetadata = this.getMetadataFromFileCache(fileToAttach);
 		// TODO: better object merging
 		fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
 
@@ -450,7 +521,7 @@ export default class MediaDbPlugin extends Plugin {
 			return { fileMetadata: fileMetadata, fileContent: fileContent };
 		}
 
-		const templateMetadata: Metadata = this.getMetaDataFromFileContent(template);
+		const templateMetadata = this.getMetaDataFromFileContent(template);
 		// TODO: better object merging
 		fileMetadata = Object.assign(templateMetadata, fileMetadata);
 
@@ -476,7 +547,7 @@ export default class MediaDbPlugin extends Plugin {
 		frontMatter = frontMatter.substring(4);
 		frontMatter = frontMatter.substring(0, frontMatter.length - 3);
 
-		metadata = parseYaml(frontMatter);
+		metadata = parseYaml(frontMatter) as Metadata;
 
 		if (!metadata) {
 			metadata = {};
@@ -510,9 +581,17 @@ export default class MediaDbPlugin extends Plugin {
 		fileName = replaceIllegalFileNameCharactersInString(fileName);
 		const filePath = `${folder.path}/${fileName}.md`;
 
-		// find and delete file with the same name
+		// look if file already exists and ask if it should be overwritten
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (file) {
+			const shouldOverwrite = await new Promise<boolean>(resolve => {
+				new ConfirmOverwriteModal(this.app, fileName, resolve).open();
+			});
+
+			if (!shouldOverwrite) {
+				throw new Error('MDB | file creation cancelled by user');
+			}
+
 			await this.app.vault.delete(file);
 		}
 
@@ -520,7 +599,7 @@ export default class MediaDbPlugin extends Plugin {
 		const targetFile = await this.app.vault.create(filePath, fileContent);
 		console.debug(`MDB | created new file at ${filePath}`);
 
-		// open newly crated file
+		// open newly created file
 		if (options.openNote) {
 			const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 			if (!activeLeaf) {
@@ -573,95 +652,9 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
-	async createEntriesFromFolder(folder: TFolder): Promise<void> {
-		const erroredFiles: { filePath: string; error: string }[] = [];
-		let canceled: boolean = false;
-
-		const { selectedAPI, titleFieldName, appendContent } = await new Promise<{ selectedAPI: string; titleFieldName: string; appendContent: boolean }>(resolve => {
-			new MediaDbFolderImportModal(this.app, this, (selectedAPI: string, titleFieldName: string, appendContent: boolean) => {
-				resolve({ selectedAPI, titleFieldName, appendContent });
-			}).open();
-		});
-
-		for (const child of folder.children) {
-			if (child instanceof TFile) {
-				const file: TFile = child;
-				if (canceled) {
-					erroredFiles.push({ filePath: file.path, error: 'user canceled' });
-					continue;
-				}
-
-				const metadata: any = this.getMetadataFromFileCache(file);
-
-				const title = metadata[titleFieldName];
-				if (!title) {
-					erroredFiles.push({ filePath: file.path, error: `metadata field '${titleFieldName}' not found or empty` });
-					continue;
-				}
-
-				let results: MediaTypeModel[] = [];
-				try {
-					results = await this.apiManager.query(title, [selectedAPI]);
-				} catch (e) {
-					erroredFiles.push({ filePath: file.path, error: `${e}` });
-					continue;
-				}
-				if (!results || results.length === 0) {
-					erroredFiles.push({ filePath: file.path, error: `no search results` });
-					continue;
-				}
-
-				const { selectModalResult, selectModal } = await this.modalHelper.createSelectModal({ elements: results, skipButton: true, modalTitle: `Results for '${title}'` });
-
-				if (selectModalResult.code === ModalResultCode.ERROR) {
-					erroredFiles.push({ filePath: file.path, error: selectModalResult.error.message });
-					selectModal.close();
-					continue;
-				}
-
-				if (selectModalResult.code === ModalResultCode.CLOSE) {
-					erroredFiles.push({ filePath: file.path, error: 'user canceled' });
-					selectModal.close();
-					canceled = true;
-					continue;
-				}
-
-				if (selectModalResult.code === ModalResultCode.SKIP) {
-					erroredFiles.push({ filePath: file.path, error: 'user skipped' });
-					selectModal.close();
-					continue;
-				}
-
-				if (selectModalResult.data.selected.length === 0) {
-					erroredFiles.push({ filePath: file.path, error: `no search results selected` });
-					continue;
-				}
-
-				const detailedResults = await this.queryDetails(selectModalResult.data.selected);
-				await this.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
-
-				selectModal.close();
-			}
-		}
-
-		if (erroredFiles.length > 0) {
-			await this.createErroredFilesReport(erroredFiles);
-		}
-	}
-
-	async createErroredFilesReport(erroredFiles: { filePath: string; error: string }[]): Promise<void> {
-		const title = `MDB - bulk import error report ${dateTimeToString(new Date())}`;
-		const filePath = `${title}.md`;
-
-		const table = [['file', 'error']].concat(erroredFiles.map(x => [x.filePath, x.error]));
-
-		const fileContent = `# ${title}\n\n${markdownTable(table)}`;
-		await this.app.vault.create(filePath, fileContent);
-	}
-
 	async loadSettings(): Promise<void> {
 		// console.log(DEFAULT_SETTINGS);
-		const diskSettings: MediaDbPluginSettings = await this.loadData();
+		const diskSettings: MediaDbPluginSettings = (await this.loadData()) as MediaDbPluginSettings;
 		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
 		const loadedSettings: MediaDbPluginSettings = Object.assign({}, defaultSettings, diskSettings);
 
@@ -683,7 +676,9 @@ export default class MediaDbPlugin extends Plugin {
 						newProperties.push(defaultProperty);
 					} else {
 						// newProperty is just an object and take locked status from default property
-						newProperties.push(new PropertyMapping(newProperty.property, newProperty.newProperty, newProperty.mapping, defaultProperty.locked));
+						newProperties.push(
+							new PropertyMapping(newProperty.property, newProperty.newProperty, newProperty.mapping, defaultProperty.locked, newProperty.wikilink ?? false),
+						);
 					}
 				}
 

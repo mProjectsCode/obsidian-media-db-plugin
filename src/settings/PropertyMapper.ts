@@ -1,3 +1,4 @@
+import type { MediaType } from 'src/utils/MediaType';
 import type MediaDbPlugin from '../main';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { PropertyMappingOption } from './PropertyMapping';
@@ -16,7 +17,7 @@ export class PropertyMapper {
 	 * @param obj
 	 */
 	convertObject(obj: Record<string, unknown>): Record<string, unknown> {
-		if (!obj.hasOwnProperty('type')) {
+		if (!Object.hasOwn(obj, 'type')) {
 			return obj;
 		}
 
@@ -34,14 +35,23 @@ export class PropertyMapper {
 		for (const [key, value] of Object.entries(obj)) {
 			for (const propertyMapping of propertyMappings) {
 				if (propertyMapping.property === key) {
+					let finalValue = value;
+					if (propertyMapping.wikilink) {
+						if (typeof value === 'string') {
+							finalValue = `[[${value}]]`;
+						} else if (Array.isArray(value)) {
+							// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+							finalValue = value.map(v => (typeof v === 'string' ? `[[${v}]]` : v));
+						}
+					}
 					if (propertyMapping.mapping === PropertyMappingOption.Map) {
 						// @ts-ignore
-						newObj[propertyMapping.newProperty] = value;
+						newObj[propertyMapping.newProperty] = finalValue;
 					} else if (propertyMapping.mapping === PropertyMappingOption.Remove) {
 						// do nothing
 					} else if (propertyMapping.mapping === PropertyMappingOption.Default) {
 						// @ts-ignore
-						newObj[key] = value;
+						newObj[key] = finalValue;
 					}
 					break;
 				}
@@ -58,7 +68,7 @@ export class PropertyMapper {
 	 * @param obj
 	 */
 	convertObjectBack(obj: Record<string, unknown>): Record<string, unknown> {
-		if (!obj.hasOwnProperty('type')) {
+		if (!Object.hasOwn(obj, 'type')) {
 			return obj;
 		}
 
@@ -66,7 +76,7 @@ export class PropertyMapper {
 			obj.type = 'comicManga';
 			console.debug(`MDB | updated metadata type`, obj.type);
 		}
-		if (MEDIA_TYPES.contains(obj.type as any)) {
+		if (MEDIA_TYPES.contains(obj.type as MediaType)) {
 			return obj;
 		}
 

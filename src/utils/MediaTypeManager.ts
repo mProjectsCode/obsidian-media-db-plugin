@@ -1,21 +1,24 @@
-import type { App, TAbstractFile, TFile } from 'obsidian';
+import type { App, TFile } from 'obsidian';
 import { TFolder } from 'obsidian';
 import { BoardGameModel } from '../models/BoardGameModel';
 import { BookModel } from '../models/BookModel';
-import { GameModel } from '../models/GameModel';
 import { ComicMangaModel } from '../models/ComicMangaModel';
+import { GameModel } from '../models/GameModel';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MovieModel } from '../models/MovieModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { SeriesModel } from '../models/SeriesModel';
+import { SeasonModel } from '../models/SeasonModel';
 import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
+import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
 import { MediaType } from './MediaType';
 import { replaceTags } from './Utils';
 
 export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Movie,
 	MediaType.Series,
+	MediaType.Season,
 	MediaType.ComicManga,
 	MediaType.Game,
 	MediaType.Wiki,
@@ -39,6 +42,7 @@ export class MediaTypeManager {
 		this.mediaFileNameTemplateMap = new Map<MediaType, string>();
 		this.mediaFileNameTemplateMap.set(MediaType.Movie, settings.movieFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Series, settings.seriesFileNameTemplate);
+		this.mediaFileNameTemplateMap.set(MediaType.Season, settings.seasonFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.ComicManga, settings.mangaFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Game, settings.gameFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Wiki, settings.wikiFileNameTemplate);
@@ -49,6 +53,7 @@ export class MediaTypeManager {
 		this.mediaTemplateMap = new Map<MediaType, string>();
 		this.mediaTemplateMap.set(MediaType.Movie, settings.movieTemplate);
 		this.mediaTemplateMap.set(MediaType.Series, settings.seriesTemplate);
+		this.mediaTemplateMap.set(MediaType.Season, settings.seasonTemplate);
 		this.mediaTemplateMap.set(MediaType.ComicManga, settings.mangaTemplate);
 		this.mediaTemplateMap.set(MediaType.Game, settings.gameTemplate);
 		this.mediaTemplateMap.set(MediaType.Wiki, settings.wikiTemplate);
@@ -61,6 +66,7 @@ export class MediaTypeManager {
 		this.mediaFolderMap = new Map<MediaType, string>();
 		this.mediaFolderMap.set(MediaType.Movie, settings.movieFolder);
 		this.mediaFolderMap.set(MediaType.Series, settings.seriesFolder);
+		this.mediaFolderMap.set(MediaType.Season, settings.seasonFolder);
 		this.mediaFolderMap.set(MediaType.ComicManga, settings.mangaFolder);
 		this.mediaFolderMap.set(MediaType.Game, settings.gameFolder);
 		this.mediaFolderMap.set(MediaType.Wiki, settings.wikiFolder);
@@ -71,7 +77,14 @@ export class MediaTypeManager {
 
 	getFileName(mediaTypeModel: MediaTypeModel): string {
 		// Ignore undefined tags since some search APIs do not return all properties in the model and produce clean file names even if errors occur
-		return replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType())!, mediaTypeModel, true);
+		const fileName = replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType())!, mediaTypeModel, true);
+		return this.cleanFileName(fileName);
+	}
+
+	cleanFileName(fileName: string): string {
+		const cleanedFileName = ILLEGAL_FILENAME_CHARACTERS.reduce((str, char) => str.replaceAll(char[0], char[1]), fileName);
+		// Remove all duplicate whitespace in the file name
+		return cleanedFileName.replaceAll(/ +/g, ' ');
 	}
 
 	async getTemplate(mediaTypeModel: MediaTypeModel, app: App): Promise<string> {
@@ -104,9 +117,7 @@ export class MediaTypeManager {
 	async getFolder(mediaTypeModel: MediaTypeModel, app: App): Promise<TFolder> {
 		let folderPath = this.mediaFolderMap.get(mediaTypeModel.getMediaType());
 
-		if (!folderPath) {
-			folderPath = `/`;
-		}
+		folderPath ??= `/`;
 		// console.log(folderPath);
 
 		if (!(await app.vault.adapter.exists(folderPath))) {
@@ -115,7 +126,7 @@ export class MediaTypeManager {
 		const folder = app.vault.getAbstractFileByPath(folderPath);
 
 		if (!(folder instanceof TFolder)) {
-			throw Error(`Expected ${folder} to be instance of TFolder`);
+			throw Error(`Expected ${folder?.path} to be instance of TFolder`);
 		}
 
 		return folder;
@@ -127,11 +138,13 @@ export class MediaTypeManager {
 	 * @param obj
 	 * @param mediaType
 	 */
-	createMediaTypeModelFromMediaType(obj: any, mediaType: MediaType): MediaTypeModel {
+	createMediaTypeModelFromMediaType(obj: object, mediaType: MediaType): MediaTypeModel {
 		if (mediaType === MediaType.Movie) {
 			return new MovieModel(obj);
 		} else if (mediaType === MediaType.Series) {
 			return new SeriesModel(obj);
+		} else if (mediaType === MediaType.Season) {
+			return new SeasonModel(obj);
 		} else if (mediaType === MediaType.ComicManga) {
 			return new ComicMangaModel(obj);
 		} else if (mediaType === MediaType.Game) {

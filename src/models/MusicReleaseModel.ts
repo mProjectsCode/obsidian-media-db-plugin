@@ -8,8 +8,18 @@ export type MusicReleaseData = ModelToData<MusicReleaseModel>;
 export class MusicReleaseModel extends MediaTypeModel {
 	genres: string[];
 	artists: string[];
+	language: string;
 	image: string;
 	rating: number;
+	releaseDate: string;
+	albumDuration: string;
+	trackCount: number;
+	tracks: {
+		number: number;
+		title: string;
+		duration: string;
+		featuredArtists: string[];
+	}[];
 
 	userData: {
 		personalRating: number;
@@ -22,17 +32,23 @@ export class MusicReleaseModel extends MediaTypeModel {
 		this.artists = [];
 		this.image = '';
 		this.rating = 0;
+		this.releaseDate = '';
+
 		this.userData = {
 			personalRating: 0,
 		};
 
 		migrateObject(this, obj, this);
 
-		if (!obj.hasOwnProperty('userData')) {
+		if (!Object.hasOwn(obj, 'userData')) {
 			migrateObject(this.userData, obj, this.userData);
 		}
 
 		this.type = this.getMediaType();
+		this.albumDuration = obj.albumDuration ?? '0:00';
+		this.trackCount = obj.trackCount ?? 0;
+		this.tracks = obj.tracks ?? [];
+		this.language = obj.language ?? '';
 	}
 
 	getTags(): string[] {
