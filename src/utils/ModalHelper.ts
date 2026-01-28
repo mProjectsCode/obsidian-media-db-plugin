@@ -159,12 +159,13 @@ export interface IdSearchModalOptions {
  * - skipButton: whether to add a skip button to the modal
  */
 export interface SelectModalOptions {
-	modalTitle?: string;
 	elements?: MediaTypeModel[];
 	multiSelect?: boolean;
+	modalTitle?: string;
 	skipButton?: boolean;
+	description?: string; // Add this
+	submitButtonText?: string; // Add this too
 }
-
 /**
  * Options for the preview modal.
  * - modalTitle: the title of the modal
@@ -203,6 +204,15 @@ export const SELECT_MODAL_OPTIONS_DEFAULT: SelectModalOptions = {
 export const PREVIEW_MODAL_DEFAULT_OPTIONS: PreviewModalOptions = {
 	modalTitle: 'Media DB Preview',
 	elements: [],
+};
+
+export const SELECTMODALOPTIONSDEFAULT: SelectModalOptions = {
+	elements: [],
+	multiSelect: true,
+	modalTitle: '',
+	skipButton: false,
+	description: 'Select one or multiple search results.',
+	submitButtonText: 'Ok',
 };
 
 /**

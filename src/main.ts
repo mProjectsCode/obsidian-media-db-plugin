@@ -13,8 +13,12 @@ import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
+import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
+import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
+import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
+import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
@@ -56,6 +60,9 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
 		this.apiManager.registerAPI(new SteamAPI(this));
+		this.apiManager.registerAPI(new TMDBSeriesAPI(this));
+		this.apiManager.registerAPI(new TMDBSeasonAPI(this));
+		this.apiManager.registerAPI(new TMDBMovieAPI(this));
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		this.apiManager.registerAPI(new OpenLibraryAPI(this));
 		this.apiManager.registerAPI(new ComicVineAPI(this));
@@ -212,11 +219,35 @@ export default class MediaDbPlugin extends Plugin {
 		const proceed: boolean = false;
 
 		while (!proceed) {
-			selectResults =
-				(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
-					return await this.queryDetails(selectModalData.selected);
-				})) ?? [];
+			if (types.length === 1 && types[0] === 'season') {
+				selectResults =
+					(await this.modalHelper.openSelectModal(
+						{
+							elements: apiSearchResults,
+							description: 'Select one search result to proceed.',
+							submitButtonText: 'Ok',
+						},
+						async selectModalData => {
+							return selectModalData.selected;
+						},
+					)) ?? [];
+			} else {
+				selectResults =
+					(await this.modalHelper.openSelectModal(
+						{
+							elements: apiSearchResults,
+						},
+						async selectModalData => {
+							return await this.queryDetails(selectModalData.selected);
+						},
+					)) ?? [];
+			}
 			if (!selectResults || selectResults.length < 1) {
+				return;
+			}
+
+			// Only show the season select modal if the user searches for seasons
+			if (await this.handleSeasonSelectModal(types, selectResults)) {
 				return;
 			}
 
@@ -230,6 +261,63 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		await this.createMediaDbNotes(selectResults!);
+	}
+
+	// Season select modal
+	private async handleSeasonSelectModal(types: string[], selectResults: MediaTypeModel[]): Promise<boolean> {
+		if (types.length === 1 && types[0] === 'season' && selectResults.length === 1 && selectResults[0].dataSource === 'TMDBSeasonAPI') {
+			// Use static import for the modal
+			const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+			if (!tmdbSeasonAPI) {
+				new Notice('TMDBSeasonAPI not found.');
+				return true;
+			}
+			// Fetch all seasons for the selected series
+			const allSeasons = await tmdbSeasonAPI.getSeasonsForSeries(selectResults[0].id);
+			if (!allSeasons || allSeasons.length === 0) {
+				new Notice('No seasons found for this series.');
+				return true;
+			}
+			// Pass the original series title from the search result
+			const seriesName = selectResults[0]?.englishTitle || selectResults[0]?.title || '';
+			const modal = new MediaDbSeasonSelectModal(
+				this,
+				allSeasons.map(s => ({
+					season_number: s.seasonNumber,
+					name: s.seasonTitle || s.title,
+					episode_count: s.episodes || 0,
+					air_date: s.year,
+					poster_path: s.image,
+				})),
+				true,
+				seriesName,
+			);
+			const selectedSeasons: any[] = await new Promise(resolve => {
+				modal.setSubmitCallback(resolve);
+				modal.open();
+			});
+			if (!selectedSeasons || selectedSeasons.length === 0) {
+				return true;
+			}
+			// Fetch full metadata for each selected season and create the note
+			await Promise.all(
+				selectedSeasons.map(async season => {
+					const orig = allSeasons.find(s => s.seasonNumber === season.season_number);
+					if (orig) {
+						// Fetch full metadata using getById
+						const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+						if (tmdbSeasonAPI) {
+							const fullMeta = await tmdbSeasonAPI.getById(orig.id);
+							await this.createMediaDbNotes([fullMeta]);
+						} else {
+							await this.createMediaDbNotes([orig]);
+						}
+					}
+				}),
+			);
+			return true;
+		}
+		return false;
 	}
 
 	async createEntryWithAdvancedSearchModal(): Promise<void> {
