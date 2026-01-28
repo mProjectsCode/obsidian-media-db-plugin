@@ -17,6 +17,9 @@ import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
 import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
 import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
+import { ComicVineAPI } from './api/apis/ComicVineAPI';
+import { VNDBAPI } from './api/apis/VNDBAPI';
+import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
@@ -68,6 +71,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new ComicVineAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
 		this.apiManager.registerAPI(new GiantBombAPI(this));
+		this.apiManager.registerAPI(new VNDBAPI(this));
 
 		this.mediaTypeManager = new MediaTypeManager();
 		this.modelPropertyMapper = new PropertyMapper(this);
