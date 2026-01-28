@@ -17,12 +17,6 @@
 
 	<!--
 		<pre>{JSON.stringify(models, null, 4)}</pre>
-
-		{ #each ICON_LIST as icon }
-			<p>
-				{icon} <Icon iconName="{icon}"/>
-			</p>
-		{/each}
 	-->
 </div>
 

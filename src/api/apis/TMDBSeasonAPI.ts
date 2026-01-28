@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+
 import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
+import { SeasonModel } from '../../models/SeasonModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
-import { SeasonModel } from '../../models/SeasonModel';
 import type { paths } from '../schemas/TMDB';
 
 export class TMDBSeasonAPI extends APIModel {
@@ -82,7 +84,9 @@ export class TMDBSeasonAPI extends APIModel {
 						totalSeasons = detailsData.seasons.length;
 					}
 				}
-			} catch {}
+			} catch {
+				// Ignore errors and assume 0 seasons
+			}
 
 			ret.push(
 				new SeasonModel({

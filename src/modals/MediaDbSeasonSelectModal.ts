@@ -40,11 +40,11 @@ export class MediaDbSeasonSelectModal extends SelectModal<SeasonSelectModalEleme
 		this.close();
 	}
 
-	setSubmitCallback(cb: (selectedSeasons: SeasonSelectModalElement[]) => void): void {
+	setSubmitCb(cb: (selectedSeasons: SeasonSelectModalElement[]) => void): void {
 		this.submitCallback = cb;
 	}
 
-	setCloseCallback(cb: (err?: Error) => void): void {
+	setCloseCb(cb: (err?: Error) => void): void {
 		this.closeCallback = cb;
 	}
 }

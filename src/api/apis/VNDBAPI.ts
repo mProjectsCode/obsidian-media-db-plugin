@@ -257,4 +257,8 @@ export class VNDBAPI extends APIModel {
 			},
 		});
 	}
+
+	getDisabledMediaTypes(): MediaType[] {
+		return this.plugin.settings.VNDBAPI_disabledMediaTypes;
+	}
 }

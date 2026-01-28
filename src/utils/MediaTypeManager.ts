@@ -7,24 +7,25 @@ import { GameModel } from '../models/GameModel';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MovieModel } from '../models/MovieModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
-import { SeriesModel } from '../models/SeriesModel';
 import { SeasonModel } from '../models/SeasonModel';
+import { SeriesModel } from '../models/SeriesModel';
 import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
 import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
 import { MediaType } from './MediaType';
 import { replaceTags } from './Utils';
 
+// All media types in alphabetical order
 export const MEDIA_TYPES: MediaType[] = [
-	MediaType.Movie,
-	MediaType.Series,
-	MediaType.Season,
-	MediaType.ComicManga,
-	MediaType.Game,
-	MediaType.Wiki,
-	MediaType.MusicRelease,
 	MediaType.BoardGame,
 	MediaType.Book,
+	MediaType.ComicManga,
+	MediaType.Game,
+	MediaType.Movie,
+	MediaType.MusicRelease,
+	MediaType.Series,
+	MediaType.Season,
+	MediaType.Wiki,
 ];
 
 export class MediaTypeManager {

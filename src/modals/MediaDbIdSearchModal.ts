@@ -28,11 +28,11 @@ export class MediaDbIdSearchModal extends Modal {
 		this.isBusy = false;
 	}
 
-	setSubmitCallback(submitCallback: (res: IdSearchModalData, err?: Error) => void): void {
+	setSubmitCb(submitCallback: (res: IdSearchModalData, err?: Error) => void): void {
 		this.submitCallback = submitCallback;
 	}
 
-	setCloseCallback(closeCallback: (err?: Error) => void): void {
+	setCloseCb(closeCallback: (err?: Error) => void): void {
 		this.closeCallback = closeCallback;
 	}
 

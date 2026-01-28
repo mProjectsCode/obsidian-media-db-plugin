@@ -124,14 +124,16 @@ export class PropertyMapping {
 		if (!this.property || !containsOnlyLettersAndUnderscores(this.property)) {
 			return {
 				res: false,
-				err: new PropertyMappingValidationError(`Error in property mapping "${this.toString()}": property may not be empty and only contain letters and underscores.`),
+				err: new PropertyMappingValidationError(`Error in property mapping "${this.toString()}": property may not be empty and may only contain letters and underscores.`),
 			};
 		}
 
 		if (!this.newProperty || !containsOnlyLettersAndUnderscores(this.newProperty)) {
 			return {
 				res: false,
-				err: new PropertyMappingValidationError(`Error in property mapping "${this.toString()}": new property may not be empty and only contain letters and underscores.`),
+				err: new PropertyMappingValidationError(
+					`Error in property mapping "${this.toString()}": new property may not be empty and may only contain letters and underscores.`,
+				),
 			};
 		}
 

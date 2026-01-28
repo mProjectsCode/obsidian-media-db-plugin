@@ -26,11 +26,11 @@ export class MediaDbPreviewModal extends Modal {
 		this.markdownComponent = new Component();
 	}
 
-	setSubmitCallback(submitCallback: (previewModalData: PreviewModalData) => void): void {
+	setSubmitCb(submitCallback: (previewModalData: PreviewModalData) => void): void {
 		this.submitCallback = submitCallback;
 	}
 
-	setCloseCallback(closeCallback: (err?: Error) => void): void {
+	setCloseCb(closeCallback: (err?: Error) => void): void {
 		this.closeCallback = closeCallback;
 	}
 

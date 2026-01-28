@@ -13,15 +13,14 @@ import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
-import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
-import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
 import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
-import { WikipediaAPI } from './api/apis/WikipediaAPI';
-import { ComicVineAPI } from './api/apis/ComicVineAPI';
+import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
+import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
 import { VNDBAPI } from './api/apis/VNDBAPI';
-import { MediaDbFolderImportModal } from './modals/MediaDbFolderImportModal';
+import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
-import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
+import type {SeasonSelectModalElement} from './modals/MediaDbSeasonSelectModal';
+import { MediaDbSeasonSelectModal  } from './modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
@@ -271,7 +270,7 @@ export default class MediaDbPlugin extends Plugin {
 	private async handleSeasonSelectModal(types: string[], selectResults: MediaTypeModel[]): Promise<boolean> {
 		if (types.length === 1 && types[0] === 'season' && selectResults.length === 1 && selectResults[0].dataSource === 'TMDBSeasonAPI') {
 			// Use static import for the modal
-			const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+			const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as TMDBSeasonAPI;
 			if (!tmdbSeasonAPI) {
 				new Notice('TMDBSeasonAPI not found.');
 				return true;
@@ -296,8 +295,8 @@ export default class MediaDbPlugin extends Plugin {
 				true,
 				seriesName,
 			);
-			const selectedSeasons: any[] = await new Promise(resolve => {
-				modal.setSubmitCallback(resolve);
+			const selectedSeasons: SeasonSelectModalElement[] = await new Promise(resolve => {
+				modal.setSubmitCb(resolve);
 				modal.open();
 			});
 			if (!selectedSeasons || selectedSeasons.length === 0) {
@@ -309,7 +308,7 @@ export default class MediaDbPlugin extends Plugin {
 					const orig = allSeasons.find(s => s.seasonNumber === season.season_number);
 					if (orig) {
 						// Fetch full metadata using getById
-						const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as import('./api/apis/TMDBSeasonAPI').TMDBSeasonAPI;
+						const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as TMDBSeasonAPI;
 						if (tmdbSeasonAPI) {
 							const fullMeta = await tmdbSeasonAPI.getById(orig.id);
 							await this.createMediaDbNotes([fullMeta]);
