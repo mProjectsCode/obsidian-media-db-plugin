@@ -7,7 +7,7 @@ import * as plugin_import from 'eslint-plugin-import';
 
 export default tseslint.config(
 	{
-		ignores: ['npm/', 'node_modules/', 'exampleVault/', 'automation/', 'main.js', '*.svelte', 'src/api/schemas/'],
+		ignores: ['npm/', 'node_modules/', 'exampleVault/', 'automation/', 'main.js', '*.css', 'src/api/schemas/'],
 	},
 	{
 		files: ['src/**/*.ts'],

@@ -27,8 +27,12 @@ export class PropertyMapper {
 			return obj;
 		}
 
-		// @ts-ignore
-		const propertyMappings = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type).properties;
+		const propertyMappingModel = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type);
+		if (!propertyMappingModel) {
+			return obj;
+		}
+
+		const propertyMappings = propertyMappingModel.properties;
 
 		const newObj: Record<string, unknown> = {};
 
@@ -80,7 +84,8 @@ export class PropertyMapper {
 			return obj;
 		}
 
-		const propertyMappings = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type)?.properties ?? [];
+		const propertyMappingModel = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type);
+		const propertyMappings = propertyMappingModel?.properties ?? [];
 
 		const originalObj: Record<string, unknown> = {};
 

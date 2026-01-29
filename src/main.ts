@@ -19,11 +19,11 @@ import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
 import { VNDBAPI } from './api/apis/VNDBAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
-import type {SeasonSelectModalElement} from './modals/MediaDbSeasonSelectModal';
-import { MediaDbSeasonSelectModal  } from './modals/MediaDbSeasonSelectModal';
+import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
+import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
-import { PropertyMapping, PropertyMappingModel } from './settings/PropertyMapping';
+import { PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
 import { getDefaultSettings, MediaDbSettingTab } from './settings/Settings';
 import { BulkImportHelper } from './utils/BulkImportHelper';
@@ -33,6 +33,7 @@ import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
 import type { CreateNoteOptions } from './utils/Utils';
 import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
+import 'src/styles.css';
 
 export type Metadata = Record<string, unknown>;
 
@@ -652,39 +653,18 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		// console.log(DEFAULT_SETTINGS);
 		const diskSettings: MediaDbPluginSettings = (await this.loadData()) as MediaDbPluginSettings;
 		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
 		const loadedSettings: MediaDbPluginSettings = Object.assign({}, defaultSettings, diskSettings);
 
-		// migrate the settings loaded from the disk to match the structure of the default settings
-		const newPropertyMappings: PropertyMappingModel[] = [];
-		for (const defaultPropertyMappingModel of defaultSettings.propertyMappingModels) {
-			const newPropertyMappingModel = loadedSettings.propertyMappingModels.find(x => x.type === defaultPropertyMappingModel.type);
-			if (newPropertyMappingModel === undefined) {
-				// if the propertyMappingModel exists in the default settings but not the loaded settings, add it
-				newPropertyMappings.push(defaultPropertyMappingModel);
-			} else {
-				// if the propertyMappingModel also exists in the loaded settings, add it from there
-				const newProperties: PropertyMapping[] = [];
+		// Migrate property mappings using the dedicated migration method
+		const migratedModels = PropertyMappingModel.migrateModels(
+			loadedSettings.propertyMappingModels || [],
+			defaultSettings.propertyMappingModels.map(m => PropertyMappingModel.fromJSON(m)),
+		);
 
-				for (const defaultProperty of defaultPropertyMappingModel.properties) {
-					const newProperty = newPropertyMappingModel.properties.find(x => x.property === defaultProperty.property);
-					if (newProperty === undefined) {
-						// default property is an instance
-						newProperties.push(defaultProperty);
-					} else {
-						// newProperty is just an object and take locked status from default property
-						newProperties.push(
-							new PropertyMapping(newProperty.property, newProperty.newProperty, newProperty.mapping, defaultProperty.locked, newProperty.wikilink ?? false),
-						);
-					}
-				}
-
-				newPropertyMappings.push(new PropertyMappingModel(newPropertyMappingModel.type, newProperties));
-			}
-		}
-		loadedSettings.propertyMappingModels = newPropertyMappings;
+		// Store as plain data for serialization
+		loadedSettings.propertyMappingModels = migratedModels.map(m => m.toJSON());
 
 		this.settings = loadedSettings;
 	}

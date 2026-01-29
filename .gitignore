@@ -37,4 +37,4 @@ exampleVault/.obsidian/plugins/obsidian-media-db-plugin/*
 
 exampleVault/Media DB/*
 meta.txt
-main.js
+dist/

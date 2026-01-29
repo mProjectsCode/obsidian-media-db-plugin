@@ -1,6 +1,20 @@
 import type { MediaType } from '../utils/MediaType';
 import { containsOnlyLettersAndUnderscores, PropertyMappingNameConflictError, PropertyMappingValidationError } from '../utils/Utils';
 
+// Plain object interfaces for serialization
+export interface PropertyMappingData {
+	property: string;
+	newProperty: string;
+	mapping: PropertyMappingOption;
+	locked?: boolean;
+	wikilink?: boolean;
+}
+
+export interface PropertyMappingModelData {
+	type: MediaType;
+	properties: PropertyMappingData[];
+}
+
 export enum PropertyMappingOption {
 	Default = 'default',
 	Map = 'remap',
@@ -80,6 +94,72 @@ export class PropertyMappingModel {
 		}
 		return copy;
 	}
+
+	// Serialization - returns a plain object that can be JSON.stringify'd
+	toJSON(): PropertyMappingModelData {
+		return {
+			type: this.type,
+			properties: this.properties.map(p => p.toJSON()),
+		};
+	}
+
+	// Deserialization - creates a PropertyMappingModel from a plain object
+	static fromJSON(json: PropertyMappingModelData): PropertyMappingModel {
+		return new PropertyMappingModel(
+			json.type,
+			json.properties.map(p => PropertyMapping.fromJSON(p)),
+		);
+	}
+
+	/**
+	 * Migrates loaded settings to match the structure of default settings.
+	 * - Adds new properties from defaults that don't exist in loaded settings
+	 * - Preserves user customizations from loaded settings
+	 * - Updates locked status from defaults
+	 *
+	 * @param loadedModels - Models loaded from disk (may be outdated)
+	 * @param defaultModels - Current default models (source of truth for structure)
+	 * @returns Migrated models with correct structure and preserved user settings
+	 */
+	static migrateModels(loadedModels: PropertyMappingModelData[], defaultModels: PropertyMappingModel[]): PropertyMappingModel[] {
+		const migratedModels: PropertyMappingModel[] = [];
+
+		for (const defaultModel of defaultModels) {
+			const loadedModel = loadedModels.find(m => m.type === defaultModel.type);
+
+			if (!loadedModel) {
+				// New model type - use default
+				migratedModels.push(defaultModel);
+				continue;
+			}
+
+			// Migrate properties
+			const migratedProperties: PropertyMapping[] = [];
+			for (const defaultProperty of defaultModel.properties) {
+				const loadedProperty = loadedModel.properties.find(p => p.property === defaultProperty.property);
+
+				if (!loadedProperty) {
+					// New property - use default
+					migratedProperties.push(defaultProperty);
+				} else {
+					// Existing property - merge: take locked from default, customizations from loaded
+					migratedProperties.push(
+						new PropertyMapping(
+							loadedProperty.property,
+							loadedProperty.newProperty,
+							loadedProperty.mapping,
+							defaultProperty.locked, // locked status from default
+							loadedProperty.wikilink ?? false,
+						),
+					);
+				}
+			}
+
+			migratedModels.push(new PropertyMappingModel(defaultModel.type, migratedProperties));
+		}
+
+		return migratedModels;
+	}
 }
 
 export class PropertyMapping {
@@ -152,5 +232,21 @@ export class PropertyMapping {
 		}
 
 		return this.property;
+	}
+
+	// Serialization - returns a plain object
+	toJSON(): PropertyMappingData {
+		return {
+			property: this.property,
+			newProperty: this.newProperty,
+			mapping: this.mapping,
+			locked: this.locked,
+			wikilink: this.wikilink,
+		};
+	}
+
+	// Deserialization - creates a PropertyMapping from a plain object
+	static fromJSON(json: PropertyMappingData): PropertyMapping {
+		return new PropertyMapping(json.property, json.newProperty, json.mapping, json.locked, json.wikilink);
 	}
 }

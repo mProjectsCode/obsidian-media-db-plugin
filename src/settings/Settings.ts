@@ -1,13 +1,14 @@
 import type { App } from 'obsidian';
 import { Notice, PluginSettingTab, SettingGroup } from 'obsidian';
+import { render } from 'solid-js/web';
 import { MediaType } from 'src/utils/MediaType';
-import { mount } from 'svelte';
 import type MediaDbPlugin from '../main';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { fragWithHTML, unCamelCase } from '../utils/Utils';
+import type { PropertyMappingModelData } from './PropertyMapping';
 import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './PropertyMapping';
-import PropertyMappingModelsComponent from './PropertyMappingModelsComponent.svelte';
+import PropertyMappingModelsComponent from './PropertyMappingModelsComponent';
 import { FileSuggest } from './suggesters/FileSuggest';
 import { FolderSuggest } from './suggesters/FolderSuggest';
 
@@ -74,7 +75,7 @@ export interface MediaDbPluginSettings {
 	boardgameFolder: string;
 	bookFolder: string;
 
-	propertyMappingModels: PropertyMappingModel[];
+	propertyMappingModels: PropertyMappingModelData[];
 
 	// DEPRECATED: Use propertyMappingModels instead
 	moviePropertyConversionRules: string;
@@ -347,12 +348,10 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 	const defaultSettings = DEFAULT_SETTINGS;
 
 	// construct property mapping defaults
-	const propertyMappingModels: PropertyMappingModel[] = [];
+	const propertyMappingModels: PropertyMappingModelData[] = [];
 	for (const mediaType of MEDIA_TYPES) {
 		const model: MediaTypeModel = plugin.mediaTypeManager.createMediaTypeModelFromMediaType({}, mediaType);
 		const metadataObj = model.toMetaDataObject();
-		// console.log(metadataObj);
-		// console.log(model);
 
 		const propertyMappingModel: PropertyMappingModel = new PropertyMappingModel(mediaType);
 
@@ -368,41 +367,12 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 			);
 		}
 
-		propertyMappingModels.push(propertyMappingModel);
-	}
-
-	// MIGRATION: Ensure all property mappings have wikilink defined (for settings loaded from disk)
-	if (defaultSettings.propertyMappingModels && Array.isArray(defaultSettings.propertyMappingModels)) {
-		for (const model of defaultSettings.propertyMappingModels) {
-			if (model.properties && Array.isArray(model.properties)) {
-				for (const prop of model.properties) {
-					if (typeof prop.wikilink === 'undefined') {
-						prop.wikilink = false;
-					}
-				}
-			}
-		}
+		// Convert to plain data for serialization
+		propertyMappingModels.push(propertyMappingModel.toJSON());
 	}
 
 	defaultSettings.propertyMappingModels = propertyMappingModels;
 	return defaultSettings;
-}
-
-/**
- * Ensures all property mappings in loaded settings have the wikilink property defined.
- */
-export function ensureWikilinkOnPropertyMappings(settings: MediaDbPluginSettings): void {
-	if (settings.propertyMappingModels && Array.isArray(settings.propertyMappingModels)) {
-		for (const model of settings.propertyMappingModels) {
-			if (model.properties && Array.isArray(model.properties)) {
-				for (const prop of model.properties) {
-					if (typeof prop.wikilink === 'undefined') {
-						prop.wikilink = false;
-					}
-				}
-			}
-		}
-	}
 }
 
 // MARK: Settings Tab
@@ -787,27 +757,23 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						),
 					);
 
-				mount(PropertyMappingModelsComponent, {
-					target: setting.descEl,
-					props: {
-						models: this.plugin.settings.propertyMappingModels.map(x => x.copy()),
-						save: (model: PropertyMappingModel): void => {
-							const propertyMappingModels: PropertyMappingModel[] = [];
-
-							for (const model2 of this.plugin.settings.propertyMappingModels) {
-								if (model2.type === model.type) {
-									propertyMappingModels.push(model);
-								} else {
-									propertyMappingModels.push(model2);
+				render(
+					() =>
+						PropertyMappingModelsComponent({
+							models: structuredClone(this.plugin.settings.propertyMappingModels),
+							save: (model: PropertyMappingModelData): void => {
+								// Update the matching model in settings (stored as plain data)
+								const index = this.plugin.settings.propertyMappingModels.findIndex(m => m.type === model.type);
+								if (index !== -1) {
+									this.plugin.settings.propertyMappingModels[index] = model;
 								}
-							}
 
-							this.plugin.settings.propertyMappingModels = propertyMappingModels;
-							new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
-							void this.plugin.saveSettings();
-						},
-					},
-				});
+								new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
+								void this.plugin.saveSettings();
+							},
+						}),
+					setting.descEl,
+				);
 			});
 		}
 	}

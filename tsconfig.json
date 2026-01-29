@@ -18,7 +18,10 @@
 		"moduleDetection": "force",
 		"sourceMap": true,
 		"lib": ["DOM", "ESNext"],
-		"allowSyntheticDefaultImports": true
+		"allowSyntheticDefaultImports": true,
+		"jsx": "preserve",
+		"jsxImportSource": "solid-js",
+		"types": ["vite/client"]
 	},
-	"include": ["src/**/*.ts", "tests/**/*.ts"]
+	"include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"]
 }
