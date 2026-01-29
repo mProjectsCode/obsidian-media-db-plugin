@@ -22,6 +22,7 @@ import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
 import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
+import type { SeasonModel } from './models/SeasonModel';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
@@ -203,125 +204,163 @@ export default class MediaDbPlugin extends Plugin {
 			types = searchModalData.types;
 			const apis = this.apiManager.apis.filter(x => x.hasTypeOverlap(searchModalData.types)).map(x => x.apiName);
 			try {
-				console.log(apis);
 				return await this.apiManager.query(searchModalData.query, apis);
 			} catch (e) {
-				console.warn(e);
+				console.warn('MDB | Query failed:', e);
+				new Notice(`Search failed: ${e}`);
 				return [];
 			}
 		});
 
-		if (!apiSearchResults) {
-			// TODO: add new notice saying no results found?
+		if (!apiSearchResults || apiSearchResults.length === 0) {
+			new Notice('No results found.');
 			return;
 		}
 
 		// filter the results
 		apiSearchResults = apiSearchResults.filter(x => types.contains(x.type));
 
-		let selectResults: MediaTypeModel[];
-		const proceed: boolean = false;
+		if (apiSearchResults.length === 0) {
+			new Notice('No results found for the selected types.');
+			return;
+		}
 
-		while (!proceed) {
-			if (types.length === 1 && types[0] === 'season') {
-				selectResults =
-					(await this.modalHelper.openSelectModal(
+		// Show selection modal - for seasons, skip detail query
+		const selectResults =
+			types.length === 1 && types[0] === 'season'
+				? await this.modalHelper.openSelectModal(
 						{
 							elements: apiSearchResults,
 							description: 'Select one search result to proceed.',
 							submitButtonText: 'Ok',
 						},
-						async selectModalData => {
-							return selectModalData.selected;
-						},
-					)) ?? [];
-			} else {
-				selectResults =
-					(await this.modalHelper.openSelectModal(
-						{
-							elements: apiSearchResults,
-						},
-						async selectModalData => {
-							return await this.queryDetails(selectModalData.selected);
-						},
-					)) ?? [];
-			}
-			if (!selectResults || selectResults.length < 1) {
-				return;
-			}
+						async selectModalData => selectModalData.selected,
+					)
+				: await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => this.queryDetails(selectModalData.selected));
 
-			// Only show the season select modal if the user searches for seasons
-			if (await this.handleSeasonSelectModal(types, selectResults)) {
-				return;
-			}
-
-			const confirmed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
-				return previewModalData.confirmed;
-			});
-			if (!confirmed) {
-				return;
-			}
-			break;
+		if (!selectResults || selectResults.length === 0) {
+			return;
 		}
 
-		await this.createMediaDbNotes(selectResults!);
+		// Handle season selection for both direct season searches and series-to-season conversion
+		const seasonHandlingResult = await this.handleSeasonWorkflow(types, selectResults);
+		if (seasonHandlingResult.handled) {
+			return;
+		}
+
+		// Show preview and confirm
+		const confirmed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => previewModalData.confirmed);
+		if (!confirmed) {
+			return;
+		}
+
+		// User confirmed, create notes and exit
+		await this.createMediaDbNotes(selectResults);
 	}
 
-	// Season select modal
-	private async handleSeasonSelectModal(types: string[], selectResults: MediaTypeModel[]): Promise<boolean> {
+	/**
+	 * Handles the season workflow for both direct season searches and series-to-season conversion.
+	 * Returns an object indicating what happened and how to proceed.
+	 */
+	private async handleSeasonWorkflow(types: string[], selectResults: MediaTypeModel[]): Promise<{ handled: boolean; seasonsCreated?: boolean }> {
+		// Case 1: User searched specifically for seasons and selected a series from TMDB
 		if (types.length === 1 && types[0] === 'season' && selectResults.length === 1 && selectResults[0].dataSource === 'TMDBSeasonAPI') {
-			// Use static import for the modal
-			const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as TMDBSeasonAPI;
-			if (!tmdbSeasonAPI) {
-				new Notice('TMDBSeasonAPI not found.');
-				return true;
+			const created = await this.showSeasonSelectAndCreate(selectResults[0].id, selectResults[0].englishTitle || selectResults[0].title);
+			return { handled: true, seasonsCreated: created };
+		}
+
+		// Case 2: User searched for series but it's actually from TMDBSeasonAPI
+		// (This happens when searching for seasons returns series results)
+		if (types.includes('series') && selectResults.some(r => r.dataSource === 'TMDBSeriesAPI')) {
+			const seriesResults = selectResults.filter(r => r.dataSource === 'TMDBSeriesAPI');
+			// If only one series result and user searched for seasons, show season selection
+			if (seriesResults.length === 1 && types.includes('season')) {
+				const created = await this.showSeasonSelectAndCreate(seriesResults[0].id, seriesResults[0].title);
+				return { handled: true, seasonsCreated: created };
 			}
+		}
+
+		return { handled: false };
+	}
+
+	/**
+	 * Shows the season selection modal for a given series and creates notes for selected seasons.
+	 * Returns true if seasons were successfully created, false if cancelled.
+	 */
+	private async showSeasonSelectAndCreate(seriesId: string, seriesTitle: string): Promise<boolean> {
+		const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as TMDBSeasonAPI;
+		if (!tmdbSeasonAPI) {
+			new Notice('TMDBSeasonAPI not available.');
+			return false;
+		}
+
+		try {
 			// Fetch all seasons for the selected series
-			const allSeasons = await tmdbSeasonAPI.getSeasonsForSeries(selectResults[0].id);
+			const allSeasons = await tmdbSeasonAPI.getSeasonsForSeries(seriesId);
 			if (!allSeasons || allSeasons.length === 0) {
 				new Notice('No seasons found for this series.');
-				return true;
+				return false;
 			}
-			// Pass the original series title from the search result
-			const seriesName = selectResults[0]?.englishTitle || selectResults[0]?.title || '';
-			const modal = new MediaDbSeasonSelectModal(
-				this,
-				allSeasons.map(s => ({
-					season_number: s.seasonNumber,
-					name: s.seasonTitle || s.title,
-					episode_count: s.episodes || 0,
-					air_date: s.year,
-					poster_path: s.image,
-				})),
-				true,
-				seriesName,
-			);
-			const selectedSeasons: SeasonSelectModalElement[] = await new Promise(resolve => {
-				modal.setSubmitCb(resolve);
-				modal.open();
-			});
+
+			// Show season selection modal
+			const selectedSeasons = await this.showSeasonSelectModal(allSeasons, seriesTitle);
 			if (!selectedSeasons || selectedSeasons.length === 0) {
-				return true;
+				return false;
 			}
-			// Fetch full metadata for each selected season and create the note
-			await Promise.all(
-				selectedSeasons.map(async season => {
-					const orig = allSeasons.find(s => s.seasonNumber === season.season_number);
-					if (orig) {
-						// Fetch full metadata using getById
-						const tmdbSeasonAPI = this.apiManager.getApiByName('TMDBSeasonAPI') as TMDBSeasonAPI;
-						if (tmdbSeasonAPI) {
-							const fullMeta = await tmdbSeasonAPI.getById(orig.id);
-							await this.createMediaDbNotes([fullMeta]);
-						} else {
-							await this.createMediaDbNotes([orig]);
-						}
-					}
-				}),
-			);
+
+			// Create notes for all selected seasons in parallel
+			await this.createNotesForSelectedSeasons(selectedSeasons, allSeasons, tmdbSeasonAPI);
+			new Notice(`Successfully created ${selectedSeasons.length} season ${selectedSeasons.length === 1 ? 'entry' : 'entries'}.`);
 			return true;
+		} catch (e) {
+			console.warn('MDB | Error in season selection workflow:', e);
+			new Notice(`Error loading seasons: ${e}`);
+			return false;
 		}
-		return false;
+	}
+
+	/**
+	 * Shows the season selection modal and returns the selected seasons.
+	 */
+	private async showSeasonSelectModal(allSeasons: SeasonModel[], seriesTitle: string): Promise<SeasonSelectModalElement[] | undefined> {
+		const modal = new MediaDbSeasonSelectModal(
+			this,
+			allSeasons.map(s => ({
+				season_number: s.seasonNumber,
+				name: s.seasonTitle || s.title,
+				episode_count: s.episodes || 0,
+				air_date: s.year,
+				poster_path: s.image,
+			})),
+			true,
+			seriesTitle,
+		);
+
+		return new Promise(resolve => {
+			modal.setSubmitCb(resolve);
+			modal.open();
+		});
+	}
+
+	/**
+	 * Creates notes for all selected seasons by fetching full metadata and creating entries.
+	 */
+	private async createNotesForSelectedSeasons(selectedSeasons: SeasonSelectModalElement[], allSeasons: SeasonModel[], tmdbSeasonAPI: TMDBSeasonAPI): Promise<void> {
+		await Promise.all(
+			selectedSeasons.map(async selectedSeason => {
+				const seasonModel = allSeasons.find(s => s.seasonNumber === selectedSeason.season_number);
+				if (seasonModel) {
+					try {
+						// Fetch full metadata using getById
+						const fullMetadata = await tmdbSeasonAPI.getById(seasonModel.id);
+						await this.createMediaDbNotes([fullMetadata]);
+					} catch (e) {
+						console.warn(`MDB | Failed to create season ${selectedSeason.season_number}:`, e);
+						new Notice(`Failed to create season ${selectedSeason.season_number}: ${e}`);
+					}
+				}
+			}),
+		);
 	}
 
 	async createEntryWithAdvancedSearchModal(): Promise<void> {
@@ -329,8 +368,8 @@ export default class MediaDbPlugin extends Plugin {
 			return await this.apiManager.query(advancedSearchModalData.query, advancedSearchModalData.apis);
 		});
 
-		if (!apiSearchResults) {
-			// TODO: add new notice saying no results found?
+		if (!apiSearchResults || apiSearchResults.length === 0) {
+			new Notice('No results found.');
 			return;
 		}
 
@@ -382,19 +421,32 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<void> {
-		for (const model of models) {
-			await this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile });
+		// Create notes in parallel for better performance
+		const results = await Promise.allSettled(models.map(model => this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile })));
+
+		// Report any failures
+		const failures = results.filter(r => r.status === 'rejected');
+		if (failures.length > 0) {
+			console.warn('MDB | Some notes failed to create:', failures);
+			new Notice(`${models.length - failures.length} of ${models.length} notes created successfully.`);
 		}
 	}
 
 	async queryDetails(models: MediaTypeModel[]): Promise<MediaTypeModel[]> {
-		const detailModels: MediaTypeModel[] = [];
-		for (const model of models) {
-			const res = await this.apiManager.queryDetailedInfo(model);
-			if (res) {
-				detailModels.push(res);
-			}
+		// Query details in parallel for better performance
+		const results = await Promise.allSettled(models.map(model => this.apiManager.queryDetailedInfo(model)));
+
+		// Filter out failures and return successful results
+		const detailModels: MediaTypeModel[] = results
+			.filter((r): r is PromiseFulfilledResult<MediaTypeModel | undefined> => r.status === 'fulfilled' && r.value !== undefined)
+			.map(r => r.value!);
+
+		// Log failures for debugging
+		const failures = results.filter(r => r.status === 'rejected');
+		if (failures.length > 0) {
+			console.warn('MDB | Some detail queries failed:', failures);
 		}
+
 		return detailModels;
 	}
 
