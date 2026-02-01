@@ -556,8 +556,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		apiKeyGroup.addSetting(
 			setting =>
 				void setting
-					.setName('TMDB API key')
-					.setDesc('API key for "https://www.themoviedb.org".')
+					.setName('TMDB API Token')
+					.setDesc('API Read Access Token for "https://www.themoviedb.org".')
 					.addText(cb => {
 						cb.setPlaceholder('API key')
 							.setValue(this.plugin.settings.TMDBKey)
