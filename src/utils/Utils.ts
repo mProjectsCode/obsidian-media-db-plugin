@@ -61,10 +61,9 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 			if (!Array.isArray(obj)) {
 				return '{{ INVALID TEMPLATE TAG - operator LIST is only applicable on an array }}';
 			}
-			
+
 			const listOutput = obj.map((e: unknown) => `\n  - ${e}`).join('');
 			return listOutput;
-		
 		} else if (operator === 'ENUM') {
 			if (!Array.isArray(obj)) {
 				return '{{ INVALID TEMPLATE TAG - operator ENUM is only applicable on an array }}';
