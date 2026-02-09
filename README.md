@@ -22,19 +22,76 @@ The plugin allows you to set a template note that gets added to the end of any n
 The plugin also offers simple template tags, for example `{{ title }}`, which will be replaced by the title of the media being imported.  
 Note that template tags are surrounded by two curly braces and spaces. The spaces inside the curly braces are important!
 
-For arrays, there are two special ways of displaying them:
+**Array Operators**
 
-- using `{{ LIST:variable_name }}` will result in:
+For arrays, there are several operators available for different formatting needs:
+
+Body Text Operators (no quotes)
+
+- `{{ LIST:variable_name }}` - Unlinked list:
+
     ```
       - element 1
       - element 2
       - element 3
-      - ...
     ```
-- using `{{ ENUM:variable_name }}` will result in:
+
+- `{{ LIST:[[variable_name]] }}` - Wikilinked list:
+
     ```
-      element 1, element 2, element 3, ...
+      - [[element 1]]
+      - [[element 2]]
+      - [[element 3]]
     ```
+
+- `{{ ENUM:variable_name }}` - Unlinked comma-separated:
+
+    ```
+    element 1, element 2, element 3
+    ```
+
+- `{{ ENUM:[[variable_name]] }}` - Wikilinked comma-separated:
+    ```
+    [[element 1]], [[element 2]], [[element 3]]
+    ```
+
+YAML Frontmatter Operators (with quotes)
+
+- `{{ LISTYAML:variable_name }}` - Unlinked YAML list:
+
+    ```yaml
+    variable_name:
+        - element 1
+        - element 2
+        - element 3
+    ```
+
+- `{{ LISTYAML:[[variable_name]] }}` - Wikilinked YAML list (recognized by Obsidian):
+
+    ```yaml
+    variable_name:
+        - '[[element 1]]'
+        - '[[element 2]]'
+        - '[[element 3]]'
+    ```
+
+- `{{ ENUMYAML:variable_name }}` - Comma-separated for YAML (no wikilink support):
+    ```yaml
+    variable_name: element 1, element 2, element 3
+    ```
+
+Single Element Operators
+
+- `{{ FIRST:variable_name }}` - Returns the first element of an array
+- `{{ FIRST:[[variable_name]] }}` - Returns the first element as a wikilink: `[[element 1]]`
+- `{{ LAST:variable_name }}` - Returns the last element of an array
+- `{{ LAST:[[variable_name]] }}` - Returns the last element as a wikilink: `[[element 3]]`
+
+**Wikilink Support**
+
+Wrap the variable name in double brackets `[[variable_name]]` to create wikilinks for array elements. This works with `LIST`, `LISTYAML`, `ENUM`, `FIRST`, and `LAST` operators. Note that `ENUMYAML` does not support wikilinks - the `[[]]` syntax will be ignored.
+
+**Important:** Use `YAML` variants (`LISTYAML`, `ENUMYAML`) in frontmatter and regular variants (`LIST`, `ENUM`) in the note body.
 
 Available variables that can be used in template tags are any front-matter properties.
 
