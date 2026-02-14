@@ -532,7 +532,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		apiKeyGroup.addSetting(
 			setting =>
 				void setting
-					.setName('OMDb API key')
+					.setName('OMDb API Key')
 					.setDesc('API key for "www.omdbapi.com".')
 					// .addComponent((el) => {
 					// 	let component = new SecretComponent(this.app, el);
@@ -559,7 +559,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					.setName('TMDB API Token')
 					.setDesc('API Read Access Token for "https://www.themoviedb.org".')
 					.addText(cb => {
-						cb.setPlaceholder('API key')
+						cb.setPlaceholder('API token')
 							.setValue(this.plugin.settings.TMDBKey)
 							.onChange(data => {
 								this.plugin.settings.TMDBKey = data;
@@ -570,7 +570,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		apiKeyGroup.addSetting(
 			setting =>
 				void setting
-					.setName('Moby Games key')
+					.setName('Moby Games Key')
 					.setDesc('API key for "www.mobygames.com".')
 					.addText(cb => {
 						cb.setPlaceholder('API key')
