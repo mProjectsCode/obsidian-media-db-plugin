@@ -35,9 +35,9 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 	tag = tag.trim();
 
 	const parts = tag.split(':');
+
 	if (parts.length === 1) {
 		const path = parts[0].split('.');
-
 		const obj = traverseMetaData(path, mediaTypeModel);
 
 		if (obj === undefined) {
@@ -48,9 +48,18 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 		return obj?.toString() ?? 'null';
 	} else if (parts.length === 2) {
 		const operator = parts[0];
+		let pathString = parts[1];
 
-		const path = parts[1].split('.');
+		// Check if the path is wrapped in [[]] for wikilinks
+		const wikilinkMatch = pathString.match(/^\[\[(.+?)\]\]$/);
+		const useWikilinks = !!wikilinkMatch;
 
+		// Extract the actual path (remove [[ ]] if present)
+		if (wikilinkMatch) {
+			pathString = wikilinkMatch[1];
+		}
+
+		const path = pathString.split('.');
 		const obj = traverseMetaData(path, mediaTypeModel);
 
 		if (obj === undefined) {
@@ -62,11 +71,39 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 				return '{{ INVALID TEMPLATE TAG - operator LIST is only applicable on an array }}';
 			}
 
-			return obj.map((e: unknown) => `- ${e}`).join('\n');
+			if (useWikilinks) {
+				// LIST with wikilinks: no quotes for body text
+				return obj.map((e: unknown) => `\n  - [[${e}]]`).join('');
+			} else {
+				return obj.map((e: unknown) => `\n  - ${e}`).join('');
+			}
+		} else if (operator === 'LISTYAML') {
+			if (!Array.isArray(obj)) {
+				return '{{ INVALID TEMPLATE TAG - operator LISTYAML is only applicable on an array }}';
+			}
+
+			if (useWikilinks) {
+				// LISTYAML with wikilinks: quoted for frontmatter
+				return obj.map((e: unknown) => `\n  - "[[${e}]]"`).join('');
+			} else {
+				return obj.map((e: unknown) => `\n  - ${e}`).join('');
+			}
 		} else if (operator === 'ENUM') {
 			if (!Array.isArray(obj)) {
 				return '{{ INVALID TEMPLATE TAG - operator ENUM is only applicable on an array }}';
 			}
+
+			if (useWikilinks) {
+				// ENUM with wikilinks: no quotes for body text
+				return obj.map((e: unknown) => `[[${e}]]`).join(', ');
+			} else {
+				return obj.join(', ');
+			}
+		} else if (operator === 'ENUMYAML') {
+			if (!Array.isArray(obj)) {
+				return '{{ INVALID TEMPLATE TAG - operator ENUMYAML is only applicable on an array }}';
+			}
+			// ENUMYAML - always comma-separated, no wikilinks support and [[]] syntax is simply ignored since they are not valid in comma-separated YAML values
 			return obj.join(', ');
 		} else if (operator === 'FIRST') {
 			if (!Array.isArray(obj)) {
@@ -74,14 +111,26 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 			}
 
 			const first = obj[0] as unknown;
-			return first?.toString() ?? 'null';
+			const value = first?.toString() ?? 'null';
+
+			if (useWikilinks && value !== 'null') {
+				return `[[${value}]]`;
+			} else {
+				return value;
+			}
 		} else if (operator === 'LAST') {
 			if (!Array.isArray(obj)) {
 				return '{{ INVALID TEMPLATE TAG - operator LAST is only applicable on an array }}';
 			}
 
 			const last = obj[obj.length - 1] as unknown;
-			return last?.toString() ?? 'null';
+			const value = last?.toString() ?? 'null';
+
+			if (useWikilinks && value !== 'null') {
+				return `[[${value}]]`;
+			} else {
+				return value;
+			}
 		}
 
 		return `{{ INVALID TEMPLATE TAG - unknown operator ${operator} }}`;
