@@ -41,9 +41,7 @@ export class MediaDbSeasonSelectModal extends SelectModal<SeasonSelectModalEleme
 
 		if (season.poster_path) {
 			const img = document.createElement('img');
-			img.src = season.poster_path.startsWith('http')
-				? season.poster_path
-				: `https://image.tmdb.org/t/p/w780${season.poster_path}`;
+			img.src = season.poster_path.startsWith('http') ? season.poster_path : `https://image.tmdb.org/t/p/w780${season.poster_path}`;
 			img.loading = 'lazy';
 			img.alt = season.name;
 			img.style.width = '100%';
