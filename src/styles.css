@@ -48,9 +48,9 @@ small.media-db-plugin-list-text {
 }
 
 .media-db-plugin-select-thumb {
-	width: 56px;
-	height: 84px;
-	flex: 0 0 56px;
+	width: 48px;
+	height: 72px;
+	flex: 0 0 48px;
 	background: var(--background-modifier-hover);
 	display: flex;
 	align-items: center;
