@@ -94,13 +94,28 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		if (item.image && item.image !== 'NSFW') {
 			if (String(item.image).includes('null')) {
 				console.debug('MDB | image URL invalid (contains null), skipping', item.image);
+				thumb.empty();
+				const placeholderSpan = thumb.createEl('span', { text: '📷' });
+				placeholderSpan.style.fontSize = '24px';
+				placeholderSpan.style.display = 'flex';
+				placeholderSpan.style.alignItems = 'center';
+				placeholderSpan.style.justifyContent = 'center';
+				placeholderSpan.style.width = '100%';
+				placeholderSpan.style.height = '100%';
 			} else {
 				setImage(item.image);
 			}
 		} else if (item.image === 'NSFW') {
 			thumb.createEl('span', { text: 'NSFW' });
 		} else {
-			thumb.createEl('span', { text: '' });
+			thumb.empty();
+			const placeholderSpan = thumb.createEl('span', { text: '📷' });
+			placeholderSpan.style.fontSize = '24px';
+			placeholderSpan.style.display = 'flex';
+			placeholderSpan.style.alignItems = 'center';
+			placeholderSpan.style.justifyContent = 'center';
+			placeholderSpan.style.width = '100%';
+			placeholderSpan.style.height = '100%';
 			// Auto-fetch detailed info with staggered delays to avoid rate limits + fetch detailed info if no image (most API's except for MusicBrainz) OR no year (like SteamAPI)
 			const needsFetch = !item.image || !item.year;
 			if (needsFetch) {
