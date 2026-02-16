@@ -43,13 +43,22 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	renderElement(item: MediaTypeModel, el: HTMLElement): void {
 		el.addClass('media-db-plugin-select-element-flex');
 		el.style.display = 'flex';
-		el.style.flexDirection = 'row';
 		el.style.gap = '8px';
 		el.style.alignItems = 'flex-start';
 
 		const thumb = el.createDiv({ cls: 'media-db-plugin-select-thumb' });
+		thumb.style.width = '48px';
+		thumb.style.height = '72px';
+		thumb.style.flex = '0 0 48px';
+		thumb.style.overflow = 'hidden';
+		thumb.style.background = 'var(--background-modifier-hover)';
+		thumb.style.borderRadius = '4px';
+		thumb.style.display = 'flex';
+		thumb.style.alignItems = 'center';
+		thumb.style.justifyContent = 'center';
 
 		let imgEl: HTMLImageElement | undefined;
+
 		const setImage = (url: string) => {
 			if (!imgEl) {
 				imgEl = document.createElement('img');
@@ -57,30 +66,27 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 				imgEl.alt = item.title;
 				thumb.empty();
 				thumb.appendChild(imgEl);
-				thumb.style.width = '48px';
-				thumb.style.height = '72px';
-				thumb.style.flex = '0 0 48px';
-				thumb.style.overflow = 'hidden';
+
 				imgEl.style.width = '100%';
 				imgEl.style.height = '100%';
 				imgEl.style.objectFit = 'cover';
+
 				// Show photograph emoticon if the link to the image fails to load
 				imgEl.onerror = () => {
 					thumb.empty();
 					const placeholderSpan = thumb.createEl('span', { text: '📷' });
 					placeholderSpan.style.fontSize = '24px';
-					placeholderSpan.style.display = 'flex';
-					placeholderSpan.style.alignItems = 'center';
-					placeholderSpan.style.justifyContent = 'center';
-					placeholderSpan.style.width = '100%';
-					placeholderSpan.style.height = '100%';
 				};
 			}
+
 			imgEl.src = url;
 		};
 
 		// Create content early so updateSummary can reference its elements
 		const content = el.createDiv({ cls: 'media-db-plugin-select-content' });
+		content.style.flex = '1';
+		content.style.minWidth = '0';
+
 		const titleEl = content.createEl('div', { text: this.plugin.mediaTypeManager.getFileName(item), cls: 'media-db-plugin-select-title' });
 		const summaryEl = content.createEl('small', { text: `${item.getSummary()}\n` });
 		content.createEl('small', { text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}` });
@@ -97,11 +103,6 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 				thumb.empty();
 				const placeholderSpan = thumb.createEl('span', { text: '📷' });
 				placeholderSpan.style.fontSize = '24px';
-				placeholderSpan.style.display = 'flex';
-				placeholderSpan.style.alignItems = 'center';
-				placeholderSpan.style.justifyContent = 'center';
-				placeholderSpan.style.width = '100%';
-				placeholderSpan.style.height = '100%';
 			} else {
 				setImage(item.image);
 			}
@@ -111,16 +112,13 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 			thumb.empty();
 			const placeholderSpan = thumb.createEl('span', { text: '📷' });
 			placeholderSpan.style.fontSize = '24px';
-			placeholderSpan.style.display = 'flex';
-			placeholderSpan.style.alignItems = 'center';
-			placeholderSpan.style.justifyContent = 'center';
-			placeholderSpan.style.width = '100%';
-			placeholderSpan.style.height = '100%';
+
 			// Auto-fetch detailed info with staggered delays to avoid rate limits + fetch detailed info if no image (most API's except for MusicBrainz) OR no year (like SteamAPI)
 			const needsFetch = !item.image || !item.year;
 			if (needsFetch) {
 				const delayMs = (parseInt(el.id.split('-').pop() ?? '0') ?? 0) * 200;
 				console.debug('MDB | will auto-fetch detail for', item.dataSource, item.id, 'in', delayMs, 'ms');
+
 				setTimeout(async () => {
 					if (item.image && item.year) return;
 					console.debug('MDB | auto-fetching detail for', item.dataSource, item.id);
@@ -128,10 +126,12 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 						console.debug('MDB | fetching detailed info for', item.dataSource, item.id);
 						const detailed = await this.plugin.apiManager.queryDetailedInfo(item);
 						console.debug('MDB | detailed fetch result', detailed?.dataSource, detailed?.id, detailed?.image, detailed?.year);
+
 						if (detailed?.image && !item.image) {
 							item.image = detailed.image;
 							setImage(detailed.image);
 						}
+
 						if (!item.year && detailed?.year) {
 							item.year = detailed.year;
 							updateSummary();
