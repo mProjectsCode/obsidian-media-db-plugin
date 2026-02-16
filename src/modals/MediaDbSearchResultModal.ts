@@ -39,6 +39,12 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		this.skipCallback = skipCallback;
 	}
 
+	// Different rate limit delay based on API source, MAL APIs = max 3 per second so 400ms between requests to be safe
+	private getDelayForApi(dataSource: string): number {
+		const isMalApi = dataSource === 'MALAPI' || dataSource === 'MALAPIManga';
+		return isMalApi ? 400 : 200;
+	}
+
 	// Renders each suggestion item.
 	renderElement(item: MediaTypeModel, el: HTMLElement): void {
 		el.addClass('media-db-plugin-select-element-flex');
@@ -116,8 +122,9 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 			// Auto-fetch detailed info with staggered delays to avoid rate limits + fetch detailed info if no image (most API's except for MusicBrainz) OR no year (like SteamAPI)
 			const needsFetch = !item.image || !item.year;
 			if (needsFetch) {
-				const delayMs = (parseInt(el.id.split('-').pop() ?? '0') ?? 0) * 200;
-				console.debug('MDB | will auto-fetch detail for', item.dataSource, item.id, 'in', delayMs, 'ms');
+				const apiDelay = this.getDelayForApi(item.dataSource);
+				const delayMs = (parseInt(el.id.split('-').pop() ?? '0') ?? 0) * apiDelay;
+				console.debug('MDB | will auto-fetch detail for', item.dataSource, item.id, 'in', delayMs, 'ms', `(${apiDelay}ms per request)`);
 
 				setTimeout(async () => {
 					if (item.image && item.year) return;
