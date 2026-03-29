@@ -470,7 +470,7 @@ interface MediaDbSettingsTabNavEntry {
 	panel: HTMLElement;
 }
 
-/** Stable order for property-mapping UI and persisted settings (matches media type settings tabs). */
+/** Stable order for property-mapping UI and persisted settings (`MEDIA_TYPES`; settings tabs move Board game last). */
 export function propertyMappingModelsInDisplayOrder(models: PropertyMappingModelData[]): PropertyMappingModelData[] {
 	const order = new Map<MediaType, number>(MEDIA_TYPES.map((t, i) => [t, i]));
 	return [...models].sort((a, b) => (order.get(a.type) ?? 999) - (order.get(b.type) ?? 999));
@@ -510,6 +510,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 	private static readonly BOOK_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Book, MediaType.ComicManga];
 
 	private static readonly LEGACY_BOOK_TAB_IDS: ReadonlySet<string> = new Set(['media-comicManga']);
+
+	private static readonly VIDEO_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Movie, MediaType.Series, MediaType.Season];
+
+	private static readonly LEGACY_VIDEO_TAB_IDS: ReadonlySet<string> = new Set(['media-series', 'media-season']);
 
 	private renderMediaTypeSection(
 		panel: HTMLElement,
@@ -690,6 +694,24 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		});
 	}
 
+	private renderVideoSettingsTab(panel: HTMLElement, mediaTypeSettings: MediaTypeMappedSettings[], mediaTypeApiMap: Map<MediaType, string[]>): void {
+		const byType = (mt: MediaType): MediaTypeMappedSettings => mediaTypeSettings.find(s => s.mediaType === mt)!;
+
+		panel.createDiv({ cls: 'media-db-plugin-spacer' });
+
+		this.renderMediaTypeSection(panel, byType(MediaType.Movie), mediaTypeApiMap, {
+			sectionHeading: 'Movie',
+		});
+		panel.createDiv({ cls: 'media-db-plugin-spacer' });
+		this.renderMediaTypeSection(panel, byType(MediaType.Series), mediaTypeApiMap, {
+			sectionHeading: 'Series',
+		});
+		panel.createDiv({ cls: 'media-db-plugin-spacer' });
+		this.renderMediaTypeSection(panel, byType(MediaType.Season), mediaTypeApiMap, {
+			sectionHeading: 'Season',
+		});
+	}
+
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
@@ -720,7 +742,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			nav.addEventListener('click', () => selectTab(id));
 		};
 
-		const mediaTypeSettings = MEDIA_TYPES.map(mt => new MediaTypeMappedSettings(mt));
+		const mediaTypeSettings = [
+			...MEDIA_TYPES.filter(mt => mt !== MediaType.BoardGame).map(mt => new MediaTypeMappedSettings(mt)),
+			new MediaTypeMappedSettings(MediaType.BoardGame),
+		];
 
 		const mediaTypeApiMap = new Map<MediaType, string[]>();
 		for (const api of this.plugin.apiManager.apis) {
@@ -890,6 +915,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		let musicTabAdded = false;
 		let bookTabAdded = false;
+		let videoTabAdded = false;
 		for (const mediaTypeSetting of mediaTypeSettings) {
 			const mediaType = mediaTypeSetting.mediaType;
 
@@ -913,6 +939,16 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				continue;
 			}
 
+			if (MediaDbSettingTab.VIDEO_SETTINGS_MEDIA_TYPES.includes(mediaType)) {
+				if (!videoTabAdded) {
+					videoTabAdded = true;
+					addTab('media-movie', 'Movie', mediaTypeTabIcon(MediaType.Movie), panel => {
+						this.renderVideoSettingsTab(panel, mediaTypeSettings, mediaTypeApiMap);
+					});
+				}
+				continue;
+			}
+
 			const mediaTypeName = unCamelCase(mediaTypeSetting.mediaType);
 			addTab(`media-${mediaType}`, mediaTypeName, mediaTypeTabIcon(mediaType), panel => {
 				this.renderMediaTypeSection(panel, mediaTypeSetting, mediaTypeApiMap);
@@ -926,6 +962,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		}
 		if (MediaDbSettingTab.LEGACY_BOOK_TAB_IDS.has(initialId) && validIds.has('media-book')) {
 			initialId = 'media-book';
+		}
+		if (MediaDbSettingTab.LEGACY_VIDEO_TAB_IDS.has(initialId) && validIds.has('media-movie')) {
+			initialId = 'media-movie';
 		}
 		if (!validIds.has(initialId)) {
 			initialId = 'general';
