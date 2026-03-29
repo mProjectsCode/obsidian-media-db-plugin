@@ -424,7 +424,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	mangaFileNameTemplate: '{{ title }} ({{ year }})',
 	gameFileNameTemplate: '{{ title }} ({{ year }})',
 	wikiFileNameTemplate: '{{ title }}',
-	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
+	musicReleaseFileNameTemplate: '{{ title }} ({{ FIRST:artists }} - {{ year }})',
 	bandFileNameTemplate: '{{ title }}',
 	songFileNameTemplate: '{{ trackNumber }}. {{ title }} ({{ albumTitle }})',
 	boardgameFileNameTemplate: '{{ title }} ({{ year }})',

@@ -72,6 +72,7 @@ export class GeniusClient {
 		const url = `https://api.genius.com/search?q=${encodeURIComponent(query)}`;
 		const res = await requestUrl({
 			url,
+			throw: false,
 			headers: {
 				'User-Agent': this.userAgent,
 				Authorization: `Bearer ${this.accessToken.trim()}`,
@@ -79,7 +80,11 @@ export class GeniusClient {
 		});
 
 		if (res.status !== 200) {
-			console.warn(`MDB | Genius search returned ${res.status}`);
+			if (res.status === 401) {
+				console.warn('MDB | Genius search returned 401 — access token missing, invalid, or expired. Update it in Media DB settings or clear it to skip lyrics.');
+			} else {
+				console.warn(`MDB | Genius search returned ${res.status}`);
+			}
 			return null;
 		}
 
@@ -95,6 +100,7 @@ export class GeniusClient {
 	async fetchLyricsFromSongPage(songPageUrl: string): Promise<string> {
 		const res = await requestUrl({
 			url: songPageUrl,
+			throw: false,
 			headers: {
 				'User-Agent': this.userAgent,
 			},

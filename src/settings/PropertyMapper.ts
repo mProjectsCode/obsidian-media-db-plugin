@@ -1,5 +1,9 @@
 import type MediaDbPlugin from '../main';
+import { BandModel } from '../models/BandModel';
+import { MusicReleaseModel } from '../models/MusicReleaseModel';
+import { MediaType } from '../utils/MediaType';
 import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from '../utils/noteTypeSettings';
+import { coerceYear } from '../utils/Utils';
 import { PropertyMappingOption } from './PropertyMapping';
 
 export class PropertyMapper {
@@ -41,11 +45,33 @@ export class PropertyMapper {
 				if (propertyMapping.property === key) {
 					let finalValue = value;
 					if (propertyMapping.wikilink) {
+						const useBandFileNameForArtists =
+							propertyMapping.property === 'artists' &&
+							(internalMediaType === MediaType.Song || internalMediaType === MediaType.MusicRelease);
+						const useMusicReleaseFileNameForAlbumTitle =
+							propertyMapping.property === 'albumTitle' && internalMediaType === MediaType.Song;
+
 						if (typeof value === 'string') {
-							finalValue = `[[${value}]]`;
+							if (useBandFileNameForArtists) {
+								finalValue = this.bandArtistWikilink(value);
+							} else if (useMusicReleaseFileNameForAlbumTitle) {
+								finalValue = this.songAlbumTitleWikilink(value, obj);
+							} else {
+								finalValue = `[[${value}]]`;
+							}
 						} else if (Array.isArray(value)) {
-							// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-							finalValue = value.map(v => (typeof v === 'string' ? `[[${v}]]` : v));
+							finalValue = value.map((v: unknown) => {
+								if (typeof v !== 'string') {
+									return v;
+								}
+								if (useBandFileNameForArtists) {
+									return this.bandArtistWikilink(v);
+								}
+								if (useMusicReleaseFileNameForAlbumTitle) {
+									return this.songAlbumTitleWikilink(v, obj);
+								}
+								return `[[${v}]]`;
+							});
 						}
 					}
 					if (propertyMapping.mapping === PropertyMappingOption.Map) {
@@ -90,7 +116,10 @@ export class PropertyMapper {
 				console.debug(`MDB | updated metadata type`, typeVal);
 			}
 			const typeStr = String(typeVal).trim();
-			if (typeStr === model.type || typeStr === noteTypeValueForMedia(this.plugin.settings, model.type)) {
+			if (
+				typeStr === (model.type as string) ||
+				typeStr === noteTypeValueForMedia(this.plugin.settings, model.type)
+			) {
 				matchedModel = model;
 				break;
 			}
@@ -122,5 +151,69 @@ export class PropertyMapper {
 		}
 
 		return originalObj;
+	}
+
+	/**
+	 * Wikilink for an artist name using the Band file name template as the link target and the raw artist title as the display alias.
+	 */
+	private bandArtistWikilink(artistTitle: string): string {
+		const title = artistTitle.trim();
+		const bandModel = new BandModel({
+			type: 'band',
+			title,
+			englishTitle: title,
+			year: 0,
+			beginYear: '',
+			releaseDate: '',
+			dataSource: '',
+			url: '',
+			id: '',
+			country: '',
+			disambiguation: '',
+			genres: [],
+			image: '',
+			officialWebsite: '',
+			subType: 'band',
+			userData: { personalRating: 0 },
+		});
+		const linkTarget = this.plugin.mediaTypeManager.getFileName(bandModel);
+		if (linkTarget === title) {
+			return `[[${linkTarget}]]`;
+		}
+		return `[[${linkTarget}|${title}]]`;
+	}
+
+	/**
+	 * Wikilink for a song's album title using the Music Release file name template; fills artists/year from the song metadata when present.
+	 */
+	private songAlbumTitleWikilink(albumTitle: string, songMeta: Record<string, unknown>): string {
+		const title = albumTitle.trim();
+		const artistsRaw = songMeta.artists;
+		const artists = Array.isArray(artistsRaw)
+			? artistsRaw.filter((a): a is string => typeof a === 'string')
+			: [];
+		const year = coerceYear(songMeta.year);
+		const releaseModel = new MusicReleaseModel({
+			type: 'musicRelease',
+			title,
+			englishTitle: title,
+			year,
+			releaseDate: '',
+			dataSource: '',
+			url: '',
+			id: '',
+			image: '',
+			artists,
+			genres: [],
+			subType: 'album',
+			language: '',
+			rating: 0,
+			userData: { personalRating: 0 },
+		});
+		const linkTarget = this.plugin.mediaTypeManager.getFileName(releaseModel);
+		if (linkTarget === title) {
+			return `[[${linkTarget}]]`;
+		}
+		return `[[${linkTarget}|${title}]]`;
 	}
 }

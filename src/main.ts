@@ -552,7 +552,6 @@ export default class MediaDbPlugin extends Plugin {
 				const bandSeg = this.safeFileTreeSegment(band.title);
 				const treeRootPath = normalizePath(`${bandBaseFolder.path}/${bandSeg}`);
 				albumNotesFolder = await this.ensureVaultFolder(treeRootPath);
-				bandNoteFolder = albumNotesFolder;
 			}
 
 			await this.createStandardMediaDbNoteFromModel(band, { ...options, folder: bandNoteFolder });
