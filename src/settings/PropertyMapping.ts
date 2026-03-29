@@ -1,3 +1,4 @@
+import { musicBrainzRegisteredApiName } from '../api/musicBrainzConstants';
 import type { MediaType } from '../utils/MediaType';
 import { containsOnlyLettersAndUnderscores, PropertyMappingNameConflictError, PropertyMappingValidationError } from '../utils/Utils';
 
@@ -23,7 +24,7 @@ export enum PropertyMappingOption {
 
 export const propertyMappingOptions = [PropertyMappingOption.Default, PropertyMappingOption.Map, PropertyMappingOption.Remove];
 
-const METADATA_KEYS_REQUIRED_IN_NOTE = ['type', 'id', 'dataSource'] as const;
+const METADATA_KEYS_REQUIRED_IN_NOTE = ['type', 'id'] as const;
 
 export class PropertyMappingModel {
 	type: MediaType;
@@ -77,6 +78,16 @@ export class PropertyMappingModel {
 					err: new PropertyMappingNameConflictError(`Remapped property (${property}) may not share it's new name with an existing property.`),
 				};
 			}
+		}
+
+		const dataSourceRule = this.properties.find(p => p.property === 'dataSource');
+		if (dataSourceRule?.mapping === PropertyMappingOption.Remove && !musicBrainzRegisteredApiName(this.type)) {
+			return {
+				res: false,
+				err: new PropertyMappingValidationError(
+					`Removing dataSource is only allowed for band, music release, and song (MusicBrainz). For "${this.type}" notes, dataSource is required to choose an API.`,
+				),
+			};
 		}
 
 		return {
@@ -203,7 +214,7 @@ export class PropertyMapping {
 			return {
 				res: false,
 				err: new PropertyMappingValidationError(
-					`Error in property mapping "${this.toString()}": type, id, and dataSource must appear in the note (you can remap them, but not remove them).`,
+					`Error in property mapping "${this.toString()}": type and id must appear in the note (you can remap them, but not remove them).`,
 				),
 			};
 		}

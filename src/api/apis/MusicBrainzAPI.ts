@@ -4,6 +4,7 @@ import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MusicReleaseModel } from '../../models/MusicReleaseModel';
 import { MediaType } from '../../utils/MediaType';
 import { contactEmail, getLanguageName, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
 import { APIModel } from '../APIModel';
 
 // sadly no open api schema available
@@ -135,7 +136,7 @@ export class MusicBrainzAPI extends APIModel {
 					englishTitle: result.title,
 					year: new Date(result['first-release-date']).getFullYear().toString(),
 					releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
-					dataSource: this.apiName,
+					dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
 					url: 'https://musicbrainz.org/release-group/' + result.id,
 					id: result.id,
 					image: 'https://coverartarchive.org/release-group/' + result.id + '/front-500.jpg',
@@ -207,7 +208,7 @@ export class MusicBrainzAPI extends APIModel {
 			englishTitle: result.title,
 			year: new Date(result['first-release-date']).getFullYear().toString(),
 			releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
-			dataSource: this.apiName,
+			dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
 			url: 'https://musicbrainz.org/release-group/' + result.id,
 			id: result.id,
 			image: 'https://coverartarchive.org/release-group/' + result.id + '/front-500.jpg',

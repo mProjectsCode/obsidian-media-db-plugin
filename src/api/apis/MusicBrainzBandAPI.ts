@@ -4,6 +4,7 @@ import { BandModel } from '../../models/BandModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
 import { APIModel } from '../APIModel';
 
 interface ArtistTag {
@@ -115,7 +116,7 @@ export class MusicBrainzBandAPI extends APIModel {
 					year: begin ? (begin.split('-')[0] ?? '') : '',
 					beginYear: begin ? (begin.split('-')[0] ?? '') : '',
 					releaseDate: '',
-					dataSource: this.apiName,
+					dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
 					url: 'https://musicbrainz.org/artist/' + artist.id,
 					id: artist.id,
 					country: artist.country ?? '',
@@ -163,7 +164,7 @@ export class MusicBrainzBandAPI extends APIModel {
 			year: beginYear,
 			beginYear,
 			releaseDate: begin ? (this.plugin.dateFormatter.format(begin, this.apiDateFormat) ?? 'unknown') : '',
-			dataSource: this.apiName,
+			dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
 			url: 'https://musicbrainz.org/artist/' + artist.id,
 			id: artist.id,
 			country: artist.country ?? '',

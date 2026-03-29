@@ -3,6 +3,7 @@ import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFolder } from 
 import { requestUrl, normalizePath } from 'obsidian';
 import { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
+import { MUSICBRAINZ_NOTE_DATA_SOURCE, musicBrainzRegisteredApiName } from './api/musicBrainzConstants';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { GiantBombAPI } from './api/apis/GiantBombAPI';
@@ -605,7 +606,7 @@ export default class MediaDbPlugin extends Plugin {
 						englishTitle: track.title,
 						year: release.year,
 						releaseDate: release.releaseDate,
-						dataSource: genius.isConfigured() ? 'MusicBrainz / Genius' : 'MusicBrainz',
+						dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
 						url: geniusUrl || release.url,
 						id: `${release.id}-t${track.number}`,
 						image: release.image,
@@ -833,7 +834,7 @@ export default class MediaDbPlugin extends Plugin {
 
 	/**
 	 * Update the active note by querying the API again.
-	 * Tries to read the type, id and dataSource of the active note. If successful it will query the api, delete the old note and create a new one.
+	 * Tries to read the type and id of the active note (and dataSource when required). If successful it will query the api, delete the old note and create a new one.
 	 */
 	async updateActiveNote(onlyMetadata: boolean = false): Promise<void> {
 		const activeFile = this.app.workspace.getActiveFile() ?? undefined;
@@ -846,17 +847,33 @@ export default class MediaDbPlugin extends Plugin {
 
 		console.debug(`MDB | read metadata`, metadata);
 
-		if (!metadata?.type || !metadata?.dataSource || !metadata?.id) {
+		if (!metadata?.type || !metadata?.id) {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
 		}
 
-		const validOldMetadata: MediaTypeModelObj = metadata as unknown as MediaTypeModelObj;
+		const mediaType = metadata.type as MediaType;
+		let dataSource = typeof metadata.dataSource === 'string' ? metadata.dataSource.trim() : '';
+		if (
+			!dataSource &&
+			musicBrainzRegisteredApiName(mediaType)
+		) {
+			dataSource = MUSICBRAINZ_NOTE_DATA_SOURCE;
+		}
+		if (!dataSource) {
+			throw new Error('MDB | active note is missing dataSource (required for this media type)');
+		}
+
+		const validOldMetadata: MediaTypeModelObj = { ...metadata, dataSource } as unknown as MediaTypeModelObj;
 		console.debug(`MDB | validOldMetadata`, validOldMetadata);
 
 		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(validOldMetadata, validOldMetadata.type);
 		console.debug(`MDB | oldMediaTypeModel created`, oldMediaTypeModel);
 
-		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(validOldMetadata.id, validOldMetadata.dataSource);
+		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(
+			validOldMetadata.id,
+			validOldMetadata.dataSource,
+			validOldMetadata.type as MediaType,
+		);
 		if (!newMediaTypeModel) {
 			return;
 		}
