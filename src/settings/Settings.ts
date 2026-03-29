@@ -1,5 +1,5 @@
-import type { App } from 'obsidian';
-import { Notice, PluginSettingTab, SettingGroup } from 'obsidian';
+import type { App, IconName } from 'obsidian';
+import { Notice, Platform, PluginSettingTab, SettingGroup, setIcon } from 'obsidian';
 import { render } from 'solid-js/web';
 import { MediaType } from 'src/utils/MediaType';
 import type MediaDbPlugin from '../main';
@@ -11,6 +11,29 @@ import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './
 import PropertyMappingModelsComponent from './PropertyMappingModelsComponent';
 import { FileSuggest } from './suggesters/FileSuggest';
 import { FolderSuggest } from './suggesters/FolderSuggest';
+
+function mediaTypeTabIcon(mediaType: MediaType): IconName {
+	switch (mediaType) {
+		case MediaType.Movie:
+			return 'film';
+		case MediaType.Series:
+			return 'tv';
+		case MediaType.Season:
+			return 'calendar-range';
+		case MediaType.ComicManga:
+			return 'book-open';
+		case MediaType.Game:
+			return 'gamepad-2';
+		case MediaType.Wiki:
+			return 'library-big';
+		case MediaType.MusicRelease:
+			return 'disc-3';
+		case MediaType.BoardGame:
+			return 'dice-3';
+		case MediaType.Book:
+			return 'book-marked';
+	}
+}
 
 // MARK: Settings
 export interface MediaDbPluginSettings {
@@ -385,9 +408,16 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 	return defaultSettings;
 }
 
+interface MediaDbSettingsTabNavEntry {
+	id: string;
+	nav: HTMLElement;
+	panel: HTMLElement;
+}
+
 // MARK: Settings Tab
 export class MediaDbSettingTab extends PluginSettingTab {
 	plugin: MediaDbPlugin;
+	private activeSettingsTabId: string | null = null;
 
 	constructor(app: App, plugin: MediaDbPlugin) {
 		super(app, plugin);
@@ -398,12 +428,48 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		const headerNav = containerEl.createEl('nav', { cls: 'media-db-setting-header' });
+		const tabGroup = headerNav.createDiv({ cls: 'media-db-setting-tab-group' });
+		const settingsContentEl = containerEl.createDiv({ cls: 'media-db-setting-content' });
+
+		const tabEntries: MediaDbSettingsTabNavEntry[] = [];
+
+		const selectTab = (id: string): void => {
+			for (const { id: tid, nav, panel } of tabEntries) {
+				const on = tid === id;
+				panel.toggleClass('media-db-tab-settings--hidden', !on);
+				nav.toggleClass('media-db-navigation-item-selected', on);
+			}
+			this.activeSettingsTabId = id;
+		};
+
+		const addTab = (id: string, title: string, icon: IconName, render: (panel: HTMLElement) => void): void => {
+			const nav = tabGroup.createDiv({ cls: 'media-db-navigation-item' });
+			nav.addClass(Platform.isMobile ? 'media-db-mobile' : 'media-db-desktop');
+			setIcon(nav.createSpan({ cls: 'media-db-navigation-item-icon' }), icon);
+			nav.createSpan().setText(title);
+			const panel = settingsContentEl.createDiv({ cls: 'media-db-tab-settings media-db-tab-settings--hidden' });
+			render(panel);
+			tabEntries.push({ id, nav, panel });
+			nav.addEventListener('click', () => selectTab(id));
+		};
+
 		const mediaTypeSettings = MEDIA_TYPES.map(mt => new MediaTypeMappedSettings(mt));
 
-		// MARK: General settings
-		const generalGroup = new SettingGroup(containerEl);
+		const mediaTypeApiMap = new Map<MediaType, string[]>();
+		for (const api of this.plugin.apiManager.apis) {
+			for (const mediaType of api.types) {
+				if (!mediaTypeApiMap.has(mediaType)) {
+					mediaTypeApiMap.set(mediaType, []);
+				}
+				mediaTypeApiMap.get(mediaType)!.push(api.apiName);
+			}
+		}
 
-		generalGroup.addSetting(
+		addTab('general', 'General', 'sliders-horizontal', panel => {
+			const generalGroup = new SettingGroup(panel);
+
+			generalGroup.addSetting(
 			setting =>
 				void setting
 					.setName('SFW filter')
@@ -534,16 +600,16 @@ export class MediaDbSettingTab extends PluginSettingTab {
 							});
 					}),
 		);
+		});
 
-		// MARK: API keys
-		const apiKeyGroup = new SettingGroup(containerEl);
-		apiKeyGroup.setHeading('API Keys');
+		addTab('api-keys', 'API keys', 'key', panel => {
+			const apiKeyGroup = new SettingGroup(panel);
 
-		apiKeyGroup.addSetting(
-			setting =>
-				void setting
-					.setName('OMDb API key')
-					.setDesc('API key for "www.omdbapi.com".')
+			apiKeyGroup.addSetting(
+				setting =>
+					void setting
+						.setName('OMDb API key')
+						.setDesc('API key for "www.omdbapi.com".')
 					// .addComponent((el) => {
 					// 	let component = new SecretComponent(this.app, el);
 
@@ -675,31 +741,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 							});
 					}),
 		);
-
-		// MARK: Media type settings
-
-		// Create a map to store APIs for each media type
-		const mediaTypeApiMap = new Map<MediaType, string[]>();
-
-		// Populate the map with APIs for each media type dynamically
-		for (const api of this.plugin.apiManager.apis) {
-			for (const mediaType of api.types) {
-				if (!mediaTypeApiMap.has(mediaType)) {
-					mediaTypeApiMap.set(mediaType, []);
-				}
-				mediaTypeApiMap.get(mediaType)!.push(api.apiName);
-			}
-		}
+		});
 
 		for (const mediaTypeSetting of mediaTypeSettings) {
-			const mediaTypeGroup = new SettingGroup(containerEl);
 			const mediaType = mediaTypeSetting.mediaType;
 			const mediaTypeName = unCamelCase(mediaTypeSetting.mediaType);
-			const mediaTypeNameLower = mediaTypeName.toLowerCase();
 
-			mediaTypeGroup.setHeading(`${mediaTypeName} settings`);
+			addTab(`media-${mediaType}`, mediaTypeName, mediaTypeTabIcon(mediaType), panel => {
+				const mediaTypeGroup = new SettingGroup(panel);
+				const mediaTypeNameLower = mediaTypeName.toLowerCase();
 
-			// Folder
+				// Folder
 			mediaTypeGroup.addSetting(
 				setting =>
 					void setting
@@ -791,42 +843,52 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					}
 				}
 			}
+			});
 		}
 
 		// MARK: Property mappings
 
 		if (this.plugin.settings.useDefaultFrontMatter) {
-			const mappingGroup = new SettingGroup(containerEl);
-			mappingGroup.setHeading('Property mappings');
-			mappingGroup.addSetting(setting => {
-				setting
-					.setName('Property mappings explanation')
-					.setDesc(
-						fragWithHTML(
-							'<p>Here you can customize how metadata fields are mapped to property names in the front matter of the created notes.</p>' +
-								'<p>You can choose to keep the original name, rename the property, or remove it entirely.</p>' +
-								'<p><strong>Remember to save your changes using the save button for each individual category.</strong></p>',
-						),
+			addTab('property-mappings', 'Property mappings', 'list-tree', panel => {
+				const mappingGroup = new SettingGroup(panel);
+				mappingGroup.addSetting(setting => {
+					setting
+						.setName('Property mappings explanation')
+						.setDesc(
+							fragWithHTML(
+								'<p>Here you can customize how metadata fields are mapped to property names in the front matter of the created notes.</p>' +
+									'<p>You can choose to keep the original name, rename the property, or remove it entirely.</p>' +
+									'<p><strong>Remember to save your changes using the save button for each individual category.</strong></p>',
+							),
+						);
+
+					render(
+						() =>
+							PropertyMappingModelsComponent({
+								models: structuredClone(this.plugin.settings.propertyMappingModels),
+								save: (model: PropertyMappingModelData): void => {
+									// Update the matching model in settings (stored as plain data)
+									const index = this.plugin.settings.propertyMappingModels.findIndex(m => m.type === model.type);
+									if (index !== -1) {
+										this.plugin.settings.propertyMappingModels[index] = model;
+									}
+
+									new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
+									void this.plugin.saveSettings();
+								},
+							}),
+						setting.descEl,
 					);
-
-				render(
-					() =>
-						PropertyMappingModelsComponent({
-							models: structuredClone(this.plugin.settings.propertyMappingModels),
-							save: (model: PropertyMappingModelData): void => {
-								// Update the matching model in settings (stored as plain data)
-								const index = this.plugin.settings.propertyMappingModels.findIndex(m => m.type === model.type);
-								if (index !== -1) {
-									this.plugin.settings.propertyMappingModels[index] = model;
-								}
-
-								new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
-								void this.plugin.saveSettings();
-							},
-						}),
-					setting.descEl,
-				);
+				});
 			});
 		}
+
+		const validIds = new Set(tabEntries.map(t => t.id));
+		let initialId =
+			this.activeSettingsTabId && validIds.has(this.activeSettingsTabId) ? this.activeSettingsTabId : 'general';
+		if (!validIds.has(initialId)) {
+			initialId = 'general';
+		}
+		selectTab(initialId);
 	}
 }

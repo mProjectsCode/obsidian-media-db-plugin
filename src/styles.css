@@ -257,3 +257,103 @@ small.media-db-plugin-list-text {
 	width: var(--checkbox-size);
 	height: var(--checkbox-size);
 }
+
+/*
+ * Settings tabs: same layout pattern as Obsidian Linter (horizontal icon tabs).
+ * Adapted from https://github.com/platers/obsidian-linter/blob/master/src/styles.css (MIT).
+ */
+.media-db-navigation-item {
+	cursor: pointer;
+	border-radius: 8px 8px 2px 2px;
+	border: 1px solid var(--background-modifier-border);
+	font-weight: bold;
+	font-size: 16px;
+	display: flex;
+	flex-direction: row;
+	white-space: nowrap;
+	padding: 4px 6px;
+	align-items: center;
+	gap: 4px;
+	overflow: hidden;
+	background-color: var(--background-primary-secondary-alt);
+	transition:
+		color 0.25s ease-in-out,
+		padding 0.25s ease-in-out,
+		background-color 0.35s cubic-bezier(0.45, 0.25, 0.83, 0.67),
+		max-width 0.35s cubic-bezier(0.57, 0.04, 0.58, 1);
+	height: 32px;
+}
+
+@media screen and (max-width: 1325px) {
+	.media-db-navigation-item.media-db-desktop {
+		max-width: 32px;
+	}
+}
+
+@media screen and (max-width: 800px) {
+	.media-db-navigation-item.media-db-mobile {
+		max-width: 32px;
+	}
+}
+
+.media-db-navigation-item-icon {
+	padding-top: 5px;
+}
+
+.media-db-navigation-item:hover {
+	border-color: var(--interactive-accent-hover);
+	border-bottom: 0;
+}
+
+.media-db-navigation-item-selected {
+	background-color: var(--interactive-accent) !important;
+	color: var(--text-on-accent);
+	padding: 4px 9px !important;
+	max-width: 100% !important;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px 8px 2px 2px;
+	border-bottom: 0;
+	transition:
+		color 0.25s ease-in-out,
+		padding 0.25s ease-in-out,
+		background-color 0.35s cubic-bezier(0.45, 0.25, 0.83, 0.67),
+		max-width 0.45s cubic-bezier(0.57, 0.04, 0.58, 1) 0.2s;
+}
+
+.media-db-setting-header {
+	margin-bottom: 24px;
+	overflow-y: hidden;
+	overflow-x: auto;
+}
+
+.media-db-setting-header .media-db-setting-tab-group {
+	display: flex;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	width: 100%;
+}
+
+.media-db-setting-tab-group {
+	margin-top: 6px;
+	padding-left: 2px;
+	padding-right: 2px;
+	border-bottom: 2px solid var(--background-modifier-border);
+}
+
+.media-db-tab-settings--hidden {
+	display: none !important;
+}
+
+.media-db-navigation-item:not(.media-db-navigation-item-selected) > span:nth-child(2),
+.media-db-visually-hidden {
+	border: 0;
+	clip: rect(0 0 0 0);
+	clip-path: rect(0 0 0 0);
+	height: auto;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	white-space: nowrap;
+}
