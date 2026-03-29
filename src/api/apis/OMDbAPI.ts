@@ -4,6 +4,7 @@ import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
 import { SeriesModel } from '../../models/SeriesModel';
+import { apiSecrets } from '../../settings/apiSecretHelpers';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 
@@ -77,12 +78,13 @@ export class OMDbAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!this.plugin.settings.OMDbKey) {
+		const omdbKey = apiSecrets.omdb(this.plugin);
+		if (!omdbKey) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const response = await requestUrl({
-			url: `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`,
+			url: `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${omdbKey}`,
 			method: 'GET',
 		});
 
@@ -161,12 +163,13 @@ export class OMDbAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!this.plugin.settings.OMDbKey) {
+		const omdbKey = apiSecrets.omdb(this.plugin);
+		if (!omdbKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const response = await requestUrl({
-			url: `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${this.plugin.settings.OMDbKey}`,
+			url: `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${omdbKey}`,
 			method: 'GET',
 		});
 

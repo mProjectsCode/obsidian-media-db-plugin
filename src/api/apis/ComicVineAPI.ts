@@ -3,6 +3,7 @@
 import { requestUrl } from 'obsidian';
 import { ComicMangaModel } from 'src/models/ComicMangaModel';
 import type MediaDbPlugin from '../../main';
+import { apiSecrets } from '../../settings/apiSecretHelpers';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -25,7 +26,12 @@ export class ComicVineAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `${this.apiUrl}/search/?api_key=${this.plugin.settings.ComicVineKey}&format=json&resources=volume&query=${encodeURIComponent(title)}`;
+		const apiKey = apiSecrets.comicVine(this.plugin);
+		if (!apiKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
+		}
+
+		const searchUrl = `${this.apiUrl}/search/?api_key=${apiKey}&format=json&resources=volume&query=${encodeURIComponent(title)}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -56,7 +62,12 @@ export class ComicVineAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `${this.apiUrl}/volume/${encodeURIComponent(id)}/?api_key=${this.plugin.settings.ComicVineKey}&format=json`;
+		const apiKey = apiSecrets.comicVine(this.plugin);
+		if (!apiKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
+		}
+
+		const searchUrl = `${this.apiUrl}/volume/${encodeURIComponent(id)}/?api_key=${apiKey}&format=json`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});

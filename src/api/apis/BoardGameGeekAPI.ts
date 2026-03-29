@@ -1,6 +1,7 @@
 import { requestUrl } from 'obsidian';
 import { BoardGameModel } from 'src/models/BoardGameModel';
 import type MediaDbPlugin from '../../main';
+import { apiSecrets } from '../../settings/apiSecretHelpers';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -23,11 +24,16 @@ export class BoardGameGeekAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
+		const bggKey = apiSecrets.boardgameGeek(this.plugin);
+		if (!bggKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
+		}
+
 		const searchUrl = `${this.apiUrl}/search?search=${encodeURIComponent(title)}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			headers: {
-				Authorization: `Bearer ${this.plugin.settings.BoardgameGeekKey}`,
+				Authorization: `Bearer ${bggKey}`,
 			},
 		});
 
@@ -68,11 +74,16 @@ export class BoardGameGeekAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
+		const bggKey = apiSecrets.boardgameGeek(this.plugin);
+		if (!bggKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
+		}
+
 		const searchUrl = `${this.apiUrl}/boardgame/${encodeURIComponent(id)}?stats=1`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			headers: {
-				Authorization: `Bearer ${this.plugin.settings.BoardgameGeekKey}`,
+				Authorization: `Bearer ${bggKey}`,
 			},
 		});
 

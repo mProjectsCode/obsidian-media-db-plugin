@@ -7,13 +7,13 @@ import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { GiantBombAPI } from './api/apis/GiantBombAPI';
 import { IGDBAPI } from './api/apis/IGDBAPI';
-import { RAWGAPI } from './api/apis/RAWGAPI';
 import { MALAPI } from './api/apis/MALAPI';
 import { MALAPIManga } from './api/apis/MALAPIManga';
 import { MobyGamesAPI } from './api/apis/MobyGamesAPI';
 import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
+import { RAWGAPI } from './api/apis/RAWGAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
 import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
@@ -25,6 +25,7 @@ import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal
 import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import type { SeasonModel } from './models/SeasonModel';
+import { migrateLegacyApiKeysToSecretStorage, stripPlaintextApiKeysFromSettings } from './settings/apiSecretHelpers';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
@@ -723,9 +724,11 @@ export default class MediaDbPlugin extends Plugin {
 		loadedSettings.propertyMappingModels = migratedModels.map(m => m.toJSON());
 
 		this.settings = loadedSettings;
+		migrateLegacyApiKeysToSecretStorage(this);
 	}
 
 	async saveSettings(): Promise<void> {
+		stripPlaintextApiKeysFromSettings(this.settings);
 		this.mediaTypeManager.updateTemplates(this.settings);
 		this.mediaTypeManager.updateFolders(this.settings);
 		this.dateFormatter.setFormat(this.settings.customDateFormat);
