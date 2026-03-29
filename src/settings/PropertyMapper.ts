@@ -1,5 +1,5 @@
 import type MediaDbPlugin from '../main';
-import { MEDIA_TYPES } from '../utils/MediaTypeManager';
+import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from '../utils/noteTypeSettings';
 import { PropertyMappingOption } from './PropertyMapping';
 
 export class PropertyMapper {
@@ -22,11 +22,12 @@ export class PropertyMapper {
 
 		// console.log(obj.type);
 
-		if (MEDIA_TYPES.filter(x => x.toString() == obj.type).length < 1) {
+		const internalMediaType = resolveMetadataTypeToMediaType(this.plugin.settings, obj.type);
+		if (!internalMediaType) {
 			return obj;
 		}
 
-		const propertyMappingModel = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type);
+		const propertyMappingModel = this.plugin.settings.propertyMappingModels.find(x => x.type === internalMediaType);
 		if (!propertyMappingModel) {
 			return obj;
 		}
@@ -88,7 +89,8 @@ export class PropertyMapper {
 				typeVal = 'comicManga';
 				console.debug(`MDB | updated metadata type`, typeVal);
 			}
-			if (typeVal === model.type) {
+			const typeStr = String(typeVal).trim();
+			if (typeStr === model.type || typeStr === noteTypeValueForMedia(this.plugin.settings, model.type)) {
 				matchedModel = model;
 				break;
 			}

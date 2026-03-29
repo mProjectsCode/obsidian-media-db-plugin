@@ -5,6 +5,7 @@ import type MediaDbPlugin from '../main';
 import { PropertyMappingModal } from '../modals/PropertyMappingModal';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
+import { noteTypeValueForMedia, setNoteTypeForMedia } from '../utils/noteTypeSettings';
 import { fragWithHTML, mediaTypeDisplayName, unCamelCase } from '../utils/Utils';
 import type { ApiSecretId } from './apiSecretIds';
 import { API_SECRET_IDS } from './apiSecretIds';
@@ -112,6 +113,19 @@ export interface MediaDbPluginSettings {
 	musicReleaseFolder: string;
 	bandFolder: string;
 	songFolder: string;
+
+	/** Frontmatter `type` for each media kind (empty = default internal id, e.g. movie, musicRelease). */
+	movieNoteType: string;
+	seriesNoteType: string;
+	seasonNoteType: string;
+	mangaNoteType: string;
+	gameNoteType: string;
+	wikiNoteType: string;
+	musicReleaseNoteType: string;
+	bandNoteType: string;
+	songNoteType: string;
+	boardgameNoteType: string;
+	bookNoteType: string;
 	/** When true, band discography import nests albums and songs under bandFolder/BandName/… instead of using album/song import folders. */
 	bandUseFileTreeForSongs: boolean;
 	boardgameFolder: string;
@@ -337,6 +351,20 @@ class MediaTypeMappedSettings {
 				break;
 		}
 	}
+
+	getNoteType(settings: MediaDbPluginSettings): string {
+		const configured = noteTypeValueForMedia(settings, this.mediaType);
+		return configured === this.mediaType ? '' : configured;
+	}
+
+	setNoteType(settings: MediaDbPluginSettings, value: string): void {
+		const trimmed = value.trim();
+		if (trimmed === '' || trimmed === this.mediaType) {
+			setNoteTypeForMedia(settings, this.mediaType, '');
+			return;
+		}
+		setNoteTypeForMedia(settings, this.mediaType, value);
+	}
 }
 
 // MARK: Defaults
@@ -414,6 +442,18 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	bandUseFileTreeForSongs: false,
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
+
+	movieNoteType: '',
+	seriesNoteType: '',
+	seasonNoteType: '',
+	mangaNoteType: '',
+	gameNoteType: '',
+	wikiNoteType: '',
+	musicReleaseNoteType: '',
+	bandNoteType: '',
+	songNoteType: '',
+	boardgameNoteType: '',
+	bookNoteType: '',
 
 	propertyMappingModels: [],
 
@@ -557,6 +597,23 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						}),
 			);
 		}
+
+		mediaTypeGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Note type')
+					.setDesc(
+						`Value for the "type" field in frontmatter. Leave blank to use the default (${mediaType}).`,
+					)
+					.addText(cb => {
+						cb.setPlaceholder(String(mediaType))
+							.setValue(mediaTypeSetting.getNoteType(this.plugin.settings))
+							.onChange(data => {
+								mediaTypeSetting.setNoteType(this.plugin.settings, data);
+								void this.plugin.saveSettings();
+							});
+					}),
+		);
 
 		mediaTypeGroup.addSetting(
 			setting =>

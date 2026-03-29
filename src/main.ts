@@ -40,6 +40,7 @@ import { getDefaultSettings, MediaDbSettingTab, propertyMappingModelsInDisplayOr
 import { BulkImportHelper } from './utils/BulkImportHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
+import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from './utils/noteTypeSettings';
 import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
 import type { CreateNoteOptions } from './utils/Utils';
@@ -671,6 +672,7 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
+		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
 		const fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
 		return stringifyYaml(fileMetadata);
 	}
@@ -682,6 +684,8 @@ export default class MediaDbPlugin extends Plugin {
 	 * @param options
 	 */
 	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<string> {
+		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
+
 		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
 		let fileMetadata: Record<string, unknown>;
 
@@ -851,7 +855,10 @@ export default class MediaDbPlugin extends Plugin {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
 		}
 
-		const mediaType = metadata.type as MediaType;
+		const mediaType = resolveMetadataTypeToMediaType(this.settings, metadata.type);
+		if (mediaType === undefined) {
+			throw new Error('MDB | active note type is not recognized; check Settings → Note type for each media kind');
+		}
 		let dataSource = typeof metadata.dataSource === 'string' ? metadata.dataSource.trim() : '';
 		if (
 			!dataSource &&
@@ -866,14 +873,10 @@ export default class MediaDbPlugin extends Plugin {
 		const validOldMetadata: MediaTypeModelObj = { ...metadata, dataSource } as unknown as MediaTypeModelObj;
 		console.debug(`MDB | validOldMetadata`, validOldMetadata);
 
-		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(validOldMetadata, validOldMetadata.type);
+		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(validOldMetadata, mediaType);
 		console.debug(`MDB | oldMediaTypeModel created`, oldMediaTypeModel);
 
-		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(
-			validOldMetadata.id,
-			validOldMetadata.dataSource,
-			validOldMetadata.type as MediaType,
-		);
+		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(validOldMetadata.id, validOldMetadata.dataSource, mediaType);
 		if (!newMediaTypeModel) {
 			return;
 		}
