@@ -1,5 +1,5 @@
 import createClient from 'openapi-fetch';
-import { obsidianFetch } from 'src/utils/Utils';
+import { coerceYear, obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import { apiSecrets } from '../../settings/apiSecretHelpers';
 import { GameModel } from '../../models/GameModel';
@@ -56,13 +56,13 @@ export class GiantBombAPI extends APIModel {
 
 		const ret: MediaTypeModel[] = [];
 		for (const result of data ?? []) {
-			const year = result.original_release_date ? new Date(result.original_release_date).getFullYear().toString() : undefined;
+			const year = result.original_release_date ? new Date(result.original_release_date).getFullYear() : undefined;
 
 			ret.push(
 				new GameModel({
 					title: result.name,
 					englishTitle: result.name,
-					year: year,
+					year: coerceYear(year),
 					dataSource: this.apiName,
 					id: result.guid?.toString(),
 				}),
@@ -112,7 +112,7 @@ export class GiantBombAPI extends APIModel {
 		console.log(result);
 
 		// sadly the only OpenAPI definition I could find doesn't have the right types
-		const year = result.original_release_date ? new Date(result.original_release_date).getFullYear().toString() : undefined;
+		const year = result.original_release_date ? new Date(result.original_release_date).getFullYear() : undefined;
 		const developers = result.developers as
 			| {
 					name: string;
@@ -140,7 +140,7 @@ export class GiantBombAPI extends APIModel {
 			type: MediaType.Game,
 			title: result.name,
 			englishTitle: result.name,
-			year: year,
+			year: coerceYear(year),
 			dataSource: this.apiName,
 			url: result.site_detail_url,
 			id: result.guid?.toString(),

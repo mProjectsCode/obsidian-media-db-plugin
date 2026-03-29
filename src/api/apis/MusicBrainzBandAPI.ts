@@ -3,7 +3,7 @@ import type MediaDbPlugin from '../../main';
 import { BandModel } from '../../models/BandModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
-import { contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { coerceYear, contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
 import { APIModel } from '../APIModel';
 
@@ -113,7 +113,7 @@ export class MusicBrainzBandAPI extends APIModel {
 					type: 'band',
 					title: artist.name,
 					englishTitle: artist.name,
-					year: begin ? (begin.split('-')[0] ?? '') : '',
+					year: coerceYear(begin ? (begin.split('-')[0] ?? '') : ''),
 					beginYear: begin ? (begin.split('-')[0] ?? '') : '',
 					releaseDate: '',
 					dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
@@ -161,7 +161,7 @@ export class MusicBrainzBandAPI extends APIModel {
 			type: 'band',
 			title: artist.name,
 			englishTitle: artist.name,
-			year: beginYear,
+			year: coerceYear(beginYear),
 			beginYear,
 			releaseDate: begin ? (this.plugin.dateFormatter.format(begin, this.apiDateFormat) ?? 'unknown') : '',
 			dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,

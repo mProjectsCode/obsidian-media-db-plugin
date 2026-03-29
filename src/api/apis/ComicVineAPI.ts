@@ -6,6 +6,7 @@ import type MediaDbPlugin from '../../main';
 import { apiSecrets } from '../../settings/apiSecretHelpers';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 // sadly no open api schema available
@@ -48,7 +49,7 @@ export class ComicVineAPI extends APIModel {
 				new ComicMangaModel({
 					title: result.name,
 					englishTitle: result.name,
-					year: result.start_year,
+					year: coerceYear(result.start_year),
 					dataSource: this.apiName,
 					id: `4050-${result.id}`,
 					publishers: result.publisher?.name,
@@ -93,7 +94,7 @@ export class ComicVineAPI extends APIModel {
 			englishTitle: result.name,
 			alternateTitles: result.aliases,
 			plot: result.deck,
-			year: result.start_year,
+			year: coerceYear(result.start_year),
 			dataSource: this.apiName,
 			url: result.site_detail_url,
 			id: `4050-${result.id}`,

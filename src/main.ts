@@ -343,7 +343,7 @@ export default class MediaDbPlugin extends Plugin {
 				season_number: s.seasonNumber,
 				name: s.seasonTitle || s.title,
 				episode_count: s.episodes || 0,
-				air_date: s.year,
+				air_date: s.year > 0 ? String(s.year) : 'unknown',
 				poster_path: s.image,
 			})),
 			true,

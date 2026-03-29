@@ -4,6 +4,7 @@ import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { apiSecrets } from '../../settings/apiSecretHelpers';
 import { MediaType } from '../../utils/MediaType';
+import { coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 interface IGDBCover { url: string; }
@@ -67,10 +68,10 @@ export class IGDBAPI extends APIModel {
 		
 		const data = response.json as IGDBGame[];
 		return data.map(result => {
-			const year = result.first_release_date ? new Date(result.first_release_date * 1000).getFullYear().toString() : '';
+			const year = result.first_release_date ? new Date(result.first_release_date * 1000).getFullYear() : 0;
 			const image = result.cover?.url ? 'https:' + result.cover.url.replace('t_thumb', 't_cover_big') : '';
 			return new GameModel({
-				type: MediaType.Game, title: result.name, englishTitle: result.name, year: year,
+				type: MediaType.Game, title: result.name, englishTitle: result.name, year: coerceYear(year),
 				dataSource: this.apiName, id: result.id.toString(), image: image
 			});
 		});
@@ -103,7 +104,9 @@ export class IGDBAPI extends APIModel {
 
 		return new GameModel({
 			type: MediaType.Game, title: result.name, englishTitle: result.name,
-			year: result.first_release_date ? new Date(result.first_release_date * 1000).getFullYear().toString() : '',
+			year: coerceYear(
+				result.first_release_date ? new Date(result.first_release_date * 1000).getFullYear() : 0,
+			),
 			dataSource: this.apiName, url: result.url, id: result.id.toString(),
 			developers: developers, publishers: publishers, genres: result.genres?.map(g => g.name) || [],
 			onlineRating: result.total_rating, image: image, released: true,

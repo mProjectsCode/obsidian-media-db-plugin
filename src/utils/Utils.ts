@@ -204,9 +204,37 @@ export interface CreateNoteOptions {
 	folder?: TFolder;
 }
 
+/** Normalizes release year for metadata: integer, 0 when unknown or non-numeric. */
+export function coerceYear(value: unknown): number {
+	if (value === undefined || value === null) return 0;
+	if (typeof value === 'number') {
+		const n = Math.trunc(value);
+		return Number.isFinite(n) ? n : 0;
+	}
+	if (typeof value === 'string') {
+		const t = value.trim();
+		if (t === '' || t.toLowerCase() === 'unknown' || t === 'TBA' || t.toUpperCase() === 'N/A') {
+			return 0;
+		}
+		const n = parseInt(t, 10);
+		return Number.isFinite(n) ? n : 0;
+	}
+	return 0;
+}
+
 export function migrateObject<T extends object>(object: T, oldData: Record<string, unknown>, defaultData: T): void {
 	for (const key in object) {
-		object[key] = Object.hasOwn(oldData, key) && oldData[key] !== undefined && oldData[key] !== null ? (oldData[key] as T[typeof key]) : defaultData[key];
+		const has = Object.hasOwn(oldData, key) && oldData[key] !== undefined && oldData[key] !== null;
+		if (!has) {
+			object[key] = defaultData[key];
+			continue;
+		}
+		const raw = oldData[key];
+		if (key === 'year') {
+			(object as Record<string, unknown>)[key] = coerceYear(raw);
+			continue;
+		}
+		object[key] = raw as T[typeof key];
 	}
 }
 

@@ -2,6 +2,7 @@ import { requestUrl } from 'obsidian';
 import { BoardGameModel } from 'src/models/BoardGameModel';
 import type MediaDbPlugin from '../../main';
 import { apiSecrets } from '../../settings/apiSecretHelpers';
+import { coerceYear } from '../../utils/Utils';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -63,7 +64,7 @@ export class BoardGameGeekAPI extends APIModel {
 					id,
 					title,
 					englishTitle: title,
-					year,
+					year: coerceYear(year),
 				}),
 			);
 		}
@@ -122,7 +123,7 @@ export class BoardGameGeekAPI extends APIModel {
 		return new BoardGameModel({
 			title: title ?? undefined,
 			englishTitle: title ?? undefined,
-			year: year === '0' ? '' : year,
+			year: year === '0' ? 0 : coerceYear(year),
 			dataSource: this.apiName,
 			url: `https://boardgamegeek.com/boardgame/${id}`,
 			id: id,

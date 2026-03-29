@@ -37,7 +37,7 @@ export class RAWGAPI extends APIModel {
 		const data = response.json as RAWGSearchResponse;
 		return data.results.map(result => new GameModel({
 			type: MediaType.Game, title: result.name, englishTitle: result.name,
-			year: result.released ? new Date(result.released).getFullYear().toString() : '',
+			year: result.released ? new Date(result.released).getFullYear() : 0,
 			dataSource: this.apiName, id: result.id.toString(), image: result.background_image
 		}));
 	}
@@ -53,7 +53,7 @@ export class RAWGAPI extends APIModel {
 		const result = response.json as RAWGGame;
 		return new GameModel({
 			type: MediaType.Game, title: result.name, englishTitle: result.name_original || result.name,
-			year: result.released ? new Date(result.released).getFullYear().toString() : '',
+			year: result.released ? new Date(result.released).getFullYear() : 0,
 			dataSource: this.apiName, url: result.website || `https://rawg.io/games/${result.slug}`,
 			id: result.id.toString(), developers: result.developers?.map(d => d.name) || [],
 			publishers: result.publishers?.map(p => p.name) || [], genres: result.genres?.map(g => g.name) || [],

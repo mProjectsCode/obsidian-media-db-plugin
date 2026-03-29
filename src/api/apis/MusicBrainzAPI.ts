@@ -3,7 +3,7 @@ import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MusicReleaseModel } from '../../models/MusicReleaseModel';
 import { MediaType } from '../../utils/MediaType';
-import { contactEmail, getLanguageName, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { contactEmail, coerceYear, getLanguageName, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
 import { APIModel } from '../APIModel';
 
@@ -134,7 +134,9 @@ export class MusicBrainzAPI extends APIModel {
 					type: 'musicRelease',
 					title: result.title,
 					englishTitle: result.title,
-					year: new Date(result['first-release-date']).getFullYear().toString(),
+					year: coerceYear(
+						result['first-release-date'] ? new Date(result['first-release-date']).getFullYear() : 0,
+					),
 					releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
 					dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
 					url: 'https://musicbrainz.org/release-group/' + result.id,
@@ -206,7 +208,9 @@ export class MusicBrainzAPI extends APIModel {
 			type: 'musicRelease',
 			title: result.title,
 			englishTitle: result.title,
-			year: new Date(result['first-release-date']).getFullYear().toString(),
+			year: coerceYear(
+				result['first-release-date'] ? new Date(result['first-release-date']).getFullYear() : 0,
+			),
 			releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
 			dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
 			url: 'https://musicbrainz.org/release-group/' + result.id,

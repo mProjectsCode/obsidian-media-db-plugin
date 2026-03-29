@@ -93,7 +93,7 @@ export class TMDBSeasonAPI extends APIModel {
 				new SeasonModel({
 					title: `${result.name ?? result.original_name ?? ''}`,
 					englishTitle: result.name ?? result.original_name ?? '',
-					year: result.first_air_date ? new Date(result.first_air_date).getFullYear().toString() : 'unknown',
+					year: result.first_air_date ? new Date(result.first_air_date).getFullYear() : 0,
 					dataSource: this.apiName,
 					id: result.id?.toString() ?? '',
 					seasonTitle: result.name ?? result.original_name ?? '',
@@ -144,7 +144,7 @@ export class TMDBSeasonAPI extends APIModel {
 					new SeasonModel({
 						title: titleText,
 						englishTitle: titleText,
-						year: season.air_date ? new Date(season.air_date).getFullYear().toString() : 'unknown',
+						year: season.air_date ? new Date(season.air_date).getFullYear() : 0,
 						dataSource: this.apiName,
 						id: `${tvId}/season/${seasonNumber}`,
 						seasonTitle: season.name ?? titleText,
@@ -243,7 +243,7 @@ export class TMDBSeasonAPI extends APIModel {
 		return new SeasonModel({
 			title: titleText,
 			englishTitle: titleText,
-			year: airDate ? new Date(airDate).getFullYear().toString() : 'unknown',
+			year: airDate ? new Date(airDate).getFullYear() : 0,
 			dataSource: this.apiName,
 			url: `https://www.themoviedb.org/tv/${tvId}/season/${seasonData.season_number}`,
 			id: `${tvId}/season/${seasonData.season_number}`,

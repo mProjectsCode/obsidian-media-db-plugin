@@ -6,6 +6,7 @@ import { MovieModel } from '../../models/MovieModel';
 import { SeriesModel } from '../../models/SeriesModel';
 import { apiSecrets } from '../../settings/apiSecretHelpers';
 import { MediaType } from '../../utils/MediaType';
+import { coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 interface ErrorResponse {
@@ -127,7 +128,7 @@ export class OMDbAPI extends APIModel {
 						type: type,
 						title: result.Title,
 						englishTitle: result.Title,
-						year: result.Year,
+						year: coerceYear(result.Year),
 						dataSource: this.apiName,
 						id: result.imdbID,
 					}),
@@ -138,7 +139,7 @@ export class OMDbAPI extends APIModel {
 						type: type,
 						title: result.Title,
 						englishTitle: result.Title,
-						year: result.Year,
+						year: coerceYear(result.Year),
 						dataSource: this.apiName,
 						id: result.imdbID,
 					}),
@@ -149,7 +150,7 @@ export class OMDbAPI extends APIModel {
 						type: type,
 						title: result.Title,
 						englishTitle: result.Title,
-						year: result.Year,
+						year: coerceYear(result.Year),
 						dataSource: this.apiName,
 						id: result.imdbID,
 					}),
@@ -200,7 +201,7 @@ export class OMDbAPI extends APIModel {
 				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
-				year: result.Year,
+				year: coerceYear(result.Year),
 				dataSource: this.apiName,
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
@@ -231,7 +232,7 @@ export class OMDbAPI extends APIModel {
 				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
-				year: result.Year,
+				year: coerceYear(result.Year),
 				dataSource: this.apiName,
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
@@ -262,7 +263,7 @@ export class OMDbAPI extends APIModel {
 				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
-				year: result.Year,
+				year: coerceYear(result.Year),
 				dataSource: this.apiName,
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
