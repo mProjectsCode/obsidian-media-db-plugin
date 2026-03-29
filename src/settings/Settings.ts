@@ -113,6 +113,8 @@ export interface MediaDbPluginSettings {
 	musicReleaseFolder: string;
 	bandFolder: string;
 	songFolder: string;
+	/** When true, band discography import nests albums and songs under bandFolder/BandName/… instead of using album/song import folders. */
+	bandUseFileTreeForSongs: boolean;
 	boardgameFolder: string;
 	bookFolder: string;
 
@@ -410,6 +412,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseFolder: 'Media DB/music',
 	bandFolder: 'Media DB/bands',
 	songFolder: 'Media DB/music/songs',
+	bandUseFileTreeForSongs: false,
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
 
@@ -503,7 +506,11 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		panel: HTMLElement,
 		mediaTypeSetting: MediaTypeMappedSettings,
 		mediaTypeApiMap: Map<MediaType, string[]>,
-		options?: { sectionHeading?: string },
+		options?: {
+			sectionHeading?: string;
+			hideImportFolder?: boolean;
+			appendToSection?: (group: SettingGroup) => void;
+		},
 	): void {
 		const mediaType = mediaTypeSetting.mediaType;
 		const descNoun = options?.sectionHeading?.toLowerCase() ?? mediaTypeDisplayName(mediaType).toLowerCase();
@@ -514,27 +521,29 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		const mediaTypeGroup = new SettingGroup(panel);
 
-		mediaTypeGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Import folder')
-					.setDesc(`Where newly imported ${descNoun} notes should be placed.`)
-					.addSearch(cb => {
-						const suggester = new FolderSuggest(this.app, cb.inputEl);
-						suggester.onSelect(folder => {
-							cb.setValue(folder.path);
-							mediaTypeSetting.setFolder(this.plugin.settings, folder.path);
-							void this.plugin.saveSettings();
-							suggester.close();
-						});
-						cb.setPlaceholder(mediaTypeSetting.getFolder(DEFAULT_SETTINGS))
-							.setValue(mediaTypeSetting.getFolder(this.plugin.settings))
-							.onChange(data => {
-								mediaTypeSetting.setFolder(this.plugin.settings, data);
+		if (!options?.hideImportFolder) {
+			mediaTypeGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Import folder')
+						.setDesc(`Where newly imported ${descNoun} notes should be placed.`)
+						.addSearch(cb => {
+							const suggester = new FolderSuggest(this.app, cb.inputEl);
+							suggester.onSelect(folder => {
+								cb.setValue(folder.path);
+								mediaTypeSetting.setFolder(this.plugin.settings, folder.path);
 								void this.plugin.saveSettings();
+								suggester.close();
 							});
-					}),
-		);
+							cb.setPlaceholder(mediaTypeSetting.getFolder(DEFAULT_SETTINGS))
+								.setValue(mediaTypeSetting.getFolder(this.plugin.settings))
+								.onChange(data => {
+									mediaTypeSetting.setFolder(this.plugin.settings, data);
+									void this.plugin.saveSettings();
+								});
+						}),
+			);
+		}
 
 		mediaTypeGroup.addSetting(
 			setting =>
@@ -602,18 +611,46 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				}
 			}
 		}
+
+		options?.appendToSection?.(mediaTypeGroup);
 	}
 
 	private renderMusicSettingsTab(panel: HTMLElement, mediaTypeSettings: MediaTypeMappedSettings[], mediaTypeApiMap: Map<MediaType, string[]>): void {
 		const byType = (mt: MediaType): MediaTypeMappedSettings => mediaTypeSettings.find(s => s.mediaType === mt)!;
+		const fileTree = this.plugin.settings.bandUseFileTreeForSongs;
 
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
 
-		this.renderMediaTypeSection(panel, byType(MediaType.Band), mediaTypeApiMap, { sectionHeading: 'Band' });
+		this.renderMediaTypeSection(panel, byType(MediaType.Band), mediaTypeApiMap, {
+			sectionHeading: 'Band',
+			appendToSection: group => {
+				group.addSetting(
+					setting =>
+						void setting
+							.setName('Use file trees for songs')
+							.setDesc(
+								'When importing a band, create a subfolder named after the band under the band import folder, place album notes there, and place each album’s songs in a subfolder named after that album. While enabled, album and song import folders are not shown below and are not used for band imports (standalone album/song imports still use those folders).',
+							)
+							.addToggle(cb => {
+								cb.setValue(this.plugin.settings.bandUseFileTreeForSongs).onChange(data => {
+									this.plugin.settings.bandUseFileTreeForSongs = data;
+									void this.plugin.saveSettings();
+									this.display();
+								});
+							}),
+				);
+			},
+		});
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
-		this.renderMediaTypeSection(panel, byType(MediaType.MusicRelease), mediaTypeApiMap, { sectionHeading: 'Album' });
+		this.renderMediaTypeSection(panel, byType(MediaType.MusicRelease), mediaTypeApiMap, {
+			sectionHeading: 'Album',
+			hideImportFolder: fileTree,
+		});
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
-		this.renderMediaTypeSection(panel, byType(MediaType.Song), mediaTypeApiMap, { sectionHeading: 'Song' });
+		this.renderMediaTypeSection(panel, byType(MediaType.Song), mediaTypeApiMap, {
+			sectionHeading: 'Song',
+			hideImportFolder: fileTree,
+		});
 	}
 
 	display(): void {

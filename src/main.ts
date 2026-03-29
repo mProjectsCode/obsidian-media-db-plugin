@@ -503,6 +503,22 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
+	private safeFileTreeSegment(title: string): string {
+		return replaceIllegalFileNameCharactersInString(title).replaceAll(/ +/g, ' ').trim();
+	}
+
+	private async ensureVaultFolder(folderPath: string): Promise<TFolder> {
+		const normalized = normalizePath(folderPath);
+		if (!(await this.app.vault.adapter.exists(normalized))) {
+			await this.app.vault.createFolder(normalized);
+		}
+		const folder = this.app.vault.getAbstractFileByPath(normalized);
+		if (!(folder instanceof TFolder)) {
+			throw new Error(`MDB | Expected folder at ${normalized}`);
+		}
+		return folder;
+	}
+
 	private async importBandDiscography(band: BandModel, options: CreateNoteOptions): Promise<void> {
 		try {
 			const geniusToken = this.app.secretStorage.getSecret(API_SECRET_IDS.genius);
@@ -518,6 +534,7 @@ export default class MediaDbPlugin extends Plugin {
 				return;
 			}
 
+			const useTree = this.settings.bandUseFileTreeForSongs;
 			const childOptions: CreateNoteOptions = {
 				attachTemplate: true,
 				openNote: false,
@@ -525,7 +542,18 @@ export default class MediaDbPlugin extends Plugin {
 				folder: undefined,
 			};
 
-			await this.createStandardMediaDbNoteFromModel(band, { ...options });
+			const bandBaseFolder = await this.mediaTypeManager.getFolder(band, this.app);
+			let bandNoteFolder = bandBaseFolder;
+			let albumNotesFolder = bandBaseFolder;
+
+			if (useTree) {
+				const bandSeg = this.safeFileTreeSegment(band.title);
+				const treeRootPath = normalizePath(`${bandBaseFolder.path}/${bandSeg}`);
+				albumNotesFolder = await this.ensureVaultFolder(treeRootPath);
+				bandNoteFolder = albumNotesFolder;
+			}
+
+			await this.createStandardMediaDbNoteFromModel(band, { ...options, folder: bandNoteFolder });
 
 			let releaseGroupIds: string[];
 			try {
@@ -548,7 +576,15 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
-				await this.createStandardMediaDbNoteFromModel(release, { ...childOptions });
+				let songNotesFolder: TFolder | undefined;
+				if (useTree) {
+					const albumSeg = this.safeFileTreeSegment(release.title);
+					songNotesFolder = await this.ensureVaultFolder(normalizePath(`${albumNotesFolder.path}/${albumSeg}`));
+				}
+
+				const releaseOpts: CreateNoteOptions = useTree ? { ...childOptions, folder: albumNotesFolder } : { ...childOptions };
+
+				await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
 
 				for (const track of release.tracks) {
 					let lyrics = '';
@@ -586,7 +622,9 @@ export default class MediaDbPlugin extends Plugin {
 						userData: { personalRating: 0 },
 					});
 
-					await this.createStandardMediaDbNoteFromModel(song, { ...childOptions });
+					const songOpts: CreateNoteOptions = useTree && songNotesFolder ? { ...childOptions, folder: songNotesFolder } : { ...childOptions };
+
+					await this.createStandardMediaDbNoteFromModel(song, songOpts);
 				}
 			}
 
