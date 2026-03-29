@@ -35,7 +35,7 @@ import { API_SECRET_IDS } from './settings/apiSecretIds';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
-import { getDefaultSettings, MediaDbSettingTab } from './settings/Settings';
+import { getDefaultSettings, MediaDbSettingTab, propertyMappingModelsInDisplayOrder } from './settings/Settings';
 import { BulkImportHelper } from './utils/BulkImportHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
@@ -882,8 +882,8 @@ export default class MediaDbPlugin extends Plugin {
 			defaultSettings.propertyMappingModels.map(m => PropertyMappingModel.fromJSON(m)),
 		);
 
-		// Store as plain data for serialization
-		loadedSettings.propertyMappingModels = migratedModels.map(m => m.toJSON());
+		// Store as plain data for serialization (canonical order matches settings UI)
+		loadedSettings.propertyMappingModels = propertyMappingModelsInDisplayOrder(migratedModels.map(m => m.toJSON()));
 
 		this.settings = loadedSettings;
 		migrateLegacyApiKeysToSecretStorage(this);

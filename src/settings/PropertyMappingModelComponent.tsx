@@ -1,7 +1,8 @@
 import { createSignal, createMemo, For, Show } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { PropertyMappingModel, PropertyMappingOption, propertyMappingOptions, type PropertyMappingModelData } from './PropertyMapping';
-import { capitalizeFirstLetter } from '../utils/Utils';
+import type { MediaType } from '../utils/MediaType';
+import { mediaTypeDisplayName } from '../utils/Utils';
 import Icon from './Icon';
 
 interface PropertyMappingModelComponentProps {
@@ -36,7 +37,7 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 	return (
 		<div class="media-db-plugin-property-mappings-model-container">
 			<div class="media-db-plugin-property-mappings-model-header">
-				<div class="setting-item-name">{capitalizeFirstLetter(modelData.type)}</div>
+				<div class="setting-item-name">{mediaTypeDisplayName(modelData.type as MediaType)}</div>
 
 				<div class="media-db-plugin-property-mappings-model-actions">
 					<Show when={unsavedChanges()}>

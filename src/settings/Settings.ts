@@ -471,6 +471,12 @@ interface MediaDbSettingsTabNavEntry {
 	panel: HTMLElement;
 }
 
+/** Stable order for property-mapping UI and persisted settings (matches media type settings tabs). */
+export function propertyMappingModelsInDisplayOrder(models: PropertyMappingModelData[]): PropertyMappingModelData[] {
+	const order = new Map<MediaType, number>(MEDIA_TYPES.map((t, i) => [t, i]));
+	return [...models].sort((a, b) => (order.get(a.type) ?? 999) - (order.get(b.type) ?? 999));
+}
+
 // MARK: Settings Tab
 export class MediaDbSettingTab extends PluginSettingTab {
 	plugin: MediaDbPlugin;
@@ -501,6 +507,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 	private static readonly MUSIC_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Band, MediaType.MusicRelease, MediaType.Song];
 
 	private static readonly LEGACY_MUSIC_TAB_IDS: ReadonlySet<string> = new Set(['media-band', 'media-musicRelease', 'media-song']);
+
+	private static readonly BOOK_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Book, MediaType.ComicManga];
+
+	private static readonly LEGACY_BOOK_TAB_IDS: ReadonlySet<string> = new Set(['media-comicManga']);
 
 	private renderMediaTypeSection(
 		panel: HTMLElement,
@@ -650,6 +660,20 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		this.renderMediaTypeSection(panel, byType(MediaType.Song), mediaTypeApiMap, {
 			sectionHeading: 'Song',
 			hideImportFolder: fileTree,
+		});
+	}
+
+	private renderBookSettingsTab(panel: HTMLElement, mediaTypeSettings: MediaTypeMappedSettings[], mediaTypeApiMap: Map<MediaType, string[]>): void {
+		const byType = (mt: MediaType): MediaTypeMappedSettings => mediaTypeSettings.find(s => s.mediaType === mt)!;
+
+		panel.createDiv({ cls: 'media-db-plugin-spacer' });
+
+		this.renderMediaTypeSection(panel, byType(MediaType.Book), mediaTypeApiMap, {
+			sectionHeading: 'Book',
+		});
+		panel.createDiv({ cls: 'media-db-plugin-spacer' });
+		this.renderMediaTypeSection(panel, byType(MediaType.ComicManga), mediaTypeApiMap, {
+			sectionHeading: 'Comic & Manga',
 		});
 	}
 
@@ -852,6 +876,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		});
 
 		let musicTabAdded = false;
+		let bookTabAdded = false;
 		for (const mediaTypeSetting of mediaTypeSettings) {
 			const mediaType = mediaTypeSetting.mediaType;
 
@@ -860,6 +885,16 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					musicTabAdded = true;
 					addTab('media-music', 'Music', 'disc-3', panel => {
 						this.renderMusicSettingsTab(panel, mediaTypeSettings, mediaTypeApiMap);
+					});
+				}
+				continue;
+			}
+
+			if (MediaDbSettingTab.BOOK_SETTINGS_MEDIA_TYPES.includes(mediaType)) {
+				if (!bookTabAdded) {
+					bookTabAdded = true;
+					addTab('media-book', 'Book', mediaTypeTabIcon(MediaType.Book), panel => {
+						this.renderBookSettingsTab(panel, mediaTypeSettings, mediaTypeApiMap);
 					});
 				}
 				continue;
@@ -890,7 +925,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					render(
 						() =>
 							PropertyMappingModelsComponent({
-								models: structuredClone(this.plugin.settings.propertyMappingModels),
+								models: propertyMappingModelsInDisplayOrder(structuredClone(this.plugin.settings.propertyMappingModels)),
 								save: (model: PropertyMappingModelData): void => {
 									// Update the matching model in settings (stored as plain data)
 									const index = this.plugin.settings.propertyMappingModels.findIndex(m => m.type === model.type);
@@ -898,7 +933,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 										this.plugin.settings.propertyMappingModels[index] = model;
 									}
 
-									new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
+									new Notice(`MDB: Property mappings for ${mediaTypeDisplayName(model.type)} saved successfully.`);
 									void this.plugin.saveSettings();
 								},
 							}),
@@ -912,6 +947,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		let initialId = this.activeSettingsTabId && validIds.has(this.activeSettingsTabId) ? this.activeSettingsTabId : 'general';
 		if (MediaDbSettingTab.LEGACY_MUSIC_TAB_IDS.has(initialId) && validIds.has('media-music')) {
 			initialId = 'media-music';
+		}
+		if (MediaDbSettingTab.LEGACY_BOOK_TAB_IDS.has(initialId) && validIds.has('media-book')) {
+			initialId = 'media-book';
 		}
 		if (!validIds.has(initialId)) {
 			initialId = 'general';
