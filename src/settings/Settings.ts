@@ -431,7 +431,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	bookPropertyConversionRules: '',
 };
 
-export const lockedPropertyMappings: string[] = ['type', 'id', 'dataSource'];
+export const lockedPropertyMappings: string[] = [];
 
 export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings {
 	const defaultSettings = DEFAULT_SETTINGS;

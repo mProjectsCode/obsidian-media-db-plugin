@@ -23,6 +23,8 @@ export enum PropertyMappingOption {
 
 export const propertyMappingOptions = [PropertyMappingOption.Default, PropertyMappingOption.Map, PropertyMappingOption.Remove];
 
+const METADATA_KEYS_REQUIRED_IN_NOTE = ['type', 'id', 'dataSource'] as const;
+
 export class PropertyMappingModel {
 	type: MediaType;
 	properties: PropertyMapping[];
@@ -192,6 +194,18 @@ export class PropertyMapping {
 					err: new PropertyMappingValidationError(`Error in property mapping "${this.toString()}": locked property may not be remapped.`),
 				};
 			}
+		}
+
+		if (
+			(METADATA_KEYS_REQUIRED_IN_NOTE as readonly string[]).includes(this.property) &&
+			this.mapping === PropertyMappingOption.Remove
+		) {
+			return {
+				res: false,
+				err: new PropertyMappingValidationError(
+					`Error in property mapping "${this.toString()}": type, id, and dataSource must appear in the note (you can remap them, but not remove them).`,
+				),
+			};
 		}
 
 		if (this.mapping === PropertyMappingOption.Default) {

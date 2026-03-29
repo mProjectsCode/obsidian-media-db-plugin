@@ -1,4 +1,3 @@
-import type { MediaType } from 'src/utils/MediaType';
 import type MediaDbPlugin from '../main';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { PropertyMappingOption } from './PropertyMapping';
@@ -72,40 +71,49 @@ export class PropertyMapper {
 	 * @param obj
 	 */
 	convertObjectBack(obj: Record<string, unknown>): Record<string, unknown> {
-		if (!Object.hasOwn(obj, 'type')) {
+		const models = this.plugin.settings.propertyMappingModels;
+
+		let matchedModel: (typeof models)[number] | undefined;
+		for (const model of models) {
+			const typePm = model.properties.find(p => p.property === 'type');
+			const typeKey =
+				typePm?.mapping === PropertyMappingOption.Map && typePm.newProperty
+					? typePm.newProperty
+					: 'type';
+			if (!Object.hasOwn(obj, typeKey)) {
+				continue;
+			}
+			let typeVal: unknown = obj[typeKey];
+			if (typeVal === 'manga') {
+				typeVal = 'comicManga';
+				console.debug(`MDB | updated metadata type`, typeVal);
+			}
+			if (typeVal === model.type) {
+				matchedModel = model;
+				break;
+			}
+		}
+
+		if (!matchedModel) {
 			return obj;
 		}
 
-		if (obj.type === 'manga') {
-			obj.type = 'comicManga';
-			console.debug(`MDB | updated metadata type`, obj.type);
-		}
-		if (MEDIA_TYPES.contains(obj.type as MediaType)) {
-			return obj;
-		}
-
-		const propertyMappingModel = this.plugin.settings.propertyMappingModels.find(x => x.type === obj.type);
-		const propertyMappings = propertyMappingModel?.properties ?? [];
-
+		const propertyMappings = matchedModel.properties;
 		const originalObj: Record<string, unknown> = {};
 
 		objLoop: for (const [key, value] of Object.entries(obj)) {
-			// first try if it is a normal property
 			for (const propertyMapping of propertyMappings) {
 				if (propertyMapping.property === key) {
-					// @ts-ignore
 					originalObj[key] = value;
-
 					continue objLoop;
 				}
 			}
-
-			// otherwise see if it is a mapped property
 			for (const propertyMapping of propertyMappings) {
-				if (propertyMapping.newProperty === key) {
-					// @ts-ignore
+				if (
+					propertyMapping.mapping === PropertyMappingOption.Map &&
+					propertyMapping.newProperty === key
+				) {
 					originalObj[propertyMapping.property] = value;
-
 					continue objLoop;
 				}
 			}
