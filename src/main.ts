@@ -1,7 +1,7 @@
 import type { TFile } from 'obsidian';
 import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFolder } from 'obsidian';
 import { requestUrl, normalizePath } from 'obsidian';
-import type { MediaType } from 'src/utils/MediaType';
+import { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
@@ -11,6 +11,7 @@ import { MALAPI } from './api/apis/MALAPI';
 import { MALAPIManga } from './api/apis/MALAPIManga';
 import { MobyGamesAPI } from './api/apis/MobyGamesAPI';
 import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
+import { MusicBrainzBandAPI } from './api/apis/MusicBrainzBandAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { RAWGAPI } from './api/apis/RAWGAPI';
@@ -20,12 +21,17 @@ import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
 import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
 import { VNDBAPI } from './api/apis/VNDBAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
+import { GeniusClient } from './api/GeniusClient';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
 import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
+import type { BandModel } from './models/BandModel';
 import type { MediaTypeModel } from './models/MediaTypeModel';
+import type { MusicReleaseModel } from './models/MusicReleaseModel';
 import type { SeasonModel } from './models/SeasonModel';
+import { SongModel } from './models/SongModel';
 import { migrateLegacyApiKeysToSecretStorage, stripPlaintextApiKeysFromSettings } from './settings/apiSecretHelpers';
+import { API_SECRET_IDS } from './settings/apiSecretIds';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
@@ -66,6 +72,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new MALAPIManga(this));
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
+		this.apiManager.registerAPI(new MusicBrainzBandAPI(this));
 		this.apiManager.registerAPI(new SteamAPI(this));
 		this.apiManager.registerAPI(new TMDBSeriesAPI(this));
 		this.apiManager.registerAPI(new TMDBSeasonAPI(this));
@@ -426,10 +433,17 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<void> {
-		// Create notes in parallel for better performance
+		const hasBand = models.some(m => m.getMediaType() === MediaType.Band);
+
+		if (hasBand) {
+			for (const model of models) {
+				await this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile });
+			}
+			return;
+		}
+
 		const results = await Promise.allSettled(models.map(model => this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile })));
 
-		// Report any failures
 		const failures = results.filter(r => r.status === 'rejected');
 		if (failures.length > 0) {
 			console.warn('MDB | Some notes failed to create:', failures);
@@ -456,10 +470,19 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
+		if (mediaTypeModel.getMediaType() === MediaType.Band) {
+			await this.importBandDiscography(mediaTypeModel as BandModel, options);
+			return;
+		}
+
+		await this.createStandardMediaDbNoteFromModel(mediaTypeModel, options);
+	}
+
+	private async createStandardMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
 		try {
 			console.debug('MDB | creating new note');
 
-			options.openNote = this.settings.openNoteInNewTab;
+			options.openNote ??= this.settings.openNoteInNewTab;
 
 			if (this.settings.imageDownload) {
 				await this.downloadImageForMediaModel(mediaTypeModel);
@@ -474,6 +497,100 @@ export default class MediaDbPlugin extends Plugin {
 			if (this.settings.enableTemplaterIntegration) {
 				await useTemplaterPluginInFile(this.app, targetFile);
 			}
+		} catch (e) {
+			console.warn(e);
+			new Notice(`${e}`);
+		}
+	}
+
+	private async importBandDiscography(band: BandModel, options: CreateNoteOptions): Promise<void> {
+		try {
+			const geniusToken = this.app.secretStorage.getSecret(API_SECRET_IDS.genius);
+			const genius = new GeniusClient(geniusToken ?? undefined);
+			if (!genius.isConfigured()) {
+				new Notice('Band import: add a Genius API access token in settings to fetch lyrics.');
+			}
+
+			const bandApi = this.apiManager.getApiByName('MusicBrainz Band API') as MusicBrainzBandAPI | undefined;
+			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
+			if (!bandApi || !musicBrainzApi) {
+				new Notice('MusicBrainz APIs not available.');
+				return;
+			}
+
+			const childOptions: CreateNoteOptions = {
+				attachTemplate: true,
+				openNote: false,
+				attachFile: undefined,
+				folder: undefined,
+			};
+
+			await this.createStandardMediaDbNoteFromModel(band, { ...options });
+
+			let releaseGroupIds: string[];
+			try {
+				releaseGroupIds = await bandApi.listStudioAlbumReleaseGroupIds(band.id);
+			} catch (e) {
+				new Notice(`Could not load albums: ${e}`);
+				return;
+			}
+
+			new Notice(`Importing ${releaseGroupIds.length} studio albums and tracks for ${band.title}…`);
+
+			for (const rgId of releaseGroupIds) {
+				await new Promise(r => setTimeout(r, 1100));
+				let release: MusicReleaseModel;
+				try {
+					const model = await musicBrainzApi.getById(rgId);
+					release = model as MusicReleaseModel;
+				} catch (e) {
+					console.warn(`MDB | Skipping release group ${rgId}:`, e);
+					continue;
+				}
+
+				await this.createStandardMediaDbNoteFromModel(release, { ...childOptions });
+
+				for (const track of release.tracks) {
+					let lyrics = '';
+					let geniusUrl = '';
+					if (genius.isConfigured()) {
+						await new Promise(r => setTimeout(r, 500));
+						const hit = await genius.searchFirstSongHit(`${band.title} ${track.title}`);
+						if (hit) {
+							geniusUrl = hit.url;
+							await new Promise(r => setTimeout(r, 600));
+							lyrics = await genius.fetchLyricsFromSongPage(hit.url);
+						}
+					}
+
+					const song = new SongModel({
+						type: 'song',
+						title: track.title,
+						englishTitle: track.title,
+						year: release.year,
+						releaseDate: release.releaseDate,
+						dataSource: genius.isConfigured() ? 'MusicBrainz / Genius' : 'MusicBrainz',
+						url: geniusUrl || release.url,
+						id: `${release.id}-t${track.number}`,
+						image: release.image,
+						subType: 'song',
+						genres: release.genres ?? [],
+						artists: release.artists.length > 0 ? release.artists : [band.title],
+						albumTitle: release.title,
+						albumReleaseGroupId: release.id,
+						trackNumber: track.number,
+						duration: track.duration,
+						featuredArtists: track.featuredArtists,
+						geniusUrl,
+						lyrics,
+						userData: { personalRating: 0 },
+					});
+
+					await this.createStandardMediaDbNoteFromModel(song, { ...childOptions });
+				}
+			}
+
+			new Notice(`Finished band import for ${band.title}.`);
 		} catch (e) {
 			console.warn(e);
 			new Notice(`${e}`);
@@ -545,9 +662,16 @@ export default class MediaDbPlugin extends Plugin {
 		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
 		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 
+		if (mediaTypeModel.getMediaType() === MediaType.Song) {
+			const song = mediaTypeModel as SongModel;
+			const body = (song.lyrics ?? '').trim();
+			fileContent += `\n\n# Lyrics\n\n${body.length > 0 ? body : '_Lyrics not found._'}\n`;
+		}
+
 		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
 			// Include the media variable in all templater commands by using a top level JavaScript execution command.
-			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
+			const mediaJson = JSON.stringify(mediaTypeModel, (key, value: unknown) => (key === 'lyrics' ? undefined : value));
+			fileContent = `---\n<%* const media = ${mediaJson} %>\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
 		} else {
 			fileContent = `---\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
 		}

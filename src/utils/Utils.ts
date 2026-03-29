@@ -2,6 +2,7 @@ import { iso6392 } from 'iso-639-2';
 import type { TFile, TFolder, App } from 'obsidian';
 import { requestUrl } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
+import { MediaType } from './MediaType';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -221,6 +222,14 @@ export function unCamelCase(str: string): string {
 				return str.toUpperCase();
 			})
 	);
+}
+
+/** User-facing label for a media type (e.g. MusicRelease → Album). */
+export function mediaTypeDisplayName(mediaType: MediaType): string {
+	if (mediaType === MediaType.MusicRelease) {
+		return 'Album';
+	}
+	return unCamelCase(mediaType);
 }
 
 /* eslint-disable */

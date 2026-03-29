@@ -5,7 +5,7 @@ import { MediaType } from 'src/utils/MediaType';
 import type MediaDbPlugin from '../main';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
-import { fragWithHTML, unCamelCase } from '../utils/Utils';
+import { fragWithHTML, mediaTypeDisplayName, unCamelCase } from '../utils/Utils';
 import type { ApiSecretId } from './apiSecretIds';
 import { API_SECRET_IDS } from './apiSecretIds';
 import type { PropertyMappingModelData } from './PropertyMapping';
@@ -16,24 +16,28 @@ import { FolderSuggest } from './suggesters/FolderSuggest';
 
 function mediaTypeTabIcon(mediaType: MediaType): IconName {
 	switch (mediaType) {
-		case MediaType.Movie:
-			return 'film';
-		case MediaType.Series:
-			return 'tv';
-		case MediaType.Season:
-			return 'calendar-range';
-		case MediaType.ComicManga:
-			return 'book-open';
-		case MediaType.Game:
-			return 'gamepad-2';
-		case MediaType.Wiki:
-			return 'library-big';
-		case MediaType.MusicRelease:
-			return 'disc-3';
+		case MediaType.Band:
+			return 'mic-2';
 		case MediaType.BoardGame:
 			return 'dice-3';
 		case MediaType.Book:
 			return 'book-marked';
+		case MediaType.ComicManga:
+			return 'book-open';
+		case MediaType.Game:
+			return 'gamepad-2';
+		case MediaType.Movie:
+			return 'film';
+		case MediaType.MusicRelease:
+			return 'disc-3';
+		case MediaType.Season:
+			return 'calendar-range';
+		case MediaType.Series:
+			return 'tv';
+		case MediaType.Song:
+			return 'music-4';
+		case MediaType.Wiki:
+			return 'library-big';
 	}
 }
 
@@ -66,6 +70,7 @@ export interface MediaDbPluginSettings {
 	MALAPIManga_disabledMediaTypes: MediaType[];
 	MobyGamesAPI_disabledMediaTypes: MediaType[];
 	MusicBrainzAPI_disabledMediaTypes: MediaType[];
+	MusicBrainzBandAPI_disabledMediaTypes: MediaType[];
 	OMDbAPI_disabledMediaTypes: MediaType[];
 	OpenLibraryAPI_disabledMediaTypes: MediaType[];
 	SteamAPI_disabledMediaTypes: MediaType[];
@@ -82,6 +87,8 @@ export interface MediaDbPluginSettings {
 	gameTemplate: string;
 	wikiTemplate: string;
 	musicReleaseTemplate: string;
+	bandTemplate: string;
+	songTemplate: string;
 	boardgameTemplate: string;
 	bookTemplate: string;
 
@@ -92,6 +99,8 @@ export interface MediaDbPluginSettings {
 	gameFileNameTemplate: string;
 	wikiFileNameTemplate: string;
 	musicReleaseFileNameTemplate: string;
+	bandFileNameTemplate: string;
+	songFileNameTemplate: string;
 	boardgameFileNameTemplate: string;
 	bookFileNameTemplate: string;
 
@@ -102,6 +111,8 @@ export interface MediaDbPluginSettings {
 	gameFolder: string;
 	wikiFolder: string;
 	musicReleaseFolder: string;
+	bandFolder: string;
+	songFolder: string;
 	boardgameFolder: string;
 	bookFolder: string;
 
@@ -115,6 +126,8 @@ export interface MediaDbPluginSettings {
 	gamePropertyConversionRules: string;
 	wikiPropertyConversionRules: string;
 	musicReleasePropertyConversionRules: string;
+	bandPropertyConversionRules: string;
+	songPropertyConversionRules: string;
 	boardgamePropertyConversionRules: string;
 	bookPropertyConversionRules: string;
 }
@@ -131,49 +144,35 @@ class MediaTypeMappedSettings {
 
 	getTemplate(settings: MediaDbPluginSettings): string {
 		switch (this.mediaType) {
-			case MediaType.Movie:
-				return settings.movieTemplate;
-			case MediaType.Series:
-				return settings.seriesTemplate;
-			case MediaType.Season:
-				return settings.seasonTemplate;
-			case MediaType.ComicManga:
-				return settings.mangaTemplate;
-			case MediaType.Game:
-				return settings.gameTemplate;
-			case MediaType.Wiki:
-				return settings.wikiTemplate;
-			case MediaType.MusicRelease:
-				return settings.musicReleaseTemplate;
+			case MediaType.Band:
+				return settings.bandTemplate;
 			case MediaType.BoardGame:
 				return settings.boardgameTemplate;
 			case MediaType.Book:
 				return settings.bookTemplate;
+			case MediaType.ComicManga:
+				return settings.mangaTemplate;
+			case MediaType.Game:
+				return settings.gameTemplate;
+			case MediaType.Movie:
+				return settings.movieTemplate;
+			case MediaType.MusicRelease:
+				return settings.musicReleaseTemplate;
+			case MediaType.Season:
+				return settings.seasonTemplate;
+			case MediaType.Series:
+				return settings.seriesTemplate;
+			case MediaType.Song:
+				return settings.songTemplate;
+			case MediaType.Wiki:
+				return settings.wikiTemplate;
 		}
 	}
 
 	setTemplate(settings: MediaDbPluginSettings, template: string): void {
 		switch (this.mediaType) {
-			case MediaType.Movie:
-				settings.movieTemplate = template;
-				break;
-			case MediaType.Series:
-				settings.seriesTemplate = template;
-				break;
-			case MediaType.Season:
-				settings.seasonTemplate = template;
-				break;
-			case MediaType.ComicManga:
-				settings.mangaTemplate = template;
-				break;
-			case MediaType.Game:
-				settings.gameTemplate = template;
-				break;
-			case MediaType.Wiki:
-				settings.wikiTemplate = template;
-				break;
-			case MediaType.MusicRelease:
-				settings.musicReleaseTemplate = template;
+			case MediaType.Band:
+				settings.bandTemplate = template;
 				break;
 			case MediaType.BoardGame:
 				settings.boardgameTemplate = template;
@@ -181,54 +180,64 @@ class MediaTypeMappedSettings {
 			case MediaType.Book:
 				settings.bookTemplate = template;
 				break;
+			case MediaType.ComicManga:
+				settings.mangaTemplate = template;
+				break;
+			case MediaType.Game:
+				settings.gameTemplate = template;
+				break;
+			case MediaType.Movie:
+				settings.movieTemplate = template;
+				break;
+			case MediaType.MusicRelease:
+				settings.musicReleaseTemplate = template;
+				break;
+			case MediaType.Season:
+				settings.seasonTemplate = template;
+				break;
+			case MediaType.Series:
+				settings.seriesTemplate = template;
+				break;
+			case MediaType.Song:
+				settings.songTemplate = template;
+				break;
+			case MediaType.Wiki:
+				settings.wikiTemplate = template;
+				break;
 		}
 	}
 
 	getFileNameTemplate(settings: MediaDbPluginSettings): string {
 		switch (this.mediaType) {
-			case MediaType.Movie:
-				return settings.movieFileNameTemplate;
-			case MediaType.Series:
-				return settings.seriesFileNameTemplate;
-			case MediaType.Season:
-				return settings.seasonFileNameTemplate;
-			case MediaType.ComicManga:
-				return settings.mangaFileNameTemplate;
-			case MediaType.Game:
-				return settings.gameFileNameTemplate;
-			case MediaType.Wiki:
-				return settings.wikiFileNameTemplate;
-			case MediaType.MusicRelease:
-				return settings.musicReleaseFileNameTemplate;
+			case MediaType.Band:
+				return settings.bandFileNameTemplate;
 			case MediaType.BoardGame:
 				return settings.boardgameFileNameTemplate;
 			case MediaType.Book:
 				return settings.bookFileNameTemplate;
+			case MediaType.ComicManga:
+				return settings.mangaFileNameTemplate;
+			case MediaType.Game:
+				return settings.gameFileNameTemplate;
+			case MediaType.Movie:
+				return settings.movieFileNameTemplate;
+			case MediaType.MusicRelease:
+				return settings.musicReleaseFileNameTemplate;
+			case MediaType.Season:
+				return settings.seasonFileNameTemplate;
+			case MediaType.Series:
+				return settings.seriesFileNameTemplate;
+			case MediaType.Song:
+				return settings.songFileNameTemplate;
+			case MediaType.Wiki:
+				return settings.wikiFileNameTemplate;
 		}
 	}
 
 	setFileNameTemplate(settings: MediaDbPluginSettings, template: string): void {
 		switch (this.mediaType) {
-			case MediaType.Movie:
-				settings.movieFileNameTemplate = template;
-				break;
-			case MediaType.Series:
-				settings.seriesFileNameTemplate = template;
-				break;
-			case MediaType.Season:
-				settings.seasonFileNameTemplate = template;
-				break;
-			case MediaType.ComicManga:
-				settings.mangaFileNameTemplate = template;
-				break;
-			case MediaType.Game:
-				settings.gameFileNameTemplate = template;
-				break;
-			case MediaType.Wiki:
-				settings.wikiFileNameTemplate = template;
-				break;
-			case MediaType.MusicRelease:
-				settings.musicReleaseFileNameTemplate = template;
+			case MediaType.Band:
+				settings.bandFileNameTemplate = template;
 				break;
 			case MediaType.BoardGame:
 				settings.boardgameFileNameTemplate = template;
@@ -236,42 +245,70 @@ class MediaTypeMappedSettings {
 			case MediaType.Book:
 				settings.bookFileNameTemplate = template;
 				break;
+			case MediaType.ComicManga:
+				settings.mangaFileNameTemplate = template;
+				break;
+			case MediaType.Game:
+				settings.gameFileNameTemplate = template;
+				break;
+			case MediaType.Movie:
+				settings.movieFileNameTemplate = template;
+				break;
+			case MediaType.MusicRelease:
+				settings.musicReleaseFileNameTemplate = template;
+				break;
+			case MediaType.Season:
+				settings.seasonFileNameTemplate = template;
+				break;
+			case MediaType.Series:
+				settings.seriesFileNameTemplate = template;
+				break;
+			case MediaType.Song:
+				settings.songFileNameTemplate = template;
+				break;
+			case MediaType.Wiki:
+				settings.wikiFileNameTemplate = template;
+				break;
 		}
 	}
 
 	getFolder(settings: MediaDbPluginSettings): string {
 		switch (this.mediaType) {
-			case MediaType.Movie:
-				return settings.movieFolder;
-			case MediaType.Series:
-				return settings.seriesFolder;
-			case MediaType.Season:
-				return settings.seasonFolder;
-			case MediaType.ComicManga:
-				return settings.mangaFolder;
-			case MediaType.Game:
-				return settings.gameFolder;
-			case MediaType.Wiki:
-				return settings.wikiFolder;
-			case MediaType.MusicRelease:
-				return settings.musicReleaseFolder;
+			case MediaType.Band:
+				return settings.bandFolder;
 			case MediaType.BoardGame:
 				return settings.boardgameFolder;
 			case MediaType.Book:
 				return settings.bookFolder;
+			case MediaType.ComicManga:
+				return settings.mangaFolder;
+			case MediaType.Game:
+				return settings.gameFolder;
+			case MediaType.Movie:
+				return settings.movieFolder;
+			case MediaType.MusicRelease:
+				return settings.musicReleaseFolder;
+			case MediaType.Season:
+				return settings.seasonFolder;
+			case MediaType.Series:
+				return settings.seriesFolder;
+			case MediaType.Song:
+				return settings.songFolder;
+			case MediaType.Wiki:
+				return settings.wikiFolder;
 		}
 	}
 
 	setFolder(settings: MediaDbPluginSettings, folder: string): void {
 		switch (this.mediaType) {
-			case MediaType.Movie:
-				settings.movieFolder = folder;
+			case MediaType.Band:
+				settings.bandFolder = folder;
 				break;
-			case MediaType.Series:
-				settings.seriesFolder = folder;
+			case MediaType.BoardGame:
+				settings.boardgameFolder = folder;
 				break;
-			case MediaType.Season:
-				settings.seasonFolder = folder;
+			case MediaType.Book:
+				settings.bookFolder = folder;
 				break;
 			case MediaType.ComicManga:
 				settings.mangaFolder = folder;
@@ -279,17 +316,23 @@ class MediaTypeMappedSettings {
 			case MediaType.Game:
 				settings.gameFolder = folder;
 				break;
-			case MediaType.Wiki:
-				settings.wikiFolder = folder;
+			case MediaType.Movie:
+				settings.movieFolder = folder;
 				break;
 			case MediaType.MusicRelease:
 				settings.musicReleaseFolder = folder;
 				break;
-			case MediaType.BoardGame:
-				settings.boardgameFolder = folder;
+			case MediaType.Season:
+				settings.seasonFolder = folder;
 				break;
-			case MediaType.Book:
-				settings.bookFolder = folder;
+			case MediaType.Series:
+				settings.seriesFolder = folder;
+				break;
+			case MediaType.Song:
+				settings.songFolder = folder;
+				break;
+			case MediaType.Wiki:
+				settings.wikiFolder = folder;
 				break;
 		}
 	}
@@ -324,6 +367,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	MALAPIManga_disabledMediaTypes: [],
 	MobyGamesAPI_disabledMediaTypes: [],
 	MusicBrainzAPI_disabledMediaTypes: [],
+	MusicBrainzBandAPI_disabledMediaTypes: [],
 	OMDbAPI_disabledMediaTypes: [],
 	OpenLibraryAPI_disabledMediaTypes: [],
 	SteamAPI_disabledMediaTypes: [],
@@ -340,6 +384,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	gameTemplate: '',
 	wikiTemplate: '',
 	musicReleaseTemplate: '',
+	bandTemplate: '',
+	songTemplate: '',
 	boardgameTemplate: '',
 	bookTemplate: '',
 
@@ -350,6 +396,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	gameFileNameTemplate: '{{ title }} ({{ year }})',
 	wikiFileNameTemplate: '{{ title }}',
 	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
+	bandFileNameTemplate: '{{ title }}',
+	songFileNameTemplate: '{{ trackNumber }}. {{ title }} ({{ albumTitle }})',
 	boardgameFileNameTemplate: '{{ title }} ({{ year }})',
 	bookFileNameTemplate: '{{ title }} ({{ year }})',
 
@@ -360,6 +408,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	gameFolder: 'Media DB/games',
 	wikiFolder: 'Media DB/wiki',
 	musicReleaseFolder: 'Media DB/music',
+	bandFolder: 'Media DB/bands',
+	songFolder: 'Media DB/music/songs',
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
 
@@ -373,6 +423,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	gamePropertyConversionRules: '',
 	wikiPropertyConversionRules: '',
 	musicReleasePropertyConversionRules: '',
+	bandPropertyConversionRules: '',
+	songPropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
 	bookPropertyConversionRules: '',
 };
@@ -427,18 +479,141 @@ export class MediaDbSettingTab extends PluginSettingTab {
 	}
 
 	private addApiSecretSetting(group: SettingGroup, name: string, description: string, secretId: ApiSecretId): void {
-		group.addSetting(setting =>
-			void setting.setName(name).setDesc(description).addComponent(el => {
-				const component = new SecretComponent(this.app, el);
-				component
-					.setValue(this.app.secretStorage.getSecret(secretId) ?? '')
-					.onChange(value => {
-						this.app.secretStorage.setSecret(secretId, value);
-						void this.plugin.saveSettings();
-					});
-				return component;
-			}),
+		group.addSetting(
+			setting =>
+				void setting
+					.setName(name)
+					.setDesc(description)
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+						component.setValue(this.app.secretStorage.getSecret(secretId) ?? '').onChange(value => {
+							this.app.secretStorage.setSecret(secretId, value);
+							void this.plugin.saveSettings();
+						});
+						return component;
+					}),
 		);
+	}
+
+	private static readonly MUSIC_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Band, MediaType.MusicRelease, MediaType.Song];
+
+	private static readonly LEGACY_MUSIC_TAB_IDS: ReadonlySet<string> = new Set(['media-band', 'media-musicRelease', 'media-song']);
+
+	private renderMediaTypeSection(
+		panel: HTMLElement,
+		mediaTypeSetting: MediaTypeMappedSettings,
+		mediaTypeApiMap: Map<MediaType, string[]>,
+		options?: { sectionHeading?: string },
+	): void {
+		const mediaType = mediaTypeSetting.mediaType;
+		const descNoun = options?.sectionHeading?.toLowerCase() ?? mediaTypeDisplayName(mediaType).toLowerCase();
+
+		if (options?.sectionHeading) {
+			panel.createEl('h3', { text: options.sectionHeading });
+		}
+
+		const mediaTypeGroup = new SettingGroup(panel);
+
+		mediaTypeGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Import folder')
+					.setDesc(`Where newly imported ${descNoun} notes should be placed.`)
+					.addSearch(cb => {
+						const suggester = new FolderSuggest(this.app, cb.inputEl);
+						suggester.onSelect(folder => {
+							cb.setValue(folder.path);
+							mediaTypeSetting.setFolder(this.plugin.settings, folder.path);
+							void this.plugin.saveSettings();
+							suggester.close();
+						});
+						cb.setPlaceholder(mediaTypeSetting.getFolder(DEFAULT_SETTINGS))
+							.setValue(mediaTypeSetting.getFolder(this.plugin.settings))
+							.onChange(data => {
+								mediaTypeSetting.setFolder(this.plugin.settings, data);
+								void this.plugin.saveSettings();
+							});
+					}),
+		);
+
+		mediaTypeGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Template')
+					.setDesc(`Template file used when creating a new ${descNoun} note.`)
+					.addSearch(cb => {
+						const suggester = new FileSuggest(this.app, cb.inputEl);
+						suggester.onSelect(file => {
+							cb.setValue(file.path);
+							mediaTypeSetting.setTemplate(this.plugin.settings, file.path);
+							void this.plugin.saveSettings();
+							suggester.close();
+						});
+						cb.setPlaceholder(`Example: ${descNoun.replace(/ /g, '')}Template.md`)
+							.setValue(mediaTypeSetting.getTemplate(this.plugin.settings))
+							.onChange(data => {
+								mediaTypeSetting.setTemplate(this.plugin.settings, data);
+								void this.plugin.saveSettings();
+							});
+					}),
+		);
+
+		mediaTypeGroup.addSetting(
+			setting =>
+				void setting
+					.setName('File name template')
+					.setDesc(`File name template for new ${descNoun} notes.`)
+					.addText(cb => {
+						cb.setPlaceholder(`Example: ${mediaTypeSetting.getFileNameTemplate(DEFAULT_SETTINGS)}`)
+							.setValue(mediaTypeSetting.getFileNameTemplate(this.plugin.settings))
+							.onChange(data => {
+								mediaTypeSetting.setFileNameTemplate(this.plugin.settings, data);
+								void this.plugin.saveSettings();
+							});
+					}),
+		);
+
+		const apis = mediaTypeApiMap.get(mediaType) ?? [];
+		if (apis.length > 1) {
+			for (const apiName of apis) {
+				const api = this.plugin.apiManager.apis.find(a => a.apiName === apiName);
+				if (api) {
+					const disabledMediaTypes = api.getDisabledMediaTypes();
+
+					mediaTypeGroup.addSetting(
+						setting =>
+							void setting
+								.setName(apiName)
+								.setDesc(`Use ${apiName} for ${descNoun} search and import.`)
+								.addToggle(cb => {
+									cb.setValue(!disabledMediaTypes.includes(mediaType)).onChange(data => {
+										if (data) {
+											const index = disabledMediaTypes.indexOf(mediaType);
+											if (index != -1) {
+												disabledMediaTypes.splice(index, 1);
+											}
+										} else {
+											disabledMediaTypes.push(mediaType);
+										}
+										void this.plugin.saveSettings();
+									});
+								}),
+					);
+				}
+			}
+		}
+	}
+
+	private renderMusicSettingsTab(panel: HTMLElement, mediaTypeSettings: MediaTypeMappedSettings[], mediaTypeApiMap: Map<MediaType, string[]>): void {
+		const byType = (mt: MediaType): MediaTypeMappedSettings => mediaTypeSettings.find(s => s.mediaType === mt)!;
+
+		panel.createDiv({ cls: 'media-db-plugin-spacer' });
+
+		this.renderMediaTypeSection(panel, byType(MediaType.Band), mediaTypeApiMap, { sectionHeading: 'Band' });
+		panel.createDiv({ cls: 'media-db-plugin-spacer' });
+		this.renderMediaTypeSection(panel, byType(MediaType.MusicRelease), mediaTypeApiMap, { sectionHeading: 'Album' });
+		panel.createDiv({ cls: 'media-db-plugin-spacer' });
+		this.renderMediaTypeSection(panel, byType(MediaType.Song), mediaTypeApiMap, { sectionHeading: 'Song' });
 	}
 
 	display(): void {
@@ -487,277 +662,175 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			const generalGroup = new SettingGroup(panel);
 
 			generalGroup.addSetting(
-			setting =>
-				void setting
-					.setName('SFW filter')
-					.setDesc('Only shows SFW results for APIs that offer filtering.')
-					.addToggle(cb => {
-						cb.setValue(this.plugin.settings.sfwFilter).onChange(data => {
-							this.plugin.settings.sfwFilter = data;
-							void this.plugin.saveSettings();
-						});
-					}),
-		);
-
-		generalGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Resolve {{ tags }} in templates')
-					.setDesc('Whether to resolve {{ tags }} in templates. The spaces inside the curly braces are important.')
-					.addToggle(cb => {
-						cb.setValue(this.plugin.settings.templates).onChange(data => {
-							this.plugin.settings.templates = data;
-							void this.plugin.saveSettings();
-						});
-					}),
-		);
-
-		generalGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Date format')
-					.setDesc(
-						fragWithHTML(
-							"Your custom date format. Use <em>'YYYY-MM-DD'</em> for example.<br>" +
-								"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
-								"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
-								this.plugin.dateFormatter.getPreview() +
-								'</a></b>',
-						),
-					)
-					.addText(cb => {
-						cb.setPlaceholder(DEFAULT_SETTINGS.customDateFormat)
-							.setValue(this.plugin.settings.customDateFormat === DEFAULT_SETTINGS.customDateFormat ? '' : this.plugin.settings.customDateFormat)
-							.onChange(data => {
-								const newDateFormat = data ? data : DEFAULT_SETTINGS.customDateFormat;
-								this.plugin.settings.customDateFormat = newDateFormat;
-								const previewEl = document.getElementById('media-db-dateformat-preview');
-								if (previewEl) {
-									previewEl.textContent = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
-								}
+				setting =>
+					void setting
+						.setName('SFW filter')
+						.setDesc('Only shows SFW results for APIs that offer filtering.')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.sfwFilter).onChange(data => {
+								this.plugin.settings.sfwFilter = data;
 								void this.plugin.saveSettings();
 							});
-					}),
-		);
+						}),
+			);
 
-		generalGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Open note in new tab')
-					.setDesc('Open the newly created note in a new tab.')
-					.addToggle(cb => {
-						cb.setValue(this.plugin.settings.openNoteInNewTab).onChange(data => {
-							this.plugin.settings.openNoteInNewTab = data;
-							void this.plugin.saveSettings();
-						});
-					}),
-		);
-
-		generalGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Use default front matter')
-					.setDesc('Whether to use the default front matter. If disabled, the front matter from the template will be used. Same as mapping everything to remove.')
-					.addToggle(cb => {
-						cb.setValue(this.plugin.settings.useDefaultFrontMatter).onChange(data => {
-							this.plugin.settings.useDefaultFrontMatter = data;
-							void this.plugin.saveSettings();
-							// Redraw settings to display/remove the property mappings
-							this.display();
-						});
-					}),
-		);
-
-		generalGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Enable Templater integration')
-					.setDesc(
-						'Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.',
-					)
-					.addToggle(cb => {
-						cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
-							this.plugin.settings.enableTemplaterIntegration = data;
-							void this.plugin.saveSettings();
-						});
-					}),
-		);
-
-		generalGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Download images')
-					.setDesc('Downloads images for new notes in the folder below')
-					.addToggle(cb => {
-						cb.setValue(this.plugin.settings.imageDownload).onChange(data => {
-							this.plugin.settings.imageDownload = data;
-							void this.plugin.saveSettings();
-						});
-					}),
-		);
-
-		generalGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Image folder')
-					.setDesc('Where downloaded images should be stored.')
-					.addSearch(cb => {
-						const suggester = new FolderSuggest(this.app, cb.inputEl);
-						suggester.onSelect(folder => {
-							cb.setValue(folder.path);
-							this.plugin.settings.imageFolder = folder.path;
-							void this.plugin.saveSettings();
-							suggester.close();
-						});
-						cb.setPlaceholder(DEFAULT_SETTINGS.imageFolder)
-							.setValue(this.plugin.settings.imageFolder)
-							.onChange(data => {
-								this.plugin.settings.imageFolder = data;
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Resolve {{ tags }} in templates')
+						.setDesc('Whether to resolve {{ tags }} in templates. The spaces inside the curly braces are important.')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.templates).onChange(data => {
+								this.plugin.settings.templates = data;
 								void this.plugin.saveSettings();
 							});
-					}),
-		);
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Date format')
+						.setDesc(
+							fragWithHTML(
+								"Your custom date format. Use <em>'YYYY-MM-DD'</em> for example.<br>" +
+									"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
+									"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
+									this.plugin.dateFormatter.getPreview() +
+									'</a></b>',
+							),
+						)
+						.addText(cb => {
+							cb.setPlaceholder(DEFAULT_SETTINGS.customDateFormat)
+								.setValue(this.plugin.settings.customDateFormat === DEFAULT_SETTINGS.customDateFormat ? '' : this.plugin.settings.customDateFormat)
+								.onChange(data => {
+									const newDateFormat = data ? data : DEFAULT_SETTINGS.customDateFormat;
+									this.plugin.settings.customDateFormat = newDateFormat;
+									const previewEl = document.getElementById('media-db-dateformat-preview');
+									if (previewEl) {
+										previewEl.textContent = this.plugin.dateFormatter.getPreview(newDateFormat); // update preview
+									}
+									void this.plugin.saveSettings();
+								});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Open note in new tab')
+						.setDesc('Open the newly created note in a new tab.')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.openNoteInNewTab).onChange(data => {
+								this.plugin.settings.openNoteInNewTab = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Use default front matter')
+						.setDesc('Whether to use the default front matter. If disabled, the front matter from the template will be used. Same as mapping everything to remove.')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.useDefaultFrontMatter).onChange(data => {
+								this.plugin.settings.useDefaultFrontMatter = data;
+								void this.plugin.saveSettings();
+								// Redraw settings to display/remove the property mappings
+								this.display();
+							});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Enable Templater integration')
+						.setDesc(
+							'Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.',
+						)
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
+								this.plugin.settings.enableTemplaterIntegration = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Download images')
+						.setDesc('Downloads images for new notes in the folder below')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.imageDownload).onChange(data => {
+								this.plugin.settings.imageDownload = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Image folder')
+						.setDesc('Where downloaded images should be stored.')
+						.addSearch(cb => {
+							const suggester = new FolderSuggest(this.app, cb.inputEl);
+							suggester.onSelect(folder => {
+								cb.setValue(folder.path);
+								this.plugin.settings.imageFolder = folder.path;
+								void this.plugin.saveSettings();
+								suggester.close();
+							});
+							cb.setPlaceholder(DEFAULT_SETTINGS.imageFolder)
+								.setValue(this.plugin.settings.imageFolder)
+								.onChange(data => {
+									this.plugin.settings.imageFolder = data;
+									void this.plugin.saveSettings();
+								});
+						}),
+			);
 		});
 
 		addTab('api-keys', 'API keys', 'key', panel => {
 			const apiKeyGroup = new SettingGroup(panel);
 
 			this.addApiSecretSetting(apiKeyGroup, 'OMDb API key', 'API key for "www.omdbapi.com".', API_SECRET_IDS.omdb);
-			this.addApiSecretSetting(
-				apiKeyGroup,
-				'TMDB API Token',
-				'API Read Access Token for "https://www.themoviedb.org".',
-				API_SECRET_IDS.tmdb,
-			);
+			this.addApiSecretSetting(apiKeyGroup, 'TMDB API Token', 'API Read Access Token for "https://www.themoviedb.org".', API_SECRET_IDS.tmdb);
 			this.addApiSecretSetting(apiKeyGroup, 'Moby Games key', 'API key for "www.mobygames.com".', API_SECRET_IDS.mobyGames);
 			this.addApiSecretSetting(apiKeyGroup, 'Giant Bomb Key', 'API key for "www.giantbomb.com".', API_SECRET_IDS.giantBomb);
-			this.addApiSecretSetting(
-				apiKeyGroup,
-				'IGDB Client ID',
-				'Client ID for IGDB API (Required for Twitch OAuth).',
-				API_SECRET_IDS.igdbClientId,
-			);
-			this.addApiSecretSetting(
-				apiKeyGroup,
-				'IGDB Client Secret',
-				'Client Secret for IGDB API.',
-				API_SECRET_IDS.igdbClientSecret,
-			);
+			this.addApiSecretSetting(apiKeyGroup, 'IGDB Client ID', 'Client ID for IGDB API (Required for Twitch OAuth).', API_SECRET_IDS.igdbClientId);
+			this.addApiSecretSetting(apiKeyGroup, 'IGDB Client Secret', 'Client Secret for IGDB API.', API_SECRET_IDS.igdbClientSecret);
 			this.addApiSecretSetting(apiKeyGroup, 'RAWG API Key', 'API key for "rawg.io".', API_SECRET_IDS.rawg);
+			this.addApiSecretSetting(apiKeyGroup, 'Comic Vine Key', 'API key for "www.comicvine.gamespot.com".', API_SECRET_IDS.comicVine);
+			this.addApiSecretSetting(apiKeyGroup, 'Boardgame Geek Key', 'API key for "www.boardgamegeek.com".', API_SECRET_IDS.boardgameGeek);
 			this.addApiSecretSetting(
 				apiKeyGroup,
-				'Comic Vine Key',
-				'API key for "www.comicvine.gamespot.com".',
-				API_SECRET_IDS.comicVine,
-			);
-			this.addApiSecretSetting(
-				apiKeyGroup,
-				'Boardgame Geek Key',
-				'API key for "www.boardgamegeek.com".',
-				API_SECRET_IDS.boardgameGeek,
+				'Genius API access token',
+				'Client access token from https://genius.com/api-clients — used to search songs and load lyrics when importing a band.',
+				API_SECRET_IDS.genius,
 			);
 		});
 
+		let musicTabAdded = false;
 		for (const mediaTypeSetting of mediaTypeSettings) {
 			const mediaType = mediaTypeSetting.mediaType;
-			const mediaTypeName = unCamelCase(mediaTypeSetting.mediaType);
 
-			addTab(`media-${mediaType}`, mediaTypeName, mediaTypeTabIcon(mediaType), panel => {
-				const mediaTypeGroup = new SettingGroup(panel);
-				const mediaTypeNameLower = mediaTypeName.toLowerCase();
-
-				// Folder
-			mediaTypeGroup.addSetting(
-				setting =>
-					void setting
-						.setName(`Import Folder`)
-						.setDesc(`Where newly imported ${mediaTypeNameLower} should be placed.`)
-						.addSearch(cb => {
-							const suggester = new FolderSuggest(this.app, cb.inputEl);
-							suggester.onSelect(folder => {
-								cb.setValue(folder.path);
-								mediaTypeSetting.setFolder(this.plugin.settings, folder.path);
-								void this.plugin.saveSettings();
-								suggester.close();
-							});
-							cb.setPlaceholder(mediaTypeSetting.getFolder(DEFAULT_SETTINGS))
-								.setValue(mediaTypeSetting.getFolder(this.plugin.settings))
-								.onChange(data => {
-									mediaTypeSetting.setFolder(this.plugin.settings, data);
-									void this.plugin.saveSettings();
-								});
-						}),
-			);
-
-			// Template
-			mediaTypeGroup.addSetting(
-				setting =>
-					void setting
-						.setName(`Template`)
-						.setDesc(`Template file to be used when creating a new note for a ${mediaTypeNameLower}.`)
-						.addSearch(cb => {
-							const suggester = new FileSuggest(this.app, cb.inputEl);
-							suggester.onSelect(file => {
-								cb.setValue(file.path);
-								mediaTypeSetting.setTemplate(this.plugin.settings, file.path);
-								void this.plugin.saveSettings();
-								suggester.close();
-							});
-							cb.setPlaceholder(`Example: ${mediaTypeNameLower}Template.md`)
-								.setValue(mediaTypeSetting.getTemplate(this.plugin.settings))
-								.onChange(data => {
-									mediaTypeSetting.setTemplate(this.plugin.settings, data);
-									void this.plugin.saveSettings();
-								});
-						}),
-			);
-
-			// File name template
-			mediaTypeGroup.addSetting(
-				setting =>
-					void setting
-						.setName(`File name template`)
-						.setDesc(`Template for the file name used when creating a new note for a ${mediaTypeNameLower}.`)
-						.addText(cb => {
-							cb.setPlaceholder(`Example: ${mediaTypeSetting.getFileNameTemplate(DEFAULT_SETTINGS)}`)
-								.setValue(mediaTypeSetting.getFileNameTemplate(this.plugin.settings))
-								.onChange(data => {
-									mediaTypeSetting.setFileNameTemplate(this.plugin.settings, data);
-									void this.plugin.saveSettings();
-								});
-						}),
-			);
-
-			// APIs
-			const apis = mediaTypeApiMap.get(mediaType) ?? [];
-			if (apis.length > 1) {
-				for (const apiName of apis) {
-					const api = this.plugin.apiManager.apis.find(api => api.apiName === apiName);
-					if (api) {
-						const disabledMediaTypes = api.getDisabledMediaTypes();
-
-						mediaTypeGroup.addSetting(
-							setting =>
-								void setting
-									.setName(apiName)
-									.setDesc(`Use ${apiName} API for ${unCamelCase(mediaType)}.`)
-									.addToggle(cb => {
-										cb.setValue(!disabledMediaTypes.includes(mediaType)).onChange(data => {
-											if (data) {
-												const index = disabledMediaTypes.indexOf(mediaType);
-												if (index != -1) {
-													disabledMediaTypes.splice(index, 1);
-												}
-											} else {
-												disabledMediaTypes.push(mediaType);
-											}
-											void this.plugin.saveSettings();
-										});
-									}),
-						);
-					}
+			if (MediaDbSettingTab.MUSIC_SETTINGS_MEDIA_TYPES.includes(mediaType)) {
+				if (!musicTabAdded) {
+					musicTabAdded = true;
+					addTab('media-music', 'Music', 'disc-3', panel => {
+						this.renderMusicSettingsTab(panel, mediaTypeSettings, mediaTypeApiMap);
+					});
 				}
+				continue;
 			}
+
+			const mediaTypeName = unCamelCase(mediaTypeSetting.mediaType);
+			addTab(`media-${mediaType}`, mediaTypeName, mediaTypeTabIcon(mediaType), panel => {
+				this.renderMediaTypeSection(panel, mediaTypeSetting, mediaTypeApiMap);
 			});
 		}
 
@@ -799,8 +872,10 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		}
 
 		const validIds = new Set(tabEntries.map(t => t.id));
-		let initialId =
-			this.activeSettingsTabId && validIds.has(this.activeSettingsTabId) ? this.activeSettingsTabId : 'general';
+		let initialId = this.activeSettingsTabId && validIds.has(this.activeSettingsTabId) ? this.activeSettingsTabId : 'general';
+		if (MediaDbSettingTab.LEGACY_MUSIC_TAB_IDS.has(initialId) && validIds.has('media-music')) {
+			initialId = 'media-music';
+		}
 		if (!validIds.has(initialId)) {
 			initialId = 'general';
 		}

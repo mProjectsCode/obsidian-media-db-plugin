@@ -12,6 +12,7 @@ export const API_SECRET_IDS = {
 	rawg: 'media-db-rawg',
 	comicVine: 'media-db-comic-vine',
 	boardgameGeek: 'media-db-boardgame-geek',
+	genius: 'media-db-genius',
 } as const;
 
 export type ApiSecretId = (typeof API_SECRET_IDS)[keyof typeof API_SECRET_IDS];
