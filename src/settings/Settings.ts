@@ -1,8 +1,8 @@
 import type { App, IconName } from 'obsidian';
-import { Notice, Platform, PluginSettingTab, SecretComponent, SettingGroup, setIcon } from 'obsidian';
-import { render } from 'solid-js/web';
+import { Platform, PluginSettingTab, SecretComponent, SettingGroup, setIcon } from 'obsidian';
 import { MediaType } from 'src/utils/MediaType';
 import type MediaDbPlugin from '../main';
+import { PropertyMappingModal } from '../modals/PropertyMappingModal';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { fragWithHTML, mediaTypeDisplayName, unCamelCase } from '../utils/Utils';
@@ -10,7 +10,6 @@ import type { ApiSecretId } from './apiSecretIds';
 import { API_SECRET_IDS } from './apiSecretIds';
 import type { PropertyMappingModelData } from './PropertyMapping';
 import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './PropertyMapping';
-import PropertyMappingModelsComponent from './PropertyMappingModelsComponent';
 import { FileSuggest } from './suggesters/FileSuggest';
 import { FolderSuggest } from './suggesters/FolderSuggest';
 
@@ -623,6 +622,20 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		}
 
 		options?.appendToSection?.(mediaTypeGroup);
+
+		if (this.plugin.settings.useDefaultFrontMatter) {
+			mediaTypeGroup.addSetting(setting =>
+				void setting
+					.setName('Property mappings')
+					.setDesc(`How metadata fields map to frontmatter for ${descNoun} notes.`)
+					.addButton(btn => {
+						btn.setButtonText('Edit');
+						btn.onClick(() => {
+							new PropertyMappingModal(this.app, this.plugin, mediaType).open();
+						});
+					}),
+			);
+		}
 	}
 
 	private renderMusicSettingsTab(panel: HTMLElement, mediaTypeSettings: MediaTypeMappedSettings[], mediaTypeApiMap: Map<MediaType, string[]>): void {
@@ -639,7 +652,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void setting
 							.setName('Use file trees for songs')
 							.setDesc(
-								'When importing a band, create a subfolder named after the band under the band import folder, place album notes there, and place each album’s songs in a subfolder named after that album. While enabled, album and song import folders are not shown below and are not used for band imports (standalone album/song imports still use those folders).',
+								'Use a file tree hierarchy to store albums and songs for each band.',
 							)
 							.addToggle(cb => {
 								cb.setValue(this.plugin.settings.bandUseFileTreeForSongs).onChange(data => {
@@ -903,43 +916,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			const mediaTypeName = unCamelCase(mediaTypeSetting.mediaType);
 			addTab(`media-${mediaType}`, mediaTypeName, mediaTypeTabIcon(mediaType), panel => {
 				this.renderMediaTypeSection(panel, mediaTypeSetting, mediaTypeApiMap);
-			});
-		}
-
-		// MARK: Property mappings
-
-		if (this.plugin.settings.useDefaultFrontMatter) {
-			addTab('property-mappings', 'Property mappings', 'list-tree', panel => {
-				const mappingGroup = new SettingGroup(panel);
-				mappingGroup.addSetting(setting => {
-					setting
-						.setName('Property mappings explanation')
-						.setDesc(
-							fragWithHTML(
-								'<p>Here you can customize how metadata fields are mapped to property names in the front matter of the created notes.</p>' +
-									'<p>You can choose to keep the original name, rename the property, or remove it entirely.</p>' +
-									'<p><strong>Remember to save your changes using the save button for each individual category.</strong></p>',
-							),
-						);
-
-					render(
-						() =>
-							PropertyMappingModelsComponent({
-								models: propertyMappingModelsInDisplayOrder(structuredClone(this.plugin.settings.propertyMappingModels)),
-								save: (model: PropertyMappingModelData): void => {
-									// Update the matching model in settings (stored as plain data)
-									const index = this.plugin.settings.propertyMappingModels.findIndex(m => m.type === model.type);
-									if (index !== -1) {
-										this.plugin.settings.propertyMappingModels[index] = model;
-									}
-
-									new Notice(`MDB: Property mappings for ${mediaTypeDisplayName(model.type)} saved successfully.`);
-									void this.plugin.saveSettings();
-								},
-							}),
-						setting.descEl,
-					);
-				});
 			});
 		}
 

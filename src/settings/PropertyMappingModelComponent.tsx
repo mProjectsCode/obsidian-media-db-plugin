@@ -8,6 +8,8 @@ import Icon from './Icon';
 interface PropertyMappingModelComponentProps {
 	model: PropertyMappingModelData;
 	save: (model: PropertyMappingModelData) => void;
+	/** When false, hides the media-type heading (e.g. modal title already shows it). Default true. */
+	showMediaTypeTitle?: boolean;
 }
 
 export default function PropertyMappingModelComponent(props: PropertyMappingModelComponentProps) {
@@ -34,10 +36,16 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 		}
 	};
 
+	const showTitle = () => props.showMediaTypeTitle !== false;
+
 	return (
 		<div class="media-db-plugin-property-mappings-model-container">
-			<div class="media-db-plugin-property-mappings-model-header">
-				<div class="setting-item-name">{mediaTypeDisplayName(modelData.type as MediaType)}</div>
+			<div
+				class={`media-db-plugin-property-mappings-model-header${showTitle() ? '' : ' media-db-plugin-property-mappings-model-header--actions-only'}`}
+			>
+				<Show when={showTitle()}>
+					<div class="setting-item-name">{mediaTypeDisplayName(modelData.type as MediaType)}</div>
+				</Show>
 
 				<div class="media-db-plugin-property-mappings-model-actions">
 					<Show when={unsavedChanges()}>

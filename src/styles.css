@@ -101,6 +101,10 @@ small.media-db-plugin-list-text {
 	gap: var(--size-4-3);
 }
 
+.media-db-plugin-property-mappings-model-header--actions-only {
+	justify-content: flex-end;
+}
+
 .media-db-plugin-property-mappings-model-header .setting-item-name {
 	font-weight: var(--font-semibold);
 	font-size: var(--font-ui-medium);
