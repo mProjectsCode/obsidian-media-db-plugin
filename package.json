@@ -30,7 +30,7 @@
 		"eslint-plugin-import": "^2.32.0",
 		"eslint-plugin-only-warn": "^1.1.0",
 		"iso-639-2": "^3.0.2",
-		"obsidian": "latest",
+		"obsidian": "^1.12.3",
 		"openapi-fetch": "^0.14.1",
 		"openapi-typescript": "^7.10.1",
 		"prettier": "^3.8.1",
