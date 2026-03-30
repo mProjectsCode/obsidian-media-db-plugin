@@ -2,7 +2,7 @@ import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
-import { apiSecrets } from '../../settings/apiSecretHelpers';
+import { API_SECRET_IDS } from '../../settings/apiSecretIds';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
@@ -37,8 +37,8 @@ export class IGDBAPI extends APIModel {
 		const currentTime = Date.now();
 		if (this.accessToken && currentTime < this.tokenExpiry) return this.accessToken;
 
-		const clientId = apiSecrets.igdbClientId(this.plugin);
-		const clientSecret = apiSecrets.igdbClientSecret(this.plugin);
+		const clientId = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.igdbClientId) ?? '';
+		const clientSecret = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.igdbClientSecret) ?? '';
 		if (!clientId || !clientSecret) {
 			throw Error(`MDB | Client ID or Client Secret for ${this.apiName} missing.`);
 		}
@@ -57,7 +57,7 @@ export class IGDBAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 		const token = await this.getAuthToken();
-		const clientId = apiSecrets.igdbClientId(this.plugin);
+		const clientId = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.igdbClientId) ?? '';
 		const queryBody = `search "${title}"; fields name, cover.url, first_release_date, summary, total_rating; limit 20;`;
 		const response = await requestUrl({
 			url: `${this.apiUrl}/games`, method: 'POST',
@@ -80,7 +80,7 @@ export class IGDBAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 		const token = await this.getAuthToken();
-		const clientId = apiSecrets.igdbClientId(this.plugin);
+		const clientId = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.igdbClientId) ?? '';
 		const queryBody = `fields name, cover.url, first_release_date, summary, total_rating, url, genres.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher; where id = ${id};`;
 		const response = await requestUrl({
 			url: `${this.apiUrl}/games`, method: 'POST',

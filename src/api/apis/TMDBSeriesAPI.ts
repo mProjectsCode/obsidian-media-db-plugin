@@ -2,8 +2,8 @@
 
 import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
-import { apiSecrets } from '../../settings/apiSecretHelpers';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
+import { API_SECRET_IDS } from '../../settings/apiSecretIds';
 import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -29,14 +29,15 @@ export class TMDBSeriesAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!apiSecrets.tmdb(this.plugin)) {
+		const bearer = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.tmdb) ?? '';
+		if (!bearer) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
 		const response = await client.GET('/3/search/tv', {
 			headers: {
-				Authorization: `Bearer ${apiSecrets.tmdb(this.plugin)}`,
+				Authorization: `Bearer ${bearer}`,
 			},
 			params: {
 				query: {
@@ -87,14 +88,15 @@ export class TMDBSeriesAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!apiSecrets.tmdb(this.plugin)) {
+		const bearer = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.tmdb) ?? '';
+		if (!bearer) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
 		const response = await client.GET('/3/tv/{series_id}', {
 			headers: {
-				Authorization: `Bearer ${apiSecrets.tmdb(this.plugin)}`,
+				Authorization: `Bearer ${bearer}`,
 			},
 			params: {
 				path: { series_id: parseInt(id) },

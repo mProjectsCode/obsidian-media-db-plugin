@@ -1,8 +1,8 @@
 import createClient from 'openapi-fetch';
 import { coerceYear, obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
-import { apiSecrets } from '../../settings/apiSecretHelpers';
 import { GameModel } from '../../models/GameModel';
+import { API_SECRET_IDS } from '../../settings/apiSecretIds';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -25,7 +25,8 @@ export class GiantBombAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!apiSecrets.giantBomb(this.plugin)) {
+		const apiKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.giantBomb) ?? '';
+		if (!apiKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
@@ -33,7 +34,7 @@ export class GiantBombAPI extends APIModel {
 		const response = await client.GET('/games', {
 			params: {
 				query: {
-					api_key: apiSecrets.giantBomb(this.plugin),
+					api_key: apiKey,
 					filter: `name:${title}`,
 					format: 'json',
 					limit: 20,
@@ -75,7 +76,8 @@ export class GiantBombAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!apiSecrets.giantBomb(this.plugin)) {
+		const apiKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.giantBomb) ?? '';
+		if (!apiKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
@@ -86,7 +88,7 @@ export class GiantBombAPI extends APIModel {
 					guid: id,
 				},
 				query: {
-					api_key: apiSecrets.giantBomb(this.plugin),
+					api_key: apiKey,
 					format: 'json',
 				},
 			},

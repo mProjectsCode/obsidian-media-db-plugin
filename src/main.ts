@@ -31,7 +31,6 @@ import type { MediaTypeModel } from './models/MediaTypeModel';
 import type { MusicReleaseModel } from './models/MusicReleaseModel';
 import type { SeasonModel } from './models/SeasonModel';
 import { SongModel } from './models/SongModel';
-import { migrateLegacyApiKeysToSecretStorage, stripPlaintextApiKeysFromSettings } from './settings/apiSecretHelpers';
 import { API_SECRET_IDS } from './settings/apiSecretIds';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMappingModel } from './settings/PropertyMapping';
@@ -735,7 +734,9 @@ export default class MediaDbPlugin extends Plugin {
 		if (mediaTypeModel.getMediaType() === MediaType.Song) {
 			const song = mediaTypeModel as SongModel;
 			const body = (song.lyrics ?? '').trim();
-			fileContent += `\n\n# Lyrics\n\n${body.length > 0 ? body : '_Lyrics not found._'}\n`;
+			if(body.length > 0) {
+				fileContent += `# Lyrics\n\`\`\`\n${body}\n\`\`\`\n`;
+			}
 		}
 
 		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
@@ -933,11 +934,9 @@ export default class MediaDbPlugin extends Plugin {
 		loadedSettings.propertyMappingModels = propertyMappingModelsInDisplayOrder(migratedModels.map(m => m.toJSON()));
 
 		this.settings = loadedSettings;
-		migrateLegacyApiKeysToSecretStorage(this);
 	}
 
 	async saveSettings(): Promise<void> {
-		stripPlaintextApiKeysFromSettings(this.settings);
 		this.mediaTypeManager.updateTemplates(this.settings);
 		this.mediaTypeManager.updateFolders(this.settings);
 		this.dateFormatter.setFormat(this.settings.customDateFormat);

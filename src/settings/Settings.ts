@@ -43,15 +43,6 @@ function mediaTypeTabIcon(mediaType: MediaType): IconName {
 
 // MARK: Settings
 export interface MediaDbPluginSettings {
-	OMDbKey: string;
-	TMDBKey: string;
-	MobyGamesKey: string;
-	GiantBombKey: string;
-	IGDBClientId: string;
-	IGDBClientSecret: string;
-	RAWGAPIKey: string;
-	ComicVineKey: string;
-	BoardgameGeekKey: string;
 	sfwFilter: boolean;
 	templates: boolean;
 	customDateFormat: string;
@@ -134,19 +125,6 @@ export interface MediaDbPluginSettings {
 	bookFolder: string;
 
 	propertyMappingModels: PropertyMappingModelData[];
-
-	// DEPRECATED: Use propertyMappingModels instead
-	moviePropertyConversionRules: string;
-	seriesPropertyConversionRules: string;
-	seasonPropertyConversionRules: string;
-	mangaPropertyConversionRules: string;
-	gamePropertyConversionRules: string;
-	wikiPropertyConversionRules: string;
-	musicReleasePropertyConversionRules: string;
-	bandPropertyConversionRules: string;
-	songPropertyConversionRules: string;
-	boardgamePropertyConversionRules: string;
-	bookPropertyConversionRules: string;
 }
 
 /**
@@ -371,15 +349,6 @@ class MediaTypeMappedSettings {
 
 // MARK: Defaults
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
-	OMDbKey: '',
-	TMDBKey: '',
-	MobyGamesKey: '',
-	GiantBombKey: '',
-	IGDBClientId: '',
-	IGDBClientSecret: '',
-	RAWGAPIKey: '',
-	ComicVineKey: '',
-	BoardgameGeekKey: '',
 	sfwFilter: true,
 	templates: true,
 	customDateFormat: 'L',
@@ -459,19 +428,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	bookNoteType: '',
 
 	propertyMappingModels: [],
-
-	// DEPRECATED
-	moviePropertyConversionRules: '',
-	seriesPropertyConversionRules: '',
-	seasonPropertyConversionRules: '',
-	mangaPropertyConversionRules: '',
-	gamePropertyConversionRules: '',
-	wikiPropertyConversionRules: '',
-	musicReleasePropertyConversionRules: '',
-	bandPropertyConversionRules: '',
-	songPropertyConversionRules: '',
-	boardgamePropertyConversionRules: '',
-	bookPropertyConversionRules: '',
 };
 
 export const lockedPropertyMappings: string[] = [];
@@ -548,15 +504,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 	private static readonly MUSIC_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Band, MediaType.MusicRelease, MediaType.Song];
 
-	private static readonly LEGACY_MUSIC_TAB_IDS: ReadonlySet<string> = new Set(['media-band', 'media-musicRelease', 'media-song']);
-
 	private static readonly BOOK_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Book, MediaType.ComicManga];
 
-	private static readonly LEGACY_BOOK_TAB_IDS: ReadonlySet<string> = new Set(['media-comicManga']);
-
 	private static readonly VIDEO_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Movie, MediaType.Series, MediaType.Season];
-
-	private static readonly LEGACY_VIDEO_TAB_IDS: ReadonlySet<string> = new Set(['media-series', 'media-season']);
 
 	private renderMediaTypeSection(
 		panel: HTMLElement,
@@ -1032,15 +982,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		const validIds = new Set(tabEntries.map(t => t.id));
 		let initialId = this.activeSettingsTabId && validIds.has(this.activeSettingsTabId) ? this.activeSettingsTabId : 'general';
-		if (MediaDbSettingTab.LEGACY_MUSIC_TAB_IDS.has(initialId) && validIds.has('media-music')) {
-			initialId = 'media-music';
-		}
-		if (MediaDbSettingTab.LEGACY_BOOK_TAB_IDS.has(initialId) && validIds.has('media-book')) {
-			initialId = 'media-book';
-		}
-		if (MediaDbSettingTab.LEGACY_VIDEO_TAB_IDS.has(initialId) && validIds.has('media-movie')) {
-			initialId = 'media-movie';
-		}
 		if (!validIds.has(initialId)) {
 			initialId = 'general';
 		}

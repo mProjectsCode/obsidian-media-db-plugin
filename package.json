@@ -22,9 +22,7 @@
 	"author": "Moritz Jung",
 	"license": "GPL-3.0",
 	"devDependencies": {
-		"@happy-dom/global-registrator": "^18.0.1",
 		"@lemons_dev/parsinom": "^0.0.12",
-		"@popperjs/core": "^2.11.8",
 		"@types/bun": "^1.3.7",
 		"eslint": "^9.39.2",
 		"eslint-plugin-import": "^2.32.0",

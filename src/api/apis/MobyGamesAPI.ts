@@ -2,8 +2,8 @@
 
 import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
-import { apiSecrets } from '../../settings/apiSecretHelpers';
 import { GameModel } from '../../models/GameModel';
+import { API_SECRET_IDS } from '../../settings/apiSecretIds';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -29,11 +29,12 @@ export class MobyGamesAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!apiSecrets.mobyGames(this.plugin)) {
+		const apiKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.mobyGames) ?? '';
+		if (!apiKey) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${apiSecrets.mobyGames(this.plugin)}`;
+		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${apiKey}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -72,11 +73,12 @@ export class MobyGamesAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!apiSecrets.mobyGames(this.plugin)) {
+		const apiKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.mobyGames) ?? '';
+		if (!apiKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${apiSecrets.mobyGames(this.plugin)}`;
+		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${apiKey}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});

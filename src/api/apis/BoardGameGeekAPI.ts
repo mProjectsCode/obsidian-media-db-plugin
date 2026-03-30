@@ -1,7 +1,7 @@
 import { requestUrl } from 'obsidian';
 import { BoardGameModel } from 'src/models/BoardGameModel';
 import type MediaDbPlugin from '../../main';
-import { apiSecrets } from '../../settings/apiSecretHelpers';
+import { API_SECRET_IDS } from '../../settings/apiSecretIds';
 import { coerceYear } from '../../utils/Utils';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
@@ -25,7 +25,7 @@ export class BoardGameGeekAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const bggKey = apiSecrets.boardgameGeek(this.plugin);
+		const bggKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.boardgameGeek) ?? '';
 		if (!bggKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
@@ -75,7 +75,7 @@ export class BoardGameGeekAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const bggKey = apiSecrets.boardgameGeek(this.plugin);
+		const bggKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.boardgameGeek) ?? '';
 		if (!bggKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
