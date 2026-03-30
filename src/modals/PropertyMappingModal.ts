@@ -1,5 +1,5 @@
 import type { App } from 'obsidian';
-import { Modal, Notice } from 'obsidian';
+import { Modal } from 'obsidian';
 import { render } from 'solid-js/web';
 import type MediaDbPlugin from '../main';
 import type { MediaType } from '../utils/MediaType';
@@ -30,7 +30,7 @@ export class PropertyMappingModal extends Modal {
 
 		contentEl.createEl('p', {
 			cls: 'mod-muted',
-			text: 'Choose whether each metadata field stays as-is, is renamed in front matter, or is omitted. Use Save to persist your changes.',
+			text: 'Choose whether each metadata field stays as-is, is renamed in front matter, or is omitted. Changes are saved automatically when valid.',
 		});
 
 		const root = contentEl.createDiv();
@@ -44,7 +44,6 @@ export class PropertyMappingModal extends Modal {
 						if (index !== -1) {
 							this.plugin.settings.propertyMappingModels[index] = model;
 						}
-						new Notice(`MDB: Property mappings for ${mediaTypeDisplayName(model.type)} saved successfully.`);
 						void this.plugin.saveSettings();
 					},
 				}),

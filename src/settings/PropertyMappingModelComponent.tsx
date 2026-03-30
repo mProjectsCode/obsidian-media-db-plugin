@@ -1,4 +1,4 @@
-import { createSignal, createMemo, For, Show } from 'solid-js';
+import { createMemo, For, Show } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { PropertyMappingModel, PropertyMappingOption, propertyMappingOptions, type PropertyMappingModelData } from './PropertyMapping';
 import type { MediaType } from '../utils/MediaType';
@@ -13,8 +13,6 @@ interface PropertyMappingModelComponentProps {
 }
 
 export default function PropertyMappingModelComponent(props: PropertyMappingModelComponentProps) {
-	const [unsavedChanges, setUnsavedChanges] = createSignal(false);
-
 	// Create a store from the model's plain data
 	const [modelData, setModelData] = createStore(props.model);
 
@@ -24,15 +22,10 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 		return model.validate();
 	});
 
-	const onModelUpdate = () => {
-		setUnsavedChanges(true);
-	};
-
-	const handleSave = () => {
+	const persistIfValid = () => {
 		const model = PropertyMappingModel.fromJSON(modelData);
 		if (model.validate().res) {
 			props.save(model);
-			setUnsavedChanges(false);
 		}
 	};
 
@@ -40,23 +33,11 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 
 	return (
 		<div class="media-db-plugin-property-mappings-model-container">
-			<div
-				class={`media-db-plugin-property-mappings-model-header${showTitle() ? '' : ' media-db-plugin-property-mappings-model-header--actions-only'}`}
-			>
-				<Show when={showTitle()}>
+			<Show when={showTitle()}>
+				<div class="media-db-plugin-property-mappings-model-header">
 					<div class="setting-item-name">{mediaTypeDisplayName(modelData.type as MediaType)}</div>
-				</Show>
-
-				<div class="media-db-plugin-property-mappings-model-actions">
-					<Show when={unsavedChanges()}>
-						<div class="media-db-plugin-property-mapping-unsaved-changes">Unsaved changes</div>
-					</Show>
-
-					<button class={`media-db-plugin-property-mappings-save-button ${validationResult().res ? 'mod-cta' : 'mod-muted'}`} onClick={handleSave}>
-						Save
-					</button>
 				</div>
-			</div>
+			</Show>
 
 			<Show when={!validationResult().res}>
 				<div class="media-db-plugin-property-mapping-validation">{validationResult().err?.message}</div>
@@ -95,7 +76,7 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 												onChange={e => {
 													setModelData('properties', index(), 'mapping', e.currentTarget.value as PropertyMappingOption);
 													setModelData('properties', index(), 'newProperty', '');
-													onModelUpdate();
+													persistIfValid();
 												}}
 											>
 												<For each={propertyMappingOptions}>{remappingOption => <option value={remappingOption}>{remappingOption}</option>}</For>
@@ -116,7 +97,7 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 														value={property.newProperty}
 														onInput={e => {
 															setModelData('properties', index(), 'newProperty', e.currentTarget.value);
-															onModelUpdate();
+															persistIfValid();
 														}}
 													/>
 												</div>
@@ -130,7 +111,7 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 													checked={property.wikilink}
 													onChange={e => {
 														setModelData('properties', index(), 'wikilink', e.currentTarget.checked);
-														onModelUpdate();
+														persistIfValid();
 													}}
 												/>
 											</label>
