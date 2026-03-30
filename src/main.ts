@@ -44,6 +44,7 @@ import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from './utils/n
 import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
 import type { CreateNoteOptions } from './utils/Utils';
+import { normalizeTitleForAsciiAlias } from './utils/normalizeTitleForAlias';
 import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
 import 'src/styles.css';
 
@@ -670,9 +671,44 @@ export default class MediaDbPlugin extends Plugin {
 		return false;
 	}
 
+	private metadataRecordForNewNote(mediaTypeModel: MediaTypeModel): Record<string, unknown> {
+		let meta: Record<string, unknown>;
+		if (this.settings.useDefaultFrontMatter) {
+			meta = mediaTypeModel.toMetaDataObject();
+		} else {
+			meta = {
+				id: mediaTypeModel.id,
+				type: mediaTypeModel.type,
+				dataSource: mediaTypeModel.dataSource,
+			};
+		}
+		return this.withNormalizedTitleAliasMetadata(meta, mediaTypeModel.title);
+	}
+
+	private withNormalizedTitleAliasMetadata(meta: Record<string, unknown>, title: string): Record<string, unknown> {
+		if (!this.settings.addNormalizeTitlesAsAlias) {
+			return meta;
+		}
+		const alias = normalizeTitleForAsciiAlias(title);
+		if (alias === null) {
+			return meta;
+		}
+		const prev = meta['aliases'];
+		let list: string[] = [];
+		if (Array.isArray(prev)) {
+			list = prev.filter((x): x is string => typeof x === 'string');
+		} else if (typeof prev === 'string' && prev.length > 0) {
+			list = [prev];
+		}
+		if (!list.includes(alias)) {
+			list = [...list, alias];
+		}
+		return { ...meta, aliases: list };
+	}
+
 	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
 		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
-		const fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		const fileMetadata = this.modelPropertyMapper.convertObject(this.metadataRecordForNewNote(mediaTypeModel));
 		return stringifyYaml(fileMetadata);
 	}
 
@@ -686,17 +722,9 @@ export default class MediaDbPlugin extends Plugin {
 		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
 
 		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
-		let fileMetadata: Record<string, unknown>;
-
-		if (this.settings.useDefaultFrontMatter) {
-			fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
-		} else {
-			fileMetadata = {
-				id: mediaTypeModel.id,
-				type: mediaTypeModel.type,
-				dataSource: mediaTypeModel.dataSource,
-			};
-		}
+		let fileMetadata: Record<string, unknown> = this.modelPropertyMapper.convertObject(
+			this.metadataRecordForNewNote(mediaTypeModel),
+		);
 
 		let fileContent = '';
 		template = options.attachTemplate ? template : '';

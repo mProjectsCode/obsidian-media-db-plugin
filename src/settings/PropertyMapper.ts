@@ -41,6 +41,9 @@ export class PropertyMapper {
 		const newObj: Record<string, unknown> = {};
 
 		for (const [key, value] of Object.entries(obj)) {
+			if (key === 'aliases') {
+				continue;
+			}
 			for (const propertyMapping of propertyMappings) {
 				if (propertyMapping.property === key) {
 					let finalValue = value;
@@ -88,7 +91,48 @@ export class PropertyMapper {
 			}
 		}
 
+		if (Object.hasOwn(obj, 'aliases')) {
+			const aliasesPm = propertyMappings.find(p => p.property === 'aliases');
+			if (aliasesPm?.mapping !== PropertyMappingOption.Remove) {
+				const incoming = obj['aliases'];
+				const targetKey =
+					aliasesPm?.mapping === PropertyMappingOption.Map && aliasesPm.newProperty
+						? aliasesPm.newProperty
+						: 'aliases';
+				const merged = PropertyMapper.mergeAliasValues(newObj[targetKey], incoming);
+				if (merged.length > 0) {
+					newObj[targetKey] = merged;
+				}
+			}
+		}
+
 		return newObj;
+	}
+
+	private static mergeAliasValues(existing: unknown, added: unknown): string[] {
+		const toStrings = (v: unknown): string[] => {
+			if (v == null) {
+				return [];
+			}
+			if (Array.isArray(v)) {
+				return v.flatMap(x => (typeof x === 'string' ? x : String(x))).filter(s => s.length > 0);
+			}
+			if (typeof v === 'string') {
+				return v.length > 0 ? [v] : [];
+			}
+			return [];
+		};
+
+		const combined = [...toStrings(existing), ...toStrings(added)];
+		const seen = new Set<string>();
+		const out: string[] = [];
+		for (const s of combined) {
+			if (!seen.has(s)) {
+				seen.add(s);
+				out.push(s);
+			}
+		}
+		return out;
 	}
 
 	/**

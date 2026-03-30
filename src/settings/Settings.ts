@@ -57,6 +57,8 @@ export interface MediaDbPluginSettings {
 	customDateFormat: string;
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
+	/** When true, add an Obsidian `aliases` entry with an ASCII form of the title when it uses diacritics or letters like ø (e.g. Likbør → Likbor). */
+	addNormalizeTitlesAsAlias: boolean;
 	enableTemplaterIntegration: boolean;
 	imageDownload: boolean;
 	imageFolder: string;
@@ -383,6 +385,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	customDateFormat: 'L',
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
+	addNormalizeTitlesAsAlias: true,
 	enableTemplaterIntegration: false,
 	imageDownload: false,
 	imageFolder: 'Media DB/images',
@@ -838,6 +841,21 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						.addToggle(cb => {
 							cb.setValue(this.plugin.settings.templates).onChange(data => {
 								this.plugin.settings.templates = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Add Normalize Titles as Alias')
+						.setDesc(
+							'When the title uses accented or special Latin letters (e.g. ó, ø), add an ASCII form to YAML aliases so links without those characters still resolve (e.g. Likbør → Likbor).',
+						)
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.addNormalizeTitlesAsAlias).onChange(data => {
+								this.plugin.settings.addNormalizeTitlesAsAlias = data;
 								void this.plugin.saveSettings();
 							});
 						}),
