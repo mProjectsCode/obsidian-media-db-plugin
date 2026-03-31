@@ -31,7 +31,7 @@ import type { MediaTypeModel } from './models/MediaTypeModel';
 import type { MusicReleaseModel } from './models/MusicReleaseModel';
 import type { SeasonModel } from './models/SeasonModel';
 import { SongModel } from './models/SongModel';
-import { API_SECRET_IDS } from './settings/apiSecretIds';
+import { ApiSecretID, getApiSecretValue } from './settings/apiSecretsHelper';
 import { PropertyMapper } from './settings/PropertyMapper';
 import { PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
@@ -523,8 +523,8 @@ export default class MediaDbPlugin extends Plugin {
 
 	private async importBandDiscography(band: BandModel, options: CreateNoteOptions): Promise<void> {
 		try {
-			const geniusToken = this.app.secretStorage.getSecret(API_SECRET_IDS.genius);
-			const genius = new GeniusClient(geniusToken ?? undefined);
+			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
+			const genius = new GeniusClient(geniusToken);
 			if (!genius.isConfigured()) {
 				new Notice('Band import: add a Genius API access token in settings to fetch lyrics.');
 			}

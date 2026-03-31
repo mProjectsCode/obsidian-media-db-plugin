@@ -2,7 +2,7 @@ import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
-import { API_SECRET_IDS } from '../../settings/apiSecretIds';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 
@@ -27,7 +27,7 @@ export class RAWGAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		const apiKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.rawg) ?? '';
+		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.rawg);
 		if (!apiKey) throw Error(`MDB | API key for ${this.apiName} missing.`);
 		const response = await requestUrl({
 			url: `${this.apiUrl}/games?key=${apiKey}&search=${encodeURIComponent(title)}&page_size=20`,
@@ -44,7 +44,7 @@ export class RAWGAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		const apiKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.rawg) ?? '';
+		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.rawg);
 		if (!apiKey) throw Error(`MDB | API key for ${this.apiName} missing.`);
 		const response = await requestUrl({
 			url: `${this.apiUrl}/games/${id}?key=${apiKey}`,

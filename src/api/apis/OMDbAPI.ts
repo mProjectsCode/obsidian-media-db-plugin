@@ -4,7 +4,7 @@ import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
 import { SeriesModel } from '../../models/SeriesModel';
-import { API_SECRET_IDS } from '../../settings/apiSecretIds';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
@@ -79,7 +79,7 @@ export class OMDbAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const omdbKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.omdb) ?? '';
+		const omdbKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.omdb);
 		if (!omdbKey) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
@@ -164,7 +164,7 @@ export class OMDbAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const omdbKey = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.omdb) ?? '';
+		const omdbKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.omdb);
 		if (!omdbKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}

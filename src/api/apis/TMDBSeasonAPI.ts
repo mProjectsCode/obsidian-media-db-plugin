@@ -3,7 +3,7 @@
 import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
-import { API_SECRET_IDS } from '../../settings/apiSecretIds';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { SeasonModel } from '../../models/SeasonModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -29,7 +29,7 @@ export class TMDBSeasonAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const bearer = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.tmdb) ?? '';
+		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
 		if (!bearer) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
@@ -108,7 +108,7 @@ export class TMDBSeasonAPI extends APIModel {
 
 	// Fetch all seasons for a given series
 	async getSeasonsForSeries(tvId: string): Promise<SeasonModel[]> {
-		const bearer = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.tmdb) ?? '';
+		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
 		if (!bearer) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
@@ -162,7 +162,7 @@ export class TMDBSeasonAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const bearer = this.plugin.app.secretStorage.getSecret(API_SECRET_IDS.tmdb) ?? '';
+		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
 		if (!bearer) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
