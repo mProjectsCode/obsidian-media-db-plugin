@@ -1,5 +1,8 @@
 import { requestUrl } from 'obsidian';
+
 import { contactEmail, mediaDbVersion, pluginName } from '../utils/Utils';
+
+import { extractLyricsFromGeniusHtml } from './geniusLyricsExtract';
 
 interface GeniusSearchHit {
 	result: {
@@ -16,40 +19,7 @@ interface GeniusSearchResponse {
 	};
 }
 
-const LYRICS_DIV_RE = /<div[^>]*data-lyrics-container="true"[^>]*>([\s\S]*?)<\/div>/gi;
-const LYRICS_CLASS_FALLBACK_RE = /<div[^>]*class="[^"]*Lyrics__Container[^"]*"[^>]*>([\s\S]*?)<\/div>/gi;
-
-function stripHtmlToPlainLyrics(fragment: string): string {
-	return fragment
-		.replace(/<br\s*\/?>/gi, '\n')
-		.replace(/<\/p>/gi, '\n')
-		.replace(/<[^>]+>/g, '')
-		.replace(/\n{3,}/g, '\n\n')
-		.replace(/&nbsp;/g, ' ')
-		.replace(/&amp;/g, '&')
-		.replace(/&lt;/g, '<')
-		.replace(/&gt;/g, '>')
-		.replace(/&quot;/g, '"')
-		.replace(/&#x27;/g, "'")
-		.trim();
-}
-
-function extractLyricsFromGeniusHtml(html: string): string {
-	const chunks: string[] = [];
-	let m: RegExpExecArray | null;
-	while ((m = LYRICS_DIV_RE.exec(html)) !== null) {
-		chunks.push(stripHtmlToPlainLyrics(m[1]));
-	}
-	LYRICS_DIV_RE.lastIndex = 0;
-	if (chunks.length > 0) {
-		return chunks.filter(Boolean).join('\n\n').trim();
-	}
-	while ((m = LYRICS_CLASS_FALLBACK_RE.exec(html)) !== null) {
-		chunks.push(stripHtmlToPlainLyrics(m[1]));
-	}
-	LYRICS_CLASS_FALLBACK_RE.lastIndex = 0;
-	return chunks.filter(Boolean).join('\n\n').trim();
-}
+export { extractLyricsFromGeniusHtml };
 
 export class GeniusClient {
 	private readonly accessToken: string | undefined;

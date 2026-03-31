@@ -733,9 +733,8 @@ export default class MediaDbPlugin extends Plugin {
 
 		if (mediaTypeModel.getMediaType() === MediaType.Song) {
 			const song = mediaTypeModel as SongModel;
-			const body = (song.lyrics ?? '').trim();
-			if(body.length > 0) {
-				fileContent += `# Lyrics\n\`\`\`\n${body}\n\`\`\`\n`;
+			if(song.lyrics.length > 0) {
+				fileContent += `# Lyrics\n\`\`\`\n${song.lyrics}\n\`\`\`\n`;
 			}
 		}
 
