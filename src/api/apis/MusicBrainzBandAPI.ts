@@ -181,6 +181,8 @@ export class MusicBrainzBandAPI extends APIModel {
 
 	/**
 	 * Lists release group MBIDs for studio albums (primary type album, excluding live/compilations/etc.).
+	 * Passes release-group-status=website-default so MusicBrainz omits groups that only have bootleg, promotional, or pseudo-releases
+	 * (see MusicBrainz API “Release (Group) Type and Status”).
 	 */
 	async listStudioAlbumReleaseGroupIds(artistId: string): Promise<string[]> {
 		const collected: { id: string; date: string }[] = [];
@@ -189,7 +191,7 @@ export class MusicBrainzBandAPI extends APIModel {
 
 		while (true) {
 			await this.throttleMs(1100);
-			const url = `https://musicbrainz.org/ws/2/release-group?artist=${encodeURIComponent(artistId)}&type=album&fmt=json&limit=${limit}&offset=${offset}`;
+			const url = `https://musicbrainz.org/ws/2/release-group?artist=${encodeURIComponent(artistId)}&type=album&fmt=json&limit=${limit}&offset=${offset}&release-group-status=website-default`;
 
 			const res = await requestUrl({
 				url,

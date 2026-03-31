@@ -26,6 +26,10 @@ interface Release {
 	status: string;
 }
 
+function pickNonBootlegRelease(releases: Release[] | undefined): Release | undefined {
+	return releases?.find(r => r.status !== 'Bootlet');
+}
+
 interface ArtistCredit {
 	name: string;
 	artist: {
@@ -170,13 +174,12 @@ export class MusicBrainzAPI extends APIModel {
 
 		const result = (await groupResponse.json) as IdResponse;
 
-		// Get ID of the first release
-		const firstRelease = result.releases?.[0];
+		const firstRelease = pickNonBootlegRelease(result.releases);
 		if (!firstRelease) {
-			throw Error('MDB | No releases found in release group.');
+			throw Error('MDB | No non-bootleg release found in release group.');
 		}
 
-		// Fetch recordings for the first release
+		// Fetch recordings for the chosen release (skip MusicBrainz status=Bootleg when another edition exists)
 		const releaseUrl = `https://musicbrainz.org/ws/2/release/${firstRelease.id}?inc=recordings+artists&fmt=json`;
 		console.log(`MDB | Fetching release recordings from: ${releaseUrl}`);
 
