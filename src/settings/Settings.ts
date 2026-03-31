@@ -815,21 +815,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			generalGroup.addSetting(
 				setting =>
 					void setting
-						.setName('Add Normalize Titles as Alias')
-						.setDesc(
-							'When the title uses accented or special Latin letters (e.g. ó, ø), add an ASCII form to YAML aliases so links without those characters still resolve (e.g. Likbør → Likbor).',
-						)
-						.addToggle(cb => {
-							cb.setValue(this.plugin.settings.addNormalizeTitlesAsAlias).onChange(data => {
-								this.plugin.settings.addNormalizeTitlesAsAlias = data;
-								void this.plugin.saveSettings();
-							});
-						}),
-			);
-
-			generalGroup.addSetting(
-				setting =>
-					void setting
 						.setName('Date format')
 						.setDesc(
 							fragWithHTML(
@@ -930,6 +915,21 @@ export class MediaDbSettingTab extends PluginSettingTab {
 									this.plugin.settings.imageFolder = data;
 									void this.plugin.saveSettings();
 								});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Add Normalized Titles as Alias')
+						.setDesc(
+							'If the title contains non-ASCII characters, add a normalized ASCII version of the title in aliases.',
+						)
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.addNormalizeTitlesAsAlias).onChange(data => {
+								this.plugin.settings.addNormalizeTitlesAsAlias = data;
+								void this.plugin.saveSettings();
+							});
 						}),
 			);
 		});

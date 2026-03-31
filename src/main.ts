@@ -127,7 +127,7 @@ export default class MediaDbPlugin extends Plugin {
 		for (const mediaType of MEDIA_TYPES) {
 			this.addCommand({
 				id: `open-media-db-search-modal-with-${mediaType}`,
-				name: `Create Media DB entry (${unCamelCase(mediaType)})`,
+				name: `Create Media DB entry: ${unCamelCase(mediaType)}`,
 				callback: () => this.createEntryWithSearchModal({ preselectedTypes: [mediaType] }),
 			});
 		}
