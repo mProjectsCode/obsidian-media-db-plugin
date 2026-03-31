@@ -441,6 +441,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 		[ApiSecretID.comicVine]: '',
 		[ApiSecretID.boardgameGeek]: '',
 		[ApiSecretID.genius]: '',
+		[ApiSecretID.spotifyClientId]: '',
+		[ApiSecretID.spotifyClientSecret]: '',
 	},
 };
 
@@ -951,6 +953,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				'Genius API access token',
 				'Client access token from https://genius.com/api-clients — used to search songs and load lyrics when importing a band.',
 				ApiSecretID.genius,
+			);
+			this.addApiSecretSetting(
+				apiKeyGroup,
+				'Spotify Client ID',
+				'From https://developer.spotify.com/dashboard — used to resolve track links when MusicBrainz has no Spotify URL (with Client Secret).',
+				ApiSecretID.spotifyClientId,
+			);
+			this.addApiSecretSetting(
+				apiKeyGroup,
+				'Spotify Client Secret',
+				'Pair with Spotify Client ID for client-credentials access to search tracks during band import.',
+				ApiSecretID.spotifyClientSecret,
 			);
 		});
 

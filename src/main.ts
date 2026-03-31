@@ -23,6 +23,7 @@ import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
 import { VNDBAPI } from './api/apis/VNDBAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { GeniusClient } from './api/GeniusClient';
+import { SpotifyClient } from './api/SpotifyClient';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
 import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
@@ -529,6 +530,10 @@ export default class MediaDbPlugin extends Plugin {
 				new Notice('Band import: add a Genius API access token in settings to fetch lyrics.');
 			}
 
+			const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
+			const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
+			const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
+
 			const bandApi = this.apiManager.getApiByName('MusicBrainz Band API') as MusicBrainzBandAPI | undefined;
 			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
 			if (!bandApi || !musicBrainzApi) {
@@ -600,6 +605,25 @@ export default class MediaDbPlugin extends Plugin {
 						}
 					}
 
+					let spotifyUrl = '';
+					if (track.recordingId) {
+						await new Promise(r => setTimeout(r, 1100));
+						try {
+							spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(track.recordingId);
+						} catch (e) {
+							console.warn(`MDB | Spotify URL for recording ${track.recordingId}:`, e);
+						}
+					}
+					if (!spotifyUrl && spotify.isConfigured()) {
+						const primaryArtist = release.artists[0] ?? band.title;
+						console.log(`MDB | Spotify API fallback for track "${track.title}" (artist: ${primaryArtist})`);
+						try {
+							spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
+						} catch (e) {
+							console.warn(`MDB | Spotify search for "${track.title}":`, e);
+						}
+					}
+
 					const song = new SongModel({
 						type: 'song',
 						title: track.title,
@@ -619,6 +643,7 @@ export default class MediaDbPlugin extends Plugin {
 						duration: track.duration,
 						featuredArtists: track.featuredArtists,
 						geniusUrl,
+						spotifyUrl,
 						lyrics,
 						userData: { personalRating: 0 },
 					});

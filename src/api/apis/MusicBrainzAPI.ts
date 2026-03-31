@@ -83,6 +83,7 @@ interface MediaResponse {
 			position: number;
 			title: string;
 			recording: {
+				id?: string;
 				length: number;
 				title: string;
 			};
@@ -237,6 +238,39 @@ export class MusicBrainzAPI extends APIModel {
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.MusicBrainzAPI_disabledMediaTypes;
 	}
+
+	/**
+	 * Loads MusicBrainz recording URL relations and returns the open.spotify.com track URL if present.
+	 * Callers should throttle requests (~1/s) per MusicBrainz etiquette.
+	 */
+	async fetchSpotifyUrlForRecording(recordingId: string): Promise<string> {
+		if (!recordingId) {
+			return '';
+		}
+		const recordingUrl = `https://musicbrainz.org/ws/2/recording/${encodeURIComponent(recordingId)}?inc=url-rels&fmt=json`;
+		const fetchData = await requestUrl({
+			url: recordingUrl,
+			headers: {
+				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+			},
+		});
+		if (fetchData.status !== 200) {
+			console.warn(`MDB | Recording ${recordingId} url-rels returned ${fetchData.status}`);
+			return '';
+		}
+		const data = (await fetchData.json) as RecordingUrlRelsResponse;
+		for (const rel of data.relations ?? []) {
+			const resource = rel.url?.resource;
+			if (typeof resource === 'string' && resource.includes('open.spotify.com')) {
+				return resource;
+			}
+		}
+		return '';
+	}
+}
+
+interface RecordingUrlRelsResponse {
+	relations?: { type: string; url?: { resource: string } }[];
 }
 
 function extractTracksFromMedia(media: MediaResponse['media']): {
@@ -247,17 +281,19 @@ function extractTracksFromMedia(media: MediaResponse['media']): {
 }[] {
 	if (!media || media.length === 0 || !media[0].tracks) return [];
 
-	return media[0].tracks.map((track, index) => {
+		return media[0].tracks.map((track, index) => {
 		const title = track.title ?? track.recording?.title ?? 'Unknown Title';
 		const rawLength = track.length ?? track.recording?.length;
 		const duration = rawLength ? millisecondsToMinutes(rawLength) : 'unknown';
 		const featuredArtists = track['artist-credit']?.map(ac => ac.name) ?? [];
+		const recordingId = track.recording?.id;
 
 		return {
 			number: index + 1,
 			title,
 			duration,
 			featuredArtists,
+			...(recordingId ? { recordingId } : {}),
 		};
 	});
 }

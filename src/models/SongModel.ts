@@ -14,6 +14,8 @@ export class SongModel extends MediaTypeModel {
 	duration: string;
 	featuredArtists: string[];
 	geniusUrl: string;
+	/** Open track URL from MusicBrainz (e.g. https://open.spotify.com/track/…) when available. */
+	spotifyUrl: string;
 	lyrics: string;
 	image: string;
 	releaseDate: string;
@@ -33,6 +35,7 @@ export class SongModel extends MediaTypeModel {
 		this.duration = '';
 		this.featuredArtists = [];
 		this.geniusUrl = '';
+		this.spotifyUrl = '';
 		this.lyrics = '';
 		this.image = '';
 		this.releaseDate = '';
@@ -54,6 +57,7 @@ export class SongModel extends MediaTypeModel {
 		this.duration = obj.duration ?? '';
 		this.featuredArtists = obj.featuredArtists ?? [];
 		this.geniusUrl = obj.geniusUrl ?? '';
+		this.spotifyUrl = obj.spotifyUrl ?? '';
 		this.lyrics = obj.lyrics ?? '';
 		this.releaseDate = obj.releaseDate ?? '';
 	}

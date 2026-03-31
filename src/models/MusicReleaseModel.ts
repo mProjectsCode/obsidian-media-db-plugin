@@ -19,6 +19,8 @@ export class MusicReleaseModel extends MediaTypeModel {
 		title: string;
 		duration: string;
 		featuredArtists: string[];
+		/** MusicBrainz recording MBID; used to resolve Spotify and other links. */
+		recordingId?: string;
 	}[];
 
 	userData: {
