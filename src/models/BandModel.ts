@@ -11,6 +11,8 @@ export class BandModel extends MediaTypeModel {
 	image: string;
 	officialWebsite: string;
 	disambiguation: string;
+	/** ISNI(s) from the data source; comma-separated if multiple. */
+	isni: string;
 	beginYear: string;
 	releaseDate: string;
 
@@ -26,6 +28,7 @@ export class BandModel extends MediaTypeModel {
 		this.image = '';
 		this.officialWebsite = '';
 		this.disambiguation = '';
+		this.isni = '';
 		this.beginYear = '';
 		this.releaseDate = '';
 

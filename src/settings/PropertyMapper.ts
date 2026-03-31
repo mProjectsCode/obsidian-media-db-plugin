@@ -214,6 +214,7 @@ export class PropertyMapper {
 			id: '',
 			country: '',
 			disambiguation: '',
+			isni: '',
 			genres: [],
 			image: '',
 			officialWebsite: '',

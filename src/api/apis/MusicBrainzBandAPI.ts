@@ -22,6 +22,7 @@ interface ArtistSearchArtist {
 	'life-span'?: { begin?: string; end?: string };
 	country?: string;
 	disambiguation?: string;
+	isnis?: string[];
 }
 
 interface ArtistSearchResponse {
@@ -35,6 +36,7 @@ interface ArtistDetailResponse {
 	'life-span'?: { begin?: string; end?: string };
 	country?: string;
 	disambiguation?: string;
+	isnis?: string[];
 	tags?: ArtistTag[];
 	genres?: ArtistGenre[];
 	relations?: { url?: { resource: string } | null; type: string }[];
@@ -50,6 +52,13 @@ interface ReleaseGroupListItem {
 
 interface ReleaseGroupBrowseResponse {
 	'release-groups': ReleaseGroupListItem[];
+}
+
+function isniFromMusicBrainz(isnis: string[] | undefined): string {
+	if (!isnis?.length) {
+		return '';
+	}
+	return isnis.join(', ');
 }
 
 const EXCLUDED_SECONDARY_TYPES = new Set([
@@ -121,6 +130,7 @@ export class MusicBrainzBandAPI extends APIModel {
 					id: artist.id,
 					country: artist.country ?? '',
 					disambiguation: artist.disambiguation ?? '',
+					isni: isniFromMusicBrainz(artist.isnis),
 					genres: [],
 					image: '',
 					officialWebsite: '',
@@ -169,6 +179,7 @@ export class MusicBrainzBandAPI extends APIModel {
 			id: artist.id,
 			country: artist.country ?? '',
 			disambiguation: artist.disambiguation ?? '',
+			isni: isniFromMusicBrainz(artist.isnis),
 			genres: [...new Set([...(artist.genres?.map(g => g.name) ?? []), ...(artist.tags?.map(t => t.name) ?? [])])],
 			image: '',
 			officialWebsite,
