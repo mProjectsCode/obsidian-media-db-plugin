@@ -204,6 +204,38 @@ export interface CreateNoteOptions {
 	folder?: TFolder;
 }
 
+/** Runtime in whole minutes (TMDB/OMDb/MAL). 0 when unknown. Parses legacy string frontmatter (e.g. "136 min", "2 hr 5 min"). */
+export function coerceMovieDurationMinutes(value: unknown): number {
+	if (value === undefined || value === null) {
+		return 0;
+	}
+	if (typeof value === 'number') {
+		const n = Math.trunc(value);
+		return Number.isFinite(n) && n >= 0 ? n : 0;
+	}
+	if (typeof value === 'string') {
+		const t = value.trim();
+		if (t === '' || t.toLowerCase() === 'unknown' || t.toUpperCase() === 'N/A' || t === 'TBA') {
+			return 0;
+		}
+		let total = 0;
+		const hours = t.match(/(\d+)\s*(?:hours?|hrs?)\b/i) ?? t.match(/(\d+)\s*h\b/i);
+		const mins = t.match(/(\d+)\s*(?:minutes?|mins?)\b/i) ?? t.match(/(\d+)\s*min\b/i);
+		if (hours) {
+			total += parseInt(hours[1], 10) * 60;
+		}
+		if (mins) {
+			total += parseInt(mins[1], 10);
+		}
+		if (total > 0) {
+			return total;
+		}
+		const n = parseInt(t, 10);
+		return Number.isFinite(n) && n >= 0 ? n : 0;
+	}
+	return 0;
+}
+
 /** Normalizes release year for metadata: integer, 0 when unknown or non-numeric. */
 export function coerceYear(value: unknown): number {
 	if (value === undefined || value === null) return 0;
@@ -278,6 +310,14 @@ export async function useTemplaterPluginInFile(app: App, file: TFile): Promise<v
 }
 
 /* eslint-enable */
+
+/** Whole USD amounts as used by TMDB (empty when unknown or non-positive). */
+export function formatUsdWholeDollars(amount: number): string {
+	if (!Number.isFinite(amount) || amount <= 0) {
+		return '';
+	}
+	return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+}
 
 export type ModelToData<T> = {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type

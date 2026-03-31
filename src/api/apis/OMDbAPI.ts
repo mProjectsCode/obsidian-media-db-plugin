@@ -6,7 +6,7 @@ import { MovieModel } from '../../models/MovieModel';
 import { SeriesModel } from '../../models/SeriesModel';
 import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
-import { coerceYear } from '../../utils/Utils';
+import { coerceMovieDurationMinutes, coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 interface ErrorResponse {
@@ -210,14 +210,14 @@ export class OMDbAPI extends APIModel {
 				genres: result.Genre?.split(', '),
 				director: result.Director?.split(', '),
 				writer: result.Writer?.split(', '),
-				duration: result.Runtime,
+				duration: coerceMovieDurationMinutes(result.Runtime),
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', '),
 				image: result.Poster.replace('_SX300', '_SX600'),
 
 				released: true,
 				country: result.Country?.split(', '),
-				boxOffice: result.BoxOffice,
+				revenue: result.BoxOffice && result.BoxOffice !== 'N/A' ? result.BoxOffice : '',
 				ageRating: result.Rated,
 				premiere: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat),
 

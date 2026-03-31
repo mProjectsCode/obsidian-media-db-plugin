@@ -1,5 +1,5 @@
 import createClient from 'openapi-fetch';
-import { coerceYear, isTruthy, obsidianFetch } from 'src/utils/Utils';
+import { coerceMovieDurationMinutes, coerceYear, isTruthy, obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
@@ -141,7 +141,7 @@ export class MALAPI extends APIModel {
 				plot: result.synopsis,
 				genres: result.genres?.map(x => x.name).filter(isTruthy),
 				studio: result.studios?.map(x => x.name).filter(isTruthy),
-				duration: result.duration,
+				duration: coerceMovieDurationMinutes(result.duration),
 				onlineRating: result.score,
 				image: result.images?.jpg?.image_url,
 
@@ -172,7 +172,7 @@ export class MALAPI extends APIModel {
 				plot: result.synopsis,
 				genres: result.genres?.map(x => x.name).filter(isTruthy),
 				studio: result.studios?.map(x => x.name).filter(isTruthy),
-				duration: result.duration,
+				duration: coerceMovieDurationMinutes(result.duration),
 				onlineRating: result.score,
 				image: result.images?.jpg?.image_url,
 
