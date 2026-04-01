@@ -1,6 +1,6 @@
 import type { App, TFile } from 'obsidian';
 import { TFolder } from 'obsidian';
-import { BandModel } from '../models/BandModel';
+import { ArtistModel } from '../models/ArtistModel';
 import { BoardGameModel } from '../models/BoardGameModel';
 import { BookModel } from '../models/BookModel';
 import { ComicMangaModel } from '../models/ComicMangaModel';
@@ -19,7 +19,7 @@ import { replaceTags } from './Utils';
 
 // All media types in alphabetical order
 export const MEDIA_TYPES: MediaType[] = [
-	MediaType.Band,
+	MediaType.Artist,
 	MediaType.BoardGame,
 	MediaType.Book,
 	MediaType.ComicManga,
@@ -45,7 +45,7 @@ export class MediaTypeManager {
 
 	updateTemplates(settings: MediaDbPluginSettings): void {
 		this.mediaFileNameTemplateMap = new Map<MediaType, string>();
-		this.mediaFileNameTemplateMap.set(MediaType.Band, settings.bandFileNameTemplate);
+		this.mediaFileNameTemplateMap.set(MediaType.Artist, settings.artistFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Movie, settings.movieFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Series, settings.seriesFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Season, settings.seasonFileNameTemplate);
@@ -58,7 +58,7 @@ export class MediaTypeManager {
 		this.mediaFileNameTemplateMap.set(MediaType.Song, settings.songFileNameTemplate);
 
 		this.mediaTemplateMap = new Map<MediaType, string>();
-		this.mediaTemplateMap.set(MediaType.Band, settings.bandTemplate);
+		this.mediaTemplateMap.set(MediaType.Artist, settings.artistTemplate);
 		this.mediaTemplateMap.set(MediaType.Movie, settings.movieTemplate);
 		this.mediaTemplateMap.set(MediaType.Series, settings.seriesTemplate);
 		this.mediaTemplateMap.set(MediaType.Season, settings.seasonTemplate);
@@ -73,7 +73,7 @@ export class MediaTypeManager {
 
 	updateFolders(settings: MediaDbPluginSettings): void {
 		this.mediaFolderMap = new Map<MediaType, string>();
-		this.mediaFolderMap.set(MediaType.Band, settings.bandFolder);
+		this.mediaFolderMap.set(MediaType.Artist, settings.artistFolder);
 		this.mediaFolderMap.set(MediaType.Movie, settings.movieFolder);
 		this.mediaFolderMap.set(MediaType.Series, settings.seriesFolder);
 		this.mediaFolderMap.set(MediaType.Season, settings.seasonFolder);
@@ -168,8 +168,8 @@ export class MediaTypeManager {
 			return new BoardGameModel(obj);
 		} else if (mediaType === MediaType.Book) {
 			return new BookModel(obj);
-		} else if (mediaType === MediaType.Band) {
-			return new BandModel(obj);
+		} else if (mediaType === MediaType.Artist) {
+			return new ArtistModel(obj);
 		} else if (mediaType === MediaType.Song) {
 			return new SongModel(obj);
 		}

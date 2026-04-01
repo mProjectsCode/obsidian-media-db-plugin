@@ -1,5 +1,5 @@
 export enum MediaType {
-	Band = 'band',
+	Artist = 'artist',
 	BoardGame = 'boardgame',
 	Book = 'book',
 	ComicManga = 'comicManga',

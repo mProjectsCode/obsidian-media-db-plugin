@@ -1,5 +1,5 @@
 import type MediaDbPlugin from '../main';
-import { BandModel } from '../models/BandModel';
+import { ArtistModel } from '../models/ArtistModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { MediaType } from '../utils/MediaType';
 import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from '../utils/noteTypeSettings';
@@ -48,15 +48,15 @@ export class PropertyMapper {
 				if (propertyMapping.property === key) {
 					let finalValue = value;
 					if (propertyMapping.wikilink) {
-						const useBandFileNameForArtists =
+						const useArtistFileNameForArtists =
 							propertyMapping.property === 'artists' &&
 							(internalMediaType === MediaType.Song || internalMediaType === MediaType.MusicRelease);
 						const useMusicReleaseFileNameForAlbumTitle =
 							propertyMapping.property === 'albumTitle' && internalMediaType === MediaType.Song;
 
 						if (typeof value === 'string') {
-							if (useBandFileNameForArtists) {
-								finalValue = this.bandArtistWikilink(value);
+							if (useArtistFileNameForArtists) {
+								finalValue = this.artistTitleWikilink(value);
 							} else if (useMusicReleaseFileNameForAlbumTitle) {
 								finalValue = this.songAlbumTitleWikilink(value, obj);
 							} else {
@@ -67,8 +67,8 @@ export class PropertyMapper {
 								if (typeof v !== 'string') {
 									return v;
 								}
-								if (useBandFileNameForArtists) {
-									return this.bandArtistWikilink(v);
+								if (useArtistFileNameForArtists) {
+									return this.artistTitleWikilink(v);
 								}
 								if (useMusicReleaseFileNameForAlbumTitle) {
 									return this.songAlbumTitleWikilink(v, obj);
@@ -198,12 +198,12 @@ export class PropertyMapper {
 	}
 
 	/**
-	 * Wikilink for an artist name using the Band file name template as the link target and the raw artist title as the display alias.
+	 * Wikilink for an artist name using the Artist file name template as the link target and the raw artist title as the display alias.
 	 */
-	private bandArtistWikilink(artistTitle: string): string {
+	private artistTitleWikilink(artistTitle: string): string {
 		const title = artistTitle.trim();
-		const bandModel = new BandModel({
-			type: 'band',
+		const artistModel = new ArtistModel({
+			type: 'artist',
 			title,
 			englishTitle: title,
 			year: 0,
@@ -218,10 +218,10 @@ export class PropertyMapper {
 			genres: [],
 			image: '',
 			officialWebsite: '',
-			subType: 'band',
+			subType: 'artist',
 			userData: { personalRating: 0 },
 		});
-		const linkTarget = this.plugin.mediaTypeManager.getFileName(bandModel);
+		const linkTarget = this.plugin.mediaTypeManager.getFileName(artistModel);
 		if (linkTarget === title) {
 			return `[[${linkTarget}]]`;
 		}

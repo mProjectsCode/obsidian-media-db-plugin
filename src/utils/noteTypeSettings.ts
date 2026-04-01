@@ -3,7 +3,7 @@ import { MEDIA_TYPES } from './MediaTypeManager';
 import { MediaType } from './MediaType';
 
 const MEDIA_TYPE_TO_NOTE_TYPE_KEY: Record<MediaType, keyof MediaDbPluginSettings> = {
-	[MediaType.Band]: 'bandNoteType',
+	[MediaType.Artist]: 'artistNoteType',
 	[MediaType.BoardGame]: 'boardgameNoteType',
 	[MediaType.Book]: 'bookNoteType',
 	[MediaType.ComicManga]: 'mangaNoteType',
@@ -48,6 +48,9 @@ export function resolveMetadataTypeToMediaType(
 	}
 	if (s === 'manga') {
 		s = MediaType.ComicManga;
+	}
+	if (s === 'band') {
+		s = MediaType.Artist;
 	}
 	for (const mt of MEDIA_TYPES) {
 		if (mt === s) {

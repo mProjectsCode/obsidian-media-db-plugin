@@ -3,9 +3,9 @@ import type { ModelToData } from '../utils/Utils';
 import { mediaDbTag, migrateObject } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
-export type BandData = ModelToData<BandModel>;
+export type ArtistData = ModelToData<ArtistModel>;
 
-export class BandModel extends MediaTypeModel {
+export class ArtistModel extends MediaTypeModel {
 	genres: string[];
 	country: string;
 	image: string;
@@ -20,7 +20,7 @@ export class BandModel extends MediaTypeModel {
 		personalRating: number;
 	};
 
-	constructor(obj: BandData) {
+	constructor(obj: ArtistData) {
 		super();
 
 		this.genres = [];
@@ -47,11 +47,11 @@ export class BandModel extends MediaTypeModel {
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'music', 'band'];
+		return [mediaDbTag, 'music', 'artist'];
 	}
 
 	getMediaType(): MediaType {
-		return MediaType.Band;
+		return MediaType.Artist;
 	}
 
 	getSummary(): string {

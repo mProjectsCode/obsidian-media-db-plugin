@@ -1,6 +1,6 @@
 import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
-import { BandModel } from '../../models/BandModel';
+import { ArtistModel } from '../../models/ArtistModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear, contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
@@ -75,7 +75,7 @@ const EXCLUDED_SECONDARY_TYPES = new Set([
 	'Field recording',
 ]);
 
-export class MusicBrainzBandAPI extends APIModel {
+export class MusicBrainzArtistAPI extends APIModel {
 	plugin: MediaDbPlugin;
 	apiDateFormat: string = 'YYYY-MM-DD';
 
@@ -83,10 +83,10 @@ export class MusicBrainzBandAPI extends APIModel {
 		super();
 
 		this.plugin = plugin;
-		this.apiName = 'MusicBrainz Band API';
+		this.apiName = 'MusicBrainz Artist API';
 		this.apiDescription = 'MusicBrainz artist search and studio album discography.';
 		this.apiUrl = 'https://musicbrainz.org/';
-		this.types = [MediaType.Band];
+		this.types = [MediaType.Artist];
 	}
 
 	private mbHeaders(): Record<string, string> {
@@ -118,8 +118,8 @@ export class MusicBrainzBandAPI extends APIModel {
 		for (const artist of data.artists ?? []) {
 			const begin = artist['life-span']?.begin;
 			ret.push(
-				new BandModel({
-					type: 'band',
+				new ArtistModel({
+					type: 'artist',
 					title: artist.name,
 					englishTitle: artist.name,
 					year: coerceYear(begin ? (begin.split('-')[0] ?? '') : ''),
@@ -134,7 +134,7 @@ export class MusicBrainzBandAPI extends APIModel {
 					genres: [],
 					image: '',
 					officialWebsite: '',
-					subType: 'band',
+					subType: 'artist',
 				}),
 			);
 		}
@@ -167,8 +167,8 @@ export class MusicBrainzBandAPI extends APIModel {
 			}
 		}
 
-		return new BandModel({
-			type: 'band',
+		return new ArtistModel({
+			type: 'artist',
 			title: artist.name,
 			englishTitle: artist.name,
 			year: coerceYear(beginYear),
@@ -183,7 +183,7 @@ export class MusicBrainzBandAPI extends APIModel {
 			genres: [...new Set([...(artist.genres?.map(g => g.name) ?? []), ...(artist.tags?.map(t => t.name) ?? [])])],
 			image: '',
 			officialWebsite,
-			subType: 'band',
+			subType: 'artist',
 			userData: {
 				personalRating: 0,
 			},
@@ -244,6 +244,6 @@ export class MusicBrainzBandAPI extends APIModel {
 	}
 
 	getDisabledMediaTypes(): MediaType[] {
-		return this.plugin.settings.MusicBrainzBandAPI_disabledMediaTypes;
+		return this.plugin.settings.MusicBrainzArtistAPI_disabledMediaTypes;
 	}
 }
