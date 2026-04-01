@@ -49,10 +49,17 @@ export interface MediaDbPluginSettings {
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	/** When true, add an Obsidian `aliases` entry with an ASCII form of the title when it uses diacritics or letters like ø (e.g. Likbør → Likbor). */
-	addNormalizeTitlesAsAlias: boolean;
+	autoTrackerAiringKey: string;
+	autoTrackerReleasedKey: string;
 	enableTemplaterIntegration: boolean;
 	imageDownload: boolean;
 	imageFolder: string;
+	tmdbRegion: string;
+	enableAutoTagging: boolean;
+	autoTagEntities: string;
+	autoTagProperties: string;
+	enableWikiLinkParsing: boolean;
+	autoUpdateAiringMode: boolean;
 
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
@@ -355,10 +362,17 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	customDateFormat: 'L',
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
-	addNormalizeTitlesAsAlias: true,
+	autoTrackerAiringKey: 'airing',
+	autoTrackerReleasedKey: 'released',
 	enableTemplaterIntegration: false,
 	imageDownload: false,
 	imageFolder: 'Media DB/images',
+	enableAutoTagging: false,
+	autoTagEntities: '',
+	autoTagProperties: '',
+	enableWikiLinkParsing: false,
+	autoUpdateAiringMode: false,
+	tmdbRegion: 'US',
 
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
@@ -738,6 +752,25 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		this.renderMediaTypeSection(panel, byType(MediaType.Season), mediaTypeApiMap, {
 			sectionHeading: 'Season',
 		});
+
+		panel.createDiv({ cls: 'media-db-plugin-spacer' });
+		panel.createEl('h3', { text: 'Region' });
+		const regionGroup = new SettingGroup(panel);
+		regionGroup.addSetting(
+			setting =>
+				void setting
+					.setName('TMDB Region')
+					.setDesc('ISO-3166-1 region code for TMDB localized metadata (e.g., US, TR, GB). Default is US.')
+					.addText(text =>
+						text
+							.setPlaceholder('US')
+							.setValue(this.plugin.settings.tmdbRegion)
+							.onChange(async value => {
+								this.plugin.settings.tmdbRegion = value;
+								await this.plugin.saveSettings();
+							}),
+					),
+		);
 	}
 
 	display(): void {
@@ -824,7 +857,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 									"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
 									"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
 									this.plugin.dateFormatter.getPreview() +
-									'</a></b>',
+									"</a></b>",
 							),
 						)
 						.addText(cb => {
@@ -864,7 +897,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 							cb.setValue(this.plugin.settings.useDefaultFrontMatter).onChange(data => {
 								this.plugin.settings.useDefaultFrontMatter = data;
 								void this.plugin.saveSettings();
-								// Redraw settings to display/remove the property mappings
 								this.display();
 							});
 						}),
@@ -874,9 +906,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				setting =>
 					void setting
 						.setName('Enable Templater integration')
-						.setDesc(
-							'Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.',
-						)
+						.setDesc('Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.')
 						.addToggle(cb => {
 							cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
 								this.plugin.settings.enableTemplaterIntegration = data;
@@ -920,27 +950,127 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						}),
 			);
 
-			generalGroup.addSetting(
+		panel.createEl('h3', { text: 'Auto-Tracker' }).style.marginTop = '1.5em';
+		const autoTrackerGroup = new SettingGroup(panel);
+
+			autoTrackerGroup.addSetting(
 				setting =>
 					void setting
-						.setName('Add Normalized Titles as Alias')
-						.setDesc(
-							'If the title contains non-ASCII characters, add a normalized ASCII version of the title in aliases.',
-						)
+						.setName('Auto-Update Airing & Unreleased Media')
+						.setDesc('At startup, automatically searches background for any active medias with "released: false" or "airing: true" and updates them via API.')
 						.addToggle(cb => {
-							cb.setValue(this.plugin.settings.addNormalizeTitlesAsAlias).onChange(data => {
-								this.plugin.settings.addNormalizeTitlesAsAlias = data;
+							cb.setValue(this.plugin.settings.autoUpdateAiringMode).onChange(data => {
+								this.plugin.settings.autoUpdateAiringMode = data;
 								void this.plugin.saveSettings();
 							});
 						}),
 			);
+
+			autoTrackerGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Auto-Tracker "Airing" Property')
+						.setDesc('Property key to check if a media item is currently airing. Default is "airing".')
+						.addText(text => {
+							text.setValue(this.plugin.settings.autoTrackerAiringKey).onChange(data => {
+								this.plugin.settings.autoTrackerAiringKey = data.trim() || 'airing';
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			autoTrackerGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Auto-Tracker "Released" Property')
+						.setDesc('Property key to check if a media item is unreleased. Default is "released".')
+						.addText(text => {
+							text.setValue(this.plugin.settings.autoTrackerReleasedKey).onChange(data => {
+								this.plugin.settings.autoTrackerReleasedKey = data.trim() || 'released';
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+		panel.createEl('h3', { text: 'Auto-Tag Properties' }).style.marginTop = '1.5em';
+		const autoTagGroup = new SettingGroup(panel);
+
+			autoTagGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Enable Auto Tagging')
+						.setDesc('Feature to automatically sanitize properties into standard Obsidian tags.')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.enableAutoTagging).onChange(data => {
+								this.plugin.settings.enableAutoTagging = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			autoTagGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Auto-Tag whitelisted properties')
+						.setDesc('Comma separated list of property names. If a property in this list is present, its values will be sanitized and appended to the Obsidian native `tags` array.')
+						.addText(text =>
+							text
+								.setPlaceholder('genres, platforms')
+								.setValue(this.plugin.settings.autoTagProperties)
+								.onChange(async value => {
+									this.plugin.settings.autoTagProperties = value;
+									await this.plugin.saveSettings();
+								}),
+						),
+			);
 		});
+
+		// Render individual media type tabs
+		// Game tab
+		const renderGameTab = (panel: HTMLElement, setting: MediaTypeMappedSettings) => {
+			this.renderMediaTypeSection(panel, setting, mediaTypeApiMap);
+		};
+
+		// Wiki tab — inject Wiki-Link settings
+		const renderWikiTab = (panel: HTMLElement, setting: MediaTypeMappedSettings) => {
+			this.renderMediaTypeSection(panel, setting, mediaTypeApiMap, {
+				appendToSection: group => {
+					group.addSetting(
+						s =>
+							void s
+								.setName('Wiki-Link parsing')
+								.setDesc('When enabled, properties listed below are formatted as Obsidian [[Wiki-Links]] across ALL media types globally. This complements the per-property wikilink checkbox in Property Mappings, which only affects that specific property.')
+								.addToggle(cb => {
+									cb.setValue(this.plugin.settings.enableWikiLinkParsing).onChange(data => {
+										this.plugin.settings.enableWikiLinkParsing = data;
+										void this.plugin.saveSettings();
+									});
+								}),
+					);
+					group.addSetting(
+						s =>
+							void s
+								.setName('Wiki-Link properties')
+								.setDesc('Comma-separated property names to convert to [[Wiki-Links]] for ALL media types. Use this for custom or cross-type properties (e.g. storefront, launcher). For standard properties like genres or studio, the wikilink checkbox inside Property Mappings also works.')
+								.addTextArea(cb => {
+									cb.setPlaceholder('genres, storefront, category')
+										.setValue(this.plugin.settings.autoTagEntities)
+										.onChange(value => {
+											this.plugin.settings.autoTagEntities = value;
+											void this.plugin.saveSettings();
+										});
+								}),
+					);
+				},
+			});
+		};
 
 		addTab('api-keys', 'API keys', 'key', panel => {
 			const apiKeyGroup = new SettingGroup(panel);
 
 			this.addApiSecretSetting(apiKeyGroup, 'OMDb API key', 'API key for "www.omdbapi.com".', ApiSecretID.omdb);
 			this.addApiSecretSetting(apiKeyGroup, 'TMDB API Token', 'API Read Access Token for "https://www.themoviedb.org".', ApiSecretID.tmdb);
+
 			this.addApiSecretSetting(apiKeyGroup, 'Moby Games key', 'API key for "www.mobygames.com".', ApiSecretID.mobyGames);
 			this.addApiSecretSetting(apiKeyGroup, 'Giant Bomb Key', 'API key for "www.giantbomb.com".', ApiSecretID.giantBomb);
 			this.addApiSecretSetting(apiKeyGroup, 'IGDB Client ID', 'Client ID for IGDB API (Required for Twitch OAuth).', ApiSecretID.igdbClientId);
@@ -1005,9 +1135,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			}
 
 			const mediaTypeName = unCamelCase(mediaTypeSetting.mediaType);
-			addTab(`media-${mediaType}`, mediaTypeName, mediaTypeTabIcon(mediaType), panel => {
-				this.renderMediaTypeSection(panel, mediaTypeSetting, mediaTypeApiMap);
-			});
+			if (mediaType === MediaType.Game) {
+				addTab(`media-${mediaType}`, mediaTypeName, mediaTypeTabIcon(mediaType), panel => {
+					renderGameTab(panel, mediaTypeSetting);
+				});
+			} else if (mediaType === MediaType.Wiki) {
+				addTab(`media-${mediaType}`, mediaTypeName, mediaTypeTabIcon(mediaType), panel => {
+					renderWikiTab(panel, mediaTypeSetting);
+				});
+			} else {
+				addTab(`media-${mediaType}`, mediaTypeName, mediaTypeTabIcon(mediaType), panel => {
+					this.renderMediaTypeSection(panel, mediaTypeSetting, mediaTypeApiMap);
+				});
+			}
 		}
 
 		const validIds = new Set(tabEntries.map(t => t.id));

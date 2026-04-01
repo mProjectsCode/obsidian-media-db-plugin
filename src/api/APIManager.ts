@@ -51,7 +51,7 @@ export class APIManager {
 
 	/**
 	 * Queries detailed info for an id from an API.
-	 * MusicBrainz-backed notes use on-disk dataSource `MusicBrainz`; `mediaType` picks artist vs release/song API.
+	 * MusicBrainz-backed notes use on-disk dataSource `MusicBrainz`; `mediaType` picks Artist vs release/song API.
 	 *
 	 * @param id
 	 * @param apiName Stored dataSource on the note, or an exact {@link APIModel.apiName} (e.g. bulk import / ID search).

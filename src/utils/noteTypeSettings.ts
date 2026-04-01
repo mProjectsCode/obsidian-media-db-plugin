@@ -49,9 +49,6 @@ export function resolveMetadataTypeToMediaType(
 	if (s === 'manga') {
 		s = MediaType.ComicManga;
 	}
-	if (s === 'band') {
-		s = MediaType.Artist;
-	}
 	for (const mt of MEDIA_TYPES) {
 		if (mt === s) {
 			return mt;

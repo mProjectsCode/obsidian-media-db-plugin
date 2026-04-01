@@ -11,10 +11,15 @@ interface IGDBCover { url: string; }
 interface IGDBGenre { name: string; }
 interface IGDBCompany { name: string; }
 interface IGDBInvolvedCompany { company: IGDBCompany; developer: boolean; publisher: boolean; }
+interface IGDBPlatform { name: string; }
+interface IGDBGameMode { name: string; }
+interface IGDBCollection { name: string; }
 interface IGDBGame {
 	id: number; name: string; cover?: IGDBCover; first_release_date?: number;
 	summary?: string; total_rating?: number; url?: string;
 	genres?: IGDBGenre[]; involved_companies?: IGDBInvolvedCompany[];
+	platforms?: IGDBPlatform[]; game_modes?: IGDBGameMode[];
+	collection?: IGDBCollection; collections?: IGDBCollection[]; franchises?: IGDBCollection[];
 }
 interface TwitchAuthResponse { access_token: string; expires_in: number; }
 
@@ -69,7 +74,7 @@ export class IGDBAPI extends APIModel {
 		const data = response.json as IGDBGame[];
 		return data.map(result => {
 			const year = result.first_release_date ? new Date(result.first_release_date * 1000).getFullYear() : 0;
-			const image = result.cover?.url ? 'https:' + result.cover.url.replace('t_thumb', 't_cover_big') : '';
+			const image = result.cover?.url ? 'https:' + result.cover.url.replace('t_thumb', 't_1080p').replace(/\.jpg$/, '.webp') : '';
 			return new GameModel({
 				type: MediaType.Game, title: result.name, englishTitle: result.name, year: coerceYear(year),
 				dataSource: this.apiName, id: result.id.toString(), image: image
@@ -81,7 +86,7 @@ export class IGDBAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 		const token = await this.getAuthToken();
 		const clientId = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.igdbClientId);
-		const queryBody = `fields name, cover.url, first_release_date, summary, total_rating, url, genres.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher; where id = ${id};`;
+		const queryBody = `fields name, cover.url, first_release_date, summary, total_rating, url, genres.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, platforms.name, game_modes.name, collection.name, collections.name, franchises.name; where id = ${id};`;
 		const response = await requestUrl({
 			url: `${this.apiUrl}/games`, method: 'POST',
 			headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
@@ -100,7 +105,12 @@ export class IGDBAPI extends APIModel {
 			if (c.publisher) publishers.push(c.company.name);
 		});
 		const dateStr = result.first_release_date ? new Date(result.first_release_date * 1000).toISOString().split('T')[0] : '';
-		const image = result.cover?.url ? 'https:' + result.cover.url.replace('t_thumb', 't_cover_big') : '';
+		const image = result.cover?.url ? 'https:' + result.cover.url.replace('t_thumb', 't_1080p').replace(/\.jpg$/, '.webp') : '';
+
+		let combinedSeries: string[] = [];
+		if (result.collection?.name) combinedSeries.push(result.collection.name);
+		result.collections?.forEach(c => { if (c.name && !combinedSeries.includes(c.name)) combinedSeries.push(c.name); });
+		result.franchises?.forEach(f => { if (f.name && !combinedSeries.includes(f.name)) combinedSeries.push(f.name); });
 
 		return new GameModel({
 			type: MediaType.Game, title: result.name, englishTitle: result.name,
@@ -108,8 +118,11 @@ export class IGDBAPI extends APIModel {
 				result.first_release_date ? new Date(result.first_release_date * 1000).getFullYear() : 0,
 			),
 			dataSource: this.apiName, url: result.url, id: result.id.toString(),
+			summary: result.summary ?? '', series: combinedSeries,
+			gameModes: result.game_modes?.map(g => g.name) || [], platforms: result.platforms?.map(p => p.name) || [],
 			developers: developers, publishers: publishers, genres: result.genres?.map(g => g.name) || [],
-			onlineRating: result.total_rating, image: image, released: true,
+			onlineRating: result.total_rating ? Math.round(result.total_rating * 10) / 10 : 0, image: image, 
+			released: result.first_release_date ? (result.first_release_date * 1000) <= Date.now() : false,
 			releaseDate: dateStr ? this.plugin.dateFormatter.format(dateStr, this.apiDateFormat) : '',
 			userData: { played: false, personalRating: 0 },
 		});

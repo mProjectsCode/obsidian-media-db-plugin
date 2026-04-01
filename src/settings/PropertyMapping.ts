@@ -1,5 +1,5 @@
 import { musicBrainzRegisteredApiName } from '../api/musicBrainzConstants';
-import { MediaType } from '../utils/MediaType';
+import type { MediaType } from '../utils/MediaType';
 import { containsOnlyLettersAndUnderscores, PropertyMappingNameConflictError, PropertyMappingValidationError } from '../utils/Utils';
 
 // Plain object interfaces for serialization
@@ -136,12 +136,6 @@ export class PropertyMappingModel {
 	 */
 	static migrateModels(loadedModels: PropertyMappingModelData[], defaultModels: PropertyMappingModel[]): PropertyMappingModel[] {
 		const migratedModels: PropertyMappingModel[] = [];
-
-		for (const m of loadedModels) {
-			if ((m.type as string) === 'band') {
-				(m as { type: MediaType }).type = MediaType.Artist;
-			}
-		}
 
 		for (const defaultModel of defaultModels) {
 			const loadedModel = loadedModels.find(m => m.type === defaultModel.type);

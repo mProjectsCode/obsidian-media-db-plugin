@@ -3,6 +3,7 @@ import { TFile } from 'obsidian';
 import type MediaDbPlugin from 'src/main';
 import { MediaDbBulkImportModal as MediaDbBulkImportModal } from 'src/modals/MediaDbBulkImportModal';
 import type { MediaTypeModel } from 'src/models/MediaTypeModel';
+import { CompletionModal } from 'src/modals/CompletionModal';
 import { ModalResultCode } from './ModalHelper';
 import { dateTimeToString, markdownTable } from './Utils';
 
@@ -27,6 +28,8 @@ export class BulkImportHelper {
 	async import(folder: TFolder): Promise<void> {
 		const erroredFiles: BulkImportError[] = [];
 		let canceled: boolean = false;
+		let successCount = 0;
+		const startTime = Date.now();
 
 		const { selectedAPI, lookupMethod, fieldName, appendContent } = await new Promise<{
 			selectedAPI: string;
@@ -60,6 +63,8 @@ export class BulkImportHelper {
 				const error = await this.importById(file, lookupValue, selectedAPI, appendContent);
 				if (error) {
 					erroredFiles.push(error);
+				} else {
+					successCount++;
 				}
 			} else if (lookupMethod === BulkImportLookupMethod.TITLE) {
 				const error = await this.importByTitle(file, lookupValue, selectedAPI, appendContent);
@@ -68,6 +73,8 @@ export class BulkImportHelper {
 						canceled = true;
 					}
 					erroredFiles.push(error);
+				} else {
+					successCount++;
 				}
 			} else {
 				erroredFiles.push({ filePath: file.path, error: `invalid lookup type` });
@@ -78,6 +85,18 @@ export class BulkImportHelper {
 		if (erroredFiles.length > 0) {
 			await this.createErroredFilesReport(erroredFiles);
 		}
+
+		const total = successCount + erroredFiles.length;
+		new CompletionModal(this.plugin.app, {
+			title: 'Bulk Import Complete',
+			icon: '📥',
+			total,
+			success: successCount,
+			errors: erroredFiles.filter(e => !e.canceled).length,
+			skipped: erroredFiles.filter(e => e.canceled).length,
+			elapsedMs: Date.now() - startTime,
+			notes: erroredFiles.length > 0 ? ['Error report saved to vault.'] : [],
+		}).open();
 	}
 
 	private async importById(file: TFile, lookupValue: string, selectedAPI: string, appendContent: boolean): Promise<BulkImportError | undefined> {
@@ -144,7 +163,7 @@ export class BulkImportHelper {
 
 		const table = [['file', 'error']].concat(erroredFiles.map(x => [x.filePath, x.error]));
 
-		const fileContent = `# ${title}\n\n${markdownTable(table)}`;
+		const fileContent = markdownTable(table);
 		await this.plugin.app.vault.create(filePath, fileContent);
 	}
 }

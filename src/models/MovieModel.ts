@@ -20,6 +20,7 @@ export class MovieModel extends MediaTypeModel {
 
 	released: boolean;
 	country: string[];
+	language: string[];
 	/** Production budget in USD (e.g. from TMDB). */
 	budget: string;
 	/** Box-office gross (e.g. worldwide from TMDB; OMDb US figure when from IMDb). */
@@ -50,6 +51,7 @@ export class MovieModel extends MediaTypeModel {
 
 		this.released = false;
 		this.country = [];
+		this.language = [];
 		this.budget = '';
 		this.revenue = '';
 		this.ageRating = '';
@@ -81,6 +83,6 @@ export class MovieModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		return this.englishTitle + ' (' + this.year + ')';
+		return this.englishTitle + ' (' + (this.year > 0 ? this.year : '') + ')';
 	}
 }
