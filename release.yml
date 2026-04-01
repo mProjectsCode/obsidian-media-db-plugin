@@ -1,0 +1,54 @@
+name: Create Plugin Release
+
+on:
+    push:
+        # Sequence of patterns matched against refs/tags
+        tags:
+            - '*' # Push events to matching any tag format, i.e. 1.0, 20.15.10
+
+env:
+    PLUGIN_NAME: obsidian-media-db-plugin # Change this to the name of your plugin-id folder
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Determine prerelease status
+              id: status
+              run: |
+                  if [[ "${{ github.ref }}" == *"canary"* ]]; then
+                  echo "prerelease=true" >> $GITHUB_OUTPUT
+                  else
+                  echo "prerelease=false" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Install Bun
+              uses: oven-sh/setup-bun@v1
+              with:
+                  bun-version: latest
+
+            - name: Build
+              id: build
+              run: |
+                  bun install
+                  bun run build
+                  mkdir ${{ env.PLUGIN_NAME }}
+                  cp dist/main.js dist/manifest.json dist/styles.css ${{ env.PLUGIN_NAME }}
+                  zip -r ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.zip ${{ env.PLUGIN_NAME }}
+                  ls
+
+            - name: Release
+              id: release
+              uses: softprops/action-gh-release@v2
+              with:
+                  prerelease: ${{ steps.status.outputs.prerelease }}
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  files: |
+                      ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.zip
+                      dist/main.js
+                      dist/manifest.json
+                      dist/styles.css
