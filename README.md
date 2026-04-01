@@ -176,6 +176,9 @@ Now you select the result you want, and the plugin will cast its magic, creating
 
 #### Notes
 
+##### TMDB Region Setting
+
+The `ageRating` and `streamingServices` properties are **region-aware**. You can configure your ISO 3166-1 country code (e.g. `US`, `TR`, `GB`) in the plugin settings under **TMDB Region**. The plugin will then automatically fetch the correct certification and streaming availability for your country on every import or metadata update.
 
 - [Jikan](https://jikan.moe/)
     - sometimes the api is very slow; this is normal
