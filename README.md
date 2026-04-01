@@ -74,6 +74,46 @@ Then the plugin will go through every file in the folder and prompt you to selec
 
 After all files have been imported or the import was canceled, you will find the new entries as well as an error report that contains any errors or skipped/canceled files in the folder specified in the setting of the plugin.
 
+#### Intelligent Wiki-Link Generation
+
+Automatically format specific metadata fields into Obsidian Wiki-Links based on a customizable whitelist. 
+- You can specify comma-separated properties (like `genres, publishers, storefront`) in the plugin settings.
+- The plugin will parse both API-fetched arrays and your own custom manual properties, formatting them safely as `[[folder/value|value]]`.
+- If you disable the feature later, updating the note will cleanly strip the brackets and revert the entries back to plain text.
+
+#### Auto-Tagging Engine & Ghost Tag Purging
+
+Generate clean, sanitized hashtags automatically (e.g. `#role-playing-rpg`) from mapped array properties or Wiki-Links.
+- The engine creates tags without destroying any manual tags you have explicitly typed into your notes.
+- **Ghost Tag Purging**: Whenever a piece of media updates (e.g. a game's genre changes on IGDB), the plugin intelligently calculates which old tags it previously generated and safely removes them, leaving your manual user tags perfectly preserved.
+
+#### Background Auto-Tracker
+
+An automated, non-blocking background scanner that actively searches your vault for ongoing series (Airing) or unreleased games/movies and queues them for silent metadata updates.
+- Scans trigger once on Obsidian startup or can be triggered manually from the left ribbon.
+- Includes a sophisticated **Emergency Abort Mechanism**: At any point during a bulk process or background tracker queue, you can click the Ribbon Icon or use the `Cancel All Updates` button inside the Overwrite Modal to instantly halt the entire queue gracefully without restarting Obsidian.
+
+
+
+The plugin allows you to import your preexisting media collection and upgrade it to Media DB entries.
+
+##### Prerequisites
+
+The preexisting media notes must be inside a folder in your vault.
+For the plugin to be able to query them, they need one metadata field that is used as the title the piece of media is searched by.
+This can be achieved by, for example, using a `csv` import plugin to import an existing list from outside of Obsidian.
+
+##### Importing
+
+To start the import process, right-click on the folder and select the `Import folder as Media DB entries` option.
+Then specify the API to search, if the current note content and metadata should be appended to the Media DB entry, and the name of the metadata field that contains the title of the piece of media.
+
+Then the plugin will go through every file in the folder and prompt you to select from the search results.
+
+##### Post import
+
+After all files have been imported or the import was canceled, you will find the new entries as well as an error report that contains any errors or skipped/canceled files in the folder specified in the setting of the plugin.
+
 ### How to install
 
 **The plugin is now released, so it can be installed directly through Obsidian's plugin installer.**
@@ -130,6 +170,61 @@ Now you select the result you want, and the plugin will cast its magic, creating
 | Comic Vine                                           | The Comic Vine API offers metadata for comic books                                                | comicbooks                                            | Yes, by making an account [here](https://comicvine.gamespot.com/login-signup/) and going to the [api section](https://comicvine.gamespot.com/api/) of the site                     | 200 requests per resource, per hour. There is also a velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources.                                         | No                 |
 | [VNDB](https://vndb.org/)                            | The VNDB API offers metadata for visual novels                                                    | games                                                 | No                                                                                                                                                                                 | 200 requests per 5 minutes                                                                                                                                                                                                         | Yes                |
 | [Boardgame Geek](https://boardgamegeek.com)          | The Boardgame Geek API offers metadata for boardgames                                             | boardgames                                            | Yes, by making an account [here](https://boardgamegeek.com/join/) and then [requesting an application token](https://boardgamegeek.com/applications)                               | Exact usage limits are still undetermined                                                                                                                                                                                          | No                 |
+
+#### Extended Metadata Properties
+
+This fork extends the default metadata output for **TMDB** and **IGDB** with additional fields.
+
+##### TMDB — Movies (`TMDBMovieAPI`)
+
+| Property | Description |
+| --- | --- |
+| `plot` | Overview / synopsis from TMDB |
+| `director` | Director name(s), extracted from crew credits |
+| `writer` | Writing credits (Screenplay, Story, Novel, etc.) |
+| `studio` | Production company name(s) |
+| `actors` | Top 5 cast members |
+| `country` | Production country/countries |
+| `language` | Spoken language(s) in English name |
+| `budget` | Production budget (formatted as USD) |
+| `revenue` | Box-office gross (formatted as USD) |
+| `ageRating` | Age certification for your configured region (e.g. `PG-13`) |
+| `streamingServices` | Flat-rate streaming providers available in your region (e.g. Netflix, Disney+) |
+| `premiere` | Formatted release date |
+
+##### TMDB — Series (`TMDBSeriesAPI`)
+
+| Property | Description |
+| --- | --- |
+| `plot` | Overview / synopsis from TMDB |
+| `writer` | Series creator(s) |
+| `studio` | Production company name(s) |
+| `actors` | Top 5 cast members |
+| `country` | Production country/countries |
+| `language` | Spoken language(s) in English name |
+| `network` | Broadcasting network(s) (e.g. HBO, Netflix) |
+| `ageRating` | Content rating for your configured region (e.g. `TV-MA`) |
+| `streamingServices` | Flat-rate streaming providers available in your region |
+| `airedFrom` | Formatted first air date |
+| `airedTo` | Formatted last air date (`unknown` if still airing) |
+
+##### IGDB — Games (`IGDBAPI`)
+
+| Property | Description |
+| --- | --- |
+| `developers` | Developer studio name(s) |
+| `publishers` | Publisher name(s) |
+| `genres` | Game genre list |
+| `series` | Collection and franchise name(s) combined |
+| `gameModes` | Game mode(s) (e.g. Single player, Multiplayer) |
+| `platforms` | Platform list (e.g. PC, PlayStation 5) |
+| `onlineRating` | IGDB aggregated rating (0–100 rounded to 1 decimal) |
+| `releaseDate` | Formatted release date |
+| `released` | Boolean — whether the game is already released |
+
+##### TMDB Region Setting
+
+The `ageRating` and `streamingServices` properties are **region-aware**. You can configure your ISO 3166-1 country code (e.g. `US`, `TR`, `GB`) in the plugin settings under **TMDB Region**. The plugin will then automatically fetch the correct certification and streaming availability for your country on every import or metadata update.
 
 #### Notes
 
