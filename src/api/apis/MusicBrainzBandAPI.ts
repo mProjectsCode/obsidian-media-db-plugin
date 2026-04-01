@@ -243,6 +243,25 @@ export class MusicBrainzBandAPI extends APIModel {
 		return [...new Set(collected.map(c => c.id))];
 	}
 
+	/**
+	 * For the 'artists' property, the link target is the Band note's file name
+	 * (derived from the Band file name template), not just the raw artist string.
+	 */
+	override wikilinkValueFor(property: string, value: string, _obj: Record<string, unknown>, folderPrefix: string): string {
+		if (property === 'artists') {
+			const title = value.trim();
+			const bandModel = new BandModel({
+				type: 'band', title, englishTitle: title, year: 0,
+				beginYear: '', releaseDate: '', dataSource: '', url: '', id: '',
+				country: '', disambiguation: '', isni: '', genres: [], image: '',
+				officialWebsite: '', subType: 'band',
+			});
+			const linkTarget = this.plugin.mediaTypeManager.getFileName(bandModel);
+			return linkTarget === title ? `[[${linkTarget}]]` : `[[${linkTarget}|${title}]]`;
+		}
+		return super.wikilinkValueFor(property, value, _obj, folderPrefix);
+	}
+
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.MusicBrainzBandAPI_disabledMediaTypes;
 	}

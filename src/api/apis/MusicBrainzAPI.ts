@@ -235,6 +235,29 @@ export class MusicBrainzAPI extends APIModel {
 			},
 		});
 	}
+	/**
+	 * For the 'albumTitle' property (used on Song notes), the link target is
+	 * derived from the MusicRelease file name template rather than the raw title.
+	 */
+	override wikilinkValueFor(property: string, value: string, obj: Record<string, unknown>, folderPrefix: string): string {
+		if (property === 'albumTitle') {
+			const title = value.trim();
+			const artistsRaw = obj.artists;
+			const artists = Array.isArray(artistsRaw)
+				? artistsRaw.filter((a): a is string => typeof a === 'string')
+				: [];
+			const releaseModel = new MusicReleaseModel({
+				type: 'musicRelease', title, englishTitle: title,
+				year: coerceYear(obj.year), releaseDate: '', dataSource: '',
+				url: '', id: '', image: '', artists, genres: [],
+				subType: 'album', language: '', rating: 0,
+			});
+			const linkTarget = this.plugin.mediaTypeManager.getFileName(releaseModel);
+			return linkTarget === title ? `[[${linkTarget}]]` : `[[${linkTarget}|${title}]]`;
+		}
+		return super.wikilinkValueFor(property, value, obj, folderPrefix);
+	}
+
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.MusicBrainzAPI_disabledMediaTypes;
 	}
