@@ -5,18 +5,18 @@
 	"main": "main.js",
 	"scripts": {
 		"dev": "vite build --watch --mode development",
-		"build": "bun run tsc && vite build --mode production",
+		"build": "npm run tsc && vite build --mode production",
 		"tsc": "tsc -noEmit -skipLibCheck",
-		"test": "bun test",
-		"test:log": "LOG_TESTS=true bun test",
+		"test": "npm test",
+		"test:log": "LOG_TESTS=true npm test",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"lint": "eslint --max-warnings=0 --no-warn-ignored src/**",
 		"lint:fix": "eslint --max-warnings=0 --fix --no-warn-ignored src/**",
-		"check": "bun run format:check && bun run tsc && bun run lint",
-		"check:fix": "bun run format && bun run tsc && bun run lint:fix",
-		"release": "bun run automation/release.ts",
-		"stats": "bun run automation/stats.ts"
+		"check": "npm run format:check && npm run tsc && npm run lint",
+		"check:fix": "npm run format && npm run tsc && npm run lint:fix",
+		"release": "npm run automation/release.ts",
+		"stats": "npm run automation/stats.ts"
 	},
 	"keywords": [],
 	"author": "Moritz Jung",
@@ -24,6 +24,7 @@
 	"devDependencies": {
 		"@lemons_dev/parsinom": "^0.0.12",
 		"@types/bun": "^1.3.7",
+		"builtin-modules": "^5.0.0",
 		"eslint": "^9.39.2",
 		"eslint-plugin-import": "^2.32.0",
 		"eslint-plugin-only-warn": "^1.1.0",
