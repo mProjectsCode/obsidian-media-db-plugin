@@ -481,7 +481,8 @@ export default class MediaDbPlugin extends Plugin {
 		await this.createStandardMediaDbNoteFromModel(mediaTypeModel, options);
 	}
 
-	private async createStandardMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
+	/** @returns whether the note file was created (false if the user cancelled overwrite or an error occurred before the file was written). */
+	private async createStandardMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<boolean> {
 		try {
 			console.debug('MDB | creating new note');
 
@@ -498,11 +499,18 @@ export default class MediaDbPlugin extends Plugin {
 			const targetFile = await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
 
 			if (this.settings.enableTemplaterIntegration) {
-				await useTemplaterPluginInFile(this.app, targetFile);
+				try {
+					await useTemplaterPluginInFile(this.app, targetFile);
+				} catch (e) {
+					console.warn(e);
+					new Notice(`${e}`);
+				}
 			}
+			return true;
 		} catch (e) {
 			console.warn(e);
 			new Notice(`${e}`);
+			return false;
 		}
 	}
 
@@ -559,7 +567,10 @@ export default class MediaDbPlugin extends Plugin {
 				albumNotesFolder = await this.ensureVaultFolder(treeRootPath);
 			}
 
-			await this.createStandardMediaDbNoteFromModel(band, { ...options, folder: bandNoteFolder });
+			const bandNoteCreated = await this.createStandardMediaDbNoteFromModel(band, { ...options, folder: bandNoteFolder });
+			if (!bandNoteCreated) {
+				return;
+			}
 
 			let releaseGroupIds: string[];
 			try {
@@ -590,7 +601,10 @@ export default class MediaDbPlugin extends Plugin {
 
 				const releaseOpts: CreateNoteOptions = useTree ? { ...childOptions, folder: albumNotesFolder } : { ...childOptions };
 
-				await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
+				const albumNoteCreated = await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
+				if (!albumNoteCreated) {
+					continue;
+				}
 
 				for (const track of release.tracks) {
 					let lyrics = '';
