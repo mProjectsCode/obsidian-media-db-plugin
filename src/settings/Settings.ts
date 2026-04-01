@@ -368,7 +368,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	enableTemplaterIntegration: false,
 	imageDownload: false,
 	imageFolder: 'Media DB/images',
-	wikiLinkFolder: 'Media DB/wiki',
+	wikiLinkFolder: 'Media DB/wikilink',
 	enableAutoTagging: false,
 	autoTagEntities: '',
 	autoTagProperties: '',
