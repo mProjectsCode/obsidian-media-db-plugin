@@ -2,6 +2,7 @@ import { iso6392 } from 'iso-639-2';
 import type { TFile, TFolder, App } from 'obsidian';
 import { requestUrl } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
+import { MediaType } from './MediaType';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -21,7 +22,7 @@ export function containsOnlyLettersAndUnderscores(str: string): boolean {
 }
 
 export function replaceIllegalFileNameCharactersInString(string: string): string {
-	return string.replace(/[\\,#%&{}/*<>$"@.?]*/g, '').replace(/:+/g, ' -');
+	return string.replace(/[\\/:"*?<>|]/g, '-');
 }
 
 export function replaceTags(template: string, mediaTypeModel: MediaTypeModel, ignoreUndefined: boolean = false): string {
@@ -40,7 +41,7 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 
 		const obj = traverseMetaData(path, mediaTypeModel);
 
-		if (obj === undefined) {
+		if (obj === undefined || (path[path.length - 1] === 'year' && obj === 0)) {
 			return ignoreUndefined ? '' : '{{ INVALID TEMPLATE TAG - object undefined }}';
 		}
 
@@ -201,11 +202,72 @@ export interface CreateNoteOptions {
 	attachFile?: TFile;
 	openNote?: boolean;
 	folder?: TFolder;
+	overwrite?: boolean;
+}
+
+/** Runtime in whole minutes (TMDB/OMDb/MAL). 0 when unknown. Parses legacy string frontmatter (e.g. "136 min", "2 hr 5 min"). */
+export function coerceMovieDurationMinutes(value: unknown): number {
+	if (value === undefined || value === null) {
+		return 0;
+	}
+	if (typeof value === 'number') {
+		const n = Math.trunc(value);
+		return Number.isFinite(n) && n >= 0 ? n : 0;
+	}
+	if (typeof value === 'string') {
+		const t = value.trim();
+		if (t === '' || t.toLowerCase() === 'unknown' || t.toUpperCase() === 'N/A' || t === 'TBA') {
+			return 0;
+		}
+		let total = 0;
+		const hours = t.match(/(\d+)\s*(?:hours?|hrs?)\b/i) ?? t.match(/(\d+)\s*h\b/i);
+		const mins = t.match(/(\d+)\s*(?:minutes?|mins?)\b/i) ?? t.match(/(\d+)\s*min\b/i);
+		if (hours) {
+			total += parseInt(hours[1], 10) * 60;
+		}
+		if (mins) {
+			total += parseInt(mins[1], 10);
+		}
+		if (total > 0) {
+			return total;
+		}
+		const n = parseInt(t, 10);
+		return Number.isFinite(n) && n >= 0 ? n : 0;
+	}
+	return 0;
+}
+
+/** Normalizes release year for metadata: integer, 0 when unknown or non-numeric. */
+export function coerceYear(value: unknown): number {
+	if (value === undefined || value === null) return 0;
+	if (typeof value === 'number') {
+		const n = Math.trunc(value);
+		return Number.isFinite(n) ? n : 0;
+	}
+	if (typeof value === 'string') {
+		const t = value.trim();
+		if (t === '' || t.toLowerCase() === 'unknown' || t === 'TBA' || t.toUpperCase() === 'N/A') {
+			return 0;
+		}
+		const n = parseInt(t, 10);
+		return Number.isFinite(n) ? n : 0;
+	}
+	return 0;
 }
 
 export function migrateObject<T extends object>(object: T, oldData: Record<string, unknown>, defaultData: T): void {
 	for (const key in object) {
-		object[key] = Object.hasOwn(oldData, key) && oldData[key] !== undefined && oldData[key] !== null ? (oldData[key] as T[typeof key]) : defaultData[key];
+		const has = Object.hasOwn(oldData, key) && oldData[key] !== undefined && oldData[key] !== null;
+		if (!has) {
+			object[key] = defaultData[key];
+			continue;
+		}
+		const raw = oldData[key];
+		if (key === 'year') {
+			(object as Record<string, unknown>)[key] = coerceYear(raw);
+			continue;
+		}
+		object[key] = raw as T[typeof key];
 	}
 }
 
@@ -221,6 +283,14 @@ export function unCamelCase(str: string): string {
 				return str.toUpperCase();
 			})
 	);
+}
+
+/** User-facing label for a media type (e.g. MusicRelease → Album). */
+export function mediaTypeDisplayName(mediaType: MediaType): string {
+	if (mediaType === MediaType.MusicRelease) {
+		return 'Album';
+	}
+	return unCamelCase(mediaType);
 }
 
 /* eslint-disable */
@@ -241,6 +311,14 @@ export async function useTemplaterPluginInFile(app: App, file: TFile): Promise<v
 }
 
 /* eslint-enable */
+
+/** Whole USD amounts as used by TMDB (empty when unknown or non-positive). */
+export function formatUsdWholeDollars(amount: number): string {
+	if (!Number.isFinite(amount) || amount <= 0) {
+		return '';
+	}
+	return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+}
 
 export type ModelToData<T> = {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type

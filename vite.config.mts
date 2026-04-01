@@ -1,11 +1,14 @@
+import { builtinModules } from 'node:module';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
-import builtins from 'builtin-modules';
 import { getBuildBanner } from './automation/build/buildBanner';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import banner from 'vite-plugin-banner';
 import manifest from './manifest.json' with { type: 'json' };
-import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const entryFile = 'src/main.ts';
 
@@ -72,7 +75,7 @@ export default defineConfig(({ mode }) => {
 					'@lezer/common',
 					'@lezer/highlight',
 					'@lezer/lr',
-					...builtins,
+					...builtinModules,
 				],
 			},
 		},

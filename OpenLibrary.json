@@ -1,0 +1,602 @@
+{
+	"components": {
+		"schemas": {
+			"HTTPValidationError": {
+				"properties": {
+					"detail": {
+						"items": {
+							"$ref": "#/components/schemas/ValidationError"
+						},
+						"title": "Detail",
+						"type": "array"
+					}
+				},
+				"title": "HTTPValidationError",
+				"type": "object"
+			},
+			"ValidationError": {
+				"properties": {
+					"loc": {
+						"items": {
+							"type": "string"
+						},
+						"title": "Location",
+						"type": "array"
+					},
+					"msg": {
+						"title": "Message",
+						"type": "string"
+					},
+					"type": {
+						"title": "Error Type",
+						"type": "string"
+					}
+				},
+				"required": ["loc", "msg", "type"],
+				"title": "ValidationError",
+				"type": "object"
+			}
+		}
+	},
+	"info": {
+		"description": "- These are still in development and may not be perfect\n- Contribute by proposing edits to [openapi.json](https://github.com/internetarchive/openlibrary/blob/master/static/openapi.json)\n- Please do not use our APIs for bulk downloads, see [dev center](https://openlibrary.org/developers/api)",
+		"title": "Open Library API",
+		"version": "0.1.0"
+	},
+	"openapi": "3.0.2",
+	"paths": {
+		"/api/books": {
+			"get": {
+				"operationId": "read_api_books_api_books_get",
+				"parameters": [
+					{
+						"examples": {
+							"isbn": {
+								"value": "ISBN:0201558025"
+							},
+							"multiple": {
+								"value": "ISBN:9781408113479,OCLC:420517"
+							},
+							"oclc": {
+								"value": "OCLC:263296519"
+							}
+						},
+						"in": "query",
+						"name": "bibkeys",
+						"required": true,
+						"schema": {
+							"title": "Bibkeys",
+							"type": "string"
+						}
+					},
+					{
+						"description": "Specifies the response format. Possible values are json and javascript. When not specified the format is javascript.",
+						"in": "query",
+						"name": "format",
+						"required": false,
+						"schema": {
+							"default": "json",
+							"title": "Format",
+							"type": "string"
+						}
+					},
+					{
+						"description": "The name of the JavaScript function to call with the result. This is considered only when the format is javascript.",
+						"in": "query",
+						"name": "callback",
+						"required": false,
+						"schema": {
+							"title": "Callback"
+						}
+					},
+					{
+						"description": "Decides what information to provide for each matched bib_key. Possible values are viewapi and data. The default value is viewapi.",
+						"in": "query",
+						"name": "jscmd",
+						"required": false,
+						"schema": {
+							"default": "viewapi",
+							"title": "Jscmd",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Api Books",
+				"tags": ["books"]
+			}
+		},
+		"/api/volumes/brief/{key_type}/{value}.json": {
+			"get": {
+				"operationId": "read_api_volumes_brief_api_volumes_brief__key_type___value__json_get",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "key_type",
+						"required": true,
+						"schema": {
+							"title": "Key Type"
+						}
+					},
+					{
+						"in": "path",
+						"name": "value",
+						"required": true,
+						"schema": {
+							"title": "Value"
+						}
+					},
+					{
+						"in": "query",
+						"name": "callback",
+						"required": false,
+						"schema": {
+							"title": "Callback"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Api Volumes Brief",
+				"tags": ["books"]
+			}
+		},
+		"/authors/{olid}.json": {
+			"get": {
+				"operationId": "read_authors_authors__olid__json_get",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "olid",
+						"required": true,
+						"schema": {
+							"title": "Olid"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Authors",
+				"tags": ["authors"]
+			}
+		},
+		"/authors/{olid}/works.json": {
+			"get": {
+				"operationId": "read_authors_works_authors__olid__works_json_get",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "olid",
+						"required": true,
+						"schema": {
+							"title": "Olid"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"title": "Limit",
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Authors Works",
+				"tags": ["authors"]
+			}
+		},
+		"/books/{olid}": {
+			"get": {
+				"operationId": "read_books_books__olid__get",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "olid",
+						"required": true,
+						"schema": {
+							"example": "OL53924W",
+							"title": "Olid"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Books",
+				"tags": ["books"]
+			}
+		},
+		"/covers/{key_type}/{value}-{size}.jpg": {
+			"get": {
+				"operationId": "read_covers_key_type_value_size_jpeg_covers__key_type___value___size__jpg_get",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "key_type",
+						"required": true,
+						"schema": {
+							"title": "Key Type"
+						}
+					},
+					{
+						"in": "path",
+						"name": "value",
+						"required": true,
+						"schema": {
+							"title": "Value"
+						}
+					},
+					{
+						"in": "path",
+						"name": "size",
+						"required": true,
+						"schema": {
+							"title": "Size"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Covers Key Type Value Size Jpeg",
+				"tags": ["covers"]
+			}
+		},
+		"/isbn/{isbn}": {
+			"get": {
+				"operationId": "read_isbn_isbn__isbn__get",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "isbn",
+						"required": true,
+						"schema": {
+							"title": "Isbn"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Isbn",
+				"tags": ["books"]
+			}
+		},
+		"/search.json": {
+			"get": {
+				"operationId": "read_search_json_search_json_get",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "q",
+						"required": true,
+						"schema": {
+							"title": "Q"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": false,
+						"schema": {
+							"title": "Page",
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Search Json",
+				"tags": ["search"]
+			}
+		},
+		"/search/authors.json": {
+			"get": {
+				"operationId": "read_search_authors_json_search_authors_json_get",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "q",
+						"required": true,
+						"schema": {
+							"title": "Q"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Search Authors Json",
+				"tags": ["search"]
+			}
+		},
+		"/subjects/{subject}.json": {
+			"get": {
+				"operationId": "read_subjects_subjects__subject__json_get",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "subject",
+						"required": true,
+						"schema": {
+							"title": "Subject"
+						}
+					},
+					{
+						"in": "query",
+						"name": "details",
+						"required": false,
+						"schema": {
+							"default": false,
+							"title": "Details",
+							"type": "boolean"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Subjects",
+				"tags": ["subjects"]
+			}
+		},
+		"/works/{olid}": {
+			"get": {
+				"operationId": "read_works_works__olid__get",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "olid",
+						"required": true,
+						"schema": {
+							"title": "Olid"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						},
+						"description": "Successful Response"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						},
+						"description": "Validation Error"
+					}
+				},
+				"summary": "Read Works",
+				"tags": ["books"]
+			}
+		}
+	},
+	"tags": [
+		{
+			"description": "Retrieve a specific work or edition by identifier",
+			"externalDocs": {
+				"description": "Find out more",
+				"url": "https://openlibrary.org/dev/docs/api/books"
+			},
+			"name": "books"
+		},
+		{
+			"description": "Retrieve an author and their works by author identifier",
+			"externalDocs": {
+				"description": "Find out more",
+				"url": "https://openlibrary.org/dev/docs/api/authors"
+			},
+			"name": "authors"
+		},
+		{
+			"description": "Search results for books, authors, and more",
+			"externalDocs": {
+				"description": "Find out more",
+				"url": "https://openlibrary.org/dev/docs/api/search"
+			},
+			"name": "search"
+		},
+		{
+			"description": "Fetch book covers by ISBN or Open Library identifier",
+			"externalDocs": {
+				"description": "Find out more",
+				"url": "https://openlibrary.org/dev/docs/api/covers"
+			},
+			"name": "covers"
+		},
+		{
+			"description": "Fetch books by subject name ",
+			"externalDocs": {
+				"description": "Find out more",
+				"url": "https://openlibrary.org/dev/docs/api/subjects"
+			},
+			"name": "subjects"
+		}
+	]
+}

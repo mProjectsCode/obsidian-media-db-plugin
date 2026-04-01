@@ -74,6 +74,46 @@ Then the plugin will go through every file in the folder and prompt you to selec
 
 After all files have been imported or the import was canceled, you will find the new entries as well as an error report that contains any errors or skipped/canceled files in the folder specified in the setting of the plugin.
 
+#### Intelligent Wiki-Link Generation
+
+Automatically format specific metadata fields into Obsidian Wiki-Links based on a customizable whitelist. 
+- You can specify comma-separated properties (like `genres, publishers, storefront`) in the plugin settings.
+- The plugin will parse both API-fetched arrays and your own custom manual properties, formatting them safely as `[[folder/value|value]]`.
+- If you disable the feature later, updating the note will cleanly strip the brackets and revert the entries back to plain text.
+
+#### Auto-Tagging Engine & Ghost Tag Purging
+
+Generate clean, sanitized hashtags automatically (e.g. `#role-playing-rpg`) from mapped array properties or Wiki-Links.
+- The engine creates tags without destroying any manual tags you have explicitly typed into your notes.
+- **Ghost Tag Purging**: Whenever a piece of media updates (e.g. a game's genre changes on IGDB), the plugin intelligently calculates which old tags it previously generated and safely removes them, leaving your manual user tags perfectly preserved.
+
+#### Background Auto-Tracker
+
+An automated, non-blocking background scanner that actively searches your vault for ongoing series (Airing) or unreleased games/movies and queues them for silent metadata updates.
+- Scans trigger once on Obsidian startup or can be triggered manually from the left ribbon.
+- Includes a sophisticated **Emergency Abort Mechanism**: At any point during a bulk process or background tracker queue, you can click the Ribbon Icon or use the `Cancel All Updates` button inside the Overwrite Modal to instantly halt the entire queue gracefully without restarting Obsidian.
+
+
+
+The plugin allows you to import your preexisting media collection and upgrade it to Media DB entries.
+
+##### Prerequisites
+
+The preexisting media notes must be inside a folder in your vault.
+For the plugin to be able to query them, they need one metadata field that is used as the title the piece of media is searched by.
+This can be achieved by, for example, using a `csv` import plugin to import an existing list from outside of Obsidian.
+
+##### Importing
+
+To start the import process, right-click on the folder and select the `Import folder as Media DB entries` option.
+Then specify the API to search, if the current note content and metadata should be appended to the Media DB entry, and the name of the metadata field that contains the title of the piece of media.
+
+Then the plugin will go through every file in the folder and prompt you to select from the search results.
+
+##### Post import
+
+After all files have been imported or the import was canceled, you will find the new entries as well as an error report that contains any errors or skipped/canceled files in the folder specified in the setting of the plugin.
+
 ### How to install
 
 **The plugin is now released, so it can be installed directly through Obsidian's plugin installer.**
@@ -130,8 +170,15 @@ Now you select the result you want, and the plugin will cast its magic, creating
 | Comic Vine                                           | The Comic Vine API offers metadata for comic books                                                | comicbooks                                            | Yes, by making an account [here](https://comicvine.gamespot.com/login-signup/) and going to the [api section](https://comicvine.gamespot.com/api/) of the site                     | 200 requests per resource, per hour. There is also a velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources.                                         | No                 |
 | [VNDB](https://vndb.org/)                            | The VNDB API offers metadata for visual novels                                                    | games                                                 | No                                                                                                                                                                                 | 200 requests per 5 minutes                                                                                                                                                                                                         | Yes                |
 | [Boardgame Geek](https://boardgamegeek.com)          | The Boardgame Geek API offers metadata for boardgames                                             | boardgames                                            | Yes, by making an account [here](https://boardgamegeek.com/join/) and then [requesting an application token](https://boardgamegeek.com/applications)                               | Exact usage limits are still undetermined                                                                                                                                                                                          | No                 |
+| [IGDB](https://www.igdb.com/)                        | IGDB is a community-driven game database offering rich metadata for video games.                  | games                                                 | Yes, requires a free Twitch Developer account. Create an app at [dev.twitch.tv](https://dev.twitch.tv/console/apps) to get a Client ID and Client Secret.                          | 4 requests per second                                                                                                                                                                                                              | No                 |
+| [RAWG](https://rawg.io/)                             | RAWG is one of the largest open video game databases with Metacritic scores and platform data.    | games                                                 | Yes, get a free API key at [rawg.io/apidocs](https://rawg.io/apidocs)                                                                                                              | None stated                                                                                                                                                                                                                        | No                 |
+
 
 #### Notes
+
+##### TMDB Region Setting
+
+The `ageRating` and `streamingServices` properties are **region-aware**. You can configure your ISO 3166-1 country code (e.g. `US`, `TR`, `GB`) in the plugin settings under **TMDB Region**. The plugin will then automatically fetch the correct certification and streaming availability for your country on every import or metadata update.
 
 - [Jikan](https://jikan.moe/)
     - sometimes the api is very slow; this is normal
