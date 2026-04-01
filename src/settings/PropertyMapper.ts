@@ -40,6 +40,31 @@ export class PropertyMapper {
 
 		const newObj: Record<string, unknown> = {};
 
+		const entityProps = this.plugin.settings.autoTagEntities.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
+
+		// 1. Preprocess global wiki-links on the raw object first
+		if (this.plugin.settings.enableWikiLinkParsing && entityProps.length > 0) {
+			for (const [key, value] of Object.entries(obj)) {
+				if (key === 'aliases') continue;
+				if (entityProps.includes(key.toLowerCase())) {
+					const folderPrefix = this.plugin.settings.wikiLinkFolder ? `${this.plugin.settings.wikiLinkFolder}/` : '';
+					const formatWiki = (v: unknown) => {
+						if (typeof v !== 'string') return v;
+						let clean = v.replace(/^\[\[(.*?)\]\]$/, '$1');
+						if (clean.includes('|')) clean = clean.split('|')[1];
+						return `[[${folderPrefix}${clean}|${clean}]]`;
+					};
+
+					if (typeof value === 'string') {
+						obj[key] = formatWiki(value);
+					} else if (Array.isArray(value)) {
+						obj[key] = value.map(formatWiki);
+					}
+				}
+			}
+		}
+
+		// 2. Map standard properties
 		for (const [key, value] of Object.entries(obj)) {
 			if (key === 'aliases') {
 				continue;
@@ -54,13 +79,12 @@ export class PropertyMapper {
 						const useMusicReleaseFileNameForAlbumTitle =
 							propertyMapping.property === 'albumTitle' && internalMediaType === MediaType.Song;
 
+						const folderPrefix = this.plugin.settings.wikiLinkFolder ? `${this.plugin.settings.wikiLinkFolder}/` : '';
 						if (typeof value === 'string') {
 							if (useBandFileNameForArtists) {
 								finalValue = this.bandArtistWikilink(value);
 							} else if (useMusicReleaseFileNameForAlbumTitle) {
 								finalValue = this.songAlbumTitleWikilink(value, obj);
-							} else {
-								finalValue = `[[${value}]]`;
 							}
 						} else if (Array.isArray(value)) {
 							finalValue = value.map((v: unknown) => {
@@ -73,7 +97,7 @@ export class PropertyMapper {
 								if (useMusicReleaseFileNameForAlbumTitle) {
 									return this.songAlbumTitleWikilink(v, obj);
 								}
-								return `[[${v}]]`;
+								return v;
 							});
 						}
 					}

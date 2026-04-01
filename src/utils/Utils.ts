@@ -22,7 +22,7 @@ export function containsOnlyLettersAndUnderscores(str: string): boolean {
 }
 
 export function replaceIllegalFileNameCharactersInString(string: string): string {
-	return string.replace(/[\\,#%&{}/*<>$"@.?]*/g, '').replace(/:+/g, ' -');
+	return string.replace(/[\\/:"*?<>|]/g, '-');
 }
 
 export function replaceTags(template: string, mediaTypeModel: MediaTypeModel, ignoreUndefined: boolean = false): string {
@@ -41,7 +41,7 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 
 		const obj = traverseMetaData(path, mediaTypeModel);
 
-		if (obj === undefined) {
+		if (obj === undefined || (path[path.length - 1] === 'year' && obj === 0)) {
 			return ignoreUndefined ? '' : '{{ INVALID TEMPLATE TAG - object undefined }}';
 		}
 
@@ -202,6 +202,7 @@ export interface CreateNoteOptions {
 	attachFile?: TFile;
 	openNote?: boolean;
 	folder?: TFolder;
+	overwrite?: boolean;
 }
 
 /** Runtime in whole minutes (TMDB/OMDb/MAL). 0 when unknown. Parses legacy string frontmatter (e.g. "136 min", "2 hr 5 min"). */

@@ -134,7 +134,7 @@ export class TMDBMovieAPI extends APIModel {
 			params: {
 				path: { movie_id: parseInt(id) },
 				query: {
-					append_to_response: 'credits',
+					append_to_response: 'credits,release_dates,watch/providers',
 				},
 			},
 			fetch: fetch,
@@ -173,15 +173,20 @@ export class TMDBMovieAPI extends APIModel {
 			studio: result.production_companies?.map((s: any) => s.name) ?? [],
 
 			duration: result.runtime != null && Number.isFinite(result.runtime) ? Math.trunc(result.runtime) : 0,
-			onlineRating: result.vote_average,
+			onlineRating: result.vote_average ? Math.round(result.vote_average * 10) / 10 : 0,
 			// @ts-ignore
 			actors: result.credits.cast.map((c: any) => c.name).slice(0, 5) ?? [],
 			image: `https://image.tmdb.org/t/p/w780${result.poster_path}`,
 
 			released: ['Released'].includes(result.status!),
+			country: result.production_countries?.map((c: any) => c.name) ?? [],
+			language: result.spoken_languages?.map((l: any) => l.english_name) ?? [],
 			budget: formatUsdWholeDollars(result.budget ?? 0),
 			revenue: formatUsdWholeDollars(result.revenue ?? 0),
-			streamingServices: [],
+			// @ts-ignore
+			ageRating: result.release_dates?.results?.find((r: any) => r.iso_3166_1 === this.plugin.settings.tmdbRegion)?.release_dates?.[0]?.certification ?? '',
+			// @ts-ignore
+			streamingServices: result['watch/providers']?.results?.[this.plugin.settings.tmdbRegion]?.flatrate?.map((p: any) => p.provider_name) ?? [],
 
 			userData: {
 				watched: false,

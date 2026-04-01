@@ -49,10 +49,18 @@ export interface MediaDbPluginSettings {
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	/** When true, add an Obsidian `aliases` entry with an ASCII form of the title when it uses diacritics or letters like ø (e.g. Likbør → Likbor). */
-	addNormalizeTitlesAsAlias: boolean;
+	autoTrackerAiringKey: string;
+	autoTrackerReleasedKey: string;
 	enableTemplaterIntegration: boolean;
 	imageDownload: boolean;
 	imageFolder: string;
+	wikiLinkFolder: string;
+	enableAutoTagging: boolean;
+	autoTagEntities: string;
+	autoTagProperties: string;
+	enableWikiLinkParsing: boolean;
+	autoUpdateAiringMode: boolean;
+	tmdbRegion: string;
 
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
@@ -355,10 +363,18 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	customDateFormat: 'L',
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
-	addNormalizeTitlesAsAlias: true,
+	autoTrackerAiringKey: 'airing',
+	autoTrackerReleasedKey: 'released',
 	enableTemplaterIntegration: false,
 	imageDownload: false,
 	imageFolder: 'Media DB/images',
+	wikiLinkFolder: 'Media DB/wiki',
+	enableAutoTagging: false,
+	autoTagEntities: '',
+	autoTagProperties: '',
+	enableWikiLinkParsing: false,
+	autoUpdateAiringMode: false,
+	tmdbRegion: 'US',
 
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
@@ -824,7 +840,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 									"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
 									"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
 									this.plugin.dateFormatter.getPreview() +
-									'</a></b>',
+									"</a></b>",
 							),
 						)
 						.addText(cb => {
@@ -864,7 +880,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 							cb.setValue(this.plugin.settings.useDefaultFrontMatter).onChange(data => {
 								this.plugin.settings.useDefaultFrontMatter = data;
 								void this.plugin.saveSettings();
-								// Redraw settings to display/remove the property mappings
 								this.display();
 							});
 						}),
@@ -874,9 +889,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				setting =>
 					void setting
 						.setName('Enable Templater integration')
-						.setDesc(
-							'Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.',
-						)
+						.setDesc('Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.')
 						.addToggle(cb => {
 							cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
 								this.plugin.settings.enableTemplaterIntegration = data;
@@ -920,19 +933,132 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						}),
 			);
 
-			generalGroup.addSetting(
+		panel.createEl('h3', { text: 'Auto-Tracker' }).style.marginTop = '1.5em';
+		const autoTrackerGroup = new SettingGroup(panel);
+
+			autoTrackerGroup.addSetting(
 				setting =>
 					void setting
-						.setName('Add Normalized Titles as Alias')
-						.setDesc(
-							'If the title contains non-ASCII characters, add a normalized ASCII version of the title in aliases.',
-						)
+						.setName('Auto-Update Airing & Unreleased Media')
+						.setDesc('At startup, automatically searches background for any active medias with "released: false" or "airing: true" and updates them via API.')
 						.addToggle(cb => {
-							cb.setValue(this.plugin.settings.addNormalizeTitlesAsAlias).onChange(data => {
-								this.plugin.settings.addNormalizeTitlesAsAlias = data;
+							cb.setValue(this.plugin.settings.autoUpdateAiringMode).onChange(data => {
+								this.plugin.settings.autoUpdateAiringMode = data;
 								void this.plugin.saveSettings();
 							});
 						}),
+			);
+
+			autoTrackerGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Auto-Tracker "Airing" Property')
+						.setDesc('Property key to check if a media item is currently airing. Default is "airing".')
+						.addText(text => {
+							text.setValue(this.plugin.settings.autoTrackerAiringKey).onChange(data => {
+								this.plugin.settings.autoTrackerAiringKey = data.trim() || 'airing';
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			autoTrackerGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Auto-Tracker "Released" Property')
+						.setDesc('Property key to check if a media item is unreleased. Default is "released".')
+						.addText(text => {
+							text.setValue(this.plugin.settings.autoTrackerReleasedKey).onChange(data => {
+								this.plugin.settings.autoTrackerReleasedKey = data.trim() || 'released';
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+		
+		panel.createEl('h3', { text: 'Wiki-Link Properties' }).style.marginTop = '1.5em';
+		const wikiLinkGroup = new SettingGroup(panel);
+
+			wikiLinkGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Enable Wiki-Link parsing')
+						.setDesc('Feature to systematically convert properties below into Wiki-Links instead of regular text.')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.enableWikiLinkParsing).onChange(data => {
+								this.plugin.settings.enableWikiLinkParsing = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			wikiLinkGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Wiki-Link default folder')
+						.setDesc('Where new Notes generated by clicking Wiki-Links should be placed.')
+						.addSearch(cb => {
+							const suggester = new FolderSuggest(this.app, cb.inputEl);
+							suggester.onSelect(folder => {
+								cb.setValue(folder.path);
+								this.plugin.settings.wikiLinkFolder = folder.path;
+								void this.plugin.saveSettings();
+								suggester.close();
+							});
+							cb.setPlaceholder(DEFAULT_SETTINGS.wikiLinkFolder)
+								.setValue(this.plugin.settings.wikiLinkFolder)
+								.onChange(data => {
+									this.plugin.settings.wikiLinkFolder = data;
+									void this.plugin.saveSettings();
+								});
+						}),
+			);
+
+			wikiLinkGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Wiki-Link entities')
+						.setDesc('Comma separated list of property names. Values generated here will become Wiki-Links instead of regular text.')
+						.addText(text =>
+							text
+								.setPlaceholder('studio, publishers')
+								.setValue(this.plugin.settings.autoTagEntities)
+								.onChange(async value => {
+									this.plugin.settings.autoTagEntities = value;
+									await this.plugin.saveSettings();
+								}),
+						),
+			);
+		
+		panel.createEl('h3', { text: 'Auto-Tag Properties' }).style.marginTop = '1.5em';
+		const autoTagGroup = new SettingGroup(panel);
+
+			autoTagGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Enable Auto Tagging')
+						.setDesc('Feature to automatically sanitize properties into standard Obsidian tags.')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.enableAutoTagging).onChange(data => {
+								this.plugin.settings.enableAutoTagging = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			autoTagGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Auto-Tag whitelisted properties')
+						.setDesc('Comma separated list of property names. If a property in this list is present, its values will be sanitized and appended to the Obsidian native `tags` array.')
+						.addText(text =>
+							text
+								.setPlaceholder('genres, platforms')
+								.setValue(this.plugin.settings.autoTagProperties)
+								.onChange(async value => {
+									this.plugin.settings.autoTagProperties = value;
+									await this.plugin.saveSettings();
+								}),
+						),
 			);
 		});
 
@@ -941,6 +1067,22 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 			this.addApiSecretSetting(apiKeyGroup, 'OMDb API key', 'API key for "www.omdbapi.com".', ApiSecretID.omdb);
 			this.addApiSecretSetting(apiKeyGroup, 'TMDB API Token', 'API Read Access Token for "https://www.themoviedb.org".', ApiSecretID.tmdb);
+			
+			apiKeyGroup.addSetting(
+				setting =>
+					void setting
+						.setName('TMDB Region')
+						.setDesc('ISO-3166-1 region code for TMDB localized metadata (e.g., US, TR, GB). Default is US.')
+						.addText(text =>
+							text
+								.setPlaceholder('US')
+								.setValue(this.plugin.settings.tmdbRegion)
+								.onChange(async value => {
+									this.plugin.settings.tmdbRegion = value;
+									await this.plugin.saveSettings();
+								}),
+						),
+			);
 			this.addApiSecretSetting(apiKeyGroup, 'Moby Games key', 'API key for "www.mobygames.com".', ApiSecretID.mobyGames);
 			this.addApiSecretSetting(apiKeyGroup, 'Giant Bomb Key', 'API key for "www.giantbomb.com".', ApiSecretID.giantBomb);
 			this.addApiSecretSetting(apiKeyGroup, 'IGDB Client ID', 'Client ID for IGDB API (Required for Twitch OAuth).', ApiSecretID.igdbClientId);

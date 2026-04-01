@@ -20,6 +20,7 @@ export class ConfirmOverwriteModal extends Modal {
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
 		const bottomSettingRow = new Setting(contentEl);
+
 		bottomSettingRow.addButton(btn => {
 			btn.setButtonText('No');
 			btn.onClick(() => this.close());

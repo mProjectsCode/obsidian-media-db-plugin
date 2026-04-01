@@ -11,6 +11,10 @@ export class GameModel extends MediaTypeModel {
 	genres: string[];
 	onlineRating: number;
 	image: string;
+	summary: string;
+	series: string[];
+	gameModes: string[];
+	platforms: string[];
 
 	released: boolean;
 	releaseDate: string;
@@ -28,6 +32,10 @@ export class GameModel extends MediaTypeModel {
 		this.genres = [];
 		this.onlineRating = 0;
 		this.image = '';
+		this.summary = '';
+		this.series = [];
+		this.gameModes = [];
+		this.platforms = [];
 
 		this.released = false;
 		this.releaseDate = '';
@@ -55,6 +63,6 @@ export class GameModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		return this.englishTitle + ' (' + this.year + ')';
+		return this.englishTitle + ' (' + (this.year > 0 ? this.year : '') + ')';
 	}
 }
