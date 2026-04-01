@@ -177,50 +177,78 @@ This fork extends the default metadata output for **TMDB** and **IGDB** with add
 
 ##### TMDB — Movies (`TMDBMovieAPI`)
 
-| Property | Description |
-| --- | --- |
-| `plot` | Overview / synopsis from TMDB |
-| `director` | Director name(s), extracted from crew credits |
-| `writer` | Writing credits (Screenplay, Story, Novel, etc.) |
-| `studio` | Production company name(s) |
-| `actors` | Top 5 cast members |
-| `country` | Production country/countries |
-| `language` | Spoken language(s) in English name |
-| `budget` | Production budget (formatted as USD) |
-| `revenue` | Box-office gross (formatted as USD) |
-| `ageRating` | Age certification for your configured region (e.g. `PG-13`) |
-| `streamingServices` | Flat-rate streaming providers available in your region (e.g. Netflix, Disney+) |
-| `premiere` | Formatted release date |
+| Property | Type | Description |
+| --- | --- | --- |
+| `title` | string | Original title |
+| `englishTitle` | string | English title |
+| `year` | number | Release year |
+| `premiere` | string | Formatted release date |
+| `plot` | string | Overview / synopsis |
+| `genres` | list | Genre(s) |
+| `director` | list | Director name(s), extracted from crew credits |
+| `writer` | list | Writing credits (Screenplay, Story, Novel, etc.) |
+| `studio` | list | Production company name(s) |
+| `actors` | list | Top 5 cast members |
+| `duration` | number | Runtime in minutes |
+| `onlineRating` | number | TMDB vote average (rounded to 1 decimal) |
+| `country` | list | Production country/countries |
+| `language` | list | Spoken language(s) in English name |
+| `budget` | string | Production budget (formatted as USD) |
+| `revenue` | string | Box-office gross (formatted as USD) |
+| `ageRating` | string | Age certification for your configured region (e.g. `PG-13`) |
+| `streamingServices` | list | Flat-rate streaming providers available in your region (e.g. Netflix, Disney+) |
+| `released` | boolean | Whether the movie has been released |
+| `userData.watched` | boolean | User data — watched status |
+| `userData.lastWatched` | string | User data — last watched date |
+| `userData.personalRating` | number | User data — personal rating |
 
 ##### TMDB — Series (`TMDBSeriesAPI`)
 
-| Property | Description |
-| --- | --- |
-| `plot` | Overview / synopsis from TMDB |
-| `writer` | Series creator(s) |
-| `studio` | Production company name(s) |
-| `actors` | Top 5 cast members |
-| `country` | Production country/countries |
-| `language` | Spoken language(s) in English name |
-| `network` | Broadcasting network(s) (e.g. HBO, Netflix) |
-| `ageRating` | Content rating for your configured region (e.g. `TV-MA`) |
-| `streamingServices` | Flat-rate streaming providers available in your region |
-| `airedFrom` | Formatted first air date |
-| `airedTo` | Formatted last air date (`unknown` if still airing) |
+| Property | Type | Description |
+| --- | --- | --- |
+| `title` | string | Original title |
+| `englishTitle` | string | English title |
+| `year` | number | First air year |
+| `airedFrom` | string | Formatted first air date |
+| `airedTo` | string | Formatted last air date (`unknown` if still airing) |
+| `plot` | string | Overview / synopsis |
+| `genres` | list | Genre(s) |
+| `writer` | list | Series creator(s) |
+| `studio` | list | Production company name(s) |
+| `episodes` | number | Total number of episodes |
+| `duration` | string | Episode runtime (minutes) |
+| `onlineRating` | number | TMDB vote average (rounded to 1 decimal) |
+| `actors` | list | Top 5 cast members |
+| `country` | list | Production country/countries |
+| `language` | list | Spoken language(s) in English name |
+| `network` | list | Broadcasting network(s) (e.g. HBO, Netflix) |
+| `ageRating` | string | Content rating for your configured region (e.g. `TV-MA`) |
+| `streamingServices` | list | Flat-rate streaming providers available in your region |
+| `released` | boolean | Whether the series has started airing |
+| `airing` | boolean | Whether the series is currently ongoing / returning |
+| `userData.watched` | boolean | User data — watched status |
+| `userData.lastWatched` | string | User data — last watched date |
+| `userData.personalRating` | number | User data — personal rating |
 
 ##### IGDB — Games (`IGDBAPI`)
 
-| Property | Description |
-| --- | --- |
-| `developers` | Developer studio name(s) |
-| `publishers` | Publisher name(s) |
-| `genres` | Game genre list |
-| `series` | Collection and franchise name(s) combined |
-| `gameModes` | Game mode(s) (e.g. Single player, Multiplayer) |
-| `platforms` | Platform list (e.g. PC, PlayStation 5) |
-| `onlineRating` | IGDB aggregated rating (0–100 rounded to 1 decimal) |
-| `releaseDate` | Formatted release date |
-| `released` | Boolean — whether the game is already released |
+| Property | Type | Description |
+| --- | --- | --- |
+| `title` | string | Game title |
+| `englishTitle` | string | English title |
+| `year` | number | Release year |
+| `releaseDate` | string | Formatted release date |
+| `developers` | list | Developer studio name(s) |
+| `publishers` | list | Publisher name(s) |
+| `genres` | list | Genre(s) |
+| `series` | list | Collection and franchise name(s) combined |
+| `gameModes` | list | Game mode(s) (e.g. Single player, Multiplayer) |
+| `platforms` | list | Platform(s) (e.g. PC, PlayStation 5) |
+| `onlineRating` | number | IGDB aggregated rating (0–100 rounded to 1 decimal) |
+| `released` | boolean | Whether the game has been released |
+| `summary` | string | Short game description from IGDB |
+| `userData.played` | boolean | User data — played status |
+| `userData.personalRating` | number | User data — personal rating |
 
 ##### TMDB Region Setting
 
