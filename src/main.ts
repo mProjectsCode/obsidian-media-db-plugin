@@ -48,7 +48,7 @@ import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
 import type { CreateNoteOptions } from './utils/Utils';
 import { normalizeTitleForAsciiAlias } from './utils/normalizeTitleForAlias';
-import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
+import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile, dateTimeToString, markdownTable } from './utils/Utils';
 import 'src/styles.css';
 
 export type Metadata = Record<string, unknown>;
@@ -797,15 +797,30 @@ export default class MediaDbPlugin extends Plugin {
 		const startTime = Date.now();
 		let downloaded = 0;
 		let failed = 0;
+		const erroredFiles: { filePath: string, error: string }[] = [];
+
 		for (const file of files) {
 			const result = await this.downloadImagesInFile(file, true);
-			if (result === true) downloaded++;
-			else if (result === false) failed++;
-			// null means no image to download
-			if (result !== null) {
-				await new Promise(r => setTimeout(r, 600)); // anti-rate limit
+			if (result.success) {
+				downloaded++;
+			} else if (!result.skipped) {
+				failed++;
+				if (result.error) erroredFiles.push({ filePath: file.path, error: result.error });
+			}
+			// wait slightly as anti-rate limit
+			if (!result.skipped) {
+				await new Promise(r => setTimeout(r, 600)); 
 			}
 		}
+
+		if (failed > 0 && erroredFiles.length > 0) {
+			const title = `MDB - image download error report ${dateTimeToString(new Date())}`;
+			const filePath = `${title}.md`;
+			const table = [['file', 'error']].concat(erroredFiles.map(x => [x.filePath, x.error]));
+			const fileContent = markdownTable(table);
+			await this.app.vault.create(filePath, fileContent);
+		}
+
 		new CompletionModal(this.app, {
 			title: 'Image Download Complete',
 			icon: '🖼️',
@@ -813,15 +828,15 @@ export default class MediaDbPlugin extends Plugin {
 			success: downloaded,
 			errors: failed,
 			elapsedMs: Date.now() - startTime,
-			notes: failed > 0 ? ['Some images could not be downloaded. Check the console for details.'] : [],
+			notes: failed > 0 ? ['Some images could not be downloaded. A detailed report file has been created in your vault folder.'] : [],
 		}).open();
 	}
 
 	/**
 	 * Downloads images for a single file.
-	 * @returns true if downloaded, false if failed, null if nothing to download
+	 * @returns object detailing success, possible errors, or whether it was skipped
 	 */
-	async downloadImagesInFile(file: TFile, silent: boolean = false): Promise<boolean | null> {
+	async downloadImagesInFile(file: TFile, silent: boolean = false): Promise<{ success: boolean; skipped?: boolean; error?: string }> {
 		const metadata = this.getMetadataFromFileCache(file);
 		if (typeof metadata.image === 'string' && metadata.image.startsWith('http')) {
 			try {
@@ -841,15 +856,15 @@ export default class MediaDbPlugin extends Plugin {
 					frontmatter.image = `[[${imagePath}]]`;
 				});
 				if (!silent) new Notice(`MDB | Image downloaded for ${file.basename}`);
-				return true;
+				return { success: true };
 			} catch (e) {
 				console.error("MDB | Image download failed for", file.path, e);
 				if (!silent) new Notice(`MDB | Image download failed for ${file.basename}`);
-				return false;
+				return { success: false, error: `${e}` };
 			}
 		}
 		if (!silent) new Notice(`MDB | No external image found in ${file.basename}`);
-		return null;
+		return { success: false, skipped: true };
 	}
 
 	private metadataRecordForNewNote(mediaTypeModel: MediaTypeModel): Record<string, unknown> {

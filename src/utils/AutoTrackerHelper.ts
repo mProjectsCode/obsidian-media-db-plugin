@@ -1,6 +1,7 @@
 import { Notice, TFile, TFolder } from 'obsidian';
 import type MediaDbPlugin from 'src/main';
 import { CompletionModal } from 'src/modals/CompletionModal';
+import { dateTimeToString, markdownTable } from './Utils';
 
 export class AutoTrackerHelper {
 	readonly plugin: MediaDbPlugin;
@@ -53,6 +54,7 @@ export class AutoTrackerHelper {
 		const startTime = Date.now();
 		let successCount = 0;
 		let failCount = 0;
+		const erroredFiles: { filePath: string, error: string }[] = [];
 
 		for (const file of filesToUpdate) {
 			try {
@@ -61,9 +63,18 @@ export class AutoTrackerHelper {
 			} catch (e) {
 				console.warn(`MDB Tracker | Failed to auto-update ${file.path}: `, e);
 				failCount++;
+				erroredFiles.push({ filePath: file.path, error: `${e}` });
 			}
 			// Sleep longer (1s) to be completely safe during background checks
 			await new Promise(resolve => setTimeout(resolve, 1000));
+		}
+
+		if (failCount > 0 && erroredFiles.length > 0) {
+			const title = `MDB - auto tracker error report ${dateTimeToString(new Date())}`;
+			const filePath = `${title}.md`;
+			const table = [['file', 'error']].concat(erroredFiles.map(x => [x.filePath, x.error]));
+			const fileContent = markdownTable(table);
+			await this.plugin.app.vault.create(filePath, fileContent);
 		}
 
 		new CompletionModal(this.plugin.app, {
@@ -73,7 +84,7 @@ export class AutoTrackerHelper {
 			success: successCount,
 			errors: failCount,
 			elapsedMs: Date.now() - startTime,
-			notes: failCount > 0 ? ['Some notes could not be updated. Check the console for details.'] : [],
+			notes: failCount > 0 ? ['Some notes could not be updated. A detailed report file has been created in your vault folder.'] : [],
 		}).open();
 	}
 }
