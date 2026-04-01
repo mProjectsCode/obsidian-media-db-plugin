@@ -198,9 +198,6 @@ This fork extends the default metadata output for **TMDB** and **IGDB** with add
 | `ageRating` | string | Age certification for your configured region (e.g. `PG-13`) |
 | `streamingServices` | list | Flat-rate streaming providers available in your region (e.g. Netflix, Disney+) |
 | `released` | boolean | Whether the movie has been released |
-| `userData.watched` | boolean | User data — watched status |
-| `userData.lastWatched` | string | User data — last watched date |
-| `userData.personalRating` | number | User data — personal rating |
 
 ##### TMDB — Series (`TMDBSeriesAPI`)
 
@@ -226,9 +223,6 @@ This fork extends the default metadata output for **TMDB** and **IGDB** with add
 | `streamingServices` | list | Flat-rate streaming providers available in your region |
 | `released` | boolean | Whether the series has started airing |
 | `airing` | boolean | Whether the series is currently ongoing / returning |
-| `userData.watched` | boolean | User data — watched status |
-| `userData.lastWatched` | string | User data — last watched date |
-| `userData.personalRating` | number | User data — personal rating |
 
 ##### IGDB — Games (`IGDBAPI`)
 
@@ -247,8 +241,6 @@ This fork extends the default metadata output for **TMDB** and **IGDB** with add
 | `onlineRating` | number | IGDB aggregated rating (0–100 rounded to 1 decimal) |
 | `released` | boolean | Whether the game has been released |
 | `summary` | string | Short game description from IGDB |
-| `userData.played` | boolean | User data — played status |
-| `userData.personalRating` | number | User data — personal rating |
 
 ##### TMDB Region Setting
 
