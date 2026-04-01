@@ -108,9 +108,14 @@ export class IGDBAPI extends APIModel {
 		const image = result.cover?.url ? 'https:' + result.cover.url.replace('t_thumb', 't_1080p').replace(/\.jpg$/, '.webp') : '';
 
 		let combinedSeries: string[] = [];
-		if (result.collection?.name) combinedSeries.push(result.collection.name);
-		result.collections?.forEach(c => { if (c.name && !combinedSeries.includes(c.name)) combinedSeries.push(c.name); });
+		// Öncelik 1: Franchise (Ana marka)
 		result.franchises?.forEach(f => { if (f.name && !combinedSeries.includes(f.name)) combinedSeries.push(f.name); });
+		
+		// Öncelik 2: Franchise yoksa Collection (Seri) fallback'i
+		if (combinedSeries.length === 0) {
+			if (result.collection?.name) combinedSeries.push(result.collection.name);
+			result.collections?.forEach(c => { if (c.name && !combinedSeries.includes(c.name)) combinedSeries.push(c.name); });
+		}
 
 		return new GameModel({
 			type: MediaType.Game, title: result.name, englishTitle: result.name,
