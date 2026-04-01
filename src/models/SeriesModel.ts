@@ -81,6 +81,6 @@ export class SeriesModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		return this.title + ' (' + (this.year > 0 ? this.year : '') + ')';
+		return this.title + (this.year > 0 ? ` (${this.year})` : '');
 	}
 }

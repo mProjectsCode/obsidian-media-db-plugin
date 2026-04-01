@@ -41,8 +41,12 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 
 		const obj = traverseMetaData(path, mediaTypeModel);
 
-		if (obj === undefined || (path[path.length - 1] === 'year' && obj === 0)) {
+		if (obj === undefined) {
 			return ignoreUndefined ? '' : '{{ INVALID TEMPLATE TAG - object undefined }}';
+		}
+		// year: 0 means "unknown" — return empty string so filename templates stay clean (e.g. "Title ()")
+		if (path[path.length - 1] === 'year' && obj === 0) {
+			return '';
 		}
 
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string

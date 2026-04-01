@@ -35,7 +35,10 @@ export abstract class MediaTypeModel {
 	abstract getTags(): string[];
 
 	toMetaDataObject(): Record<string, unknown> {
-		return { ...this.getWithOutUserData(), ...this.userData, tags: this.getTags().join('/') };
+		const obj: Record<string, unknown> = { ...this.getWithOutUserData(), ...this.userData, tags: this.getTags().join('/') };
+		// year: 0 means "unknown" — write null so YAML shows blank (None) instead of 0
+		if (obj['year'] === 0) obj['year'] = null;
+		return obj;
 	}
 
 	getWithOutUserData(): Record<string, unknown> {

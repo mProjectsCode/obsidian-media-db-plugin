@@ -83,6 +83,6 @@ export class MovieModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		return this.englishTitle + ' (' + (this.year > 0 ? this.year : '') + ')';
+		return this.englishTitle + (this.year > 0 ? ` (${this.year})` : '');
 	}
 }
