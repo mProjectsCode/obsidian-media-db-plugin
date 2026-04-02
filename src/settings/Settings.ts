@@ -50,6 +50,8 @@ export interface MediaDbPluginSettings {
 	useDefaultFrontMatter: boolean;
 	/** When true, add an Obsidian `aliases` entry with an ASCII form of the title when it uses diacritics or letters like ø (e.g. Likbør → Likbor). */
 	addNormalizeTitlesAsAlias: boolean;
+	/** When true, movie Budget and Revenue front matter use `{ value, currency }` instead of a formatted string. */
+	useObjectFormatForCurrencyValues: boolean;
 	enableTemplaterIntegration: boolean;
 	imageDownload: boolean;
 	imageFolder: string;
@@ -356,6 +358,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
 	addNormalizeTitlesAsAlias: true,
+	useObjectFormatForCurrencyValues: true,
 	enableTemplaterIntegration: false,
 	imageDownload: false,
 	imageFolder: 'Media DB/images',
@@ -447,6 +450,9 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 };
 
 export const lockedPropertyMappings: string[] = [];
+
+/** Forward-compatible hook for merging persisted settings with new defaults. */
+export function migrateLoadedPluginSettings(_settings: MediaDbPluginSettings): void {}
 
 export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings {
 	const defaultSettings = DEFAULT_SETTINGS;
@@ -930,6 +936,21 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						.addToggle(cb => {
 							cb.setValue(this.plugin.settings.addNormalizeTitlesAsAlias).onChange(data => {
 								this.plugin.settings.addNormalizeTitlesAsAlias = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Use object format for currency values')
+						.setDesc(
+							'For movies, store Budget and Revenue as nested objects with numeric value and currency (e.g. USD) instead of a single formatted string.',
+						)
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.useObjectFormatForCurrencyValues).onChange(data => {
+								this.plugin.settings.useObjectFormatForCurrencyValues = data;
 								void this.plugin.saveSettings();
 							});
 						}),

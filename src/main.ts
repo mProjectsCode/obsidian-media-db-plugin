@@ -45,7 +45,13 @@ import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
 import type { CreateNoteOptions } from './utils/Utils';
 import { normalizeTitleForAsciiAlias } from './utils/normalizeTitleForAlias';
-import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
+import {
+	parseUsdWholeDollarsFromDisplayString,
+	replaceIllegalFileNameCharactersInString,
+	unCamelCase,
+	hasTemplaterPlugin,
+	useTemplaterPluginInFile,
+} from './utils/Utils';
 import 'src/styles.css';
 
 export type Metadata = Record<string, unknown>;
@@ -720,7 +726,25 @@ export default class MediaDbPlugin extends Plugin {
 				dataSource: mediaTypeModel.dataSource,
 			};
 		}
+		meta = this.withMovieCurrencyObjectFormat(meta, mediaTypeModel);
 		return this.withNormalizedTitleAliasMetadata(meta, mediaTypeModel.title);
+	}
+
+	/** When enabled, movie budget/revenue become `{ value, currency }` for YAML front matter. */
+	private withMovieCurrencyObjectFormat(meta: Record<string, unknown>, mediaTypeModel: MediaTypeModel): Record<string, unknown> {
+		if (!this.settings.useObjectFormatForCurrencyValues || mediaTypeModel.getMediaType() !== MediaType.Movie) {
+			return meta;
+		}
+		const next = { ...meta };
+		for (const key of ['budget', 'revenue'] as const) {
+			const raw = next[key];
+			if (typeof raw !== 'string') {
+				continue;
+			}
+			const amount = parseUsdWholeDollarsFromDisplayString(raw);
+			next[key] = amount !== null ? { value: amount, currency: 'USD' } : null;
+		}
+		return next;
 	}
 
 	private withNormalizedTitleAliasMetadata(meta: Record<string, unknown>, title: string): Record<string, unknown> {

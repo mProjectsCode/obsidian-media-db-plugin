@@ -319,6 +319,26 @@ export function formatUsdWholeDollars(amount: number): string {
 	return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
 }
 
+/**
+ * Parses whole-dollar amounts from API display strings (TMDB Intl format, OMDb box office, etc.).
+ * Returns null when empty or not parseable.
+ */
+export function parseUsdWholeDollarsFromDisplayString(s: string): number | null {
+	const t = s.trim();
+	if (!t) {
+		return null;
+	}
+	const numeric = t.replace(/[^\d.,-]/g, '').replace(/,/g, '');
+	if (!numeric) {
+		return null;
+	}
+	const n = Number.parseFloat(numeric);
+	if (!Number.isFinite(n) || n <= 0) {
+		return null;
+	}
+	return Math.round(n);
+}
+
 export type ModelToData<T> = {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	[K in keyof T as T[K] extends Function ? never : K]?: T[K] | null;
