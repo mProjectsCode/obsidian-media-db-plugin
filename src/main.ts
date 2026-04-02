@@ -2,7 +2,6 @@ import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFolder, TFile 
 import { requestUrl, normalizePath } from 'obsidian';
 import { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
-import { MUSICBRAINZ_NOTE_DATA_SOURCE, musicBrainzRegisteredApiName } from './api/musicBrainzConstants';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { GiantBombAPI } from './api/apis/GiantBombAPI';
@@ -22,10 +21,11 @@ import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
 import { VNDBAPI } from './api/apis/VNDBAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { GeniusClient } from './api/GeniusClient';
+import { MUSICBRAINZ_NOTE_DATA_SOURCE, musicBrainzRegisteredApiName } from './api/musicBrainzConstants';
 import { SpotifyClient } from './api/SpotifyClient';
-import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import { BulkUpdateConfirmModal } from './modals/BulkUpdateConfirmModal';
 import { CompletionModal } from './modals/CompletionModal';
+import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
 import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { ArtistModel } from './models/ArtistModel';
@@ -43,11 +43,11 @@ import { BulkImportHelper } from './utils/BulkImportHelper';
 import { BulkUpdateHelper } from './utils/BulkUpdateHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
-import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from './utils/noteTypeSettings';
 import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
-import type { CreateNoteOptions } from './utils/Utils';
 import { normalizeTitleForAsciiAlias } from './utils/normalizeTitleForAlias';
+import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from './utils/noteTypeSettings';
+import type { CreateNoteOptions } from './utils/Utils';
 import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile, dateTimeToString, markdownTable } from './utils/Utils';
 import 'src/styles.css';
 
@@ -132,16 +132,34 @@ export default class MediaDbPlugin extends Plugin {
 						if (typeof item.setSubmenu === 'function') {
 							// @ts-ignore
 							const sub = item.setSubmenu();
-							sub.addItem((subItem: any) => subItem.setTitle('Bulk Import Folder').setIcon('database').onClick(() => this.bulkImportHelper.import(file)));
-							sub.addItem((subItem: any) => subItem.setTitle('Bulk Update Metadata').setIcon('refresh-cw').onClick(() => this.bulkUpdateHelper.updateFolder(file)));
-							sub.addItem((subItem: any) => subItem.setTitle('Start Auto-Tracker in Folder').setIcon('sync').onClick(() => {
-								new BulkUpdateConfirmModal(
-									this.app,
-									(silentUpdate: boolean) => {
-										this.autoTrackerHelper.startBackgroundScan(silentUpdate, file);
-									}).open();
-							}));
-							sub.addItem((subItem: any) => subItem.setTitle('Download images in folder').setIcon('image').onClick(() => this.downloadImagesInFolder(file)));
+							sub.addItem((subItem: any) =>
+								subItem
+									.setTitle('Bulk Import Folder')
+									.setIcon('database')
+									.onClick(() => this.bulkImportHelper.import(file)),
+							);
+							sub.addItem((subItem: any) =>
+								subItem
+									.setTitle('Bulk Update Metadata')
+									.setIcon('refresh-cw')
+									.onClick(() => this.bulkUpdateHelper.updateFolder(file)),
+							);
+							sub.addItem((subItem: any) =>
+								subItem
+									.setTitle('Start Auto-Tracker in Folder')
+									.setIcon('sync')
+									.onClick(() => {
+										new BulkUpdateConfirmModal(this.app, (silentUpdate: boolean) => {
+											this.autoTrackerHelper.startBackgroundScan(silentUpdate, file);
+										}).open();
+									}),
+							);
+							sub.addItem((subItem: any) =>
+								subItem
+									.setTitle('Download images in folder')
+									.setIcon('image')
+									.onClick(() => this.downloadImagesInFolder(file)),
+							);
 						} else {
 							// Fallback if setSubmenu isn't in older Obsidian versions
 							item.onClick(() => this.bulkUpdateHelper.updateFolder(file));
@@ -189,7 +207,7 @@ export default class MediaDbPlugin extends Plugin {
 			name: 'Media DB: Download images in active note',
 			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
-				if (!activeFile || activeFile.extension !== 'md') return false;
+				if (activeFile?.extension !== 'md') return false;
 				if (!checking) void this.downloadImagesInFile(activeFile);
 				return true;
 			},
@@ -797,7 +815,7 @@ export default class MediaDbPlugin extends Plugin {
 		const startTime = Date.now();
 		let downloaded = 0;
 		let failed = 0;
-		const erroredFiles: { filePath: string, error: string }[] = [];
+		const erroredFiles: { filePath: string; error: string }[] = [];
 
 		for (const file of files) {
 			const result = await this.downloadImagesInFile(file, true);
@@ -809,7 +827,7 @@ export default class MediaDbPlugin extends Plugin {
 			}
 			// wait slightly as anti-rate limit
 			if (!result.skipped) {
-				await new Promise(r => setTimeout(r, 600)); 
+				await new Promise(r => setTimeout(r, 600));
 			}
 		}
 
@@ -841,7 +859,7 @@ export default class MediaDbPlugin extends Plugin {
 		if (typeof metadata.image === 'string' && metadata.image.startsWith('http')) {
 			try {
 				const imageUrl = metadata.image;
-				const extMatch = imageUrl.split('?')[0].match(/\.([a-zA-Z0-9]+)$/);
+				const extMatch = /\.([a-zA-Z0-9]+)$/.exec(imageUrl.split('?')[0]);
 				const ext = extMatch ? extMatch[1] : 'jpg';
 				const imgName = replaceIllegalFileNameCharactersInString(file.basename) + '.' + ext;
 				const imgFolder = await this.ensureVaultFolder(this.settings.imageFolder);
@@ -858,7 +876,7 @@ export default class MediaDbPlugin extends Plugin {
 				if (!silent) new Notice(`MDB | Image downloaded for ${file.basename}`);
 				return { success: true };
 			} catch (e) {
-				console.error("MDB | Image download failed for", file.path, e);
+				console.error('MDB | Image download failed for', file.path, e);
 				if (!silent) new Notice(`MDB | Image download failed for ${file.basename}`);
 				return { success: false, error: `${e}` };
 			}
@@ -897,9 +915,7 @@ export default class MediaDbPlugin extends Plugin {
 		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
 
 		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
-		let fileMetadata: Record<string, unknown> = this.modelPropertyMapper.convertObject(
-			this.metadataRecordForNewNote(mediaTypeModel),
-		);
+		let fileMetadata: Record<string, unknown> = this.modelPropertyMapper.convertObject(this.metadataRecordForNewNote(mediaTypeModel));
 
 		let fileContent = '';
 		template = options.attachTemplate ? template : '';
@@ -908,7 +924,10 @@ export default class MediaDbPlugin extends Plugin {
 		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 
 		// --- Global Wiki-Link Post-Processing (for Custom/Manual Properties) ---
-		const entityWikiProps = this.settings.autoTagEntities.split(',').map(s => s.trim().toLowerCase()).filter(s => s !== '');
+		const entityWikiProps = this.settings.autoTagEntities
+			.split(',')
+			.map(s => s.trim().toLowerCase())
+			.filter(s => s !== '');
 		if (entityWikiProps.length > 0) {
 			const folderPrefix = this.settings.wikiFolder ? `${this.settings.wikiFolder}/` : '';
 			const isEnabled = this.settings.enableWikiLinkParsing;
@@ -932,9 +951,12 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		// --- Auto-Tag Logic ---
-		const tagProps = this.settings.autoTagProperties.split(',').map(s => s.trim().toLowerCase()).filter(s => s !== '');
+		const tagProps = this.settings.autoTagProperties
+			.split(',')
+			.map(s => s.trim().toLowerCase())
+			.filter(s => s !== '');
 		if (this.settings.enableAutoTagging && tagProps.length > 0) {
-			const existingTags: string[] = Array.isArray(fileMetadata['tags']) ? (fileMetadata['tags'] as string[]) : [];
+			const existingTags: string[] = Array.isArray(fileMetadata.tags) ? (fileMetadata.tags as string[]) : [];
 			const newTags = new Set<string>(existingTags.filter(t => typeof t === 'string' && t.trim() !== ''));
 
 			for (const [key, value] of Object.entries(fileMetadata)) {
@@ -951,23 +973,30 @@ export default class MediaDbPlugin extends Plugin {
 								.replace(/\s+/g, '-')
 								.replace(/[^\wığüşöçIĞÜŞÖÇ-]/g, '')
 								.toLowerCase();
-							
+
 							if (sanitized) newTags.add(sanitized);
 						}
 					}
 				}
 			}
-			
+
 			if (newTags.size > 0) {
-				fileMetadata['tags'] = Array.from(newTags);
+				fileMetadata.tags = Array.from(newTags);
 			}
 		}
 
 		if (mediaTypeModel.getMediaType() === MediaType.Song) {
 			const song = mediaTypeModel as SongModel;
-			if(song.lyrics.length > 0) {
+			if (song.lyrics.length > 0) {
 				fileContent += `# Lyrics\n\`\`\`\n${song.lyrics}\n\`\`\`\n`;
 			}
+		}
+
+		// Ensure 'tags' always appears last in frontmatter
+		if ('tags' in fileMetadata) {
+			const tagsValue = fileMetadata['tags'];
+			delete fileMetadata['tags'];
+			fileMetadata['tags'] = tagsValue;
 		}
 
 		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
@@ -982,11 +1011,14 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	extractManualTags(metadata: Record<string, unknown>, autoTagKeys: string): string[] {
-		const allTagsRaw = metadata['tags'];
+		const allTagsRaw = metadata.tags;
 		const allTags = Array.isArray(allTagsRaw) ? allTagsRaw : typeof allTagsRaw === 'string' ? [allTagsRaw] : [];
 		if (allTags.length === 0) return [];
-		
-		const tagProps = autoTagKeys.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
+
+		const tagProps = autoTagKeys
+			.split(',')
+			.map(s => s.trim().toLowerCase())
+			.filter(s => s);
 		const autoTagValues = new Set<string>();
 
 		for (const [key, value] of Object.entries(metadata)) {
@@ -996,7 +1028,11 @@ export default class MediaDbPlugin extends Plugin {
 					if (typeof v === 'string') {
 						let clean = v.replace(/^\[\[(.*?)\]\]$/, '$1');
 						if (clean.includes('|')) clean = clean.split('|')[1];
-						const sanitized = clean.trim().replace(/\s+/g, '-').replace(/[^\wığüşöçIĞÜŞÖÇ-]/g, '').toLowerCase();
+						const sanitized = clean
+							.trim()
+							.replace(/\s+/g, '-')
+							.replace(/[^\wığüşöçIĞÜŞÖÇ-]/g, '')
+							.toLowerCase();
 						if (sanitized) autoTagValues.add(sanitized);
 					}
 				}
@@ -1012,11 +1048,11 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		const attachFileMetadata = this.getMetadataFromFileCache(fileToAttach);
-		
+
 		// Rescue arrays that Object.assign would normally crush
 		const rescueArray = (key: string) => {
 			const arr = attachFileMetadata[key];
-			if (Array.isArray(arr)) return [...arr as string[]];
+			if (Array.isArray(arr)) return [...(arr as string[])];
 			if (typeof arr === 'string' && arr.trim()) return [arr];
 			return [];
 		};
@@ -1027,14 +1063,16 @@ export default class MediaDbPlugin extends Plugin {
 		fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
 
 		// Merge tags cleanly (Preserving only manual user tags, discarding old ghost auto-tags!)
-		const newObjTags = fileMetadata['tags'];
+		const newObjTags = fileMetadata.tags;
 		const finalTags = new Set([...oldManualTags, ...(Array.isArray(newObjTags) ? newObjTags : typeof newObjTags === 'string' ? [newObjTags] : [])].map(t => String(t).trim()));
-		if (finalTags.size > 0) fileMetadata['tags'] = Array.from(finalTags);
+		if (finalTags.size > 0) fileMetadata.tags = Array.from(finalTags);
 
 		// Merge aliases cleanly
-		const newObjAliases = fileMetadata['aliases'];
-		const finalAliases = new Set([...oldAliases, ...(Array.isArray(newObjAliases) ? newObjAliases : typeof newObjAliases === 'string' ? [newObjAliases] : [])].map(a => String(a).trim()));
-		if (finalAliases.size > 0) fileMetadata['aliases'] = Array.from(finalAliases);
+		const newObjAliases = fileMetadata.aliases;
+		const finalAliases = new Set(
+			[...oldAliases, ...(Array.isArray(newObjAliases) ? newObjAliases : typeof newObjAliases === 'string' ? [newObjAliases] : [])].map(a => String(a).trim()),
+		);
+		if (finalAliases.size > 0) fileMetadata.aliases = Array.from(finalAliases);
 
 		let attachFileContent: string = await this.app.vault.read(fileToAttach);
 		const regExp = new RegExp(this.frontMatterRexExpPattern);
@@ -1051,8 +1089,12 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		const templateMetadata = this.getMetaDataFromFileContent(template);
-		// TODO: better object merging
-		fileMetadata = Object.assign(templateMetadata, fileMetadata);
+		// Merge: API data wins and stays at top; template-only keys are appended at the bottom
+		for (const [key, value] of Object.entries(templateMetadata)) {
+			if (!(key in fileMetadata)) {
+				fileMetadata[key] = value;
+			}
+		}
 
 		const regExp = new RegExp(this.frontMatterRexExpPattern);
 		const attachFileContent = template.replace(regExp, '');
@@ -1150,13 +1192,11 @@ export default class MediaDbPlugin extends Plugin {
 		if (!this._ribbonEl) {
 			this._ribbonEl = this.addRibbonIcon('sync', 'Media DB: Auto-Tracker Sync', () => {
 				if (this.autoTrackerHelper.isScanning) {
-					new Notice("Auto-Tracker is currently syncing in the background.");
+					new Notice('Auto-Tracker is currently syncing in the background.');
 				} else {
-					new BulkUpdateConfirmModal(
-						this.app,
-						(silentUpdate: boolean) => {
-							this.autoTrackerHelper.startBackgroundScan(silentUpdate);
-						}).open();
+					new BulkUpdateConfirmModal(this.app, (silentUpdate: boolean) => {
+						this.autoTrackerHelper.startBackgroundScan(silentUpdate);
+					}).open();
 				}
 			});
 			this._ribbonEl.addClass('obsidian-media-db-plugin-ribbon-class');
@@ -1182,7 +1222,6 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async updateNote(activeFile: TFile, onlyMetadata: boolean = false, openNoteFinal: boolean = true, overwrite: boolean = false): Promise<void> {
-
 		let metadata = this.getMetadataFromFileCache(activeFile);
 		metadata = this.modelPropertyMapper.convertObjectBack(metadata);
 
@@ -1197,10 +1236,7 @@ export default class MediaDbPlugin extends Plugin {
 			throw new Error('MDB | active note type is not recognized; check Settings → Note type for each media kind');
 		}
 		let dataSource = typeof metadata.dataSource === 'string' ? metadata.dataSource.trim() : '';
-		if (
-			!dataSource &&
-			musicBrainzRegisteredApiName(mediaType)
-		) {
+		if (!dataSource && musicBrainzRegisteredApiName(mediaType)) {
 			dataSource = MUSICBRAINZ_NOTE_DATA_SOURCE;
 		}
 		if (!dataSource) {
@@ -1249,8 +1285,10 @@ export default class MediaDbPlugin extends Plugin {
 			if (anyLoaded.bandFolder && !loadedSettings.artistFolder) loadedSettings.artistFolder = anyLoaded.bandFolder;
 			if (anyLoaded.bandFileNameTemplate && !loadedSettings.artistFileNameTemplate) loadedSettings.artistFileNameTemplate = anyLoaded.bandFileNameTemplate;
 			if (anyLoaded.bandNoteType && !loadedSettings.artistNoteType) loadedSettings.artistNoteType = anyLoaded.bandNoteType;
-			if (anyLoaded.bandUseFileTreeForSongs !== undefined && loadedSettings.artistUseFileTreeForSongs === false) loadedSettings.artistUseFileTreeForSongs = anyLoaded.bandUseFileTreeForSongs;
-			if (anyLoaded.MusicBrainzBandAPI_disabledMediaTypes && !loadedSettings.MusicBrainzArtistAPI_disabledMediaTypes) loadedSettings.MusicBrainzArtistAPI_disabledMediaTypes = anyLoaded.MusicBrainzBandAPI_disabledMediaTypes;
+			if (anyLoaded.bandUseFileTreeForSongs !== undefined && loadedSettings.artistUseFileTreeForSongs === false)
+				loadedSettings.artistUseFileTreeForSongs = anyLoaded.bandUseFileTreeForSongs;
+			if (anyLoaded.MusicBrainzBandAPI_disabledMediaTypes && !loadedSettings.MusicBrainzArtistAPI_disabledMediaTypes)
+				loadedSettings.MusicBrainzArtistAPI_disabledMediaTypes = anyLoaded.MusicBrainzBandAPI_disabledMediaTypes;
 		}
 
 		this.settings = loadedSettings;
