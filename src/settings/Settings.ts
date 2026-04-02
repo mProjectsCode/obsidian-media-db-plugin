@@ -691,8 +691,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				group.addSetting(
 					setting =>
 						void setting
-							.setName('Automatically Import Releases')
-							.setDesc('When importing an artist, also create notes for their studio albums and tracks.')
+							.setName('Automatically Import Discography')
+							.setDesc('When importing an artist, also create notes for their studio albums.')
 							.addToggle(cb => {
 								cb.setValue(this.plugin.settings.artistAutomaticallyImportReleases).onChange(data => {
 									this.plugin.settings.artistAutomaticallyImportReleases = data;
@@ -710,7 +710,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					setting =>
 						void setting
 							.setName('Automatically Import Songs')
-							.setDesc('When importing an album (on its own or as part of an artist import), also create a note for each track.')
+							.setDesc('Create a note for each track when importing an album.')
 							.addToggle(cb => {
 								cb.setValue(this.plugin.settings.musicReleaseAutomaticallyImportSongs).onChange(data => {
 									this.plugin.settings.musicReleaseAutomaticallyImportSongs = data;

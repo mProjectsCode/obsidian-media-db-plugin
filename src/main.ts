@@ -1,5 +1,4 @@
-import type { TFile } from 'obsidian';
-import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFolder } from 'obsidian';
+import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder } from 'obsidian';
 import { requestUrl, normalizePath } from 'obsidian';
 import { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
@@ -24,7 +23,7 @@ import { VNDBAPI } from './api/apis/VNDBAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { GeniusClient } from './api/GeniusClient';
 import { SpotifyClient } from './api/SpotifyClient';
-import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
+import { ConfirmOverwriteModal, ConfirmOverwriteChoice } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
 import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { ArtistModel } from './models/ArtistModel';
@@ -43,7 +42,7 @@ import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
 import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from './utils/noteTypeSettings';
 import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
-import type { CreateNoteOptions } from './utils/Utils';
+import type { ChainedImportControl, CreateNoteOptions } from './utils/Utils';
 import { normalizeTitleForAsciiAlias } from './utils/normalizeTitleForAlias';
 import {
 	parseUsdWholeDollarsFromDisplayString,
@@ -443,10 +442,34 @@ export default class MediaDbPlugin extends Plugin {
 
 	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<void> {
 		const hasArtist = models.some(m => m.getMediaType() === MediaType.Artist);
+		const artistBatchImport =
+			hasArtist && models.filter(m => m.getMediaType() === MediaType.Artist).length >= 2
+				? { abort: false }
+				: undefined;
+		const musicReleaseCount = models.filter(m => m.getMediaType() === MediaType.MusicRelease).length;
+		const releaseBatchImport =
+			!hasArtist &&
+			musicReleaseCount >= 2 &&
+			this.settings.musicReleaseAutomaticallyImportSongs
+				? { abort: false }
+				: undefined;
 
 		if (hasArtist) {
 			for (const model of models) {
-				await this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile });
+				if (artistBatchImport?.abort) {
+					break;
+				}
+				await this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile, artistBatchImport });
+			}
+			return;
+		}
+
+		if (releaseBatchImport) {
+			for (const model of models) {
+				if (releaseBatchImport.abort) {
+					break;
+				}
+				await this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile, releaseBatchImport });
 			}
 			return;
 		}
@@ -506,9 +529,16 @@ export default class MediaDbPlugin extends Plugin {
 
 			options.folder ??= await this.mediaTypeManager.getFolder(mediaTypeModel, this.app);
 
-			const targetFile = await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
+			const { file: targetFile, keptExisting } = await this.createNote(
+				this.mediaTypeManager.getFileName(mediaTypeModel),
+				fileContent,
+				options,
+			);
+			if (!targetFile) {
+				return false;
+			}
 
-			if (this.settings.enableTemplaterIntegration) {
+			if (!keptExisting && this.settings.enableTemplaterIntegration) {
 				try {
 					await useTemplaterPluginInFile(this.app, targetFile);
 				} catch (e) {
@@ -533,6 +563,9 @@ export default class MediaDbPlugin extends Plugin {
 		childOptions: CreateNoteOptions,
 	): Promise<void> {
 		for (const track of release.tracks) {
+			if (childOptions.chainedImport?.abort) {
+				break;
+			}
 			let lyrics = '';
 			let geniusUrl = '';
 			if (genius.isConfigured()) {
@@ -588,7 +621,10 @@ export default class MediaDbPlugin extends Plugin {
 				userData: { personalRating: 0 },
 			});
 
-			await this.createStandardMediaDbNoteFromModel(song, { ...childOptions });
+			const songCreated = await this.createStandardMediaDbNoteFromModel(song, { ...childOptions });
+			if (!songCreated && childOptions.chainedImport?.abort) {
+				break;
+			}
 		}
 	}
 
@@ -597,7 +633,11 @@ export default class MediaDbPlugin extends Plugin {
 			const albumNotesFolder = options.folder ?? (await this.mediaTypeManager.getFolder(release, this.app));
 			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
 
-			const albumCreated = await this.createStandardMediaDbNoteFromModel(release, { ...options, folder: albumNotesFolder });
+			const albumCreated = await this.createStandardMediaDbNoteFromModel(release, {
+				...options,
+				folder: albumNotesFolder,
+				...(importSongs ? { musicReleaseSongsOverwrite: true } : {}),
+			});
 			if (!albumCreated) {
 				return;
 			}
@@ -634,6 +674,14 @@ export default class MediaDbPlugin extends Plugin {
 				folder: undefined,
 			};
 
+			const tracksChain: ChainedImportControl = { abort: false };
+			const trackImportOptions: CreateNoteOptions = {
+				...options,
+				...childOptions,
+				chainedImport: tracksChain,
+				chainedImportStopLabel: 'Abort',
+			};
+
 			new Notice(`Importing ${release.tracks.length} tracks for ${release.title}…`);
 			console.log(`Importing ${release.tracks.length} tracks for ${release.title}…`);
 
@@ -643,11 +691,16 @@ export default class MediaDbPlugin extends Plugin {
 				musicBrainzApi,
 				genius,
 				spotify,
-				childOptions,
+				trackImportOptions,
 			);
 
-			new Notice(`✅ Finished music release import for ${release.title}.`);
-			console.log(`✅ Finished music release import for ${release.title}.`);
+			if (tracksChain.abort) {
+				new Notice(`Stopped track import for ${release.title}.`);
+				console.log(`Stopped track import for ${release.title}.`);
+			} else {
+				new Notice(`✅ Finished music release import for ${release.title}.`);
+				console.log(`✅ Finished music release import for ${release.title}.`);
+			}
 		} catch (e) {
 			console.warn(e);
 			new Notice(`${e}`);
@@ -665,7 +718,11 @@ export default class MediaDbPlugin extends Plugin {
 
 			const artistNoteFolder = await this.mediaTypeManager.getFolder(artist, this.app);
 
-			const artistNoteCreated = await this.createStandardMediaDbNoteFromModel(artist, { ...options, folder: artistNoteFolder });
+			const artistNoteCreated = await this.createStandardMediaDbNoteFromModel(artist, {
+				...options,
+				folder: artistNoteFolder,
+				...(this.settings.artistAutomaticallyImportReleases ? { artistDiscographyOverwrite: true } : {}),
+			});
 			if (!artistNoteCreated) {
 				return;
 			}
@@ -712,7 +769,13 @@ export default class MediaDbPlugin extends Plugin {
 				`Importing ${releaseGroupIds.length} studio albums${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
 			);
 
+			const discographyChain: ChainedImportControl = { abort: false };
+
 			for (const rgId of releaseGroupIds) {
+				if (discographyChain.abort) {
+					break;
+				}
+
 				await new Promise(r => setTimeout(r, 1100));
 				let release: MusicReleaseModel;
 				try {
@@ -723,10 +786,19 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
-				const releaseOpts: CreateNoteOptions = { ...childOptions };
+				const releaseOpts: CreateNoteOptions = {
+					...options,
+					...childOptions,
+					chainedImport: discographyChain,
+					chainedImportStopLabel: 'Abort',
+					...(importSongs ? { musicReleaseSongsOverwrite: true } : {}),
+				};
 
 				const albumNoteCreated = await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
 				if (!albumNoteCreated) {
+					if (discographyChain.abort) {
+						break;
+					}
 					continue;
 				}
 
@@ -734,18 +806,30 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
+				const releaseTracksChain: ChainedImportControl = { abort: false };
+				const trackImportOpts: CreateNoteOptions = {
+					...options,
+					...childOptions,
+					chainedImport: releaseTracksChain,
+					chainedImportStopLabel: 'Abort',
+				};
 				await this.importSongNotesForMusicReleaseTracks(
 					release,
 					artist.title,
 					musicBrainzApi,
 					genius,
 					spotify,
-					childOptions,
+					trackImportOpts,
 				);
 			}
 
-			new Notice(`✅ Finished artist import for ${artist.title}.`);
-			console.log(`✅ Finished artist import for ${artist.title}.`);
+			if (discographyChain.abort) {
+				new Notice(`Stopped album import for ${artist.title}.`);
+				console.log(`Stopped album import for ${artist.title}.`);
+			} else {
+				new Notice(`✅ Finished artist import for ${artist.title}.`);
+				console.log(`✅ Finished artist import for ${artist.title}.`);
+			}
 		} catch (e) {
 			console.warn(e);
 			new Notice(`${e}`);
@@ -965,11 +1049,13 @@ export default class MediaDbPlugin extends Plugin {
 	/**
 	 * Creates a note in the vault.
 	 *
-	 * @param fileName
-	 * @param fileContent
-	 * @param options
+	 * @returns The created or kept file, or null if the user skipped overwrite or chose to stop a chained import.
 	 */
-	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions): Promise<TFile> {
+	async createNote(
+		fileName: string,
+		fileContent: string,
+		options: CreateNoteOptions,
+	): Promise<{ file: TFile | null; keptExisting: boolean }> {
 		// find and possibly create the folder set in settings or passed in folder
 		const folder = options.folder ?? this.app.vault.getAbstractFileByPath('/');
 
@@ -983,12 +1069,59 @@ export default class MediaDbPlugin extends Plugin {
 		// look if file already exists and ask if it should be overwritten
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (file) {
-			const shouldOverwrite = await new Promise<boolean>(resolve => {
-				new ConfirmOverwriteModal(this.app, fileName, resolve).open();
+			const chain = options.chainedImport;
+			const stopLabel =
+				options.chainedImportStopLabel?.trim() ||
+				(chain ? 'Abort' : '');
+			const showAbortRemainingLegacy = !!chain && stopLabel.length > 0;
+			const extendedOverwriteDetail = options.artistDiscographyOverwrite
+				? `The artist note "${fileName}" already exists. Do you want to overwrite it? "No" does not stop importing discography.`
+				: options.musicReleaseSongsOverwrite
+					? `The album note "${fileName}" already exists. Do you want to overwrite it? "No" does not stop importing tracks.`
+					: undefined;
+
+			const choice = await new Promise<ConfirmOverwriteChoice>(resolve => {
+				new ConfirmOverwriteModal(this.app, fileName, resolve, {
+					detail: extendedOverwriteDetail,
+					showAbortRemaining: extendedOverwriteDetail ? true : showAbortRemainingLegacy,
+					showSkip: extendedOverwriteDetail
+						? options.artistDiscographyOverwrite
+							? !!options.artistBatchImport
+							: !!(options.releaseBatchImport || options.chainedImport)
+						: false,
+				}).open();
 			});
 
-			if (!shouldOverwrite) {
-				throw new Error('MDB | file creation cancelled by user');
+			if (choice === ConfirmOverwriteChoice.Skip) {
+				return { file: null, keptExisting: false };
+			}
+			if (choice === ConfirmOverwriteChoice.Abort) {
+				if (chain) {
+					chain.abort = true;
+				}
+				// Nested imports (discography, tracks) spread batch handles onto options; only stop the
+				// multi-artist / multi-release batch when this dialog is not scoped to an inner chain.
+				if (options.artistBatchImport && !chain) {
+					options.artistBatchImport.abort = true;
+				}
+				if (options.releaseBatchImport && !chain) {
+					options.releaseBatchImport.abort = true;
+				}
+				return { file: null, keptExisting: false };
+			}
+			if (choice === ConfirmOverwriteChoice.KeepExisting) {
+				if (!(file instanceof TFile)) {
+					return { file: null, keptExisting: false };
+				}
+				if (options.openNote) {
+					const activeLeaf = this.app.workspace.getUnpinnedLeaf();
+					if (!activeLeaf) {
+						console.warn('MDB | no active leaf, not opening existing note');
+					} else {
+						await activeLeaf.openFile(file, { state: { mode: 'source' } });
+					}
+				}
+				return { file, keptExisting: true };
 			}
 
 			await this.app.vault.delete(file);
@@ -1003,12 +1136,12 @@ export default class MediaDbPlugin extends Plugin {
 			const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 			if (!activeLeaf) {
 				console.warn('MDB | no active leaf, not opening newly created note');
-				return targetFile;
+				return { file: targetFile, keptExisting: false };
 			}
 			await activeLeaf.openFile(targetFile, { state: { mode: 'source' } });
 		}
 
-		return targetFile;
+		return { file: targetFile, keptExisting: false };
 	}
 
 	/**

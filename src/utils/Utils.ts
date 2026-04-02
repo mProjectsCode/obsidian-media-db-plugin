@@ -194,6 +194,11 @@ export class PropertyMappingNameConflictError extends Error {
 	}
 }
 
+/** Mutable handle: set by the overwrite dialog when the user stops a chained import. */
+export interface ChainedImportControl {
+	abort: boolean;
+}
+
 /**
  * - attachTemplate: whether to attach the template (DEFAULT: false)
  * - attachFie: a file to attach (DEFAULT: undefined)
@@ -205,6 +210,23 @@ export interface CreateNoteOptions {
 	attachFile?: TFile;
 	openNote?: boolean;
 	folder?: TFolder;
+	/** With chainedImportStopLabel, the overwrite dialog offers a third action that sets abort. */
+	chainedImport?: ChainedImportControl;
+	chainedImportStopLabel?: string;
+	/**
+	 * While auto-importing discography, an existing artist note triggers a four-button overwrite dialog
+	 * (Abort / optional Skip / No keeps file / Yes overwrites). Use with {@link artistBatchImport} when importing multiple artists.
+	 */
+	artistDiscographyOverwrite?: boolean;
+	/** When multiple artists are imported in one batch, Abort sets this and the batch loop stops. */
+	artistBatchImport?: ChainedImportControl;
+	/**
+	 * While auto-importing tracks, an existing album note triggers the same four-button overwrite dialog
+	 * as for artists. Use with {@link releaseBatchImport} when importing multiple releases in one batch.
+	 */
+	musicReleaseSongsOverwrite?: boolean;
+	/** When multiple releases are imported in one batch (sequential), Abort sets this and the batch loop stops. */
+	releaseBatchImport?: ChainedImportControl;
 }
 
 /** Runtime in whole minutes (TMDB/OMDb/MAL). 0 when unknown. Parses legacy string frontmatter (e.g. "136 min", "2 hr 5 min"). */

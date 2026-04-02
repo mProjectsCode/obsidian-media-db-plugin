@@ -68,6 +68,15 @@ small.media-db-plugin-list-text {
 	/*outline: 1px solid white;*/
 }
 
+button.media-db-plugin-button.media-db-plugin-abort-button {
+	background-color: var(--background-modifier-error);
+	color: var(--text-on-accent);
+}
+
+button.media-db-plugin-button.media-db-plugin-abort-button:hover {
+	background-color: var(--background-modifier-error-hover);
+}
+
 .media-db-plugin-preview {
 	border-radius: var(--modal-radius);
 	border: var(--modal-border-width) solid var(--modal-border-color);
