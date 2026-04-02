@@ -229,7 +229,7 @@ export class PropertyMapper {
 	}
 
 	/**
-	 * Wikilink for a song's album title using the Music Release file name template; fills artists/year from the song metadata when present.
+	 * Wikilink for a song's release title using the Music Release file name template; fills artists/year from the song metadata when present.
 	 */
 	private songAlbumTitleWikilink(albumTitle: string, songMeta: Record<string, unknown>): string {
 		const title = albumTitle.trim();

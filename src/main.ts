@@ -630,15 +630,15 @@ export default class MediaDbPlugin extends Plugin {
 
 	private async importMusicReleaseWithOptionalSongs(release: MusicReleaseModel, options: CreateNoteOptions): Promise<void> {
 		try {
-			const albumNotesFolder = options.folder ?? (await this.mediaTypeManager.getFolder(release, this.app));
+			const releaseNotesFolder = options.folder ?? (await this.mediaTypeManager.getFolder(release, this.app));
 			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
 
-			const albumCreated = await this.createStandardMediaDbNoteFromModel(release, {
+			const releaseCreated = await this.createStandardMediaDbNoteFromModel(release, {
 				...options,
-				folder: albumNotesFolder,
+				folder: releaseNotesFolder,
 				...(importSongs ? { musicReleaseSongsOverwrite: true } : {}),
 			});
-			if (!albumCreated) {
+			if (!releaseCreated) {
 				return;
 			}
 
@@ -658,8 +658,8 @@ export default class MediaDbPlugin extends Plugin {
 			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
 			const genius = new GeniusClient(geniusToken);
 			if (!genius.isConfigured()) {
-				new Notice('Album import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
-				console.warn('Album import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+				new Notice('Release import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+				console.warn('Release import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
 			}
 
 			const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
@@ -756,17 +756,17 @@ export default class MediaDbPlugin extends Plugin {
 			try {
 				releaseGroupIds = await artistApi.listStudioAlbumReleaseGroupIds(artist.id);
 			} catch (e) {
-				new Notice(`Could not load albums: ${e}`);
-				console.log(`Could not load albums: ${e}`);
+				new Notice(`Could not load releases: ${e}`);
+				console.log(`Could not load releases: ${e}`);
 				return;
 			}
 
 			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
 			new Notice(
-				`Importing ${releaseGroupIds.length} studio albums${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+				`Importing ${releaseGroupIds.length} studio releases${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
 			);
 			console.log(
-				`Importing ${releaseGroupIds.length} studio albums${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+				`Importing ${releaseGroupIds.length} studio releases${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
 			);
 
 			const discographyChain: ChainedImportControl = { abort: false };
@@ -794,8 +794,8 @@ export default class MediaDbPlugin extends Plugin {
 					...(importSongs ? { musicReleaseSongsOverwrite: true } : {}),
 				};
 
-				const albumNoteCreated = await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
-				if (!albumNoteCreated) {
+				const releaseNoteCreated = await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
+				if (!releaseNoteCreated) {
 					if (discographyChain.abort) {
 						break;
 					}
@@ -824,8 +824,8 @@ export default class MediaDbPlugin extends Plugin {
 			}
 
 			if (discographyChain.abort) {
-				new Notice(`Stopped album import for ${artist.title}.`);
-				console.log(`Stopped album import for ${artist.title}.`);
+				new Notice(`Stopped release import for ${artist.title}.`);
+				console.log(`Stopped release import for ${artist.title}.`);
 			} else {
 				new Notice(`✅ Finished artist import for ${artist.title}.`);
 				console.log(`✅ Finished artist import for ${artist.title}.`);
@@ -1077,7 +1077,7 @@ export default class MediaDbPlugin extends Plugin {
 			const extendedOverwriteDetail = options.artistDiscographyOverwrite
 				? `The artist note "${fileName}" already exists. Do you want to overwrite it? "No" does not stop importing discography.`
 				: options.musicReleaseSongsOverwrite
-					? `The album note "${fileName}" already exists. Do you want to overwrite it? "No" does not stop importing tracks.`
+					? `The release note "${fileName}" already exists. Do you want to overwrite it? "No" does not stop importing tracks.`
 					: undefined;
 
 			const choice = await new Promise<ConfirmOverwriteChoice>(resolve => {

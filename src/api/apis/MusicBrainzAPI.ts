@@ -104,7 +104,7 @@ export class MusicBrainzAPI extends APIModel {
 
 		this.plugin = plugin;
 		this.apiName = 'MusicBrainz API';
-		this.apiDescription = 'Free API for music albums.';
+		this.apiDescription = 'Free API for music releases.';
 		this.apiUrl = 'https://musicbrainz.org/';
 		this.types = [MediaType.MusicRelease];
 	}
@@ -198,7 +198,7 @@ export class MusicBrainzAPI extends APIModel {
 		const releaseData = (await releaseResponse.json) as MediaResponse;
 		const tracks = extractTracksFromMedia(releaseData.media);
 
-		// Calculate total album length for the first release
+		// Calculate total length for the first release
 		const totalrawLength =
 			releaseData.media[0]?.tracks.reduce((sum, track) => {
 				const len = track.length ?? track.recording?.length;

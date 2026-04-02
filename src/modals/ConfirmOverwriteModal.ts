@@ -27,7 +27,7 @@ export class ConfirmOverwriteModal extends Modal {
 		opts?: {
 			showAbortRemaining?: boolean;
 			showSkip?: boolean;
-			/** Explains overwrite vs keep vs abort for chained imports (artist discography, album + tracks). */
+			/** Explains overwrite vs keep vs abort for chained imports (artist discography, release + tracks). */
 			detail?: string;
 		},
 	) {

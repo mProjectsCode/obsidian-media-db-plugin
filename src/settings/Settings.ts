@@ -121,9 +121,9 @@ export interface MediaDbPluginSettings {
 	songNoteType: string;
 	boardgameNoteType: string;
 	bookNoteType: string;
-	/** When true, importing an artist also creates album and song notes from their discography. */
+	/** When true, importing an artist also creates release and song notes from their discography. */
 	artistAutomaticallyImportReleases: boolean;
-	/** When true, each imported album also creates a note per track (standalone album import or artist discography). */
+	/** When true, each imported release also creates a note per track (standalone release import or artist discography). */
 	musicReleaseAutomaticallyImportSongs: boolean;
 	boardgameFolder: string;
 	bookFolder: string;
@@ -692,7 +692,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					setting =>
 						void setting
 							.setName('Automatically Import Discography')
-							.setDesc('When importing an artist, also create notes for their studio albums.')
+							.setDesc('When importing an artist, also create notes for their studio releases.')
 							.addToggle(cb => {
 								cb.setValue(this.plugin.settings.artistAutomaticallyImportReleases).onChange(data => {
 									this.plugin.settings.artistAutomaticallyImportReleases = data;
@@ -704,13 +704,13 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		});
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
 		this.renderMediaTypeSection(panel, byType(MediaType.MusicRelease), mediaTypeApiMap, {
-			sectionHeading: 'Album',
+			sectionHeading: 'Release',
 			appendToSection: group => {
 				group.addSetting(
 					setting =>
 						void setting
 							.setName('Automatically Import Songs')
-							.setDesc('Create a note for each track when importing an album.')
+							.setDesc('Create a note for each track when importing a release.')
 							.addToggle(cb => {
 								cb.setValue(this.plugin.settings.musicReleaseAutomaticallyImportSongs).onChange(data => {
 									this.plugin.settings.musicReleaseAutomaticallyImportSongs = data;

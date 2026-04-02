@@ -221,7 +221,7 @@ export interface CreateNoteOptions {
 	/** When multiple artists are imported in one batch, Abort sets this and the batch loop stops. */
 	artistBatchImport?: ChainedImportControl;
 	/**
-	 * While auto-importing tracks, an existing album note triggers the same four-button overwrite dialog
+	 * While auto-importing tracks, an existing release note triggers the same four-button overwrite dialog
 	 * as for artists. Use with {@link releaseBatchImport} when importing multiple releases in one batch.
 	 */
 	musicReleaseSongsOverwrite?: boolean;
@@ -309,10 +309,10 @@ export function unCamelCase(str: string): string {
 	);
 }
 
-/** User-facing label for a media type (e.g. MusicRelease → Album). */
+/** User-facing label for a media type (e.g. MusicRelease → Release). */
 export function mediaTypeDisplayName(mediaType: MediaType): string {
 	if (mediaType === MediaType.MusicRelease) {
-		return 'Album';
+		return 'Release';
 	}
 	return unCamelCase(mediaType);
 }
