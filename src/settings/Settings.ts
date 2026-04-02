@@ -125,6 +125,8 @@ export interface MediaDbPluginSettings {
 	artistAutomaticallyImportReleases: boolean;
 	/** When true, artist discography import nests albums and songs under artistFolder/ArtistName/… instead of using album/song import folders. */
 	artistUseFileTreeForSongs: boolean;
+	/** When true, each imported album also creates a note per track (standalone album import or artist discography). */
+	musicReleaseAutomaticallyImportSongs: boolean;
 	boardgameFolder: string;
 	bookFolder: string;
 
@@ -419,6 +421,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	songFolder: 'Media DB/music/songs',
 	artistAutomaticallyImportReleases: true,
 	artistUseFileTreeForSongs: false,
+	musicReleaseAutomaticallyImportSongs: true,
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
 
@@ -721,6 +724,20 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		this.renderMediaTypeSection(panel, byType(MediaType.MusicRelease), mediaTypeApiMap, {
 			sectionHeading: 'Album',
 			hideImportFolder: fileTree,
+			appendToSection: group => {
+				group.addSetting(
+					setting =>
+						void setting
+							.setName('Automatically Import Songs')
+							.setDesc('When importing an album (on its own or as part of an artist import), also create a note for each track.')
+							.addToggle(cb => {
+								cb.setValue(this.plugin.settings.musicReleaseAutomaticallyImportSongs).onChange(data => {
+									this.plugin.settings.musicReleaseAutomaticallyImportSongs = data;
+									void this.plugin.saveSettings();
+								});
+							}),
+				);
+			},
 		});
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
 		this.renderMediaTypeSection(panel, byType(MediaType.Song), mediaTypeApiMap, {

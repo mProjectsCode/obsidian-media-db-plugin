@@ -483,6 +483,10 @@ export default class MediaDbPlugin extends Plugin {
 			await this.importArtistDiscography(mediaTypeModel as ArtistModel, options);
 			return;
 		}
+		if (mediaTypeModel.getMediaType() === MediaType.MusicRelease) {
+			await this.importMusicReleaseWithOptionalSongs(mediaTypeModel as MusicReleaseModel, options);
+			return;
+		}
 
 		await this.createStandardMediaDbNoteFromModel(mediaTypeModel, options);
 	}
@@ -534,6 +538,144 @@ export default class MediaDbPlugin extends Plugin {
 			throw new Error(`MDB | Expected folder at ${normalized}`);
 		}
 		return folder;
+	}
+
+	private async importSongNotesForMusicReleaseTracks(
+		release: MusicReleaseModel,
+		geniusSearchArtist: string,
+		musicBrainzApi: MusicBrainzAPI,
+		genius: GeniusClient,
+		spotify: SpotifyClient,
+		childOptions: CreateNoteOptions,
+		useTree: boolean,
+		songNotesFolder: TFolder | undefined,
+	): Promise<void> {
+		for (const track of release.tracks) {
+			let lyrics = '';
+			let geniusUrl = '';
+			if (genius.isConfigured()) {
+				await new Promise(r => setTimeout(r, 500));
+				const hit = await genius.searchFirstSongHit(`${geniusSearchArtist} ${track.title}`);
+				if (hit) {
+					geniusUrl = hit.url;
+					await new Promise(r => setTimeout(r, 600));
+					lyrics = await genius.fetchLyricsFromSongPage(hit.url);
+				}
+			}
+
+			let spotifyUrl = '';
+			if (track.recordingId) {
+				await new Promise(r => setTimeout(r, 1100));
+				try {
+					spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(track.recordingId);
+				} catch (e) {
+					console.warn(`MDB | Spotify URL for recording ${track.recordingId}:`, e);
+				}
+			}
+			if (!spotifyUrl && spotify.isConfigured()) {
+				const primaryArtist = release.artists[0] ?? geniusSearchArtist;
+				console.log(`MDB | Spotify API fallback for track "${track.title}" (artist: ${primaryArtist})`);
+				try {
+					spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
+				} catch (e) {
+					console.warn(`MDB | Spotify search for "${track.title}":`, e);
+				}
+			}
+
+			const song = new SongModel({
+				type: 'song',
+				title: track.title,
+				englishTitle: track.title,
+				year: release.year,
+				releaseDate: release.releaseDate,
+				dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
+				url: geniusUrl || release.url,
+				id: `${release.id}-t${track.number}`,
+				image: release.image,
+				subType: 'song',
+				genres: release.genres ?? [],
+				artists: release.artists.length > 0 ? release.artists : [geniusSearchArtist],
+				albumTitle: release.title,
+				albumReleaseGroupId: release.id,
+				trackNumber: track.number,
+				duration: track.duration,
+				featuredArtists: track.featuredArtists,
+				geniusUrl,
+				spotifyUrl,
+				lyrics,
+				userData: { personalRating: 0 },
+			});
+
+			const songOpts: CreateNoteOptions = useTree && songNotesFolder ? { ...childOptions, folder: songNotesFolder } : { ...childOptions };
+
+			await this.createStandardMediaDbNoteFromModel(song, songOpts);
+		}
+	}
+
+	private async importMusicReleaseWithOptionalSongs(release: MusicReleaseModel, options: CreateNoteOptions): Promise<void> {
+		try {
+			const albumNotesFolder = options.folder ?? (await this.mediaTypeManager.getFolder(release, this.app));
+			const useTree = this.settings.artistUseFileTreeForSongs;
+			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
+
+			let songNotesFolder: TFolder | undefined;
+			if (useTree && importSongs) {
+				const albumSeg = this.safeFileTreeSegment(release.title);
+				songNotesFolder = await this.ensureVaultFolder(normalizePath(`${albumNotesFolder.path}/${albumSeg}`));
+			}
+
+			const albumCreated = await this.createStandardMediaDbNoteFromModel(release, { ...options, folder: albumNotesFolder });
+			if (!albumCreated) {
+				return;
+			}
+
+			if (!importSongs || release.tracks.length === 0) {
+				return;
+			}
+
+			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
+			if (!musicBrainzApi) {
+				new Notice('MusicBrainz API not available; song notes were skipped.');
+				console.warn('MusicBrainz API not available; song notes were skipped.');
+				return;
+			}
+
+			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
+			const genius = new GeniusClient(geniusToken);
+			if (!genius.isConfigured()) {
+				new Notice('Album import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+				console.warn('Album import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+			}
+
+			const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
+			const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
+			const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
+
+			const geniusSearchArtist = release.artists[0] ?? release.title;
+			const childOptions: CreateNoteOptions = {
+				attachTemplate: true,
+				openNote: false,
+				attachFile: undefined,
+				folder: undefined,
+			};
+
+			new Notice(`Importing ${release.tracks.length} tracks for ${release.title}…`);
+			console.log(`Importing ${release.tracks.length} tracks for ${release.title}…`);
+
+			await this.importSongNotesForMusicReleaseTracks(
+				release,
+				geniusSearchArtist,
+				musicBrainzApi,
+				genius,
+				spotify,
+				childOptions,
+				useTree,
+				songNotesFolder,
+			);
+		} catch (e) {
+			console.warn(e);
+			new Notice(`${e}`);
+		}
 	}
 
 	private async importArtistDiscography(artist: ArtistModel, options: CreateNoteOptions): Promise<void> {
@@ -595,8 +737,13 @@ export default class MediaDbPlugin extends Plugin {
 				return;
 			}
 
-			new Notice(`Importing ${releaseGroupIds.length} studio albums and tracks for ${artist.title}…`);
-			console.log(`Importing ${releaseGroupIds.length} studio albums and tracks for ${artist.title}…`);
+			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
+			new Notice(
+				`Importing ${releaseGroupIds.length} studio albums${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+			);
+			console.log(
+				`Importing ${releaseGroupIds.length} studio albums${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+			);
 
 			for (const rgId of releaseGroupIds) {
 				await new Promise(r => setTimeout(r, 1100));
@@ -610,7 +757,7 @@ export default class MediaDbPlugin extends Plugin {
 				}
 
 				let songNotesFolder: TFolder | undefined;
-				if (useTree) {
+				if (useTree && importSongs) {
 					const albumSeg = this.safeFileTreeSegment(release.title);
 					songNotesFolder = await this.ensureVaultFolder(normalizePath(`${albumNotesFolder.path}/${albumSeg}`));
 				}
@@ -622,66 +769,20 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
-				for (const track of release.tracks) {
-					let lyrics = '';
-					let geniusUrl = '';
-					if (genius.isConfigured()) {
-						await new Promise(r => setTimeout(r, 500));
-						const hit = await genius.searchFirstSongHit(`${artist.title} ${track.title}`);
-						if (hit) {
-							geniusUrl = hit.url;
-							await new Promise(r => setTimeout(r, 600));
-							lyrics = await genius.fetchLyricsFromSongPage(hit.url);
-						}
-					}
-
-					let spotifyUrl = '';
-					if (track.recordingId) {
-						await new Promise(r => setTimeout(r, 1100));
-						try {
-							spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(track.recordingId);
-						} catch (e) {
-							console.warn(`MDB | Spotify URL for recording ${track.recordingId}:`, e);
-						}
-					}
-					if (!spotifyUrl && spotify.isConfigured()) {
-						const primaryArtist = release.artists[0] ?? artist.title;
-						console.log(`MDB | Spotify API fallback for track "${track.title}" (artist: ${primaryArtist})`);
-						try {
-							spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
-						} catch (e) {
-							console.warn(`MDB | Spotify search for "${track.title}":`, e);
-						}
-					}
-
-					const song = new SongModel({
-						type: 'song',
-						title: track.title,
-						englishTitle: track.title,
-						year: release.year,
-						releaseDate: release.releaseDate,
-						dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
-						url: geniusUrl || release.url,
-						id: `${release.id}-t${track.number}`,
-						image: release.image,
-						subType: 'song',
-						genres: release.genres ?? [],
-						artists: release.artists.length > 0 ? release.artists : [artist.title],
-						albumTitle: release.title,
-						albumReleaseGroupId: release.id,
-						trackNumber: track.number,
-						duration: track.duration,
-						featuredArtists: track.featuredArtists,
-						geniusUrl,
-						spotifyUrl,
-						lyrics,
-						userData: { personalRating: 0 },
-					});
-
-					const songOpts: CreateNoteOptions = useTree && songNotesFolder ? { ...childOptions, folder: songNotesFolder } : { ...childOptions };
-
-					await this.createStandardMediaDbNoteFromModel(song, songOpts);
+				if (!importSongs) {
+					continue;
 				}
+
+				await this.importSongNotesForMusicReleaseTracks(
+					release,
+					artist.title,
+					musicBrainzApi,
+					genius,
+					spotify,
+					childOptions,
+					useTree,
+					songNotesFolder,
+				);
 			}
 
 			new Notice(`✅ Finished artist import for ${artist.title}.`);
