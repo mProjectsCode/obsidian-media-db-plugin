@@ -123,8 +123,6 @@ export interface MediaDbPluginSettings {
 	bookNoteType: string;
 	/** When true, importing an artist also creates album and song notes from their discography. */
 	artistAutomaticallyImportReleases: boolean;
-	/** When true, artist discography import nests albums and songs under artistFolder/ArtistName/… instead of using album/song import folders. */
-	artistUseFileTreeForSongs: boolean;
 	/** When true, each imported album also creates a note per track (standalone album import or artist discography). */
 	musicReleaseAutomaticallyImportSongs: boolean;
 	boardgameFolder: string;
@@ -420,7 +418,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	artistFolder: 'Media DB/artists',
 	songFolder: 'Media DB/music/songs',
 	artistAutomaticallyImportReleases: true,
-	artistUseFileTreeForSongs: false,
 	musicReleaseAutomaticallyImportSongs: true,
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
@@ -458,7 +455,9 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 export const lockedPropertyMappings: string[] = [];
 
 /** Forward-compatible hook for merging persisted settings with new defaults. */
-export function migrateLoadedPluginSettings(_settings: MediaDbPluginSettings): void {}
+export function migrateLoadedPluginSettings(settings: MediaDbPluginSettings): void {
+	delete (settings as unknown as Record<string, unknown>).artistUseFileTreeForSongs;
+}
 
 export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings {
 	const defaultSettings = DEFAULT_SETTINGS;
@@ -544,7 +543,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		mediaTypeApiMap: Map<MediaType, string[]>,
 		options?: {
 			sectionHeading?: string;
-			hideImportFolder?: boolean;
 			appendToSection?: (group: SettingGroup) => void;
 		},
 	): void {
@@ -557,13 +555,14 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 		const mediaTypeGroup = new SettingGroup(panel);
 
-		if (!options?.hideImportFolder) {
-			mediaTypeGroup.addSetting(
-				setting =>
-					void setting
-						.setName('Import folder')
-						.setDesc(`Where newly imported ${descNoun} notes should be placed.`)
-						.addSearch(cb => {
+		mediaTypeGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Import folder')
+					.setDesc(
+						`Supports template parameters.`,
+					)
+					.addSearch(cb => {
 							const suggester = new FolderSuggest(this.app, cb.inputEl);
 							suggester.onSelect(folder => {
 								cb.setValue(folder.path);
@@ -578,8 +577,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 									void this.plugin.saveSettings();
 								});
 						}),
-			);
-		}
+		);
 
 		mediaTypeGroup.addSetting(
 			setting =>
@@ -684,7 +682,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 	private renderMusicSettingsTab(panel: HTMLElement, mediaTypeSettings: MediaTypeMappedSettings[], mediaTypeApiMap: Map<MediaType, string[]>): void {
 		const byType = (mt: MediaType): MediaTypeMappedSettings => mediaTypeSettings.find(s => s.mediaType === mt)!;
-		const fileTree = this.plugin.settings.artistUseFileTreeForSongs;
 
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
 
@@ -703,27 +700,11 @@ export class MediaDbSettingTab extends PluginSettingTab {
 								});
 							}),
 				);
-				group.addSetting(
-					setting =>
-						void setting
-							.setName('Use file trees for songs')
-							.setDesc(
-								'Use a file tree hierarchy to store albums and songs for each artist.',
-							)
-							.addToggle(cb => {
-								cb.setValue(this.plugin.settings.artistUseFileTreeForSongs).onChange(data => {
-									this.plugin.settings.artistUseFileTreeForSongs = data;
-									void this.plugin.saveSettings();
-									this.display();
-								});
-							}),
-				);
 			},
 		});
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
 		this.renderMediaTypeSection(panel, byType(MediaType.MusicRelease), mediaTypeApiMap, {
 			sectionHeading: 'Album',
-			hideImportFolder: fileTree,
 			appendToSection: group => {
 				group.addSetting(
 					setting =>
@@ -742,7 +723,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
 		this.renderMediaTypeSection(panel, byType(MediaType.Song), mediaTypeApiMap, {
 			sectionHeading: 'Song',
-			hideImportFolder: fileTree,
 		});
 	}
 

@@ -524,22 +524,6 @@ export default class MediaDbPlugin extends Plugin {
 		}
 	}
 
-	private safeFileTreeSegment(title: string): string {
-		return replaceIllegalFileNameCharactersInString(title).replaceAll(/ +/g, ' ').trim();
-	}
-
-	private async ensureVaultFolder(folderPath: string): Promise<TFolder> {
-		const normalized = normalizePath(folderPath);
-		if (!(await this.app.vault.adapter.exists(normalized))) {
-			await this.app.vault.createFolder(normalized);
-		}
-		const folder = this.app.vault.getAbstractFileByPath(normalized);
-		if (!(folder instanceof TFolder)) {
-			throw new Error(`MDB | Expected folder at ${normalized}`);
-		}
-		return folder;
-	}
-
 	private async importSongNotesForMusicReleaseTracks(
 		release: MusicReleaseModel,
 		geniusSearchArtist: string,
@@ -547,8 +531,6 @@ export default class MediaDbPlugin extends Plugin {
 		genius: GeniusClient,
 		spotify: SpotifyClient,
 		childOptions: CreateNoteOptions,
-		useTree: boolean,
-		songNotesFolder: TFolder | undefined,
 	): Promise<void> {
 		for (const track of release.tracks) {
 			let lyrics = '';
@@ -606,23 +588,14 @@ export default class MediaDbPlugin extends Plugin {
 				userData: { personalRating: 0 },
 			});
 
-			const songOpts: CreateNoteOptions = useTree && songNotesFolder ? { ...childOptions, folder: songNotesFolder } : { ...childOptions };
-
-			await this.createStandardMediaDbNoteFromModel(song, songOpts);
+			await this.createStandardMediaDbNoteFromModel(song, { ...childOptions });
 		}
 	}
 
 	private async importMusicReleaseWithOptionalSongs(release: MusicReleaseModel, options: CreateNoteOptions): Promise<void> {
 		try {
 			const albumNotesFolder = options.folder ?? (await this.mediaTypeManager.getFolder(release, this.app));
-			const useTree = this.settings.artistUseFileTreeForSongs;
 			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
-
-			let songNotesFolder: TFolder | undefined;
-			if (useTree && importSongs) {
-				const albumSeg = this.safeFileTreeSegment(release.title);
-				songNotesFolder = await this.ensureVaultFolder(normalizePath(`${albumNotesFolder.path}/${albumSeg}`));
-			}
 
 			const albumCreated = await this.createStandardMediaDbNoteFromModel(release, { ...options, folder: albumNotesFolder });
 			if (!albumCreated) {
@@ -669,8 +642,6 @@ export default class MediaDbPlugin extends Plugin {
 				genius,
 				spotify,
 				childOptions,
-				useTree,
-				songNotesFolder,
 			);
 		} catch (e) {
 			console.warn(e);
@@ -680,7 +651,6 @@ export default class MediaDbPlugin extends Plugin {
 
 	private async importArtistDiscography(artist: ArtistModel, options: CreateNoteOptions): Promise<void> {
 		try {
-			const useTree = this.settings.artistUseFileTreeForSongs;
 			const childOptions: CreateNoteOptions = {
 				attachTemplate: true,
 				openNote: false,
@@ -688,15 +658,7 @@ export default class MediaDbPlugin extends Plugin {
 				folder: undefined,
 			};
 
-			const artistBaseFolder = await this.mediaTypeManager.getFolder(artist, this.app);
-			let artistNoteFolder = artistBaseFolder;
-			let albumNotesFolder = artistBaseFolder;
-
-			if (useTree) {
-				const artistSeg = this.safeFileTreeSegment(artist.title);
-				const treeRootPath = normalizePath(`${artistBaseFolder.path}/${artistSeg}`);
-				albumNotesFolder = await this.ensureVaultFolder(treeRootPath);
-			}
+			const artistNoteFolder = await this.mediaTypeManager.getFolder(artist, this.app);
 
 			const artistNoteCreated = await this.createStandardMediaDbNoteFromModel(artist, { ...options, folder: artistNoteFolder });
 			if (!artistNoteCreated) {
@@ -756,13 +718,7 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
-				let songNotesFolder: TFolder | undefined;
-				if (useTree && importSongs) {
-					const albumSeg = this.safeFileTreeSegment(release.title);
-					songNotesFolder = await this.ensureVaultFolder(normalizePath(`${albumNotesFolder.path}/${albumSeg}`));
-				}
-
-				const releaseOpts: CreateNoteOptions = useTree ? { ...childOptions, folder: albumNotesFolder } : { ...childOptions };
+				const releaseOpts: CreateNoteOptions = { ...childOptions };
 
 				const albumNoteCreated = await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
 				if (!albumNoteCreated) {
@@ -780,8 +736,6 @@ export default class MediaDbPlugin extends Plugin {
 					genius,
 					spotify,
 					childOptions,
-					useTree,
-					songNotesFolder,
 				);
 			}
 
