@@ -22,7 +22,10 @@ export function containsOnlyLettersAndUnderscores(str: string): boolean {
 }
 
 export function replaceIllegalFileNameCharactersInString(string: string): string {
-	return string.replace(/[\\,#%&{}/*<>$"@.?]*/g, '').replace(/:+/g, ' -');
+	return string
+		.replaceAll('&', 'and')
+		.replace(/[\\,#%{}/*<>$"@.?]*/g, '')
+		.replace(/:+/g, ' -');
 }
 
 export function replaceTags(template: string, mediaTypeModel: MediaTypeModel, ignoreUndefined: boolean = false): string {

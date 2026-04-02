@@ -11,4 +11,5 @@ export const ILLEGAL_FILENAME_CHARACTERS = [
 	['*', ''],
 	['^', ''],
 	['#', ''],
+	['&', 'and'],
 ];
