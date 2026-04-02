@@ -121,6 +121,8 @@ export interface MediaDbPluginSettings {
 	songNoteType: string;
 	boardgameNoteType: string;
 	bookNoteType: string;
+	/** When true, importing an artist also creates album and song notes from their discography. */
+	artistAutomaticallyImportReleases: boolean;
 	/** When true, artist discography import nests albums and songs under artistFolder/ArtistName/… instead of using album/song import folders. */
 	artistUseFileTreeForSongs: boolean;
 	boardgameFolder: string;
@@ -415,6 +417,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseFolder: 'Media DB/music',
 	artistFolder: 'Media DB/artists',
 	songFolder: 'Media DB/music/songs',
+	artistAutomaticallyImportReleases: true,
 	artistUseFileTreeForSongs: false,
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
@@ -685,6 +688,18 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		this.renderMediaTypeSection(panel, byType(MediaType.Artist), mediaTypeApiMap, {
 			sectionHeading: 'Artist',
 			appendToSection: group => {
+				group.addSetting(
+					setting =>
+						void setting
+							.setName('Automatically Import Releases')
+							.setDesc('When importing an artist, also create notes for their studio albums and tracks.')
+							.addToggle(cb => {
+								cb.setValue(this.plugin.settings.artistAutomaticallyImportReleases).onChange(data => {
+									this.plugin.settings.artistAutomaticallyImportReleases = data;
+									void this.plugin.saveSettings();
+								});
+							}),
+				);
 				group.addSetting(
 					setting =>
 						void setting

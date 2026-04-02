@@ -538,23 +538,6 @@ export default class MediaDbPlugin extends Plugin {
 
 	private async importArtistDiscography(artist: ArtistModel, options: CreateNoteOptions): Promise<void> {
 		try {
-			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
-			const genius = new GeniusClient(geniusToken);
-			if (!genius.isConfigured()) {
-				new Notice('Artist import: add a Genius API access token in settings to fetch lyrics.');
-			}
-
-			const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
-			const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
-			const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
-
-			const artistApi = this.apiManager.getApiByName('MusicBrainz Artist API') as MusicBrainzArtistAPI | undefined;
-			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
-			if (!artistApi || !musicBrainzApi) {
-				new Notice('MusicBrainz APIs not available.');
-				return;
-			}
-
 			const useTree = this.settings.artistUseFileTreeForSongs;
 			const childOptions: CreateNoteOptions = {
 				attachTemplate: true,
@@ -578,15 +561,42 @@ export default class MediaDbPlugin extends Plugin {
 				return;
 			}
 
+			if (!this.settings.artistAutomaticallyImportReleases) {
+				new Notice(`✅ Finished artist import for ${artist.title}.`);
+				console.log(`✅ Finished artist import for ${artist.title}.`);
+				return;
+			}
+
+			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
+			const genius = new GeniusClient(geniusToken);
+			if (!genius.isConfigured()) {
+				new Notice('Artist import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+				console.warn('Artist import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+			}
+
+			const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
+			const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
+			const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
+
+			const artistApi = this.apiManager.getApiByName('MusicBrainz Artist API') as MusicBrainzArtistAPI | undefined;
+			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
+			if (!artistApi || !musicBrainzApi) {
+				new Notice('MusicBrainz APIs not available.');
+				console.warn('MusicBrainz APIs not available.');
+				return;
+			}
+
 			let releaseGroupIds: string[];
 			try {
 				releaseGroupIds = await artistApi.listStudioAlbumReleaseGroupIds(artist.id);
 			} catch (e) {
 				new Notice(`Could not load albums: ${e}`);
+				console.log(`Could not load albums: ${e}`);
 				return;
 			}
 
 			new Notice(`Importing ${releaseGroupIds.length} studio albums and tracks for ${artist.title}…`);
+			console.log(`Importing ${releaseGroupIds.length} studio albums and tracks for ${artist.title}…`);
 
 			for (const rgId of releaseGroupIds) {
 				await new Promise(r => setTimeout(r, 1100));
@@ -674,7 +684,8 @@ export default class MediaDbPlugin extends Plugin {
 				}
 			}
 
-			new Notice(`Finished artist import for ${artist.title}.`);
+			new Notice(`✅ Finished artist import for ${artist.title}.`);
+			console.log(`✅ Finished artist import for ${artist.title}.`);
 		} catch (e) {
 			console.warn(e);
 			new Notice(`${e}`);
