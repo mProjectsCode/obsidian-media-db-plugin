@@ -603,6 +603,8 @@ export default class MediaDbPlugin extends Plugin {
 			}
 
 			if (!importSongs || release.tracks.length === 0) {
+				new Notice(`✅ Finished music release import for ${release.title}.`);
+				console.log(`✅ Finished music release import for ${release.title}.`);
 				return;
 			}
 
@@ -643,6 +645,9 @@ export default class MediaDbPlugin extends Plugin {
 				spotify,
 				childOptions,
 			);
+
+			new Notice(`✅ Finished music release import for ${release.title}.`);
+			console.log(`✅ Finished music release import for ${release.title}.`);
 		} catch (e) {
 			console.warn(e);
 			new Notice(`${e}`);
@@ -838,6 +843,20 @@ export default class MediaDbPlugin extends Plugin {
 		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
 		const fileMetadata = this.modelPropertyMapper.convertObject(this.metadataRecordForNewNote(mediaTypeModel));
 		return stringifyYaml(fileMetadata);
+	}
+
+	/**
+	 * Vault-relative path where a new note for this model would be written, using the same folder templates,
+	 * tag expansion, and filename rules as {@link createNote} (folders are not created on disk).
+	 */
+	getResolvedImportPath(mediaTypeModel: MediaTypeModel): string {
+		let folderPath = this.mediaTypeManager.mediaFolderMap.get(mediaTypeModel.getMediaType()) ?? '/';
+		folderPath = this.mediaTypeManager.expandFolderPathForModel(folderPath, mediaTypeModel);
+		let fileName = this.mediaTypeManager.getFileName(mediaTypeModel);
+		fileName = replaceIllegalFileNameCharactersInString(fileName);
+		const dir = folderPath.replace(/^\/+|\/+$/g, '');
+		const relative = dir.length > 0 ? `${dir}/${fileName}.md` : `${fileName}.md`;
+		return normalizePath(relative);
 	}
 
 	/**

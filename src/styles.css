@@ -74,6 +74,15 @@ small.media-db-plugin-list-text {
 	padding: var(--size-4-4);
 }
 
+.media-db-plugin-preview-import-path {
+	margin-top: var(--size-4-2);
+}
+
+/* Obsidian adds a copy control on rendered code blocks; hide it only in this modal. */
+.media-db-plugin-preview button.copy-code-button {
+	display: none;
+}
+
 /* Icon Component Styles */
 .icon-wrapper {
 	display: inline-block;
