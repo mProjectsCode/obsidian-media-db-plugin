@@ -47,10 +47,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 	// Renders each suggestion item.
 	renderElement(item: MediaTypeModel, el: HTMLElement): void {
-		el.addClass('media-db-plugin-select-element-flex');
-		el.style.display = 'flex';
-		el.style.gap = '8px';
-		el.style.alignItems = 'flex-start';
+		el.addClass('media-db-list-item-flex');
 
 		const thumb = el.createDiv({ cls: 'media-db-plugin-select-thumb' });
 

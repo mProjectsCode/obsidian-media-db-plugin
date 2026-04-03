@@ -533,3 +533,19 @@ small.media-db-plugin-list-text {
 	justify-content: flex-end;
 	padding-top: 12px;
 }
+
+/* ── Modals Inline Style Replacements ─────────────────────────────── */
+
+.media-db-list-item-flex {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+}
+
+.media-db-list-item-thumb {
+	background: var(--background-modifier-hover);
+	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

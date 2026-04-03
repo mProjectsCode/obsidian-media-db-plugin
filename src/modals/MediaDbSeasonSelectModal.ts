@@ -24,20 +24,13 @@ export class MediaDbSeasonSelectModal extends SelectModal<SeasonSelectModalEleme
 	}
 
 	renderElement(season: SeasonSelectModalElement, el: HTMLElement): void {
-		el.style.display = 'flex';
-		el.style.gap = '8px';
-		el.style.alignItems = 'flex-start';
+		el.addClass('media-db-list-item-flex');
 
-		const thumb = el.createDiv();
+		const thumb = el.createDiv({ cls: 'media-db-list-item-thumb' });
 		thumb.style.width = '48px';
 		thumb.style.height = '72px';
 		thumb.style.flex = '0 0 48px';
 		thumb.style.overflow = 'hidden';
-		thumb.style.background = 'var(--background-modifier-hover)';
-		thumb.style.borderRadius = '4px';
-		thumb.style.display = 'flex';
-		thumb.style.alignItems = 'center';
-		thumb.style.justifyContent = 'center';
 
 		if (season.poster_path) {
 			const img = document.createElement('img');

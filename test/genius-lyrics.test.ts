@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { extractLyricsFromGeniusHtml } from '../src/api/geniusLyricsExtract';
+import { extractLyricsFromGeniusHtml } from '../src/api/helpers/geniusLyricsExtract';
 
 describe('extractLyricsFromGeniusHtml', () => {
 	test('keeps all lines when lyrics use nested divs (balanced extraction)', () => {

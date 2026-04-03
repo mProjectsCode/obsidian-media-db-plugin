@@ -4,6 +4,7 @@ import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { MediaType } from '../utils/MediaType';
 import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from '../utils/noteTypeSettings';
 import { coerceYear } from '../utils/Utils';
+import { artistTitleWikilink, songAlbumTitleWikilink } from '../utils/musicFormatHelper';
 import { PropertyMappingOption } from './PropertyMapping';
 
 export class PropertyMapper {
@@ -63,9 +64,9 @@ export class PropertyMapper {
 
 					if (typeof value === 'string') {
 						if (useArtistFileNameForArtists) {
-							finalValue = this.artistTitleWikilink(value);
+							finalValue = artistTitleWikilink(value, this.plugin);
 						} else if (useMusicReleaseFileNameForAlbumTitle) {
-							finalValue = this.songAlbumTitleWikilink(value, obj);
+							finalValue = songAlbumTitleWikilink(value, obj, this.plugin);
 						} else {
 							finalValue = `[[${value}]]`;
 						}
@@ -75,10 +76,10 @@ export class PropertyMapper {
 								return v;
 							}
 							if (useArtistFileNameForArtists) {
-								return this.artistTitleWikilink(v);
+								return artistTitleWikilink(v, this.plugin);
 							}
 							if (useMusicReleaseFileNameForAlbumTitle) {
-								return this.songAlbumTitleWikilink(v, obj);
+								return songAlbumTitleWikilink(v, obj, this.plugin);
 							}
 							return `[[${v}]]`;
 						});
@@ -247,68 +248,5 @@ export class PropertyMapper {
 		return originalObj;
 	}
 
-	/**
-	 * Wikilink for an artist name using the Artist file name template as the link target and the raw artist title as the display alias.
-	 */
-	private artistTitleWikilink(artistTitle: string): string {
-		const title = artistTitle.trim();
-		const artistModel = new ArtistModel({
-			type: 'artist',
-			title,
-			englishTitle: title,
-			year: 0,
-			beginYear: '',
-			releaseDate: '',
-			dataSource: '',
-			url: '',
-			id: '',
-			country: '',
-			disambiguation: '',
-			isni: '',
-			genres: [],
-			image: '',
-			officialWebsite: '',
-			subType: 'artist',
-			userData: { personalRating: 0 },
-		});
-		const linkTarget = this.plugin.mediaTypeManager.getFileName(artistModel);
-		if (linkTarget === title) {
-			return `[[${linkTarget}]]`;
-		}
-		return `[[${linkTarget}|${title}]]`;
-	}
-
-	/**
-	 * Wikilink for a song's release title using the Music Release file name template; fills artists/year from the song metadata when present.
-	 */
-	private songAlbumTitleWikilink(albumTitle: string, songMeta: Record<string, unknown>): string {
-		const title = albumTitle.trim();
-		const artistsRaw = songMeta.artists;
-		const artists = Array.isArray(artistsRaw)
-			? artistsRaw.filter((a): a is string => typeof a === 'string')
-			: [];
-		const year = coerceYear(songMeta.year);
-		const releaseModel = new MusicReleaseModel({
-			type: 'musicRelease',
-			title,
-			englishTitle: title,
-			year,
-			releaseDate: '',
-			dataSource: '',
-			url: '',
-			id: '',
-			image: '',
-			artists,
-			genres: [],
-			subType: 'album',
-			language: '',
-			rating: 0,
-			userData: { personalRating: 0 },
-		});
-		const linkTarget = this.plugin.mediaTypeManager.getFileName(releaseModel);
-		if (linkTarget === title) {
-			return `[[${linkTarget}]]`;
-		}
-		return `[[${linkTarget}|${title}]]`;
-	}
+	// --- Helper logic removed to src/utils/musicFormatHelper.ts per developer feedback ---
 }

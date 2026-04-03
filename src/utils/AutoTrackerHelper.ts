@@ -78,7 +78,7 @@ export class AutoTrackerHelper {
 
 		new CompletionModal(this.plugin.app, {
 			title: 'Auto Tracker Complete',
-			icon: '🎯',
+			icon: 'target',
 			total: filesToUpdate.length,
 			success: successCount,
 			errors: failCount,

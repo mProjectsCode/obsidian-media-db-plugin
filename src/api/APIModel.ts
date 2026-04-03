@@ -29,17 +29,17 @@ export abstract class APIModel {
 		return types.some(type => this.hasType(type));
 	}
 
+	canHandleDataSource(dataSource: string, _mediaType?: MediaType): boolean {
+		return this.apiName === dataSource;
+	}
+
 	/**
 	 * Returns the wiki-link string for a given property value.
-	 * Subclasses can override this to apply API-specific file name templates
-	 * (e.g. using an Artist file name for artist links).
 	 *
-	 * @param _property  the property key (e.g. 'artists', 'albumTitle')
 	 * @param value      the raw string value to wrap
-	 * @param _obj       the full metadata object (for context)
 	 * @param folderPrefix  the wiki-link folder prefix (e.g. 'Media DB/wiki/')
 	 */
-	wikilinkValueFor(_property: string, value: string, _obj: Record<string, unknown>, folderPrefix: string): string {
+	wikilinkValueFor(value: string, folderPrefix: string): string {
 		const clean = value
 			.replace(/^\[\[(.*?)\]\]$/, '$1')
 			.split('|')

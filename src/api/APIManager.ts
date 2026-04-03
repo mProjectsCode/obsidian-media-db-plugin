@@ -2,7 +2,6 @@ import { Notice } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import type { MediaType } from '../utils/MediaType';
 import type { APIModel } from './APIModel';
-import { isMusicBrainzFamilyDataSource, musicBrainzRegisteredApiName, MUSICBRAINZ_NOTE_DATA_SOURCE } from './musicBrainzConstants';
 
 export class APIManager {
 	apis: APIModel[];
@@ -54,34 +53,16 @@ export class APIManager {
 	 * @param mediaType When set with a MusicBrainz family dataSource, selects which MusicBrainz API handles {@link getById}.
 	 */
 	async queryDetailedInfoById(id: string, apiName: string, mediaType?: MediaType): Promise<MediaTypeModel | undefined> {
-		const trimmed = apiName.trim();
-		const effectiveApiName = trimmed === '' && mediaType !== undefined && musicBrainzRegisteredApiName(mediaType) ? MUSICBRAINZ_NOTE_DATA_SOURCE : trimmed || apiName;
+		const effectiveApiName = apiName.trim() || apiName;
 
-		if (isMusicBrainzFamilyDataSource(effectiveApiName) && mediaType !== undefined) {
-			const registeredName = musicBrainzRegisteredApiName(mediaType);
-			if (registeredName) {
-				const api = this.getApiByName(registeredName);
-				if (api) {
-					try {
-						return await api.getById(id);
-					} catch (e) {
-						new Notice(`Error querying ${api.apiName}: ${e}`);
-						console.warn(e);
-
-						return undefined;
-					}
-				}
-			}
-		}
-
+		// Delegate to each registered API — APIs override canHandleDataSource() for special logic
 		for (const api of this.apis) {
-			if (api.apiName === effectiveApiName) {
+			if (api.canHandleDataSource(effectiveApiName, mediaType)) {
 				try {
-					return api.getById(id);
+					return await api.getById(id);
 				} catch (e) {
 					new Notice(`Error querying ${api.apiName}: ${e}`);
 					console.warn(e);
-
 					return undefined;
 				}
 			}

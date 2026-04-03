@@ -1,6 +1,6 @@
 import { requestUrl } from 'obsidian';
 import { contactEmail, mediaDbVersion, pluginName } from '../utils/Utils';
-import { extractLyricsFromGeniusHtml } from './geniusLyricsExtract';
+import { extractLyricsFromGeniusHtml } from './helpers/geniusLyricsExtract';
 
 interface GeniusSearchHit {
 	result: {
@@ -16,8 +16,6 @@ interface GeniusSearchResponse {
 		hits: GeniusSearchHit[];
 	};
 }
-
-export { extractLyricsFromGeniusHtml };
 
 export class GeniusClient {
 	private readonly accessToken: string | undefined;

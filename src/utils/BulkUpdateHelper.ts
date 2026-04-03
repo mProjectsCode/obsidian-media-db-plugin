@@ -53,7 +53,7 @@ export class BulkUpdateHelper {
 
 			new CompletionModal(this.plugin.app, {
 				title: 'Bulk Update Complete',
-				icon: '🔄',
+				icon: 'refresh-cw',
 				total: mediaFiles.length,
 				success: successCount,
 				errors: failCount,

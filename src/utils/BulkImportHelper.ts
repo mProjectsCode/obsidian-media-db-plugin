@@ -89,7 +89,7 @@ export class BulkImportHelper {
 		const total = successCount + erroredFiles.length;
 		new CompletionModal(this.plugin.app, {
 			title: 'Bulk Import Complete',
-			icon: '📥',
+			icon: 'folder-down',
 			total,
 			success: successCount,
 			errors: erroredFiles.filter(e => !e.canceled).length,

@@ -89,6 +89,13 @@ export class MusicBrainzArtistAPI extends APIModel {
 		this.types = [MediaType.Artist];
 	}
 
+	canHandleDataSource(dataSource: string, mediaType?: import('../../utils/MediaType').MediaType): boolean {
+		if (dataSource.contains('MusicBrainz')) {
+			return mediaType === MediaType.Artist;
+		}
+		return dataSource === this.apiName;
+	}
+
 	private mbHeaders(): Record<string, string> {
 		return {
 			'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,

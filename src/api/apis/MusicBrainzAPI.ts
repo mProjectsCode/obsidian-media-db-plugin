@@ -109,6 +109,13 @@ export class MusicBrainzAPI extends APIModel {
 		this.types = [MediaType.MusicRelease];
 	}
 
+	canHandleDataSource(dataSource: string, mediaType?: import('../../utils/MediaType').MediaType): boolean {
+		if (dataSource.contains('MusicBrainz')) {
+			return mediaType === MediaType.MusicRelease || mediaType === MediaType.Song;
+		}
+		return dataSource === this.apiName;
+	}
+
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
