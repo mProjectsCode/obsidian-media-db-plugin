@@ -81,8 +81,7 @@ export class CompletionModal extends Modal {
 	}
 
 	private addStatRow(container: HTMLElement, iconIcon: string, label: string, value: string, cls?: string): void {
-		const row = container.createEl('div', { cls: 'mdb-completion-row media-db-list-item-flex' });
-		row.style.alignItems = 'center';
+		const row = container.createEl('div', { cls: 'mdb-completion-row' });
 		const iconEl = row.createEl('span', { cls: 'mdb-completion-row-icon' });
 		setIcon(iconEl, iconIcon);
 		row.createEl('span', { cls: 'mdb-completion-label', text: label });
