@@ -44,76 +44,36 @@ I also published my own templates [here](https://github.com/mProjectsCode/obsidi
 
 The plugin offers a setting to automatically download the poster images for a new media, ensuring offline access. The images are saved as `type_title (year)` e.g. `movie_The Perfect Storm (2000)`, in a user-chosen folder.
 
-#### Metadata field customization
+#### Property Mapping & Customization
 
-Allows you to rename the metadata fields this plugin generates through mappings. The mappings can be set in the plugin's settings.
-The three options for mapping are:
+The plugin allows you to completely reorganize and customize how metadata fields are generated into your Obsidian notes. In the plugin settings, you can edit mappings with the following granular controls:
 
-- `default`: Keep the original name
-- `remap`: Rename the property
-- `remove`: Removes the property entirely
+- **Mapping Types**: Choose to keep original names (`default`), rename properties (`remap`), or skip them entirely (`remove`).
+- **Drag & Drop Ordering**: Easily drag and rearrange properties to dictate their exact output order in your frontmatter.
+- **Wikilink**: Convert specific properties into safe `[[Wiki-links]]` directly within the frontmatter.
+- **Pin to Bottom**: Pin specific properties to the absolute bottom of the frontmatter. If multiple properties are pinned, they strictly follow your drag-and-drop order.
+- **Auto-Tagging**: Dynamically convert property values into Obsidian tags, complete with a custom nested prefix input box (e.g., configuring `genres` to generate `#genre/action`).
 
-#### Bulk Import
+#### Bulk Operations
 
-The plugin allows you to import your preexisting media collection and upgrade it to Media DB entries.
+The plugin offers powerful bulk actions accessible via right-clicking a folder or the left-side Ribbon:
 
-##### Prerequisites
+- **Bulk Download Images**: Automatically downloads and stores remote poster images locally for all notes in a folder.
+- **Bulk Update Metadata**: Refresh API data for multiple existing notes at once.
+- **Bulk Recreate Metadata**: Features two unique modes: **Reset** (completely wipes and reconstructs the metadata) and **Safe** (preserves your manual text/content while safely reorganizing properties to match your latest mapping layout).
+- **Import Folder as Media**: Convert a folder of basic notes (e.g. from a CSV import) into rich Media DB entries by searching their titles.
 
-The preexisting media notes must be inside a folder in your vault.
-For the plugin to be able to query them, they need one metadata field that is used as the title the piece of media is searched by.
-This can be achieved by, for example, using a `csv` import plugin to import an existing list from outside of Obsidian.
+#### Auto-Tracker Engine
 
-##### Importing
+An automated tracking system that periodically checks for `airing` and `released` state changes of your ongoing media (Series, Games, Movies, etc.).
 
-To start the import process, right-click on the folder and select the `Import folder as Media DB entries` option.
-Then specify the API to search, if the current note content and metadata should be appended to the Media DB entry, and the name of the metadata field that contains the title of the piece of media.
+- The tracker scans on Obsidian startup or can be triggered manually via the Ribbon icon or bulk menus.
+- **Custom Statuses**: You can customize the exact keywords the plugin looks for (e.g., matching your personalized vocabulary for "Airing", "Released", or "Upcoming") in the Settings panel.
+- Includes a sophisticated **Emergency Abort Mechanism**: You can cancel any ongoing bulk update or background tracker safely at any time.
 
-Then the plugin will go through every file in the folder and prompt you to select from the search results.
+#### Intelligent Ghost Tag Purging
 
-##### Post import
-
-After all files have been imported or the import was canceled, you will find the new entries as well as an error report that contains any errors or skipped/canceled files in the folder specified in the setting of the plugin.
-
-#### Intelligent Wiki-Link Generation
-
-Automatically format specific metadata fields into Obsidian Wiki-Links based on a customizable whitelist.
-
-- You can specify comma-separated properties (like `genres, publishers, storefront`) in the plugin settings.
-- The plugin will parse both API-fetched arrays and your own custom manual properties, formatting them safely as `[[folder/value|value]]`.
-- If you disable the feature later, updating the note will cleanly strip the brackets and revert the entries back to plain text.
-
-#### Auto-Tagging Engine & Ghost Tag Purging
-
-Generate clean, sanitized hashtags automatically (e.g. `#role-playing-rpg`) from mapped array properties or Wiki-Links.
-
-- The engine creates tags without destroying any manual tags you have explicitly typed into your notes.
-- **Ghost Tag Purging**: Whenever a piece of media updates (e.g. a game's genre changes on IGDB), the plugin intelligently calculates which old tags it previously generated and safely removes them, leaving your manual user tags perfectly preserved.
-
-#### Background Auto-Tracker
-
-An automated, non-blocking background scanner that actively searches your vault for ongoing series (Airing) or unreleased games/movies and queues them for silent metadata updates.
-
-- Scans trigger once on Obsidian startup or can be triggered manually from the left ribbon.
-- Includes a sophisticated **Emergency Abort Mechanism**: At any point during a bulk process or background tracker queue, you can click the Ribbon Icon or use the `Cancel All Updates` button inside the Overwrite Modal to instantly halt the entire queue gracefully without restarting Obsidian.
-
-The plugin allows you to import your preexisting media collection and upgrade it to Media DB entries.
-
-##### Prerequisites
-
-The preexisting media notes must be inside a folder in your vault.
-For the plugin to be able to query them, they need one metadata field that is used as the title the piece of media is searched by.
-This can be achieved by, for example, using a `csv` import plugin to import an existing list from outside of Obsidian.
-
-##### Importing
-
-To start the import process, right-click on the folder and select the `Import folder as Media DB entries` option.
-Then specify the API to search, if the current note content and metadata should be appended to the Media DB entry, and the name of the metadata field that contains the title of the piece of media.
-
-Then the plugin will go through every file in the folder and prompt you to select from the search results.
-
-##### Post import
-
-After all files have been imported or the import was canceled, you will find the new entries as well as an error report that contains any errors or skipped/canceled files in the folder specified in the setting of the plugin.
+The plugin's granular Auto-Tag generator is strictly non-destructive. Whenever a piece of media updates (e.g., a game's genre changes on the API), the plugin intelligently calculates which old tags it previously auto-generated and safely removes only those, leaving any manual tags you typed yourself perfectly preserved!
 
 ### How to install
 
