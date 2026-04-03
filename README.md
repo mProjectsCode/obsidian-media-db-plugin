@@ -69,7 +69,6 @@ An automated tracking system that periodically checks for `airing` and `released
 
 - The tracker scans on Obsidian startup or can be triggered manually via the Ribbon icon or bulk menus.
 - **Custom Statuses**: You can customize the exact keywords the plugin looks for (e.g., matching your personalized vocabulary for "Airing", "Released", or "Upcoming") in the Settings panel.
-- Includes a sophisticated **Emergency Abort Mechanism**: You can cancel any ongoing bulk update or background tracker safely at any time.
 
 #### Intelligent Ghost Tag Purging
 
