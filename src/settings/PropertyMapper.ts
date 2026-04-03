@@ -4,7 +4,6 @@ import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { MediaType } from '../utils/MediaType';
 import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from '../utils/noteTypeSettings';
 import { coerceYear } from '../utils/Utils';
-import { artistTitleWikilink, songAlbumTitleWikilink } from '../utils/musicFormatHelper';
 import { PropertyMappingOption } from './PropertyMapping';
 
 export class PropertyMapper {
@@ -56,30 +55,12 @@ export class PropertyMapper {
 
 				let finalValue = value;
 				if (propertyMapping.wikilink) {
-					const useArtistFileNameForArtists =
-						propertyMapping.property === 'artists' &&
-						(internalMediaType === MediaType.Song || internalMediaType === MediaType.MusicRelease);
-					const useMusicReleaseFileNameForAlbumTitle =
-						propertyMapping.property === 'albumTitle' && internalMediaType === MediaType.Song;
-
 					if (typeof value === 'string') {
-						if (useArtistFileNameForArtists) {
-							finalValue = artistTitleWikilink(value, this.plugin);
-						} else if (useMusicReleaseFileNameForAlbumTitle) {
-							finalValue = songAlbumTitleWikilink(value, obj, this.plugin);
-						} else {
-							finalValue = `[[${value}]]`;
-						}
+						finalValue = `[[${value}]]`;
 					} else if (Array.isArray(value)) {
 						finalValue = value.map((v: unknown) => {
 							if (typeof v !== 'string') {
 								return v;
-							}
-							if (useArtistFileNameForArtists) {
-								return artistTitleWikilink(v, this.plugin);
-							}
-							if (useMusicReleaseFileNameForAlbumTitle) {
-								return songAlbumTitleWikilink(v, obj, this.plugin);
 							}
 							return `[[${v}]]`;
 						});
