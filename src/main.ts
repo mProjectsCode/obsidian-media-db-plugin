@@ -157,9 +157,14 @@ export default class MediaDbPlugin extends Plugin {
 									.setTitle('Start Auto-Tracker in Folder')
 									.setIcon('sync')
 									.onClick(() => {
-										new BulkUpdateConfirmModal(this.app, (silentUpdate: boolean) => {
-											this.autoTrackerHelper.startBackgroundScan(silentUpdate, file);
-										}).open();
+										new BulkUpdateConfirmModal(
+											this.app,
+											(silentUpdate: boolean) => {
+												this.autoTrackerHelper.startBackgroundScan(silentUpdate, file);
+											},
+											'Auto Tracker Sync',
+											'You are about to scan and automatically update Airing/Released status for tracked media in this folder.'
+										).open();
 									}),
 							);
 							sub.addItem((subItem: any) =>
@@ -1426,9 +1431,14 @@ export default class MediaDbPlugin extends Plugin {
 				if (this.autoTrackerHelper.isScanning) {
 					new Notice('Auto-Tracker is currently syncing in the background.');
 				} else {
-					new BulkUpdateConfirmModal(this.app, (silentUpdate: boolean) => {
-						this.autoTrackerHelper.startBackgroundScan(silentUpdate);
-					}).open();
+					new BulkUpdateConfirmModal(
+						this.app,
+						(silentUpdate: boolean) => {
+							this.autoTrackerHelper.startBackgroundScan(silentUpdate);
+						},
+						'Auto Tracker Sync',
+						'You are about to scan and automatically update Airing/Released status for tracked media across your vault.'
+					).open();
 				}
 			});
 			this._ribbonEl.addClass('obsidian-media-db-plugin-ribbon-class');

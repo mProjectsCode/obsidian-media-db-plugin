@@ -4,16 +4,25 @@ import {  Modal, Setting } from 'obsidian';
 export class BulkUpdateConfirmModal extends Modal {
 	onSubmit: (silent: boolean) => void;
 	silentUpdate: boolean = false;
+	customTitle: string;
+	customDesc: string;
 
-	constructor(app: App, onSubmit: (silent: boolean) => void) {
+	constructor(
+		app: App, 
+		onSubmit: (silent: boolean) => void,
+		customTitle: string = 'Bulk Update Metadata',
+		customDesc: string = 'You are about to scan and update metadata for notes in this folder.'
+	) {
 		super(app);
 		this.onSubmit = onSubmit;
+		this.customTitle = customTitle;
+		this.customDesc = customDesc;
 	}
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.createEl('h2', { text: 'Bulk Update Metadata' });
-		contentEl.createEl('p', { text: 'You are about to scan and update metadata for notes in this folder.' });
+		contentEl.createEl('h2', { text: this.customTitle });
+		contentEl.createEl('p', { text: this.customDesc });
 
 		new Setting(contentEl)
 			.setName('Update Silently (No Confirmations)')
