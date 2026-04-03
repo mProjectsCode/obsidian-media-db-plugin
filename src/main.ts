@@ -179,7 +179,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'media-db-bulk-import-active-file-folder',
-			name: 'Media DB: Bulk Import Folder (Active Context)',
+			name: 'Bulk Import Folder (Active Context)',
 			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile?.parent) return false;
@@ -190,7 +190,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'media-db-bulk-recreate-active-file-folder',
-			name: 'Media DB: Bulk Recreate Notes (Active Context)',
+			name: 'Bulk Recreate Notes (Active Context)',
 			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile?.parent) return false;
@@ -201,7 +201,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'media-db-bulk-update-active-file-folder',
-			name: 'Media DB: Bulk Update Metadata (Active Context)',
+			name: 'Bulk Update Metadata (Active Context)',
 			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile?.parent) return false;
@@ -212,7 +212,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'media-db-download-images-active-file-folder',
-			name: 'Media DB: Download images in folder (Active Context)',
+			name: 'Download images in folder (Active Context)',
 			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile?.parent) return false;
@@ -223,7 +223,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'media-db-download-images-active-note',
-			name: 'Media DB: Download images in active note',
+			name: 'Download images in active note',
 			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile?.extension !== 'md') return false;
@@ -234,7 +234,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'media-db-manual-sync-auto-tracker',
-			name: 'Media DB: Force Auto-Tracker Background Scan',
+			name: 'Force Auto-Tracker Background Scan',
 			callback: () => this.autoTrackerHelper.startBackgroundScan(false),
 		});
 
@@ -265,7 +265,7 @@ export default class MediaDbPlugin extends Plugin {
 		// register command to update the open note
 		this.addCommand({
 			id: 'update-media-db-note',
-			name: 'Update open note (this will recreate the note)',
+			name: 'Recreate open note (Reset mode)',
 			checkCallback: (checking: boolean) => {
 				if (!this.app.workspace.getActiveFile()) {
 					return false;
@@ -278,13 +278,27 @@ export default class MediaDbPlugin extends Plugin {
 		});
 		this.addCommand({
 			id: 'update-media-db-note-metadata',
-			name: 'Update metadata',
+			name: 'Recreate open note (Safe mode)',
 			checkCallback: (checking: boolean) => {
 				if (!this.app.workspace.getActiveFile()) {
 					return false;
 				}
 				if (!checking) {
-					void this.updateActiveNote(true);
+					void this.updateActiveNote(true, false);
+				}
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: 'update-media-db-note-legacy',
+			name: 'Update metadata (Keep current property order)',
+			checkCallback: (checking: boolean) => {
+				if (!this.app.workspace.getActiveFile()) {
+					return false;
+				}
+				if (!checking) {
+					void this.updateActiveNote(true, true);
 				}
 				return true;
 			},
@@ -1101,7 +1115,7 @@ export default class MediaDbPlugin extends Plugin {
 		let fileContent = '';
 		template = options.attachTemplate ? template : '';
 
-		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
+		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile, options.preservePropertyOrder));
 		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 
 		// --- Global Wiki-Link Post-Processing (for Custom/Manual Properties) ---
@@ -1226,7 +1240,7 @@ export default class MediaDbPlugin extends Plugin {
 		return allTags.map(t => String(t).trim()).filter(t => t && !autoTagValues.has(t.toLowerCase()) && !t.toLowerCase().startsWith('mediadb/'));
 	}
 
-	async attachFile(fileMetadata: Metadata, fileContent: string, fileToAttach?: TFile): Promise<{ fileMetadata: Metadata; fileContent: string }> {
+	async attachFile(fileMetadata: Metadata, fileContent: string, fileToAttach?: TFile, preservePropertyOrder?: boolean): Promise<{ fileMetadata: Metadata; fileContent: string }> {
 		if (!fileToAttach) {
 			return { fileMetadata: fileMetadata, fileContent: fileContent };
 		}
@@ -1245,8 +1259,22 @@ export default class MediaDbPlugin extends Plugin {
 		const oldManualTags = this.extractManualTags(attachFileMetadata, autoTagEntries);
 		const oldAliases = rescueArray('aliases');
 
-		// TODO: better object merging
-		fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
+		if (preservePropertyOrder) {
+			// Messy legacy behavior: old attachFileMetadata acts as the base, preserving its currently unordered key layout
+			fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
+		} else {
+			// Enforce strict property order from the new mapping
+			const orderedMetadata: Record<string, unknown> = {};
+			for (const key of Object.keys(fileMetadata)) {
+				orderedMetadata[key] = fileMetadata[key];
+			}
+			for (const [key, value] of Object.entries(attachFileMetadata)) {
+				if (!(key in orderedMetadata)) {
+					orderedMetadata[key] = value;
+				}
+			}
+			fileMetadata = orderedMetadata;
+		}
 
 		// Merge tags cleanly (Preserving only manual user tags, discarding old ghost auto-tags!)
 		const newObjTags = fileMetadata.tags;
@@ -1417,15 +1445,15 @@ export default class MediaDbPlugin extends Plugin {
 	 * Update the active note by querying the API again.
 	 * Tries to read the type and id of the active note (and dataSource when required). If successful it will query the api, delete the old note and create a new one.
 	 */
-	async updateActiveNote(onlyMetadata: boolean = false): Promise<void> {
+	async updateActiveNote(onlyMetadata: boolean = false, preserveOrder: boolean = false): Promise<void> {
 		const activeFile = this.app.workspace.getActiveFile() ?? undefined;
 		if (!activeFile) {
 			throw new Error('MDB | there is no active note');
 		}
-		return this.updateNote(activeFile, onlyMetadata, true, false);
+		return this.updateNote(activeFile, onlyMetadata, preserveOrder, true, false);
 	}
 
-	async updateNote(activeFile: TFile, onlyMetadata: boolean = false, openNoteFinal: boolean = true, overwrite: boolean = false): Promise<void> {
+	async updateNote(activeFile: TFile, onlyMetadata: boolean = false, preserveOrder: boolean = false, openNoteFinal: boolean = true, overwrite: boolean = false): Promise<void> {
 		let metadata = this.getMetadataFromFileCache(activeFile);
 		metadata = this.modelPropertyMapper.convertObjectBack(metadata);
 
@@ -1462,7 +1490,7 @@ export default class MediaDbPlugin extends Plugin {
 		console.debug(`MDB | newMediaTypeModel after merge`, newMediaTypeModel);
 
 		if (onlyMetadata) {
-			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent ?? undefined, openNote: openNoteFinal, overwrite });
+			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent ?? undefined, openNote: openNoteFinal, overwrite, preservePropertyOrder: preserveOrder });
 		} else {
 			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachTemplate: true, folder: activeFile.parent ?? undefined, openNote: openNoteFinal, overwrite });
 		}
