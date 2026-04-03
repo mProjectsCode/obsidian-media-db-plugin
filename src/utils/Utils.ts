@@ -207,6 +207,7 @@ export interface CreateNoteOptions {
 	openNote?: boolean;
 	folder?: TFolder;
 	overwrite?: boolean;
+	preservePropertyOrder?: boolean;
 }
 
 /** Runtime in whole minutes (TMDB/OMDb/MAL). 0 when unknown. Parses legacy string frontmatter (e.g. "136 min", "2 hr 5 min"). */
