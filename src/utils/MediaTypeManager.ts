@@ -1,5 +1,5 @@
 import type { App, TFile } from 'obsidian';
-import { TFolder } from 'obsidian';
+import { normalizePath, TFolder } from 'obsidian';
 import { ArtistModel } from '../models/ArtistModel';
 import { BoardGameModel } from '../models/BoardGameModel';
 import { BookModel } from '../models/BookModel';
@@ -15,7 +15,7 @@ import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
 import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
 import { MediaType } from './MediaType';
-import { replaceTags } from './Utils';
+import { replaceIllegalFileNameCharactersInString, replaceTags } from './Utils';
 
 // All media types in alphabetical order
 export const MEDIA_TYPES: MediaType[] = [
@@ -98,6 +98,19 @@ export class MediaTypeManager {
 		return cleanedFileName.replaceAll(/ +/g, ' ');
 	}
 
+	/** Expands {{ tags }} in a folder path and sanitizes each segment for vault paths. */
+	expandFolderPathForModel(folderPath: string, mediaTypeModel: MediaTypeModel): string {
+		const expanded = replaceTags(folderPath, mediaTypeModel, true);
+		const segments = expanded
+			.split('/')
+			.map(seg => replaceIllegalFileNameCharactersInString(seg).replaceAll(/ +/g, ' ').trim())
+			.filter(seg => seg.length > 0);
+		if (segments.length === 0) {
+			return '/';
+		}
+		return normalizePath(segments.join('/'));
+	}
+
 	async getTemplate(mediaTypeModel: MediaTypeModel, app: App): Promise<string> {
 		const templateFilePath = this.mediaTemplateMap.get(mediaTypeModel.getMediaType());
 
@@ -129,7 +142,7 @@ export class MediaTypeManager {
 		let folderPath = this.mediaFolderMap.get(mediaTypeModel.getMediaType());
 
 		folderPath ??= `/`;
-		// console.log(folderPath);
+		folderPath = this.expandFolderPathForModel(folderPath, mediaTypeModel);
 
 		if (!(await app.vault.adapter.exists(folderPath))) {
 			await app.vault.createFolder(folderPath);

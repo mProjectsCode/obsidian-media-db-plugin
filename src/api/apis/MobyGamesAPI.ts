@@ -3,8 +3,8 @@
 import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
-import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 

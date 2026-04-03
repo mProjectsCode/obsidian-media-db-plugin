@@ -1,9 +1,9 @@
 import type { TFolder } from 'obsidian';
 import { TFile } from 'obsidian';
 import type MediaDbPlugin from 'src/main';
+import { CompletionModal } from 'src/modals/CompletionModal';
 import { MediaDbBulkImportModal as MediaDbBulkImportModal } from 'src/modals/MediaDbBulkImportModal';
 import type { MediaTypeModel } from 'src/models/MediaTypeModel';
-import { CompletionModal } from 'src/modals/CompletionModal';
 import { ModalResultCode } from './ModalHelper';
 import { dateTimeToString, markdownTable } from './Utils';
 

@@ -22,6 +22,40 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 		return model.validate();
 	});
 
+	let draggedIndex: number | null = null;
+
+	const onDragStart = (e: DragEvent, index: number) => {
+		draggedIndex = index;
+		if (e.dataTransfer) {
+			e.dataTransfer.effectAllowed = 'move';
+			// Firefox requires data to be set to drag
+			e.dataTransfer.setData('text/plain', index.toString());
+		}
+	};
+
+	const onDragOver = (e: DragEvent, index: number) => {
+		e.preventDefault();
+		if (e.dataTransfer) {
+			e.dataTransfer.dropEffect = 'move';
+		}
+	};
+
+	const onDrop = (e: DragEvent, dropIndex: number) => {
+		e.preventDefault();
+		if (draggedIndex === null || draggedIndex === dropIndex) {
+			draggedIndex = null;
+			return;
+		}
+
+		const newProperties = [...modelData.properties];
+		const item = newProperties.splice(draggedIndex, 1)[0];
+		newProperties.splice(dropIndex, 0, item);
+
+		setModelData('properties', newProperties);
+		persistIfValid();
+		draggedIndex = null;
+	};
+
 	const persistIfValid = () => {
 		const model = PropertyMappingModel.fromJSON(modelData);
 		if (model.validate().res) {
@@ -47,16 +81,35 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 				<table class="media-db-plugin-property-mappings-table">
 					<thead>
 						<tr>
+							<th class="col-drag"></th>
 							<th class="col-property">Property</th>
 							<th class="col-mapping">Mapping</th>
 							<th class="col-new-name">New name</th>
+							<th class="col-tag-prefix"></th>
+							<th class="col-tag">Tag</th>
 							<th class="col-wikilink">Wikilink</th>
+							<th class="col-pin">Pin</th>
 						</tr>
 					</thead>
 					<tbody>
 						<For each={modelData.properties}>
 							{(property, index) => (
-								<tr>
+								<tr
+									draggable={!property.locked}
+									onDragStart={(e) => onDragStart(e, index())}
+									onDragOver={(e) => onDragOver(e, index())}
+									onDrop={(e) => onDrop(e, index())}
+									style={{
+										cursor: property.locked ? 'default' : 'grab',
+									}}
+								>
+									<td class="col-drag">
+										<Show when={!property.locked}>
+											<span class="media-db-plugin-drag-handle" style="cursor: grab; opacity: 0.5;">
+												≡
+											</span>
+										</Show>
+									</td>
 									<td class="col-property">
 										<code>{property.property}</code>
 									</td>
@@ -64,7 +117,7 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 									<Show
 										when={!property.locked}
 										fallback={
-											<td class="col-locked" colspan={3}>
+											<td class="col-locked" colspan={6}>
 												<div class="media-db-plugin-property-binding-text">property cannot be remapped</div>
 											</td>
 										}
@@ -104,6 +157,36 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 											</Show>
 										</td>
 
+										<td class="col-tag-prefix">
+											<Show when={property.autoTag}>
+												<input
+													class="media-db-plugin-tag-prefix-input"
+													type="text"
+													placeholder="prefix"
+													spellcheck={false}
+													title="Optional tag prefix (e.g. 'genre' → 'genre/action')"
+													value={property.autoTagPrefix ?? ''}
+													onInput={e => {
+														setModelData('properties', index(), 'autoTagPrefix', e.currentTarget.value);
+														persistIfValid();
+													}}
+												/>
+											</Show>
+										</td>
+
+										<td class="col-tag">
+											<label class="media-db-plugin-property-mapping-pin-label" title="Generate Obsidian tags from this property's values">
+												<input
+													type="checkbox"
+													checked={property.autoTag}
+													onChange={e => {
+														setModelData('properties', index(), 'autoTag', e.currentTarget.checked);
+														persistIfValid();
+													}}
+												/>
+											</label>
+										</td>
+
 										<td class="col-wikilink">
 											<label class="media-db-plugin-property-mapping-wikilink-label" title="Convert value to wikilink ([[value]])">
 												<input
@@ -111,6 +194,19 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 													checked={property.wikilink}
 													onChange={e => {
 														setModelData('properties', index(), 'wikilink', e.currentTarget.checked);
+														persistIfValid();
+													}}
+												/>
+											</label>
+										</td>
+
+										<td class="col-pin">
+											<label class="media-db-plugin-property-mapping-pin-label" title="Pin this property below custom template variables">
+												<input
+													type="checkbox"
+													checked={property.pinBottom}
+													onChange={e => {
+														setModelData('properties', index(), 'pinBottom', e.currentTarget.checked);
 														persistIfValid();
 													}}
 												/>

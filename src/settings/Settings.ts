@@ -2,17 +2,16 @@ import type { App, IconName } from 'obsidian';
 import { Platform, PluginSettingTab, SecretComponent, SettingGroup, setIcon } from 'obsidian';
 import { MediaType } from 'src/utils/MediaType';
 import type MediaDbPlugin from '../main';
-import { ApiSecretID } from './apiSecretsHelper';
 import { PropertyMappingModal } from '../modals/PropertyMappingModal';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { noteTypeValueForMedia, setNoteTypeForMedia } from '../utils/noteTypeSettings';
 import { fragWithHTML, mediaTypeDisplayName, unCamelCase } from '../utils/Utils';
+import { ApiSecretID } from './apiSecretsHelper';
 import type { PropertyMappingModelData } from './PropertyMapping';
 import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from './PropertyMapping';
 import { FileSuggest } from './suggesters/FileSuggest';
 import { FolderSuggest } from './suggesters/FolderSuggest';
-
 
 function mediaTypeTabIcon(mediaType: MediaType): IconName {
 	switch (mediaType) {
@@ -60,6 +59,8 @@ export interface MediaDbPluginSettings {
 	autoTagProperties: string;
 	enableWikiLinkParsing: boolean;
 	autoUpdateAiringMode: boolean;
+	addNormalizeTitlesAsAlias: boolean;
+	useObjectFormatForCurrencyValues: boolean;
 
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
@@ -126,8 +127,12 @@ export interface MediaDbPluginSettings {
 	songNoteType: string;
 	boardgameNoteType: string;
 	bookNoteType: string;
+	/** When true, importing an artist also creates album and song notes from their discography. */
+	artistAutomaticallyImportReleases: boolean;
 	/** When true, artist discography import nests albums and songs under artistFolder/ArtistName/… instead of using album/song import folders. */
 	artistUseFileTreeForSongs: boolean;
+	/** When true, each imported album also creates a note per track (standalone album import or artist discography). */
+	musicReleaseAutomaticallyImportSongs: boolean;
 	boardgameFolder: string;
 	bookFolder: string;
 
@@ -373,6 +378,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	enableWikiLinkParsing: false,
 	autoUpdateAiringMode: false,
 	tmdbRegion: 'US',
+	addNormalizeTitlesAsAlias: false,
+	useObjectFormatForCurrencyValues: false,
 
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
@@ -426,7 +433,9 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseFolder: 'Media DB/music',
 	artistFolder: 'Media DB/artists',
 	songFolder: 'Media DB/music/songs',
+	artistAutomaticallyImportReleases: true,
 	artistUseFileTreeForSongs: false,
+	musicReleaseAutomaticallyImportSongs: true,
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
 
@@ -516,21 +525,20 @@ export class MediaDbSettingTab extends PluginSettingTab {
 	}
 
 	private addApiSecretSetting(group: SettingGroup, name: string, description: string, slot: ApiSecretID): void {
-		group.addSetting(
-			setting =>
-				setting
-					.setName(name)
-					.setDesc(description)
-					.addComponent(el => {
-						const component = new SecretComponent(this.app, el);
-						const { linkedApiSecretIds } = this.plugin.settings;
-						const linkedId = linkedApiSecretIds[slot] ?? '';
-						component.setValue(linkedId).onChange((secretId: string) => {
-							linkedApiSecretIds[slot] = secretId;
-							this.plugin.saveSettings();
-						});
-						return component;
-					}),
+		group.addSetting(setting =>
+			setting
+				.setName(name)
+				.setDesc(description)
+				.addComponent(el => {
+					const component = new SecretComponent(this.app, el);
+					const { linkedApiSecretIds } = this.plugin.settings;
+					const linkedId = linkedApiSecretIds[slot] ?? '';
+					component.setValue(linkedId).onChange((secretId: string) => {
+						linkedApiSecretIds[slot] = secretId;
+						this.plugin.saveSettings();
+					});
+					return component;
+				}),
 		);
 	}
 
@@ -587,9 +595,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			setting =>
 				void setting
 					.setName('Note type')
-					.setDesc(
-						`Value for the "type" field in frontmatter. Leave blank to use the default (${mediaType}).`,
-					)
+					.setDesc(`Value for the "type" field in frontmatter. Leave blank to use the default (${mediaType}).`)
 					.addText(cb => {
 						cb.setPlaceholder(String(mediaType))
 							.setValue(mediaTypeSetting.getNoteType(this.plugin.settings))
@@ -670,16 +676,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		options?.appendToSection?.(mediaTypeGroup);
 
 		if (this.plugin.settings.useDefaultFrontMatter) {
-			mediaTypeGroup.addSetting(setting =>
-				void setting
-					.setName('Property mappings')
-					.setDesc(`How metadata fields map to frontmatter for ${descNoun} notes.`)
-					.addButton(btn => {
-						btn.setButtonText('Edit');
-						btn.onClick(() => {
-							new PropertyMappingModal(this.app, this.plugin, mediaType).open();
-						});
-					}),
+			mediaTypeGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Property mappings')
+						.setDesc(`How metadata fields map to frontmatter for ${descNoun} notes.`)
+						.addButton(btn => {
+							btn.setButtonText('Edit');
+							btn.onClick(() => {
+								new PropertyMappingModal(this.app, this.plugin, mediaType).open();
+							});
+						}),
 			);
 		}
 	}
@@ -696,10 +703,20 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				group.addSetting(
 					setting =>
 						void setting
+							.setName('Automatically Import Releases')
+							.setDesc('When importing an artist, also create notes for their studio albums and tracks.')
+							.addToggle(cb => {
+								cb.setValue(this.plugin.settings.artistAutomaticallyImportReleases).onChange(data => {
+									this.plugin.settings.artistAutomaticallyImportReleases = data;
+									void this.plugin.saveSettings();
+								});
+							}),
+				);
+				group.addSetting(
+					setting =>
+						void setting
 							.setName('Use file trees for songs')
-							.setDesc(
-								'Use a file tree hierarchy to store albums and songs for each artist.',
-							)
+							.setDesc('Use a file tree hierarchy to store albums and songs for each artist.')
 							.addToggle(cb => {
 								cb.setValue(this.plugin.settings.artistUseFileTreeForSongs).onChange(data => {
 									this.plugin.settings.artistUseFileTreeForSongs = data;
@@ -714,6 +731,20 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		this.renderMediaTypeSection(panel, byType(MediaType.MusicRelease), mediaTypeApiMap, {
 			sectionHeading: 'Album',
 			hideImportFolder: fileTree,
+			appendToSection: group => {
+				group.addSetting(
+					setting =>
+						void setting
+							.setName('Automatically Import Songs')
+							.setDesc('When importing an album (on its own or as part of an artist import), also create a note for each track.')
+							.addToggle(cb => {
+								cb.setValue(this.plugin.settings.musicReleaseAutomaticallyImportSongs).onChange(data => {
+									this.plugin.settings.musicReleaseAutomaticallyImportSongs = data;
+									void this.plugin.saveSettings();
+								});
+							}),
+				);
+			},
 		});
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
 		this.renderMediaTypeSection(panel, byType(MediaType.Song), mediaTypeApiMap, {
@@ -857,7 +888,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 									"For more syntax, refer to <a href='https://momentjs.com/docs/#/displaying/format/'>format reference</a>.<br>" +
 									"Your current syntax looks like this: <b><a id='media-db-dateformat-preview' style='pointer-events: none; cursor: default; text-decoration: none;'>" +
 									this.plugin.dateFormatter.getPreview() +
-									"</a></b>",
+									'</a></b>',
 							),
 						)
 						.addText(cb => {
@@ -906,7 +937,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				setting =>
 					void setting
 						.setName('Enable Templater integration')
-						.setDesc('Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.')
+						.setDesc(
+							'Enable integration with the templater plugin, this also needs templater to be installed. Warning: Templater allows you to execute arbitrary JavaScript code and system commands.',
+						)
 						.addToggle(cb => {
 							cb.setValue(this.plugin.settings.enableTemplaterIntegration).onChange(data => {
 								this.plugin.settings.enableTemplaterIntegration = data;
@@ -950,8 +983,36 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						}),
 			);
 
-		panel.createEl('h3', { text: 'Auto-Tracker' }).style.marginTop = '1.5em';
-		const autoTrackerGroup = new SettingGroup(panel);
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Add Normalized Titles as Alias')
+						.setDesc('If the title contains non-ASCII characters, add a normalized ASCII version of the title in aliases.')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.addNormalizeTitlesAsAlias).onChange(data => {
+								this.plugin.settings.addNormalizeTitlesAsAlias = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Use object format for currency values')
+						.setDesc(
+							'For movies, store Budget and Revenue as nested objects with numeric value and currency (e.g. USD) instead of a single formatted string.',
+						)
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.useObjectFormatForCurrencyValues).onChange(data => {
+								this.plugin.settings.useObjectFormatForCurrencyValues = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			panel.createEl('h3', { text: 'Auto-Tracker' }).style.marginTop = '1.5em';
+			const autoTrackerGroup = new SettingGroup(panel);
 
 			autoTrackerGroup.addSetting(
 				setting =>
@@ -989,39 +1050,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 								this.plugin.settings.autoTrackerReleasedKey = data.trim() || 'released';
 								void this.plugin.saveSettings();
 							});
-						}),
-			);
-
-		panel.createEl('h3', { text: 'Auto-Tag Properties' }).style.marginTop = '1.5em';
-		const autoTagGroup = new SettingGroup(panel);
-
-			autoTagGroup.addSetting(
-				setting =>
-					void setting
-						.setName('Enable Auto Tagging')
-						.setDesc('Feature to automatically sanitize properties into standard Obsidian tags.')
-						.addToggle(cb => {
-							cb.setValue(this.plugin.settings.enableAutoTagging).onChange(data => {
-								this.plugin.settings.enableAutoTagging = data;
-								void this.plugin.saveSettings();
-							});
-						}),
-			);
-
-			autoTagGroup.addSetting(
-				setting =>
-					void setting
-						.setName('Auto-Tag whitelisted properties')
-						.setDesc('Comma separated list of property names. If a property in this list is present, its values will be sanitized and appended to the Obsidian native `tags` array.')
-						.addText(text =>
-							text
-								.setPlaceholder('genres, platforms')
-								.setValue(this.plugin.settings.autoTagProperties)
-								.onChange(async value => {
-									this.plugin.settings.autoTagProperties = value;
-									await this.plugin.saveSettings();
-								}),
-						),
+							}),
 			);
 		});
 
@@ -1039,7 +1068,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						s =>
 							void s
 								.setName('Wiki-Link parsing')
-								.setDesc('When enabled, properties listed below are formatted as Obsidian [[Wiki-Links]] across ALL media types globally. This complements the per-property wikilink checkbox in Property Mappings, which only affects that specific property.')
+								.setDesc(
+									'When enabled, properties listed below are formatted as Obsidian [[Wiki-Links]] across ALL media types globally. This complements the per-property wikilink checkbox in Property Mappings, which only affects that specific property.',
+								)
 								.addToggle(cb => {
 									cb.setValue(this.plugin.settings.enableWikiLinkParsing).onChange(data => {
 										this.plugin.settings.enableWikiLinkParsing = data;
@@ -1051,7 +1082,9 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						s =>
 							void s
 								.setName('Wiki-Link properties')
-								.setDesc('Comma-separated property names to convert to [[Wiki-Links]] for ALL media types. Use this for custom or cross-type properties (e.g. storefront, launcher). For standard properties like genres or studio, the wikilink checkbox inside Property Mappings also works.')
+								.setDesc(
+									'Comma-separated property names to convert to [[Wiki-Links]] for ALL media types. Use this for custom or cross-type properties (e.g. storefront, launcher). For standard properties like genres or studio, the wikilink checkbox inside Property Mappings also works.',
+								)
 								.addTextArea(cb => {
 									cb.setPlaceholder('genres, storefront, category')
 										.setValue(this.plugin.settings.autoTagEntities)

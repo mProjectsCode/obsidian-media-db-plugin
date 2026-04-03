@@ -40,7 +40,10 @@ export abstract class APIModel {
 	 * @param folderPrefix  the wiki-link folder prefix (e.g. 'Media DB/wiki/')
 	 */
 	wikilinkValueFor(_property: string, value: string, _obj: Record<string, unknown>, folderPrefix: string): string {
-		const clean = value.replace(/^\[\[(.*?)\]\]$/, '$1').split('|').pop()!;
+		const clean = value
+			.replace(/^\[\[(.*?)\]\]$/, '$1')
+			.split('|')
+			.pop()!;
 		return `[[${folderPrefix}${clean}|${clean}]]`;
 	}
 }

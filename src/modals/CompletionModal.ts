@@ -1,4 +1,5 @@
-import { type App, Modal, ButtonComponent } from 'obsidian';
+import type {App} from 'obsidian';
+import {  Modal, ButtonComponent } from 'obsidian';
 
 export interface CompletionResult {
 	/** Title shown in the modal header */

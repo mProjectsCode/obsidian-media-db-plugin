@@ -1,12 +1,8 @@
 import { Notice } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import type { MediaType } from '../utils/MediaType';
-import {
-	isMusicBrainzFamilyDataSource,
-	musicBrainzRegisteredApiName,
-	MUSICBRAINZ_NOTE_DATA_SOURCE,
-} from './musicBrainzConstants';
 import type { APIModel } from './APIModel';
+import { isMusicBrainzFamilyDataSource, musicBrainzRegisteredApiName, MUSICBRAINZ_NOTE_DATA_SOURCE } from './musicBrainzConstants';
 
 export class APIManager {
 	apis: APIModel[];
@@ -59,10 +55,7 @@ export class APIManager {
 	 */
 	async queryDetailedInfoById(id: string, apiName: string, mediaType?: MediaType): Promise<MediaTypeModel | undefined> {
 		const trimmed = apiName.trim();
-		const effectiveApiName =
-			trimmed === '' && mediaType !== undefined && musicBrainzRegisteredApiName(mediaType)
-				? MUSICBRAINZ_NOTE_DATA_SOURCE
-				: trimmed || apiName;
+		const effectiveApiName = trimmed === '' && mediaType !== undefined && musicBrainzRegisteredApiName(mediaType) ? MUSICBRAINZ_NOTE_DATA_SOURCE : trimmed || apiName;
 
 		if (isMusicBrainzFamilyDataSource(effectiveApiName) && mediaType !== undefined) {
 			const registeredName = musicBrainzRegisteredApiName(mediaType);

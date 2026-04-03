@@ -3,8 +3,8 @@
 import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
-import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { SeasonModel } from '../../models/SeasonModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/TMDB';
@@ -99,6 +99,7 @@ export class TMDBSeasonAPI extends APIModel {
 					id: result.id?.toString() ?? '',
 					seasonTitle: result.name ?? result.original_name ?? '',
 					seasonNumber: totalSeasons,
+					image: result.poster_path ? `https://image.tmdb.org/t/p/w780${result.poster_path}` : '',
 				}),
 			);
 		}
@@ -151,6 +152,7 @@ export class TMDBSeasonAPI extends APIModel {
 						id: `${tvId}/season/${seasonNumber}`,
 						seasonTitle: season.name ?? titleText,
 						seasonNumber: seasonNumber,
+						image: season.poster_path ?? '',
 					}),
 				);
 			}

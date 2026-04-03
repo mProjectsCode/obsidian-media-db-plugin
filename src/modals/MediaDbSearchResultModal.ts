@@ -39,11 +39,90 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		this.skipCallback = skipCallback;
 	}
 
+	// Different rate limit delay based on API source, MAL APIs = max 3 per second so 400ms between requests to be safe
+	private getDelayForApi(dataSource: string): number {
+		const isMalApi = dataSource === 'MALAPI' || dataSource === 'MALAPIManga';
+		return isMalApi ? 400 : 200;
+	}
+
 	// Renders each suggestion item.
 	renderElement(item: MediaTypeModel, el: HTMLElement): void {
-		el.createEl('div', { text: this.plugin.mediaTypeManager.getFileName(item) });
-		el.createEl('small', { text: `${item.getSummary()}\n` });
-		el.createEl('small', { text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}` });
+		el.addClass('media-db-plugin-select-element-flex');
+		el.style.display = 'flex';
+		el.style.gap = '8px';
+		el.style.alignItems = 'flex-start';
+
+		const thumb = el.createDiv({ cls: 'media-db-plugin-select-thumb' });
+
+		let imgEl: HTMLImageElement | undefined;
+
+		const setImage = (url: string) => {
+			if (!imgEl) {
+				imgEl = document.createElement('img');
+				imgEl.loading = 'lazy';
+				imgEl.alt = item.title;
+				thumb.empty();
+				thumb.appendChild(imgEl);
+				imgEl.style.width = '100%';
+				imgEl.style.height = '100%';
+				imgEl.style.objectFit = 'cover';
+				imgEl.onerror = () => {
+					thumb.empty();
+					const placeholderSpan = thumb.createEl('span', { text: '📷' });
+					placeholderSpan.style.fontSize = '24px';
+				};
+			}
+			imgEl.src = url;
+		};
+
+		const content = el.createDiv({ cls: 'media-db-plugin-select-content' });
+
+		const titleEl = content.createEl('div', { text: this.plugin.mediaTypeManager.getFileName(item), cls: 'media-db-plugin-select-title' });
+		const summaryEl = content.createEl('small', { text: `${item.getSummary()}\n` });
+		content.createEl('small', { text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}` });
+
+		const updateSummary = () => {
+			titleEl.textContent = this.plugin.mediaTypeManager.getFileName(item);
+			summaryEl.textContent = `${item.getSummary()}\n`;
+		};
+
+		if (item.image && item.image !== 'NSFW') {
+			if (String(item.image).includes('null')) {
+				thumb.empty();
+				const placeholderSpan = thumb.createEl('span', { text: '📷' });
+				placeholderSpan.style.fontSize = '24px';
+			} else {
+				setImage(item.image);
+			}
+		} else if (item.image === 'NSFW') {
+			thumb.createEl('span', { text: 'NSFW' });
+		} else {
+			thumb.empty();
+			const placeholderSpan = thumb.createEl('span', { text: '📷' });
+			placeholderSpan.style.fontSize = '24px';
+
+			const needsFetch = !item.image || !item.year;
+			if (needsFetch) {
+				const apiDelay = this.getDelayForApi(item.dataSource);
+				const delayMs = (parseInt(el.id.split('-').pop() ?? '0') ?? 0) * apiDelay;
+				setTimeout(async () => {
+					if (item.image && item.year) return;
+					try {
+						const detailed = await this.plugin.apiManager.queryDetailedInfo(item);
+						if (detailed?.image && !item.image) {
+							item.image = detailed.image;
+							setImage(detailed.image);
+						}
+						if (!item.year && detailed?.year) {
+							item.year = detailed.year;
+							updateSummary();
+						}
+					} catch (e) {
+						console.warn('MDB | Failed to fetch detail', e);
+					}
+				}, delayMs);
+			}
+		}
 	}
 
 	// Perform action on the selected suggestion.

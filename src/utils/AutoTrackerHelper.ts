@@ -1,4 +1,5 @@
-import { Notice, TFile, TFolder } from 'obsidian';
+import type { TFile, TFolder } from 'obsidian';
+import { Notice } from 'obsidian';
 import type MediaDbPlugin from 'src/main';
 import { CompletionModal } from 'src/modals/CompletionModal';
 import { dateTimeToString, markdownTable } from './Utils';
@@ -21,15 +22,13 @@ export class AutoTrackerHelper {
 	}
 
 	async runAutoUpdate(silent: boolean = false, targetFolder?: TFolder): Promise<void> {
-		const allFiles = targetFolder
-			? this.plugin.app.vault.getMarkdownFiles().filter(f => f.path.startsWith(targetFolder.path))
-			: this.plugin.app.vault.getMarkdownFiles();
+		const allFiles = targetFolder ? this.plugin.app.vault.getMarkdownFiles().filter(f => f.path.startsWith(targetFolder.path)) : this.plugin.app.vault.getMarkdownFiles();
 
 		const filesToUpdate: TFile[] = [];
 
 		for (const file of allFiles) {
 			const metadata = this.plugin.getMetadataFromFileCache(file);
-			if (metadata && metadata.dataSource && metadata.id) {
+			if (metadata?.dataSource && metadata.id) {
 				const airingKey = this.plugin.settings.autoTrackerAiringKey;
 				const releasedKey = this.plugin.settings.autoTrackerReleasedKey;
 				if (metadata[airingKey] === true || metadata[releasedKey] === false) {
@@ -54,7 +53,7 @@ export class AutoTrackerHelper {
 		const startTime = Date.now();
 		let successCount = 0;
 		let failCount = 0;
-		const erroredFiles: { filePath: string, error: string }[] = [];
+		const erroredFiles: { filePath: string; error: string }[] = [];
 
 		for (const file of filesToUpdate) {
 			try {

@@ -1,10 +1,10 @@
 import { requestUrl } from 'obsidian';
 import { BoardGameModel } from 'src/models/BoardGameModel';
 import type MediaDbPlugin from '../../main';
-import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
-import { coerceYear } from '../../utils/Utils';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
+import { coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 // sadly no open api schema available

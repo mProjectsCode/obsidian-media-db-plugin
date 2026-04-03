@@ -1,8 +1,9 @@
-import { type App, Modal, Setting } from 'obsidian';
+import type {App} from 'obsidian';
+import {  Modal, Setting } from 'obsidian';
 
 export class BulkUpdateConfirmModal extends Modal {
 	onSubmit: (silent: boolean) => void;
-	silentUpdate: boolean = true;
+	silentUpdate: boolean = false;
 
 	constructor(app: App, onSubmit: (silent: boolean) => void) {
 		super(app);
@@ -17,19 +18,17 @@ export class BulkUpdateConfirmModal extends Modal {
 		new Setting(contentEl)
 			.setName('Update Silently (No Confirmations)')
 			.setDesc('If enabled, all updates will aggressively overwrite the note frontmatter without asking for individual confirmation for each file.')
-			.addToggle(toggle => toggle
-				.setValue(this.silentUpdate)
-				.onChange(value => (this.silentUpdate = value))
-			);
+			.addToggle(toggle => toggle.setValue(this.silentUpdate).onChange(value => (this.silentUpdate = value)));
 
-		new Setting(contentEl)
-			.addButton(btn => btn
+		new Setting(contentEl).addButton(btn =>
+			btn
 				.setButtonText('Start Update')
 				.setCta()
 				.onClick(() => {
 					this.close();
 					this.onSubmit(this.silentUpdate);
-				}));
+				}),
+		);
 	}
 
 	onClose() {

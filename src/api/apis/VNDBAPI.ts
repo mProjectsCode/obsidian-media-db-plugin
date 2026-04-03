@@ -191,9 +191,7 @@ export class VNDBAPI extends APIModel {
 					type: MediaType.Game,
 					title: vn.title,
 					englishTitle: vn.titles.find(t => t.lang === 'en')?.title ?? vn.title,
-					year: coerceYear(
-						vn.released && vn.released !== 'TBA' ? new Date(vn.released).getFullYear() : 0,
-					),
+					year: coerceYear(vn.released && vn.released !== 'TBA' ? new Date(vn.released).getFullYear() : 0),
 					dataSource: this.apiName,
 					id: vn.id,
 				}),

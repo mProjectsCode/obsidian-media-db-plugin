@@ -3,8 +3,8 @@
 import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
-import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { SeriesModel } from '../../models/SeriesModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/TMDB';

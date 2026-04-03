@@ -1,5 +1,4 @@
-const LYRICS_CONTAINER_OPEN_RE =
-	/<div\b[^>]*\bdata-lyrics-container\s*=\s*(?:"true"|'true'|true)[^>]*>/gi;
+const LYRICS_CONTAINER_OPEN_RE = /<div\b[^>]*\bdata-lyrics-container\s*=\s*(?:"true"|'true'|true)[^>]*>/gi;
 
 function stripHtmlToPlainLyrics(fragment: string): string {
 	return fragment
@@ -80,8 +79,11 @@ export function extractLyricsFromGeniusHtml(html: string): string {
 	}
 
 	if (chunks.length === 0) {
-		return ''
+		return '';
 	}
 
-	return chunks.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
+	return chunks
+		.join('\n\n')
+		.replace(/\n{3,}/g, '\n\n')
+		.trim();
 }

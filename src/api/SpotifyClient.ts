@@ -1,5 +1,4 @@
 import { requestUrl } from 'obsidian';
-
 import { contactEmail, mediaDbVersion, pluginName } from '../utils/Utils';
 
 interface SpotifyTokenResponse {

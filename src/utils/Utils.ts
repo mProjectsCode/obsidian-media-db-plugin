@@ -385,3 +385,15 @@ export function getLanguageName(code: string): string | null {
 
 	return language?.name ?? null;
 }
+
+export function normalizeTitleForAsciiAlias(title: string): string | null {
+	const normalized = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+	if (normalized !== title) return normalized;
+	return null;
+}
+
+export function parseUsdWholeDollarsFromDisplayString(value: string): number | null {
+	const cleaned = value.replace(/[^0-9]/g, '');
+	if (cleaned) return parseInt(cleaned, 10);
+	return null;
+}

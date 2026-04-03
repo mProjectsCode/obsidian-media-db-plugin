@@ -6,19 +6,19 @@ import type { App } from 'obsidian';
  * @see https://docs.obsidian.md/plugins/guides/secret-storage
  */
 export enum ApiSecretID {
-    omdb,
-    tmdb,
-    mobyGames,
-    giantBomb,
-    igdbClientId,
-    igdbClientSecret,
-    rawg,
-    comicVine,
-    boardgameGeek,
-    genius,
-    /** Spotify Developer Dashboard — used when MusicBrainz has no streaming URL for a recording. */
-    spotifyClientId,
-    spotifyClientSecret,
+	omdb,
+	tmdb,
+	mobyGames,
+	giantBomb,
+	igdbClientId,
+	igdbClientSecret,
+	rawg,
+	comicVine,
+	boardgameGeek,
+	genius,
+	/** Spotify Developer Dashboard — used when MusicBrainz has no streaming URL for a recording. */
+	spotifyClientId,
+	spotifyClientSecret,
 }
 
 export function getApiSecretValue(app: App, linked: Record<ApiSecretID, string> | undefined, slot: ApiSecretID): string {

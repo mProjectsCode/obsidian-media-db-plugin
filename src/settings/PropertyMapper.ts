@@ -1,5 +1,9 @@
 import type MediaDbPlugin from '../main';
+import { ArtistModel } from '../models/ArtistModel';
+import { MusicReleaseModel } from '../models/MusicReleaseModel';
+import { MediaType } from '../utils/MediaType';
 import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from '../utils/noteTypeSettings';
+import { coerceYear } from '../utils/Utils';
 import { PropertyMappingOption } from './PropertyMapping';
 
 export class PropertyMapper {
@@ -35,71 +39,70 @@ export class PropertyMapper {
 		const propertyMappings = propertyMappingModel.properties;
 
 		const newObj: Record<string, unknown> = {};
+		const handledKeys = new Set<string>();
 
-		const entityProps = this.plugin.settings.autoTagEntities.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
-
-		// 1. Preprocess global wiki-links on the raw object first
-		if (this.plugin.settings.enableWikiLinkParsing && entityProps.length > 0) {
-			for (const [key, value] of Object.entries(obj)) {
-				if (key === 'aliases') continue;
-				if (entityProps.includes(key.toLowerCase())) {
-					const folderPrefix = this.plugin.settings.wikiFolder ? `${this.plugin.settings.wikiFolder}/` : '';
-					const formatWiki = (v: unknown) => {
-						if (typeof v !== 'string') return v;
-						let clean = v.replace(/^\[\[(.*?)\]\]$/, '$1');
-						if (clean.includes('|')) clean = clean.split('|')[1];
-						return `[[${folderPrefix}${clean}|${clean}]]`;
-					};
-
-					if (typeof value === 'string') {
-						obj[key] = formatWiki(value);
-					} else if (Array.isArray(value)) {
-						obj[key] = value.map(formatWiki);
-					}
-				}
-			}
-		}
-
-		// 2. Map standard properties
-		for (const [key, value] of Object.entries(obj)) {
+		// 1. Process keys exactly in the order of the user's Property Mappings array
+		for (const propertyMapping of propertyMappings) {
+			const key = propertyMapping.property;
 			if (key === 'aliases') {
+				handledKeys.add(key);
 				continue;
 			}
-			for (const propertyMapping of propertyMappings) {
-				if (propertyMapping.property === key) {
-					let finalValue = value;
-					if (propertyMapping.wikilink) {
-						const folderPrefix = this.plugin.settings.wikiFolder ? `${this.plugin.settings.wikiFolder}/` : '';
-						// Resolve the originating API so it can provide property-specific link formatting
-						const api = typeof obj.dataSource === 'string'
-							? this.plugin.apiManager.getApiByName(obj.dataSource)
-							: undefined;
-						const wikilink = (v: unknown): unknown => {
-							if (typeof v !== 'string') return v;
-							if (api) return api.wikilinkValueFor(key, v, obj, folderPrefix);
-							const clean = v.replace(/^\[\[(.*?)\]\]$/, '$1').split('|').pop()!;
-							return `[[${folderPrefix}${clean}|${clean}]]`;
-						};
-						if (typeof value === 'string') {
-							finalValue = wikilink(value);
-						} else if (Array.isArray(value)) {
-							finalValue = value.map(wikilink);
+			
+			if (Object.hasOwn(obj, key)) {
+				const value = obj[key];
+				handledKeys.add(key);
+
+				let finalValue = value;
+				if (propertyMapping.wikilink) {
+					const useArtistFileNameForArtists =
+						propertyMapping.property === 'artists' &&
+						(internalMediaType === MediaType.Song || internalMediaType === MediaType.MusicRelease);
+					const useMusicReleaseFileNameForAlbumTitle =
+						propertyMapping.property === 'albumTitle' && internalMediaType === MediaType.Song;
+
+					if (typeof value === 'string') {
+						if (useArtistFileNameForArtists) {
+							finalValue = this.artistTitleWikilink(value);
+						} else if (useMusicReleaseFileNameForAlbumTitle) {
+							finalValue = this.songAlbumTitleWikilink(value, obj);
+						} else {
+							finalValue = `[[${value}]]`;
 						}
+					} else if (Array.isArray(value)) {
+						finalValue = value.map((v: unknown) => {
+							if (typeof v !== 'string') {
+								return v;
+							}
+							if (useArtistFileNameForArtists) {
+								return this.artistTitleWikilink(v);
+							}
+							if (useMusicReleaseFileNameForAlbumTitle) {
+								return this.songAlbumTitleWikilink(v, obj);
+							}
+							return `[[${v}]]`;
+						});
 					}
-					if (propertyMapping.mapping === PropertyMappingOption.Map) {
-						// @ts-ignore
-						newObj[propertyMapping.newProperty] = finalValue;
-					} else if (propertyMapping.mapping === PropertyMappingOption.Remove) {
-						// do nothing
-					} else if (propertyMapping.mapping === PropertyMappingOption.Default) {
-						// @ts-ignore
-						newObj[key] = finalValue;
-					}
-					break;
+				}
+
+				if (propertyMapping.mapping === PropertyMappingOption.Map) {
+					newObj[propertyMapping.newProperty] = finalValue;
+				} else if (propertyMapping.mapping === PropertyMappingOption.Remove) {
+					// do nothing
+				} else if (propertyMapping.mapping === PropertyMappingOption.Default) {
+					newObj[key] = finalValue;
 				}
 			}
 		}
 
+		// 2. Append any remaining unmatched keys from obj (to preserve unhandled data)
+		for (const [key, value] of Object.entries(obj)) {
+			if (!handledKeys.has(key) && key !== 'aliases') {
+				newObj[key] = value;
+			}
+		}
+
+		// 3. Handle aliases
 		if (Object.hasOwn(obj, 'aliases')) {
 			const aliasesPm = propertyMappings.find(p => p.property === 'aliases');
 			if (aliasesPm?.mapping !== PropertyMappingOption.Remove) {
@@ -116,6 +119,44 @@ export class PropertyMapper {
 		}
 
 		return newObj;
+	}
+
+	getPinnedBottomKeys(type: unknown): string[] {
+		const internalMediaType = resolveMetadataTypeToMediaType(this.plugin.settings, type);
+		if (!internalMediaType) return [];
+
+		const propertyMappingModel = this.plugin.settings.propertyMappingModels.find(x => x.type === internalMediaType);
+		if (!propertyMappingModel) return [];
+
+		const pinnedKeys: string[] = [];
+		for (const mapping of propertyMappingModel.properties) {
+			if (mapping.pinBottom) {
+				// The key to pin is the NEW key if mapped
+				if (mapping.mapping === PropertyMappingOption.Map) {
+					pinnedKeys.push(mapping.newProperty);
+				} else if (mapping.mapping === PropertyMappingOption.Default) {
+					pinnedKeys.push(mapping.property);
+				}
+			}
+		}
+		return pinnedKeys;
+	}
+
+	getAutoTagKeys(type: unknown): { key: string; prefix: string }[] {
+		const internalMediaType = resolveMetadataTypeToMediaType(this.plugin.settings, type);
+		if (!internalMediaType) return [];
+
+		const propertyMappingModel = this.plugin.settings.propertyMappingModels.find(x => x.type === internalMediaType);
+		if (!propertyMappingModel) return [];
+
+		const autoTagKeys: { key: string; prefix: string }[] = [];
+		for (const mapping of propertyMappingModel.properties) {
+			if (mapping.autoTag && mapping.mapping !== PropertyMappingOption.Remove) {
+				const key = mapping.mapping === PropertyMappingOption.Map ? mapping.newProperty : mapping.property;
+				autoTagKeys.push({ key, prefix: mapping.autoTagPrefix ?? '' });
+			}
+		}
+		return autoTagKeys;
 	}
 
 	private static mergeAliasValues(existing: unknown, added: unknown): string[] {
@@ -206,4 +247,68 @@ export class PropertyMapper {
 		return originalObj;
 	}
 
+	/**
+	 * Wikilink for an artist name using the Artist file name template as the link target and the raw artist title as the display alias.
+	 */
+	private artistTitleWikilink(artistTitle: string): string {
+		const title = artistTitle.trim();
+		const artistModel = new ArtistModel({
+			type: 'artist',
+			title,
+			englishTitle: title,
+			year: 0,
+			beginYear: '',
+			releaseDate: '',
+			dataSource: '',
+			url: '',
+			id: '',
+			country: '',
+			disambiguation: '',
+			isni: '',
+			genres: [],
+			image: '',
+			officialWebsite: '',
+			subType: 'artist',
+			userData: { personalRating: 0 },
+		});
+		const linkTarget = this.plugin.mediaTypeManager.getFileName(artistModel);
+		if (linkTarget === title) {
+			return `[[${linkTarget}]]`;
+		}
+		return `[[${linkTarget}|${title}]]`;
+	}
+
+	/**
+	 * Wikilink for a song's release title using the Music Release file name template; fills artists/year from the song metadata when present.
+	 */
+	private songAlbumTitleWikilink(albumTitle: string, songMeta: Record<string, unknown>): string {
+		const title = albumTitle.trim();
+		const artistsRaw = songMeta.artists;
+		const artists = Array.isArray(artistsRaw)
+			? artistsRaw.filter((a): a is string => typeof a === 'string')
+			: [];
+		const year = coerceYear(songMeta.year);
+		const releaseModel = new MusicReleaseModel({
+			type: 'musicRelease',
+			title,
+			englishTitle: title,
+			year,
+			releaseDate: '',
+			dataSource: '',
+			url: '',
+			id: '',
+			image: '',
+			artists,
+			genres: [],
+			subType: 'album',
+			language: '',
+			rating: 0,
+			userData: { personalRating: 0 },
+		});
+		const linkTarget = this.plugin.mediaTypeManager.getFileName(releaseModel);
+		if (linkTarget === title) {
+			return `[[${linkTarget}]]`;
+		}
+		return `[[${linkTarget}|${title}]]`;
+	}
 }

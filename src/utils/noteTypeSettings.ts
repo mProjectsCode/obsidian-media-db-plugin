@@ -1,6 +1,6 @@
 import type { MediaDbPluginSettings } from '../settings/Settings';
-import { MEDIA_TYPES } from './MediaTypeManager';
 import { MediaType } from './MediaType';
+import { MEDIA_TYPES } from './MediaTypeManager';
 
 const MEDIA_TYPE_TO_NOTE_TYPE_KEY: Record<MediaType, keyof MediaDbPluginSettings> = {
 	[MediaType.Artist]: 'artistNoteType',
@@ -35,10 +35,7 @@ export function setNoteTypeForMedia(settings: MediaDbPluginSettings, mediaType: 
 /**
  * Maps a frontmatter `type` string (legacy enum id or configured custom string) to {@link MediaType}.
  */
-export function resolveMetadataTypeToMediaType(
-	settings: MediaDbPluginSettings,
-	noteType: unknown,
-): MediaType | undefined {
+export function resolveMetadataTypeToMediaType(settings: MediaDbPluginSettings, noteType: unknown): MediaType | undefined {
 	if (noteType === undefined || noteType === null) {
 		return undefined;
 	}

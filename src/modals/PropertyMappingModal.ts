@@ -2,10 +2,10 @@ import type { App } from 'obsidian';
 import { Modal } from 'obsidian';
 import { render } from 'solid-js/web';
 import type MediaDbPlugin from '../main';
-import type { MediaType } from '../utils/MediaType';
-import { mediaTypeDisplayName } from '../utils/Utils';
 import type { PropertyMappingModelData } from '../settings/PropertyMapping';
 import PropertyMappingModelComponent from '../settings/PropertyMappingModelComponent';
+import type { MediaType } from '../utils/MediaType';
+import { mediaTypeDisplayName } from '../utils/Utils';
 
 export class PropertyMappingModal extends Modal {
 	private disposeSolid?: () => void;

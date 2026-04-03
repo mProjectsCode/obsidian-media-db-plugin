@@ -84,7 +84,7 @@ export class MusicBrainzArtistAPI extends APIModel {
 
 		this.plugin = plugin;
 		this.apiName = 'MusicBrainz Artist API';
-		this.apiDescription = 'MusicBrainz artist search and studio album discography.';
+		this.apiDescription = 'MusicBrainz artist search and studio release discography.';
 		this.apiUrl = 'https://musicbrainz.org/';
 		this.types = [MediaType.Artist];
 	}
@@ -191,7 +191,7 @@ export class MusicBrainzArtistAPI extends APIModel {
 	}
 
 	/**
-	 * Lists release group MBIDs for studio albums (primary type album, excluding live/compilations/etc.).
+	 * Lists release group MBIDs for studio releases (MusicBrainz primary type album, excluding live/compilations/etc.).
 	 * Passes release-group-status=website-default so MusicBrainz omits groups that only have bootleg, promotional, or pseudo-releases
 	 * (see MusicBrainz API “Release (Group) Type and Status”).
 	 */

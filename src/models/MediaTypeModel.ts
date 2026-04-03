@@ -35,9 +35,27 @@ export abstract class MediaTypeModel {
 	abstract getTags(): string[];
 
 	toMetaDataObject(): Record<string, unknown> {
-		const obj: Record<string, unknown> = { ...this.getWithOutUserData(), ...this.userData, tags: this.getTags().join('/') };
+		const base = { ...this.getWithOutUserData() };
+
+		// Extract description-like fields to pin them just before tags
+		const hasSummary = Object.hasOwn(base, 'summary');
+		const hasPlot = Object.hasOwn(base, 'plot');
+		const summary = base.summary;
+		const plot = base.plot;
+		delete base.summary;
+		delete base.plot;
+
+		const obj: Record<string, unknown> = { ...base, ...this.userData };
+
 		// year: 0 means "unknown" — write null so YAML shows blank (None) instead of 0
-		if (obj['year'] === 0) obj['year'] = null;
+		if (obj.year === 0) obj.year = null;
+
+		// Pin summary / plot just above tags — always include them if the model has the field
+		// (empty string → null so YAML renders as blank rather than empty quotes)
+		if (hasSummary) obj.summary = summary || null;
+		if (hasPlot) obj.plot = plot || null;
+
+		obj.tags = this.getTags().join('/');
 		return obj;
 	}
 

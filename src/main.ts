@@ -25,7 +25,7 @@ import { MUSICBRAINZ_NOTE_DATA_SOURCE, musicBrainzRegisteredApiName } from './ap
 import { SpotifyClient } from './api/SpotifyClient';
 import { BulkUpdateConfirmModal } from './modals/BulkUpdateConfirmModal';
 import { CompletionModal } from './modals/CompletionModal';
-import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
+import { ConfirmOverwriteChoice, ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
 import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { ArtistModel } from './models/ArtistModel';
@@ -41,14 +41,14 @@ import { getDefaultSettings, MediaDbSettingTab, propertyMappingModelsInDisplayOr
 import { AutoTrackerHelper } from './utils/AutoTrackerHelper';
 import { BulkImportHelper } from './utils/BulkImportHelper';
 import { BulkUpdateHelper } from './utils/BulkUpdateHelper';
+import { BulkRecreateHelper } from './utils/BulkRecreateHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
 import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
-import { normalizeTitleForAsciiAlias } from './utils/normalizeTitleForAlias';
 import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from './utils/noteTypeSettings';
 import type { CreateNoteOptions } from './utils/Utils';
-import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile, dateTimeToString, markdownTable } from './utils/Utils';
+import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile, dateTimeToString, markdownTable, parseUsdWholeDollarsFromDisplayString, normalizeTitleForAsciiAlias } from './utils/Utils';
 import 'src/styles.css';
 
 export type Metadata = Record<string, unknown>;
@@ -67,6 +67,7 @@ export default class MediaDbPlugin extends Plugin {
 	modalHelper!: ModalHelper;
 	bulkImportHelper!: BulkImportHelper;
 	bulkUpdateHelper!: BulkUpdateHelper;
+	bulkRecreateHelper!: BulkRecreateHelper;
 	autoTrackerHelper!: AutoTrackerHelper;
 	dateFormatter!: DateFormatter;
 
@@ -99,6 +100,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.modalHelper = new ModalHelper(this);
 		this.bulkImportHelper = new BulkImportHelper(this);
 		this.bulkUpdateHelper = new BulkUpdateHelper(this);
+		this.bulkRecreateHelper = new BulkRecreateHelper(this);
 		this.autoTrackerHelper = new AutoTrackerHelper(this);
 		this.dateFormatter = new DateFormatter();
 
@@ -146,6 +148,12 @@ export default class MediaDbPlugin extends Plugin {
 							);
 							sub.addItem((subItem: any) =>
 								subItem
+									.setTitle('Bulk Recreate Notes')
+									.setIcon('file-stack')
+									.onClick(() => this.bulkRecreateHelper.recreateFolder(file)),
+							);
+							sub.addItem((subItem: any) =>
+								subItem
 									.setTitle('Start Auto-Tracker in Folder')
 									.setIcon('sync')
 									.onClick(() => {
@@ -176,6 +184,17 @@ export default class MediaDbPlugin extends Plugin {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile?.parent) return false;
 				if (!checking) void this.bulkImportHelper.import(activeFile.parent);
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: 'media-db-bulk-recreate-active-file-folder',
+			name: 'Media DB: Bulk Recreate Notes (Active Context)',
+			checkCallback: (checking: boolean) => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (!activeFile?.parent) return false;
+				if (!checking) void this.bulkRecreateHelper.recreateFolder(activeFile.parent);
 				return true;
 			},
 		});
@@ -630,25 +649,146 @@ export default class MediaDbPlugin extends Plugin {
 		return folder;
 	}
 
-	private async importArtistDiscography(artist: ArtistModel, options: CreateNoteOptions): Promise<void> {
+	private async importSongNotesForMusicReleaseTracks(
+		release: MusicReleaseModel,
+		geniusSearchArtist: string,
+		musicBrainzApi: MusicBrainzAPI,
+		genius: GeniusClient,
+		spotify: SpotifyClient,
+		childOptions: CreateNoteOptions,
+		useTree: boolean,
+		songNotesFolder: TFolder | undefined,
+	): Promise<void> {
+		for (const track of release.tracks) {
+			let lyrics = '';
+			let geniusUrl = '';
+			if (genius.isConfigured()) {
+				await new Promise(r => setTimeout(r, 500));
+				const hit = await genius.searchFirstSongHit(`${geniusSearchArtist} ${track.title}`);
+				if (hit) {
+					geniusUrl = hit.url;
+					await new Promise(r => setTimeout(r, 600));
+					lyrics = await genius.fetchLyricsFromSongPage(hit.url);
+				}
+			}
+
+			let spotifyUrl = '';
+			if (track.recordingId) {
+				await new Promise(r => setTimeout(r, 1100));
+				try {
+					spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(track.recordingId);
+				} catch (e) {
+					console.warn(`MDB | Spotify URL for recording ${track.recordingId}:`, e);
+				}
+			}
+			if (!spotifyUrl && spotify.isConfigured()) {
+				const primaryArtist = release.artists[0] ?? geniusSearchArtist;
+				console.log(`MDB | Spotify API fallback for track "${track.title}" (artist: ${primaryArtist})`);
+				try {
+					spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
+				} catch (e) {
+					console.warn(`MDB | Spotify search for "${track.title}":`, e);
+				}
+			}
+
+			const song = new SongModel({
+				type: 'song',
+				title: track.title,
+				englishTitle: track.title,
+				year: release.year,
+				releaseDate: release.releaseDate,
+				dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
+				url: geniusUrl || release.url,
+				id: `${release.id}-t${track.number}`,
+				image: release.image,
+				subType: 'song',
+				genres: release.genres ?? [],
+				artists: release.artists.length > 0 ? release.artists : [geniusSearchArtist],
+				albumTitle: release.title,
+				albumReleaseGroupId: release.id,
+				trackNumber: track.number,
+				duration: track.duration,
+				featuredArtists: track.featuredArtists,
+				geniusUrl,
+				spotifyUrl,
+				lyrics,
+				userData: { personalRating: 0 },
+			});
+
+			const songOpts: CreateNoteOptions = useTree && songNotesFolder ? { ...childOptions, folder: songNotesFolder } : { ...childOptions };
+
+			await this.createStandardMediaDbNoteFromModel(song, songOpts);
+		}
+	}
+
+	private async importMusicReleaseWithOptionalSongs(release: MusicReleaseModel, options: CreateNoteOptions): Promise<void> {
 		try {
+			const albumNotesFolder = options.folder ?? (await this.mediaTypeManager.getFolder(release, this.app));
+			const useTree = this.settings.artistUseFileTreeForSongs;
+			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
+
+			let songNotesFolder: TFolder | undefined;
+			if (useTree && importSongs) {
+				const albumSeg = this.safeFileTreeSegment(release.title);
+				songNotesFolder = await this.ensureVaultFolder(normalizePath(`${albumNotesFolder.path}/${albumSeg}`));
+			}
+
+			const albumCreated = await this.createStandardMediaDbNoteFromModel(release, { ...options, folder: albumNotesFolder });
+			if (!albumCreated) {
+				return;
+			}
+
+			if (!importSongs || release.tracks.length === 0) {
+				return;
+			}
+
+			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
+			if (!musicBrainzApi) {
+				new Notice('MusicBrainz API not available; song notes were skipped.');
+				console.warn('MusicBrainz API not available; song notes were skipped.');
+				return;
+			}
+
 			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
 			const genius = new GeniusClient(geniusToken);
 			if (!genius.isConfigured()) {
-				new Notice('Artist import: add a Genius API access token in settings to fetch lyrics.');
+				new Notice('Album import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+				console.warn('Album import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
 			}
 
 			const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
 			const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
 			const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
 
-			const artistApi = this.apiManager.getApiByName('MusicBrainz Artist API') as MusicBrainzArtistAPI | undefined;
-			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
-			if (!artistApi || !musicBrainzApi) {
-				new Notice('MusicBrainz APIs not available.');
-				return;
-			}
+			const geniusSearchArtist = release.artists[0] ?? release.title;
+			const childOptions: CreateNoteOptions = {
+				attachTemplate: true,
+				openNote: false,
+				attachFile: undefined,
+				folder: undefined,
+			};
 
+			new Notice(`Importing ${release.tracks.length} tracks for ${release.title}…`);
+			console.log(`Importing ${release.tracks.length} tracks for ${release.title}…`);
+
+			await this.importSongNotesForMusicReleaseTracks(
+				release,
+				geniusSearchArtist,
+				musicBrainzApi,
+				genius,
+				spotify,
+				childOptions,
+				useTree,
+				songNotesFolder,
+			);
+		} catch (e) {
+			console.warn(e);
+			new Notice(`${e}`);
+		}
+	}
+
+	private async importArtistDiscography(artist: ArtistModel, options: CreateNoteOptions): Promise<void> {
+		try {
 			const useTree = this.settings.artistUseFileTreeForSongs;
 			const childOptions: CreateNoteOptions = {
 				attachTemplate: true,
@@ -658,7 +798,7 @@ export default class MediaDbPlugin extends Plugin {
 			};
 
 			const artistBaseFolder = await this.mediaTypeManager.getFolder(artist, this.app);
-			const artistNoteFolder = artistBaseFolder;
+			let artistNoteFolder = artistBaseFolder;
 			let albumNotesFolder = artistBaseFolder;
 
 			if (useTree) {
@@ -672,15 +812,47 @@ export default class MediaDbPlugin extends Plugin {
 				return;
 			}
 
+			if (!this.settings.artistAutomaticallyImportReleases) {
+				new Notice(`✅ Finished artist import for ${artist.title}.`);
+				console.log(`✅ Finished artist import for ${artist.title}.`);
+				return;
+			}
+
+			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
+			const genius = new GeniusClient(geniusToken);
+			if (!genius.isConfigured()) {
+				new Notice('Artist import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+				console.warn('Artist import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+			}
+
+			const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
+			const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
+			const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
+
+			const artistApi = this.apiManager.getApiByName('MusicBrainz Artist API') as MusicBrainzArtistAPI | undefined;
+			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
+			if (!artistApi || !musicBrainzApi) {
+				new Notice('MusicBrainz APIs not available.');
+				console.warn('MusicBrainz APIs not available.');
+				return;
+			}
+
 			let releaseGroupIds: string[];
 			try {
 				releaseGroupIds = await artistApi.listStudioAlbumReleaseGroupIds(artist.id);
 			} catch (e) {
 				new Notice(`Could not load albums: ${e}`);
+				console.log(`Could not load albums: ${e}`);
 				return;
 			}
 
-			new Notice(`Importing ${releaseGroupIds.length} studio albums and tracks for ${artist.title}…`);
+			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
+			new Notice(
+				`Importing ${releaseGroupIds.length} studio albums${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+			);
+			console.log(
+				`Importing ${releaseGroupIds.length} studio albums${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+			);
 
 			for (const rgId of releaseGroupIds) {
 				await new Promise(r => setTimeout(r, 1100));
@@ -694,7 +866,7 @@ export default class MediaDbPlugin extends Plugin {
 				}
 
 				let songNotesFolder: TFolder | undefined;
-				if (useTree) {
+				if (useTree && importSongs) {
 					const albumSeg = this.safeFileTreeSegment(release.title);
 					songNotesFolder = await this.ensureVaultFolder(normalizePath(`${albumNotesFolder.path}/${albumSeg}`));
 				}
@@ -706,69 +878,24 @@ export default class MediaDbPlugin extends Plugin {
 					continue;
 				}
 
-				for (const track of release.tracks) {
-					let lyrics = '';
-					let geniusUrl = '';
-					if (genius.isConfigured()) {
-						await new Promise(r => setTimeout(r, 500));
-						const hit = await genius.searchFirstSongHit(`${artist.title} ${track.title}`);
-						if (hit) {
-							geniusUrl = hit.url;
-							await new Promise(r => setTimeout(r, 600));
-							lyrics = await genius.fetchLyricsFromSongPage(hit.url);
-						}
-					}
-
-					let spotifyUrl = '';
-					if (track.recordingId) {
-						await new Promise(r => setTimeout(r, 1100));
-						try {
-							spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(track.recordingId);
-						} catch (e) {
-							console.warn(`MDB | Spotify URL for recording ${track.recordingId}:`, e);
-						}
-					}
-					if (!spotifyUrl && spotify.isConfigured()) {
-						const primaryArtist = release.artists[0] ?? artist.title;
-						console.log(`MDB | Spotify API fallback for track "${track.title}" (artist: ${primaryArtist})`);
-						try {
-							spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
-						} catch (e) {
-							console.warn(`MDB | Spotify search for "${track.title}":`, e);
-						}
-					}
-
-					const song = new SongModel({
-						type: 'song',
-						title: track.title,
-						englishTitle: track.title,
-						year: release.year,
-						releaseDate: release.releaseDate,
-						dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
-						url: geniusUrl || release.url,
-						id: `${release.id}-t${track.number}`,
-						image: release.image,
-						subType: 'song',
-						genres: release.genres ?? [],
-						artists: release.artists.length > 0 ? release.artists : [artist.title],
-						albumTitle: release.title,
-						albumReleaseGroupId: release.id,
-						trackNumber: track.number,
-						duration: track.duration,
-						featuredArtists: track.featuredArtists,
-						geniusUrl,
-						spotifyUrl,
-						lyrics,
-						userData: { personalRating: 0 },
-					});
-
-					const songOpts: CreateNoteOptions = useTree && songNotesFolder ? { ...childOptions, folder: songNotesFolder } : { ...childOptions };
-
-					await this.createStandardMediaDbNoteFromModel(song, songOpts);
+				if (!importSongs) {
+					continue;
 				}
+
+				await this.importSongNotesForMusicReleaseTracks(
+					release,
+					artist.title,
+					musicBrainzApi,
+					genius,
+					spotify,
+					childOptions,
+					useTree,
+					songNotesFolder,
+				);
 			}
 
-			new Notice(`Finished artist import for ${artist.title}.`);
+			new Notice(`✅ Finished artist import for ${artist.title}.`);
+			console.log(`✅ Finished artist import for ${artist.title}.`);
 		} catch (e) {
 			console.warn(e);
 			new Notice(`${e}`);
@@ -896,6 +1023,60 @@ export default class MediaDbPlugin extends Plugin {
 				dataSource: mediaTypeModel.dataSource,
 			};
 		}
+		meta = this.withMovieCurrencyObjectFormat(meta, mediaTypeModel);
+		meta = this.withSanitizedColonStrings(meta);
+		return this.withNormalizedTitleAliasMetadata(meta, mediaTypeModel.title);
+	}
+
+	/** Sanitize missing spaces after colons to avoid Obsidian treating them as URIs */
+	private withSanitizedColonStrings(meta: Record<string, unknown>): Record<string, unknown> {
+		const next = { ...meta };
+		for (const key of Object.keys(next)) {
+			const val = next[key];
+			if (typeof val === 'string') {
+				// Don't format URLs or similar links
+				if (val.startsWith('http://') || val.startsWith('https://')) continue;
+				next[key] = val.replace(/:(?=[^\s\/\\])/g, ': ');
+			}
+		}
+		return next;
+	}
+
+	/** When enabled, movie budget/revenue become `{ value, currency }` for YAML front matter. */
+	private withMovieCurrencyObjectFormat(meta: Record<string, unknown>, mediaTypeModel: MediaTypeModel): Record<string, unknown> {
+		if (!this.settings.useObjectFormatForCurrencyValues || mediaTypeModel.getMediaType() !== MediaType.Movie) {
+			return meta;
+		}
+		const next = { ...meta };
+		for (const key of ['budget', 'revenue'] as const) {
+			const raw = next[key];
+			if (typeof raw !== 'string') {
+				continue;
+			}
+			const amount = parseUsdWholeDollarsFromDisplayString(raw);
+			next[key] = amount !== null ? { value: amount, currency: 'USD' } : null;
+		}
+		return next;
+	}
+
+	private withNormalizedTitleAliasMetadata(meta: Record<string, unknown>, title: string): Record<string, unknown> {
+		if (!this.settings.addNormalizeTitlesAsAlias) {
+			return meta;
+		}
+		const alias = normalizeTitleForAsciiAlias(title);
+		if (alias === null) {
+			return meta;
+		}
+		const prev = meta['aliases'];
+		if (Array.isArray(prev)) {
+			if (!prev.includes(alias)) {
+				meta['aliases'] = [...prev, alias];
+			}
+		} else if (typeof prev === 'string') {
+			meta['aliases'] = prev === alias ? [prev] : [prev, alias];
+		} else {
+			meta['aliases'] = [alias];
+		}
 		return meta;
 	}
 
@@ -950,17 +1131,16 @@ export default class MediaDbPlugin extends Plugin {
 			}
 		}
 
-		// --- Auto-Tag Logic ---
-		const tagProps = this.settings.autoTagProperties
-			.split(',')
-			.map(s => s.trim().toLowerCase())
-			.filter(s => s !== '');
-		if (this.settings.enableAutoTagging && tagProps.length > 0) {
+		// --- Per-Property Auto-Tag Logic ---
+		const autoTagEntries = this.modelPropertyMapper.getAutoTagKeys(mediaTypeModel.type);
+		if (autoTagEntries.length > 0) {
 			const existingTags: string[] = Array.isArray(fileMetadata.tags) ? (fileMetadata.tags as string[]) : [];
 			const newTags = new Set<string>(existingTags.filter(t => typeof t === 'string' && t.trim() !== ''));
 
 			for (const [key, value] of Object.entries(fileMetadata)) {
-				if (tagProps.includes(key.toLowerCase()) && value) {
+				const entry = autoTagEntries.find(e => e.key.toLowerCase() === key.toLowerCase());
+				if (entry && value) {
+					const prefix = entry.prefix.trim().replace(/\/$/, ''); // strip trailing slash
 					const valuesToTag = Array.isArray(value) ? value : [value];
 					for (let v of valuesToTag) {
 						if (typeof v === 'string') {
@@ -971,10 +1151,10 @@ export default class MediaDbPlugin extends Plugin {
 							const sanitized = v
 								.trim()
 								.replace(/\s+/g, '-')
-								.replace(/[^\wığüşöçIĞÜŞÖÇ-]/g, '')
+								.replace(/[^\wığüşöçIĞÜŞÖÇ/-]/g, '')
 								.toLowerCase();
 
-							if (sanitized) newTags.add(sanitized);
+							if (sanitized) newTags.add(prefix ? `${prefix}/${sanitized}` : sanitized);
 						}
 					}
 				}
@@ -992,11 +1172,17 @@ export default class MediaDbPlugin extends Plugin {
 			}
 		}
 
-		// Ensure 'tags' always appears last in frontmatter
-		if ('tags' in fileMetadata) {
-			const tagsValue = fileMetadata['tags'];
-			delete fileMetadata['tags'];
-			fileMetadata['tags'] = tagsValue;
+		// Ensure 'pinBottom' properties (including 'tags' if pinned) appear at the absolute bottom
+		// This guarantees they are listed chronologically below template properties.
+		const pinnedKeys = this.modelPropertyMapper.getPinnedBottomKeys(mediaTypeModel.type);
+		for (const key of pinnedKeys) {
+			if (key in fileMetadata) {
+				const val = fileMetadata[key];
+				delete fileMetadata[key];
+				if (val !== null && val !== undefined) {
+					fileMetadata[key] = val;
+				}
+			}
 		}
 
 		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
@@ -1010,19 +1196,17 @@ export default class MediaDbPlugin extends Plugin {
 		return fileContent;
 	}
 
-	extractManualTags(metadata: Record<string, unknown>, autoTagKeys: string): string[] {
+	extractManualTags(metadata: Record<string, unknown>, autoTagEntries: { key: string; prefix: string }[]): string[] {
 		const allTagsRaw = metadata.tags;
 		const allTags = Array.isArray(allTagsRaw) ? allTagsRaw : typeof allTagsRaw === 'string' ? [allTagsRaw] : [];
 		if (allTags.length === 0) return [];
 
-		const tagProps = autoTagKeys
-			.split(',')
-			.map(s => s.trim().toLowerCase())
-			.filter(s => s);
 		const autoTagValues = new Set<string>();
 
 		for (const [key, value] of Object.entries(metadata)) {
-			if (tagProps.includes(key.toLowerCase()) && value) {
+			const entry = autoTagEntries.find(e => e.key.toLowerCase() === key.toLowerCase());
+			if (entry && value) {
+				const prefix = entry.prefix.trim().replace(/\/$/, '');
 				const valuesToTag = Array.isArray(value) ? value : [value];
 				for (const v of valuesToTag) {
 					if (typeof v === 'string') {
@@ -1031,9 +1215,9 @@ export default class MediaDbPlugin extends Plugin {
 						const sanitized = clean
 							.trim()
 							.replace(/\s+/g, '-')
-							.replace(/[^\wığüşöçIĞÜŞÖÇ-]/g, '')
+							.replace(/[^\wığüşöçIĞÜŞÖÇ/-]/g, '')
 							.toLowerCase();
-						if (sanitized) autoTagValues.add(sanitized);
+						if (sanitized) autoTagValues.add(prefix ? `${prefix}/${sanitized}` : sanitized);
 					}
 				}
 			}
@@ -1056,7 +1240,9 @@ export default class MediaDbPlugin extends Plugin {
 			if (typeof arr === 'string' && arr.trim()) return [arr];
 			return [];
 		};
-		const oldManualTags = this.extractManualTags(attachFileMetadata, this.settings.autoTagProperties);
+		const mediaType = attachFileMetadata.type ?? fileMetadata.type;
+		const autoTagEntries = this.modelPropertyMapper.getAutoTagKeys(mediaType);
+		const oldManualTags = this.extractManualTags(attachFileMetadata, autoTagEntries);
 		const oldAliases = rescueArray('aliases');
 
 		// TODO: better object merging
@@ -1141,6 +1327,16 @@ export default class MediaDbPlugin extends Plugin {
 	 * @param fileContent
 	 * @param options
 	 */
+	getResolvedImportPath(mediaTypeModel: MediaTypeModel): string {
+		let folderPath = this.mediaTypeManager.mediaFolderMap.get(mediaTypeModel.getMediaType()) ?? '/';
+		folderPath = this.mediaTypeManager.expandFolderPathForModel(folderPath, mediaTypeModel);
+		let fileName = this.mediaTypeManager.getFileName(mediaTypeModel);
+		fileName = replaceIllegalFileNameCharactersInString(fileName);
+		const dir = folderPath.replace(/^\/+|\/+$/g, '');
+		const relative = dir.length > 0 ? `${dir}/${fileName}.md` : `${fileName}.md`;
+		return normalizePath(relative);
+	}
+
 	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions): Promise<TFile> {
 		// find and possibly create the folder set in settings or passed in folder
 		const folder = options.folder ?? this.app.vault.getAbstractFileByPath('/');
@@ -1155,14 +1351,22 @@ export default class MediaDbPlugin extends Plugin {
 		// look if file already exists and ask if it should be overwritten
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (file) {
-			let shouldOverwrite = options.overwrite;
-			if (!shouldOverwrite) {
-				shouldOverwrite = await new Promise<boolean>(resolve => {
+			let choice = options.overwrite ? ConfirmOverwriteChoice.Overwrite : null;
+			if (!choice) {
+				choice = await new Promise<ConfirmOverwriteChoice>(resolve => {
 					new ConfirmOverwriteModal(this.app, fileName, resolve).open();
 				});
 			}
 
-			if (!shouldOverwrite) {
+			if (choice !== ConfirmOverwriteChoice.Overwrite) {
+				// To keep old Promise<TFile> compatibility, return the existing file if kept, or throw
+				if (choice === ConfirmOverwriteChoice.KeepExisting && file instanceof TFile) {
+					if (options.openNote) {
+						const activeLeaf = this.app.workspace.getUnpinnedLeaf();
+						if (activeLeaf) await activeLeaf.openFile(file, { state: { mode: 'source' } });
+					}
+					return file;
+				}
 				throw new Error('MDB | file creation cancelled by user');
 			}
 

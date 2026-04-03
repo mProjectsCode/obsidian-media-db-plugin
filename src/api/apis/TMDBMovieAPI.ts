@@ -11,16 +11,7 @@ import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/TMDB';
 
 /** TMDB `credits.crew` jobs that count as writing credits for movies. */
-const TMDB_WRITING_CREW_JOBS = new Set([
-	'Writer',
-	'Screenplay',
-	'Story',
-	'Teleplay',
-	'Original Story',
-	'Characters',
-	'Novel',
-	'Screenstory',
-]);
+const TMDB_WRITING_CREW_JOBS = new Set(['Writer', 'Screenplay', 'Story', 'Teleplay', 'Original Story', 'Characters', 'Novel', 'Screenstory']);
 
 function tmdbWritingCreditsFromCrew(crew: any[] | undefined): string[] {
 	if (!crew?.length) {
