@@ -4,8 +4,10 @@ import { ArtistModel } from '../../models/ArtistModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear, contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
-import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
 import { APIModel } from '../APIModel';
+import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
+import type { ArtistDiscographyReleaseSecondaryTypes, MusicBrainzReleaseGroupPrimaryTypeId } from '../musicBrainzReleaseGroupTypes';
+import { MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES, releaseGroupPassesSecondaryTypeFilter } from '../musicBrainzReleaseGroupTypes';
 
 interface ArtistTag {
 	name: string;
@@ -60,20 +62,6 @@ function isniFromMusicBrainz(isnis: string[] | undefined): string {
 	}
 	return isnis.join(', ');
 }
-
-const EXCLUDED_SECONDARY_TYPES = new Set([
-	'Compilation',
-	'Live',
-	'Remix',
-	'Soundtrack',
-	'Spokenword',
-	'Interview',
-	'Audio drama',
-	'DJ-mix',
-	'Mixtape/Street',
-	'Demo',
-	'Field recording',
-]);
 
 export class MusicBrainzArtistAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -191,51 +179,68 @@ export class MusicBrainzArtistAPI extends APIModel {
 	}
 
 	/**
-	 * Lists release group MBIDs for studio releases (MusicBrainz primary type album, excluding live/compilations/etc.).
+	 * Lists release group MBIDs for an artist’s discography import, filtered by enabled MusicBrainz primary types
+	 * and optional secondary types (live, compilation, …) per plugin settings.
 	 * Passes release-group-status=website-default so MusicBrainz omits groups that only have bootleg, promotional, or pseudo-releases
 	 * (see MusicBrainz API “Release (Group) Type and Status”).
 	 */
-	async listStudioAlbumReleaseGroupIds(artistId: string): Promise<string[]> {
+	async listArtistDiscographyReleaseGroupIds(
+		artistId: string,
+		enabledPrimaryTypeIds: MusicBrainzReleaseGroupPrimaryTypeId[],
+		secondaryTypesAllowed: ArtistDiscographyReleaseSecondaryTypes,
+	): Promise<string[]> {
+		if (enabledPrimaryTypeIds.length === 0) {
+			return [];
+		}
+
 		const collected: { id: string; date: string }[] = [];
-		let offset = 0;
-		const limit = 100;
 
-		while (true) {
-			await this.throttleMs(1100);
-			const url = `https://musicbrainz.org/ws/2/release-group?artist=${encodeURIComponent(artistId)}&type=album&fmt=json&limit=${limit}&offset=${offset}&release-group-status=website-default`;
-
-			const res = await requestUrl({
-				url,
-				headers: this.mbHeaders(),
-			});
-
-			if (res.status !== 200) {
-				throw Error(`MDB | Received status code ${res.status} browsing release groups.`);
+		for (const primaryTypeId of enabledPrimaryTypeIds) {
+			const typeDef = MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES.find(t => t.id === primaryTypeId);
+			if (!typeDef) {
+				continue;
 			}
+			const browseParam = typeDef.browseParam;
 
-			const data = (await res.json) as ReleaseGroupBrowseResponse;
-			const groups = data['release-groups'] ?? [];
-			if (groups.length === 0) {
-				break;
-			}
+			let offset = 0;
+			const limit = 100;
 
-			for (const rg of groups) {
-				if (rg['primary-type'] !== 'Album') {
-					continue;
-				}
-				const secondary = rg['secondary-types'] ?? [];
-				if (secondary.some(t => EXCLUDED_SECONDARY_TYPES.has(t))) {
-					continue;
-				}
-				collected.push({
-					id: rg.id,
-					date: rg['first-release-date'] ?? '',
+			while (true) {
+				await this.throttleMs(1100);
+				const url = `https://musicbrainz.org/ws/2/release-group?artist=${encodeURIComponent(artistId)}&type=${encodeURIComponent(browseParam)}&fmt=json&limit=${limit}&offset=${offset}&release-group-status=website-default`;
+
+				const res = await requestUrl({
+					url,
+					headers: this.mbHeaders(),
 				});
-			}
 
-			offset += limit;
-			if (groups.length < limit) {
-				break;
+				if (res.status !== 200) {
+					throw Error(`MDB | Received status code ${res.status} browsing release groups.`);
+				}
+
+				const data = (await res.json) as ReleaseGroupBrowseResponse;
+				const groups = data['release-groups'] ?? [];
+				if (groups.length === 0) {
+					break;
+				}
+
+				for (const rg of groups) {
+					if (rg['primary-type'] !== primaryTypeId) {
+						continue;
+					}
+					if (!releaseGroupPassesSecondaryTypeFilter(rg['secondary-types'], secondaryTypesAllowed)) {
+						continue;
+					}
+					collected.push({
+						id: rg.id,
+						date: rg['first-release-date'] ?? '',
+					});
+				}
+
+				offset += limit;
+				if (groups.length < limit) {
+					break;
+				}
 			}
 		}
 

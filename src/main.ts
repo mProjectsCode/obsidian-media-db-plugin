@@ -2,7 +2,6 @@ import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder 
 import { requestUrl, normalizePath } from 'obsidian';
 import { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
-import { MUSICBRAINZ_NOTE_DATA_SOURCE, musicBrainzRegisteredApiName } from './api/musicBrainzConstants';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { GiantBombAPI } from './api/apis/GiantBombAPI';
@@ -22,6 +21,8 @@ import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
 import { VNDBAPI } from './api/apis/VNDBAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { GeniusClient } from './api/GeniusClient';
+import { MUSICBRAINZ_NOTE_DATA_SOURCE, musicBrainzRegisteredApiName } from './api/musicBrainzConstants';
+import { enabledMusicBrainzPrimaryTypeIds } from './api/musicBrainzReleaseGroupTypes';
 import { SpotifyClient } from './api/SpotifyClient';
 import { ConfirmOverwriteModal, ConfirmOverwriteChoice } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
@@ -733,6 +734,15 @@ export default class MediaDbPlugin extends Plugin {
 				return;
 			}
 
+			const enabledPrimaryTypes = enabledMusicBrainzPrimaryTypeIds(this.settings.artistDiscographyReleasePrimaryTypes);
+			if (enabledPrimaryTypes.length === 0) {
+				console.log('MDB | Discography skipped: no release types enabled in settings.');
+				new Notice(
+					`✅ Finished artist import for ${artist.title}. Discography was skipped — no release types are enabled (Settings → Music → Release → Release types).`,
+				);
+				return;
+			}
+
 			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
 			const genius = new GeniusClient(geniusToken);
 			if (!genius.isConfigured()) {
@@ -754,7 +764,11 @@ export default class MediaDbPlugin extends Plugin {
 
 			let releaseGroupIds: string[];
 			try {
-				releaseGroupIds = await artistApi.listStudioAlbumReleaseGroupIds(artist.id);
+				releaseGroupIds = await artistApi.listArtistDiscographyReleaseGroupIds(
+					artist.id,
+					enabledPrimaryTypes,
+					this.settings.artistDiscographyReleaseSecondaryTypes,
+				);
 			} catch (e) {
 				new Notice(`Could not load releases: ${e}`);
 				console.log(`Could not load releases: ${e}`);
@@ -763,10 +777,10 @@ export default class MediaDbPlugin extends Plugin {
 
 			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
 			new Notice(
-				`Importing ${releaseGroupIds.length} studio releases${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+				`Importing ${releaseGroupIds.length} releases${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
 			);
 			console.log(
-				`Importing ${releaseGroupIds.length} studio releases${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+				`Importing ${releaseGroupIds.length} releases${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
 			);
 
 			const discographyChain: ChainedImportControl = { abort: false };

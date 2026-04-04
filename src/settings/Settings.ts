@@ -1,9 +1,19 @@
 import type { App, IconName } from 'obsidian';
 import { Platform, PluginSettingTab, SecretComponent, SettingGroup, setIcon } from 'obsidian';
 import { MediaType } from 'src/utils/MediaType';
+import type { ArtistDiscographyReleasePrimaryTypes, ArtistDiscographyReleaseSecondaryTypes } from '../api/musicBrainzReleaseGroupTypes';
+import {
+	DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_PRIMARY_TYPES,
+	DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_SECONDARY_TYPES,
+	formatArtistDiscographyReleaseSecondarySummary,
+	formatArtistDiscographyReleaseTypesSummary,
+	normalizeArtistDiscographyReleasePrimaryTypes,
+	normalizeArtistDiscographyReleaseSecondaryTypes,
+} from '../api/musicBrainzReleaseGroupTypes';
 import type MediaDbPlugin from '../main';
-import { ApiSecretID } from './apiSecretsHelper';
 import { PropertyMappingModal } from '../modals/PropertyMappingModal';
+import { ReleaseTypesModal } from '../modals/ReleaseTypesModal';
+import { ApiSecretID } from './apiSecretsHelper';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { noteTypeValueForMedia, setNoteTypeForMedia } from '../utils/noteTypeSettings';
@@ -125,6 +135,10 @@ export interface MediaDbPluginSettings {
 	artistAutomaticallyImportReleases: boolean;
 	/** When true, each imported release also creates a note per track (standalone release import or artist discography). */
 	musicReleaseAutomaticallyImportSongs: boolean;
+	/** MusicBrainz release group primary types to include when importing an artist discography. */
+	artistDiscographyReleasePrimaryTypes: ArtistDiscographyReleasePrimaryTypes;
+	/** Which MusicBrainz release group secondary-type tags are allowed (e.g. Live, Compilation); others block import. */
+	artistDiscographyReleaseSecondaryTypes: ArtistDiscographyReleaseSecondaryTypes;
 	boardgameFolder: string;
 	bookFolder: string;
 
@@ -419,6 +433,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	songFolder: 'Media DB/music/songs',
 	artistAutomaticallyImportReleases: true,
 	musicReleaseAutomaticallyImportSongs: true,
+	artistDiscographyReleasePrimaryTypes: { ...DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_PRIMARY_TYPES },
+	artistDiscographyReleaseSecondaryTypes: { ...DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_SECONDARY_TYPES },
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
 
@@ -457,6 +473,12 @@ export const lockedPropertyMappings: string[] = [];
 /** Forward-compatible hook for merging persisted settings with new defaults. */
 export function migrateLoadedPluginSettings(settings: MediaDbPluginSettings): void {
 	delete (settings as unknown as Record<string, unknown>).artistUseFileTreeForSongs;
+	settings.artistDiscographyReleasePrimaryTypes = normalizeArtistDiscographyReleasePrimaryTypes(
+		settings.artistDiscographyReleasePrimaryTypes,
+	);
+	settings.artistDiscographyReleaseSecondaryTypes = normalizeArtistDiscographyReleaseSecondaryTypes(
+		settings.artistDiscographyReleaseSecondaryTypes,
+	);
 }
 
 export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings {
@@ -706,6 +728,20 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		this.renderMediaTypeSection(panel, byType(MediaType.MusicRelease), mediaTypeApiMap, {
 			sectionHeading: 'Release',
 			appendToSection: group => {
+				group.addSetting(
+					setting =>
+						void setting
+							.setName('Release types')
+							.setDesc(
+								`Primary types: ${formatArtistDiscographyReleaseTypesSummary(this.plugin.settings.artistDiscographyReleasePrimaryTypes)}. ` +
+									`Secondary tags allowed: ${formatArtistDiscographyReleaseSecondarySummary(this.plugin.settings.artistDiscographyReleaseSecondaryTypes)}.`,
+							)
+							.addButton(btn => {
+								btn.setButtonText('Configure…').onClick(() => {
+									new ReleaseTypesModal(this.app, this.plugin).open();
+								});
+							}),
+				);
 				group.addSetting(
 					setting =>
 						void setting
