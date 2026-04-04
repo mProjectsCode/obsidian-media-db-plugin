@@ -1,10 +1,10 @@
-import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import { ArtistModel } from '../../models/ArtistModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear, contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
+import { requestUrlRateLimited } from '../requestUrlRateLimited';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
 import type { MusicBrainzReleaseGroupPrimaryTypeId, ReleaseGroupSecondaryTypeId } from '../musicBrainzReleaseGroupTypes';
 import { MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES, releaseGroupPassesImportSecondaryFilter } from '../musicBrainzReleaseGroupTypes';
@@ -91,10 +91,13 @@ export class MusicBrainzArtistAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		const searchUrl = `https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(title)}&limit=20&fmt=json`;
-		const fetchData = await requestUrl({
-			url: searchUrl,
-			headers: this.mbHeaders(),
-		});
+		const fetchData = await requestUrlRateLimited(
+			{
+				url: searchUrl,
+				headers: this.mbHeaders(),
+			},
+			{ logLabel: 'MusicBrainz' },
+		);
 
 		if (fetchData.status !== 200) {
 			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
@@ -134,10 +137,13 @@ export class MusicBrainzArtistAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const artistUrl = `https://musicbrainz.org/ws/2/artist/${encodeURIComponent(id)}?inc=tags+genres+url-rels&fmt=json`;
-		const res = await requestUrl({
-			url: artistUrl,
-			headers: this.mbHeaders(),
-		});
+		const res = await requestUrlRateLimited(
+			{
+				url: artistUrl,
+				headers: this.mbHeaders(),
+			},
+			{ logLabel: 'MusicBrainz' },
+		);
 
 		if (res.status !== 200) {
 			throw Error(`MDB | Received status code ${res.status} from ${this.apiName}.`);
@@ -209,10 +215,13 @@ export class MusicBrainzArtistAPI extends APIModel {
 				await this.throttleMs(1100);
 				const url = `https://musicbrainz.org/ws/2/release-group?artist=${encodeURIComponent(artistId)}&type=${encodeURIComponent(browseParam)}&fmt=json&limit=${limit}&offset=${offset}&release-group-status=website-default`;
 
-				const res = await requestUrl({
-					url,
-					headers: this.mbHeaders(),
-				});
+				const res = await requestUrlRateLimited(
+					{
+						url,
+						headers: this.mbHeaders(),
+					},
+					{ logLabel: 'MusicBrainz' },
+				);
 
 				if (res.status !== 200) {
 					throw Error(`MDB | Received status code ${res.status} browsing release groups.`);

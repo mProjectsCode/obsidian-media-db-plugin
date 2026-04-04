@@ -1,4 +1,3 @@
-import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MusicReleaseModel } from '../../models/MusicReleaseModel';
@@ -10,6 +9,7 @@ import {
 	releaseGroupPassesImportSecondaryFilter,
 } from '../musicBrainzReleaseGroupTypes';
 import { APIModel } from '../APIModel';
+import { requestUrlRateLimited } from '../requestUrlRateLimited';
 
 // sadly no open api schema available
 
@@ -119,12 +119,15 @@ export class MusicBrainzAPI extends APIModel {
 
 		const searchUrl = `https://musicbrainz.org/ws/2/release-group?query=${encodeURIComponent(title)}&limit=50&fmt=json`;
 
-		const fetchData = await requestUrl({
-			url: searchUrl,
-			headers: {
-				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+		const fetchData = await requestUrlRateLimited(
+			{
+				url: searchUrl,
+				headers: {
+					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+				},
 			},
-		});
+			{ logLabel: 'MusicBrainz' },
+		);
 
 		// console.debug(fetchData);
 
@@ -175,12 +178,15 @@ export class MusicBrainzAPI extends APIModel {
 
 		// Fetch release group
 		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
-		const groupResponse = await requestUrl({
-			url: groupUrl,
-			headers: {
-				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+		const groupResponse = await requestUrlRateLimited(
+			{
+				url: groupUrl,
+				headers: {
+					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+				},
 			},
-		});
+			{ logLabel: 'MusicBrainz' },
+		);
 
 		if (groupResponse.status !== 200) {
 			throw Error(`MDB | Received status code ${groupResponse.status} from ${this.apiName}.`);
@@ -197,12 +203,15 @@ export class MusicBrainzAPI extends APIModel {
 		const releaseUrl = `https://musicbrainz.org/ws/2/release/${firstRelease.id}?inc=recordings+artists&fmt=json`;
 		console.log(`MDB | Fetching release recordings from: ${releaseUrl}`);
 
-		const releaseResponse = await requestUrl({
-			url: releaseUrl,
-			headers: {
-				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+		const releaseResponse = await requestUrlRateLimited(
+			{
+				url: releaseUrl,
+				headers: {
+					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+				},
 			},
-		});
+			{ logLabel: 'MusicBrainz' },
+		);
 
 		if (releaseResponse.status !== 200) {
 			throw Error(`MDB | Received status code ${releaseResponse.status} from ${this.apiName}.`);
@@ -218,8 +227,6 @@ export class MusicBrainzAPI extends APIModel {
 				return typeof len === 'number' && !isNaN(len) ? sum + len : sum;
 			}, 0) ?? 0;
 		const albumLengthCalc = millisecondsToMinutes(totalrawLength);
-
-		console.log(releaseData);
 
 		return new MusicReleaseModel({
 			type: 'musicRelease',
@@ -261,12 +268,15 @@ export class MusicBrainzAPI extends APIModel {
 			return '';
 		}
 		const recordingUrl = `https://musicbrainz.org/ws/2/recording/${encodeURIComponent(recordingId)}?inc=url-rels&fmt=json`;
-		const fetchData = await requestUrl({
-			url: recordingUrl,
-			headers: {
-				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+		const fetchData = await requestUrlRateLimited(
+			{
+				url: recordingUrl,
+				headers: {
+					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+				},
 			},
-		});
+			{ logLabel: 'MusicBrainz' },
+		);
 		if (fetchData.status !== 200) {
 			console.warn(`MDB | Recording ${recordingId} url-rels returned ${fetchData.status}`);
 			return '';

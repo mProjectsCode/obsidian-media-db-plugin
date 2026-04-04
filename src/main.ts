@@ -55,6 +55,7 @@ import {
 	unCamelCase,
 	hasTemplaterPlugin,
 	useTemplaterPluginInFile,
+	ensureVaultFolderPath,
 } from './utils/Utils';
 import 'src/styles.css';
 
@@ -76,6 +77,9 @@ export default class MediaDbPlugin extends Plugin {
 	dateFormatter!: DateFormatter;
 
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
+
+	/** Serializes vault writes and overwrite modals during chained imports so parallel release/track jobs do not stack dialogs. */
+	private chainedVaultOperationQueue: Promise<unknown> = Promise.resolve();
 
 	async onload(): Promise<void> {
 		this.apiManager = new APIManager();
@@ -524,6 +528,10 @@ export default class MediaDbPlugin extends Plugin {
 		try {
 			console.debug('MDB | creating new note');
 
+			if (options.chainedImport?.abort) {
+				return false;
+			}
+
 			options.openNote ??= this.settings.openNoteInNewTab;
 
 			if (this.settings.imageDownload) {
@@ -567,70 +575,83 @@ export default class MediaDbPlugin extends Plugin {
 		spotify: SpotifyClient,
 		childOptions: CreateNoteOptions,
 	): Promise<void> {
-		for (const track of release.tracks) {
-			if (childOptions.chainedImport?.abort) {
-				break;
-			}
-			let lyrics = '';
-			let geniusUrl = '';
-			if (genius.isConfigured()) {
-				await new Promise(r => setTimeout(r, 500));
-				const hit = await genius.searchFirstSongHit(`${geniusSearchArtist} ${track.title}`);
-				if (hit) {
-					geniusUrl = hit.url;
-					await new Promise(r => setTimeout(r, 600));
-					lyrics = await genius.fetchLyricsFromSongPage(hit.url);
+		await Promise.allSettled(
+			release.tracks.map(async track => {
+				if (childOptions.chainedImport?.abort) {
+					return;
 				}
-			}
 
-			let spotifyUrl = '';
-			if (track.recordingId) {
-				await new Promise(r => setTimeout(r, 1100));
-				try {
-					spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(track.recordingId);
-				} catch (e) {
-					console.warn(`MDB | Spotify URL for recording ${track.recordingId}:`, e);
+				let lyrics = '';
+				let geniusUrl = '';
+				if (genius.isConfigured()) {
+					await new Promise(r => setTimeout(r, 500));
+					if (childOptions.chainedImport?.abort) {
+						return;
+					}
+					const hit = await genius.searchFirstSongHit(`${geniusSearchArtist} ${track.title}`);
+					if (hit) {
+						geniusUrl = hit.url;
+						await new Promise(r => setTimeout(r, 600));
+						if (childOptions.chainedImport?.abort) {
+							return;
+						}
+						lyrics = await genius.fetchLyricsFromSongPage(hit.url);
+					}
 				}
-			}
-			if (!spotifyUrl && spotify.isConfigured()) {
-				const primaryArtist = release.artists[0] ?? geniusSearchArtist;
-				console.log(`MDB | Spotify API fallback for track "${track.title}" (artist: ${primaryArtist})`);
-				try {
-					spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
-				} catch (e) {
-					console.warn(`MDB | Spotify search for "${track.title}":`, e);
+
+				let spotifyUrl = '';
+				if (track.recordingId) {
+					await new Promise(r => setTimeout(r, 1100));
+					if (childOptions.chainedImport?.abort) {
+						return;
+					}
+					try {
+						spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(track.recordingId);
+					} catch (e) {
+						console.warn(`MDB | Spotify URL for recording ${track.recordingId}:`, e);
+					}
 				}
-			}
+				if (!spotifyUrl && spotify.isConfigured()) {
+					const primaryArtist = release.artists[0] ?? geniusSearchArtist;
+					console.log(`MDB | Spotify API fallback for track "${track.title}" (artist: ${primaryArtist})`);
+					try {
+						spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
+					} catch (e) {
+						console.warn(`MDB | Spotify search for "${track.title}":`, e);
+					}
+				}
 
-			const song = new SongModel({
-				type: 'song',
-				title: track.title,
-				englishTitle: track.title,
-				year: release.year,
-				releaseDate: release.releaseDate,
-				dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
-				url: geniusUrl || release.url,
-				id: `${release.id}-t${track.number}`,
-				image: release.image,
-				subType: 'song',
-				genres: release.genres ?? [],
-				artists: release.artists.length > 0 ? release.artists : [geniusSearchArtist],
-				albumTitle: release.title,
-				albumReleaseGroupId: release.id,
-				trackNumber: track.number,
-				duration: track.duration,
-				featuredArtists: track.featuredArtists,
-				geniusUrl,
-				spotifyUrl,
-				lyrics,
-				userData: { personalRating: 0 },
-			});
+				if (childOptions.chainedImport?.abort) {
+					return;
+				}
 
-			const songCreated = await this.createStandardMediaDbNoteFromModel(song, { ...childOptions });
-			if (!songCreated && childOptions.chainedImport?.abort) {
-				break;
-			}
-		}
+				const song = new SongModel({
+					type: 'song',
+					title: track.title,
+					englishTitle: track.title,
+					year: release.year,
+					releaseDate: release.releaseDate,
+					dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
+					url: geniusUrl || release.url,
+					id: `${release.id}-t${track.number}`,
+					image: release.image,
+					subType: 'song',
+					genres: release.genres ?? [],
+					artists: release.artists.length > 0 ? release.artists : [geniusSearchArtist],
+					albumTitle: release.title,
+					albumReleaseGroupId: release.id,
+					trackNumber: track.number,
+					duration: track.duration,
+					featuredArtists: track.featuredArtists,
+					geniusUrl,
+					spotifyUrl,
+					lyrics,
+					userData: { personalRating: 0 },
+				});
+
+				await this.createStandardMediaDbNoteFromModel(song, { ...childOptions });
+			}),
+		);
 	}
 
 	private async importMusicReleaseWithOptionalSongs(release: MusicReleaseModel, options: CreateNoteOptions): Promise<void> {
@@ -789,57 +810,59 @@ export default class MediaDbPlugin extends Plugin {
 
 			const discographyChain: ChainedImportControl = { abort: false };
 
-			for (const rgId of releaseGroupIds) {
-				if (discographyChain.abort) {
-					break;
-				}
-
-				await new Promise(r => setTimeout(r, 1100));
-				let release: MusicReleaseModel;
-				try {
-					const model = await musicBrainzApi.getById(rgId);
-					release = model as MusicReleaseModel;
-				} catch (e) {
-					console.warn(`MDB | Skipping release group ${rgId}:`, e);
-					continue;
-				}
-
-				const releaseOpts: CreateNoteOptions = {
-					...options,
-					...childOptions,
-					chainedImport: discographyChain,
-					chainedImportStopLabel: 'Abort',
-					...(importSongs ? { musicReleaseSongsOverwrite: true } : {}),
-				};
-
-				const releaseNoteCreated = await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
-				if (!releaseNoteCreated) {
+			await Promise.allSettled(
+				releaseGroupIds.map(async rgId => {
 					if (discographyChain.abort) {
-						break;
+						return;
 					}
-					continue;
-				}
 
-				if (!importSongs) {
-					continue;
-				}
+					let release: MusicReleaseModel;
+					try {
+						const model = await musicBrainzApi.getById(rgId);
+						release = model as MusicReleaseModel;
+					} catch (e) {
+						console.warn(`MDB | Skipping release group ${rgId}:`, e);
+						return;
+					}
 
-				const releaseTracksChain: ChainedImportControl = { abort: false };
-				const trackImportOpts: CreateNoteOptions = {
-					...options,
-					...childOptions,
-					chainedImport: releaseTracksChain,
-					chainedImportStopLabel: 'Abort',
-				};
-				await this.importSongNotesForMusicReleaseTracks(
-					release,
-					artist.title,
-					musicBrainzApi,
-					genius,
-					spotify,
-					trackImportOpts,
-				);
-			}
+					if (discographyChain.abort) {
+						return;
+					}
+
+					const releaseOpts: CreateNoteOptions = {
+						...options,
+						...childOptions,
+						chainedImport: discographyChain,
+						chainedImportStopLabel: 'Abort',
+						...(importSongs ? { musicReleaseSongsOverwrite: true } : {}),
+					};
+
+					const releaseNoteCreated = await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
+					if (!releaseNoteCreated) {
+						return;
+					}
+
+					if (!importSongs || discographyChain.abort) {
+						return;
+					}
+
+					const releaseTracksChain: ChainedImportControl = { abort: false };
+					const trackImportOpts: CreateNoteOptions = {
+						...options,
+						...childOptions,
+						chainedImport: releaseTracksChain,
+						chainedImportStopLabel: 'Abort',
+					};
+					await this.importSongNotesForMusicReleaseTracks(
+						release,
+						artist.title,
+						musicBrainzApi,
+						genius,
+						spotify,
+						trackImportOpts,
+					);
+				}),
+			);
 
 			if (discographyChain.abort) {
 				new Notice(`Stopped release import for ${artist.title}.`);
@@ -868,9 +891,7 @@ export default class MediaDbPlugin extends Plugin {
 				const imageFileName = `${replaceIllegalFileNameCharactersInString(`${mediaTypeModel.type}_${mediaTypeModel.title} (${mediaTypeModel.year})`)}.${imageExt}`;
 				const imagePath = normalizePath(`${this.settings.imageFolder}/${imageFileName}`);
 
-				if (!this.app.vault.getAbstractFileByPath(this.settings.imageFolder)) {
-					await this.app.vault.createFolder(this.settings.imageFolder);
-				}
+				await ensureVaultFolderPath(this.app, this.settings.imageFolder);
 
 				if (!this.app.vault.getAbstractFileByPath(imagePath)) {
 					const response = await requestUrl({ url: imageUrl, method: 'GET' });
@@ -998,7 +1019,7 @@ export default class MediaDbPlugin extends Plugin {
 		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
 			// Include the media variable in all templater commands by using a top level JavaScript execution command.
 			const mediaJson = JSON.stringify(mediaTypeModel, (key, value: unknown) => (key === 'lyrics' ? undefined : value));
-			fileContent = `---\n<%* const media = ${mediaJson} %>\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
+			fileContent = `---\n<%* const media = ${mediaJson} -%>\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
 		} else {
 			fileContent = `---\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
 		}
@@ -1081,6 +1102,28 @@ export default class MediaDbPlugin extends Plugin {
 		fileContent: string,
 		options: CreateNoteOptions,
 	): Promise<{ file: TFile | null; keptExisting: boolean }> {
+		const run = (): Promise<{ file: TFile | null; keptExisting: boolean }> =>
+			this.createNoteInternal(fileName, fileContent, options);
+		if (options.chainedImport) {
+			const pending = this.chainedVaultOperationQueue.then(run);
+			this.chainedVaultOperationQueue = pending.then(
+				() => undefined,
+				() => undefined,
+			);
+			return pending;
+		}
+		return run();
+	}
+
+	private async createNoteInternal(
+		fileName: string,
+		fileContent: string,
+		options: CreateNoteOptions,
+	): Promise<{ file: TFile | null; keptExisting: boolean }> {
+		if (options.chainedImport?.abort) {
+			return { file: null, keptExisting: false };
+		}
+
 		// find and possibly create the folder set in settings or passed in folder
 		const folder = options.folder ?? this.app.vault.getAbstractFileByPath('/');
 

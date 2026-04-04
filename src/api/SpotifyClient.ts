@@ -1,6 +1,5 @@
-import { requestUrl } from 'obsidian';
-
 import { contactEmail, mediaDbVersion, pluginName } from '../utils/Utils';
+import { requestUrlRateLimited } from './requestUrlRateLimited';
 
 interface SpotifyTokenResponse {
 	access_token: string;
@@ -15,7 +14,7 @@ interface SpotifySearchResponse {
 }
 
 function spotifyTrackArtistQuery(trackTitle: string, artistName: string): string {
-	const clean = (s: string) => s.trim().replace(/"/g, ' ').replace(/\s+/g, ' ');
+	const clean = (s: string): string => s.trim().replace(/"/g, ' ').replace(/\s+/g, ' ');
 	const t = clean(trackTitle);
 	const a = clean(artistName);
 	if (!t) {
@@ -49,17 +48,19 @@ export class SpotifyClient {
 			return null;
 		}
 		const basic = btoa(`${this.clientId}:${this.clientSecret}`);
-		const res = await requestUrl({
-			url: 'https://accounts.spotify.com/api/token',
-			method: 'POST',
-			throw: false,
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				Authorization: `Basic ${basic}`,
-				'User-Agent': this.userAgent,
+		const res = await requestUrlRateLimited(
+			{
+				url: 'https://accounts.spotify.com/api/token',
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					Authorization: `Basic ${basic}`,
+					'User-Agent': this.userAgent,
+				},
+				body: 'grant_type=client_credentials',
 			},
-			body: 'grant_type=client_credentials',
-		});
+			{ logLabel: 'Spotify (token)' },
+		);
 		if (res.status !== 200) {
 			console.warn(`MDB | Spotify token request returned ${res.status}`);
 			this.accessToken = null;
@@ -104,15 +105,17 @@ export class SpotifyClient {
 		const params = new URLSearchParams({ q, type: 'track', limit: '1' });
 		const url = `https://api.spotify.com/v1/search?${params.toString()}`;
 		console.log(`MDB | Spotify search fetch: ${url}`);
-		let res = await requestUrl({
-			url,
-			method: 'GET',
-			throw: false,
-			headers: {
-				Authorization: `Bearer ${token}`,
-				'User-Agent': this.userAgent,
+		let res = await requestUrlRateLimited(
+			{
+				url,
+				method: 'GET',
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'User-Agent': this.userAgent,
+				},
 			},
-		});
+			{ logLabel: 'Spotify (search)' },
+		);
 
 		if (res.status === 401) {
 			this.accessToken = null;
@@ -122,15 +125,17 @@ export class SpotifyClient {
 				return '';
 			}
 			console.log(`MDB | Spotify search fetch (retry after 401): ${url}`);
-			res = await requestUrl({
-				url,
-				method: 'GET',
-				throw: false,
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'User-Agent': this.userAgent,
+			res = await requestUrlRateLimited(
+				{
+					url,
+					method: 'GET',
+					headers: {
+						Authorization: `Bearer ${token}`,
+						'User-Agent': this.userAgent,
+					},
 				},
-			});
+				{ logLabel: 'Spotify (search)' },
+			);
 		}
 
 		if (res.status !== 200) {

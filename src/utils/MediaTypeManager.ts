@@ -15,7 +15,7 @@ import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
 import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
 import { MediaType } from './MediaType';
-import { replaceIllegalFileNameCharactersInString, replaceTags } from './Utils';
+import { ensureVaultFolderPath, replaceIllegalFileNameCharactersInString, replaceTags } from './Utils';
 
 // All media types in alphabetical order
 export const MEDIA_TYPES: MediaType[] = [
@@ -144,9 +144,7 @@ export class MediaTypeManager {
 		folderPath ??= `/`;
 		folderPath = this.expandFolderPathForModel(folderPath, mediaTypeModel);
 
-		if (!(await app.vault.adapter.exists(folderPath))) {
-			await app.vault.createFolder(folderPath);
-		}
+		await ensureVaultFolderPath(app, folderPath);
 		const folder = app.vault.getAbstractFileByPath(folderPath);
 
 		if (!(folder instanceof TFolder)) {

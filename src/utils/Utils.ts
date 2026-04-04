@@ -1,6 +1,6 @@
 import { iso6392 } from 'iso-639-2';
 import type { TFile, TFolder, App } from 'obsidian';
-import { requestUrl } from 'obsidian';
+import { normalizePath, requestUrl } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MediaType } from './MediaType';
 
@@ -367,6 +367,27 @@ export async function useTemplaterPluginInFile(app: App, file: TFile): Promise<v
 	const templater = (app as any).plugins.plugins['templater-obsidian'];
 	if (templater && !templater?.settings.trigger_on_file_creation) {
 		await templater.templater.overwrite_file_commands(file);
+	}
+}
+
+/**
+ * Creates a folder if missing. Tolerates parallel callers creating the same path (Obsidian throws "Folder already exists").
+ */
+export async function ensureVaultFolderPath(app: App, folderPath: string): Promise<void> {
+	const normalized = normalizePath(folderPath);
+	if (normalized === '/' || normalized === '.' || normalized === '') {
+		return;
+	}
+	if (await app.vault.adapter.exists(normalized)) {
+		return;
+	}
+	try {
+		await app.vault.createFolder(normalized);
+	} catch (e) {
+		if (await app.vault.adapter.exists(normalized)) {
+			return;
+		}
+		throw e;
 	}
 }
 
