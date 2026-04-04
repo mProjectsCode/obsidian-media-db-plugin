@@ -8,9 +8,9 @@ import { GameModel } from '../models/GameModel';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { MovieModel } from '../models/MovieModel';
 import { MusicReleaseModel } from '../models/MusicReleaseModel';
+import { RecordingModel } from '../models/RecordingModel';
 import { SeasonModel } from '../models/SeasonModel';
 import { SeriesModel } from '../models/SeriesModel';
-import { SongModel } from '../models/SongModel';
 import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
 import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
@@ -21,7 +21,7 @@ import { ensureVaultFolderPath, replaceIllegalFileNameCharactersInString, replac
 export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Artist,
 	MediaType.MusicRelease,
-	MediaType.Song,
+	MediaType.Recording,
 	MediaType.Book,
 	MediaType.ComicManga,
 	MediaType.Game,
@@ -55,7 +55,7 @@ export class MediaTypeManager {
 		this.mediaFileNameTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.BoardGame, settings.boardgameFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Book, settings.bookFileNameTemplate);
-		this.mediaFileNameTemplateMap.set(MediaType.Song, settings.songFileNameTemplate);
+		this.mediaFileNameTemplateMap.set(MediaType.Recording, settings.recordingFileNameTemplate);
 
 		this.mediaTemplateMap = new Map<MediaType, string>();
 		this.mediaTemplateMap.set(MediaType.Artist, settings.artistTemplate);
@@ -68,7 +68,7 @@ export class MediaTypeManager {
 		this.mediaTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseTemplate);
 		this.mediaTemplateMap.set(MediaType.BoardGame, settings.boardgameTemplate);
 		this.mediaTemplateMap.set(MediaType.Book, settings.bookTemplate);
-		this.mediaTemplateMap.set(MediaType.Song, settings.songTemplate);
+		this.mediaTemplateMap.set(MediaType.Recording, settings.recordingTemplate);
 	}
 
 	updateFolders(settings: MediaDbPluginSettings): void {
@@ -83,7 +83,7 @@ export class MediaTypeManager {
 		this.mediaFolderMap.set(MediaType.MusicRelease, settings.musicReleaseFolder);
 		this.mediaFolderMap.set(MediaType.BoardGame, settings.boardgameFolder);
 		this.mediaFolderMap.set(MediaType.Book, settings.bookFolder);
-		this.mediaFolderMap.set(MediaType.Song, settings.songFolder);
+		this.mediaFolderMap.set(MediaType.Recording, settings.recordingFolder);
 	}
 
 	getFileName(mediaTypeModel: MediaTypeModel): string {
@@ -181,8 +181,8 @@ export class MediaTypeManager {
 			return new BookModel(obj);
 		} else if (mediaType === MediaType.Artist) {
 			return new ArtistModel(obj);
-		} else if (mediaType === MediaType.Song) {
-			return new SongModel(obj);
+		} else if (mediaType === MediaType.Recording) {
+			return new RecordingModel(obj);
 		}
 
 		throw new Error(`Unknown media type: ${mediaType}`);

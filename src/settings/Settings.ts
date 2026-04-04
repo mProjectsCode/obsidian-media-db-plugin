@@ -42,7 +42,7 @@ function mediaTypeTabIcon(mediaType: MediaType): IconName {
 			return 'calendar-range';
 		case MediaType.Series:
 			return 'tv';
-		case MediaType.Song:
+		case MediaType.Recording:
 			return 'music-4';
 		case MediaType.Wiki:
 			return 'library-big';
@@ -93,7 +93,7 @@ export interface MediaDbPluginSettings {
 	wikiTemplate: string;
 	musicReleaseTemplate: string;
 	artistTemplate: string;
-	songTemplate: string;
+	recordingTemplate: string;
 	boardgameTemplate: string;
 	bookTemplate: string;
 
@@ -105,7 +105,7 @@ export interface MediaDbPluginSettings {
 	wikiFileNameTemplate: string;
 	musicReleaseFileNameTemplate: string;
 	artistFileNameTemplate: string;
-	songFileNameTemplate: string;
+	recordingFileNameTemplate: string;
 	boardgameFileNameTemplate: string;
 	bookFileNameTemplate: string;
 
@@ -117,7 +117,7 @@ export interface MediaDbPluginSettings {
 	wikiFolder: string;
 	musicReleaseFolder: string;
 	artistFolder: string;
-	songFolder: string;
+	recordingFolder: string;
 
 	/** Frontmatter `type` for each media kind (empty = default internal id, e.g. movie, musicRelease). */
 	movieNoteType: string;
@@ -128,13 +128,13 @@ export interface MediaDbPluginSettings {
 	wikiNoteType: string;
 	musicReleaseNoteType: string;
 	artistNoteType: string;
-	songNoteType: string;
+	recordingNoteType: string;
 	boardgameNoteType: string;
 	bookNoteType: string;
-	/** When true, importing an artist also creates release and song notes from their discography. */
+	/** When true, importing an artist also creates release and recording notes from their discography. */
 	artistAutomaticallyImportReleases: boolean;
 	/** When true, each imported release also creates a note per track (standalone release import or artist discography). */
-	musicReleaseAutomaticallyImportSongs: boolean;
+	musicReleaseAutomaticallyImportRecordings: boolean;
 	/** MusicBrainz release group primary types shown in release search and included when importing an artist discography. */
 	enabledReleaseGroupPrimaryTypes: Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean>;
 	/** Allowed release group secondary-type tags (and inferred title tags); disallowed or unknown tags exclude a release from search and import. */
@@ -176,8 +176,8 @@ class MediaTypeMappedSettings {
 				return settings.seasonTemplate;
 			case MediaType.Series:
 				return settings.seriesTemplate;
-			case MediaType.Song:
-				return settings.songTemplate;
+			case MediaType.Recording:
+				return settings.recordingTemplate;
 			case MediaType.Wiki:
 				return settings.wikiTemplate;
 		}
@@ -212,8 +212,8 @@ class MediaTypeMappedSettings {
 			case MediaType.Series:
 				settings.seriesTemplate = template;
 				break;
-			case MediaType.Song:
-				settings.songTemplate = template;
+			case MediaType.Recording:
+				settings.recordingTemplate = template;
 				break;
 			case MediaType.Wiki:
 				settings.wikiTemplate = template;
@@ -241,8 +241,8 @@ class MediaTypeMappedSettings {
 				return settings.seasonFileNameTemplate;
 			case MediaType.Series:
 				return settings.seriesFileNameTemplate;
-			case MediaType.Song:
-				return settings.songFileNameTemplate;
+			case MediaType.Recording:
+				return settings.recordingFileNameTemplate;
 			case MediaType.Wiki:
 				return settings.wikiFileNameTemplate;
 		}
@@ -277,8 +277,8 @@ class MediaTypeMappedSettings {
 			case MediaType.Series:
 				settings.seriesFileNameTemplate = template;
 				break;
-			case MediaType.Song:
-				settings.songFileNameTemplate = template;
+			case MediaType.Recording:
+				settings.recordingFileNameTemplate = template;
 				break;
 			case MediaType.Wiki:
 				settings.wikiFileNameTemplate = template;
@@ -306,8 +306,8 @@ class MediaTypeMappedSettings {
 				return settings.seasonFolder;
 			case MediaType.Series:
 				return settings.seriesFolder;
-			case MediaType.Song:
-				return settings.songFolder;
+			case MediaType.Recording:
+				return settings.recordingFolder;
 			case MediaType.Wiki:
 				return settings.wikiFolder;
 		}
@@ -342,8 +342,8 @@ class MediaTypeMappedSettings {
 			case MediaType.Series:
 				settings.seriesFolder = folder;
 				break;
-			case MediaType.Song:
-				settings.songFolder = folder;
+			case MediaType.Recording:
+				settings.recordingFolder = folder;
 				break;
 			case MediaType.Wiki:
 				settings.wikiFolder = folder;
@@ -407,7 +407,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiTemplate: '',
 	musicReleaseTemplate: '',
 	artistTemplate: '',
-	songTemplate: '',
+	recordingTemplate: '',
 	boardgameTemplate: '',
 	bookTemplate: '',
 
@@ -419,7 +419,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiFileNameTemplate: '{{ title }}',
 	musicReleaseFileNameTemplate: '{{ title }} ({{ FIRST:artists }} - {{ year }})',
 	artistFileNameTemplate: '{{ title }}',
-	songFileNameTemplate: '{{ trackNumber }}. {{ title }} ({{ albumTitle }})',
+	recordingFileNameTemplate: '{{ trackNumber }}. {{ title }} ({{ albumTitle }})',
 	boardgameFileNameTemplate: '{{ title }} ({{ year }})',
 	bookFileNameTemplate: '{{ title }} ({{ year }})',
 
@@ -431,9 +431,9 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiFolder: 'Media DB/wiki',
 	musicReleaseFolder: 'Media DB/music',
 	artistFolder: 'Media DB/artists',
-	songFolder: 'Media DB/music/songs',
+	recordingFolder: 'Media DB/music/recordings',
 	artistAutomaticallyImportReleases: true,
-	musicReleaseAutomaticallyImportSongs: true,
+	musicReleaseAutomaticallyImportRecordings: true,
 	enabledReleaseGroupPrimaryTypes: { ...DEFAULT_RELEASE_GROUP_PRIMARY_TYPES },
 	enabledReleaseGroupSecondaryTypes: { ...DEFAULT_RELEASE_GROUP_SECONDARY_TYPES },
 	boardgameFolder: 'Media DB/boardgames',
@@ -447,7 +447,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	wikiNoteType: '',
 	musicReleaseNoteType: '',
 	artistNoteType: '',
-	songNoteType: '',
+	recordingNoteType: '',
 	boardgameNoteType: '',
 	bookNoteType: '',
 
@@ -543,7 +543,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		);
 	}
 
-	private static readonly MUSIC_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Artist, MediaType.MusicRelease, MediaType.Song];
+	private static readonly MUSIC_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Artist, MediaType.MusicRelease, MediaType.Recording];
 
 	private static readonly BOOK_SETTINGS_MEDIA_TYPES: readonly MediaType[] = [MediaType.Book, MediaType.ComicManga];
 
@@ -731,11 +731,11 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				group.addSetting(
 					setting =>
 						void setting
-							.setName('Automatically Import Songs')
+							.setName('Automatically Import Recordings')
 							.setDesc('Create a note for each track when importing a release.')
 							.addToggle(cb => {
-								cb.setValue(this.plugin.settings.musicReleaseAutomaticallyImportSongs).onChange(data => {
-									this.plugin.settings.musicReleaseAutomaticallyImportSongs = data;
+								cb.setValue(this.plugin.settings.musicReleaseAutomaticallyImportRecordings).onChange(data => {
+									this.plugin.settings.musicReleaseAutomaticallyImportRecordings = data;
 									void this.plugin.saveSettings();
 								});
 							}),
@@ -743,8 +743,8 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			},
 		});
 		panel.createDiv({ cls: 'media-db-plugin-spacer' });
-		this.renderMediaTypeSection(panel, byType(MediaType.Song), mediaTypeApiMap, {
-			sectionHeading: 'Song',
+		this.renderMediaTypeSection(panel, byType(MediaType.Recording), mediaTypeApiMap, {
+			sectionHeading: 'Recording',
 		});
 	}
 
@@ -1023,7 +1023,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			this.addApiSecretSetting(
 				apiKeyGroup,
 				'Genius API access token',
-				'Client access token from https://genius.com/api-clients — used to search songs and load lyrics when importing songs (standalone, from a release, or via an artist).',
+				'Client access token from https://genius.com/api-clients — used to search Genius and load lyrics when importing recordings (standalone, from a release, or via an artist).',
 				ApiSecretID.genius,
 			);
 			this.addApiSecretSetting(

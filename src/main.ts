@@ -34,8 +34,8 @@ import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
 import type { ArtistModel } from './models/ArtistModel';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import type { MusicReleaseModel } from './models/MusicReleaseModel';
+import { RecordingModel } from './models/RecordingModel';
 import type { SeasonModel } from './models/SeasonModel';
-import { SongModel } from './models/SongModel';
 import { ApiSecretID, getApiSecretValue } from './settings/apiSecretsHelper';
 import { PropertyMapper } from './settings/PropertyMapper';
 import type { MediaDbPluginSettings } from './settings/Settings';
@@ -459,7 +459,7 @@ export default class MediaDbPlugin extends Plugin {
 		const releaseBatchImport =
 			!hasArtist &&
 			musicReleaseCount >= 2 &&
-			this.settings.musicReleaseAutomaticallyImportSongs
+			this.settings.musicReleaseAutomaticallyImportRecordings
 				? { abort: false }
 				: undefined;
 
@@ -516,7 +516,7 @@ export default class MediaDbPlugin extends Plugin {
 			return;
 		}
 		if (mediaTypeModel.getMediaType() === MediaType.MusicRelease) {
-			await this.importMusicReleaseWithOptionalSongs(mediaTypeModel as MusicReleaseModel, options);
+			await this.importMusicReleaseWithOptionalRecordings(mediaTypeModel as MusicReleaseModel, options);
 			return;
 		}
 
@@ -534,7 +534,7 @@ export default class MediaDbPlugin extends Plugin {
 
 			options.openNote ??= this.settings.openNoteInNewTab;
 
-			await this.enrichStandaloneMusicBrainzSongIfNeeded(mediaTypeModel, options);
+			await this.enrichStandaloneMusicBrainzRecordingIfNeeded(mediaTypeModel, options);
 
 			if (this.settings.imageDownload) {
 				await this.downloadImageForMediaModel(mediaTypeModel);
@@ -570,19 +570,19 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	/**
-	 * Release imports create per-track songs with ids `{releaseGroupId}-t{n}`. Those already carry lyrics/URLs from
-	 * {@link importSongNotesForMusicReleaseTracks}. Standalone recording imports use a bare MusicBrainz recording id.
+	 * Release imports create per-track recordings with ids `{releaseGroupId}-t{n}`. Those already carry lyrics/URLs from
+	 * {@link importRecordingNotesForMusicReleaseTracks}. Standalone recording imports use a bare MusicBrainz recording id.
 	 */
-	private isMusicBrainzStandaloneRecordingSongId(songId: string): boolean {
-		return !/-t\d+$/i.test(songId);
+	private isMusicBrainzStandaloneRecordingId(recordingId: string): boolean {
+		return !/-t\d+$/i.test(recordingId);
 	}
 
-	private async enrichStandaloneMusicBrainzSongIfNeeded(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
-		if (mediaTypeModel.getMediaType() !== MediaType.Song) {
+	private async enrichStandaloneMusicBrainzRecordingIfNeeded(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
+		if (mediaTypeModel.getMediaType() !== MediaType.Recording) {
 			return;
 		}
-		const song = mediaTypeModel as SongModel;
-		if (song.dataSource !== MUSICBRAINZ_NOTE_DATA_SOURCE || !this.isMusicBrainzStandaloneRecordingSongId(song.id)) {
+		const recording = mediaTypeModel as RecordingModel;
+		if (recording.dataSource !== MUSICBRAINZ_NOTE_DATA_SOURCE || !this.isMusicBrainzStandaloneRecordingId(recording.id)) {
 			return;
 		}
 		if (options.chainedImport?.abort) {
@@ -596,29 +596,29 @@ export default class MediaDbPlugin extends Plugin {
 		const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
 		const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
 
-		const geniusSearchArtist = song.artists[0] ?? song.title;
+		const geniusSearchArtist = recording.artists[0] ?? recording.title;
 
-		if (genius.isConfigured() && !song.lyrics) {
+		if (genius.isConfigured() && !recording.lyrics) {
 			await new Promise(r => setTimeout(r, 500));
 			if (options.chainedImport?.abort) {
 				return;
 			}
-			if (song.geniusUrl) {
+			if (recording.geniusUrl) {
 				await new Promise(r => setTimeout(r, 600));
 				if (options.chainedImport?.abort) {
 					return;
 				}
-				song.lyrics = await genius.fetchLyricsFromSongPage(song.geniusUrl);
+				recording.lyrics = await genius.fetchLyricsFromGeniusPage(recording.geniusUrl);
 			} else {
-				const hit = await genius.searchFirstSongHit(`${geniusSearchArtist} ${song.title}`);
+				const hit = await genius.searchFirstGeniusHit(`${geniusSearchArtist} ${recording.title}`);
 				if (hit) {
-					song.geniusUrl = hit.url;
-					song.url = song.geniusUrl || song.url;
+					recording.geniusUrl = hit.url;
+					recording.url = recording.geniusUrl || recording.url;
 					await new Promise(r => setTimeout(r, 600));
 					if (options.chainedImport?.abort) {
 						return;
 					}
-					song.lyrics = await genius.fetchLyricsFromSongPage(hit.url);
+					recording.lyrics = await genius.fetchLyricsFromGeniusPage(hit.url);
 				}
 			}
 		}
@@ -627,28 +627,27 @@ export default class MediaDbPlugin extends Plugin {
 			return;
 		}
 
-		if (!song.spotifyUrl && musicBrainzApi) {
+		if (!recording.spotifyUrl && musicBrainzApi) {
 			await new Promise(r => setTimeout(r, 1100));
 			if (options.chainedImport?.abort) {
 				return;
 			}
 			try {
-				song.spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(song.id);
+				recording.spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(recording.id);
 			} catch (e) {
-				console.warn(`MDB | Spotify URL for recording ${song.id}:`, e);
+				console.warn(`MDB | Spotify URL for recording ${recording.id}:`, e);
 			}
 		}
-		if (!song.spotifyUrl && spotify.isConfigured()) {
-			console.log(`MDB | Spotify API fallback for track "${song.title}" (artist: ${geniusSearchArtist})`);
+		if (!recording.spotifyUrl && spotify.isConfigured()) {
 			try {
-				song.spotifyUrl = await spotify.searchFirstTrackUrl(song.title, geniusSearchArtist);
+				recording.spotifyUrl = await spotify.searchFirstTrackUrl(recording.title, geniusSearchArtist);
 			} catch (e) {
-				console.warn(`MDB | Spotify search for "${song.title}":`, e);
+				console.warn(`MDB | Spotify search for "${recording.title}":`, e);
 			}
 		}
 	}
 
-	private async importSongNotesForMusicReleaseTracks(
+	private async importRecordingNotesForMusicReleaseTracks(
 		release: MusicReleaseModel,
 		geniusSearchArtist: string,
 		musicBrainzApi: MusicBrainzAPI,
@@ -669,14 +668,14 @@ export default class MediaDbPlugin extends Plugin {
 					if (childOptions.chainedImport?.abort) {
 						return;
 					}
-					const hit = await genius.searchFirstSongHit(`${geniusSearchArtist} ${track.title}`);
+					const hit = await genius.searchFirstGeniusHit(`${geniusSearchArtist} ${track.title}`);
 					if (hit) {
 						geniusUrl = hit.url;
 						await new Promise(r => setTimeout(r, 600));
 						if (childOptions.chainedImport?.abort) {
 							return;
 						}
-						lyrics = await genius.fetchLyricsFromSongPage(hit.url);
+						lyrics = await genius.fetchLyricsFromGeniusPage(hit.url);
 					}
 				}
 
@@ -694,7 +693,6 @@ export default class MediaDbPlugin extends Plugin {
 				}
 				if (!spotifyUrl && spotify.isConfigured()) {
 					const primaryArtist = release.artists[0] ?? geniusSearchArtist;
-					console.log(`MDB | Spotify API fallback for track "${track.title}" (artist: ${primaryArtist})`);
 					try {
 						spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
 					} catch (e) {
@@ -706,8 +704,8 @@ export default class MediaDbPlugin extends Plugin {
 					return;
 				}
 
-				const song = new SongModel({
-					type: 'song',
+				const recording = new RecordingModel({
+					type: MediaType.Recording,
 					title: track.title,
 					englishTitle: track.title,
 					year: release.year,
@@ -716,7 +714,7 @@ export default class MediaDbPlugin extends Plugin {
 					url: geniusUrl || release.url,
 					id: `${release.id}-t${track.number}`,
 					image: release.image,
-					subType: 'song',
+					subType: MediaType.Recording,
 					genres: release.genres ?? [],
 					artists: release.artists.length > 0 ? release.artists : [geniusSearchArtist],
 					albumTitle: release.title,
@@ -730,26 +728,26 @@ export default class MediaDbPlugin extends Plugin {
 					userData: { personalRating: 0 },
 				});
 
-				await this.createStandardMediaDbNoteFromModel(song, { ...childOptions });
+				await this.createStandardMediaDbNoteFromModel(recording, { ...childOptions });
 			}),
 		);
 	}
 
-	private async importMusicReleaseWithOptionalSongs(release: MusicReleaseModel, options: CreateNoteOptions): Promise<void> {
+	private async importMusicReleaseWithOptionalRecordings(release: MusicReleaseModel, options: CreateNoteOptions): Promise<void> {
 		try {
 			const releaseNotesFolder = options.folder ?? (await this.mediaTypeManager.getFolder(release, this.app));
-			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
+			const importRecordings = this.settings.musicReleaseAutomaticallyImportRecordings;
 
 			const releaseCreated = await this.createStandardMediaDbNoteFromModel(release, {
 				...options,
 				folder: releaseNotesFolder,
-				...(importSongs ? { musicReleaseSongsOverwrite: true } : {}),
+				...(importRecordings ? { musicReleaseRecordingsOverwrite: true } : {}),
 			});
 			if (!releaseCreated) {
 				return;
 			}
 
-			if (!importSongs || release.tracks.length === 0) {
+			if (!importRecordings || release.tracks.length === 0) {
 				new Notice(`✅ Finished music release import for ${release.title}.`);
 				console.log(`✅ Finished music release import for ${release.title}.`);
 				return;
@@ -757,8 +755,8 @@ export default class MediaDbPlugin extends Plugin {
 
 			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
 			if (!musicBrainzApi) {
-				new Notice('MusicBrainz API not available; song notes were skipped.');
-				console.warn('MusicBrainz API not available; song notes were skipped.');
+				new Notice('MusicBrainz API not available; recording notes were skipped.');
+				console.warn('MusicBrainz API not available; recording notes were skipped.');
 				return;
 			}
 
@@ -792,7 +790,7 @@ export default class MediaDbPlugin extends Plugin {
 			new Notice(`Importing ${release.tracks.length} tracks for ${release.title}…`);
 			console.log(`Importing ${release.tracks.length} tracks for ${release.title}…`);
 
-			await this.importSongNotesForMusicReleaseTracks(
+			await this.importRecordingNotesForMusicReleaseTracks(
 				release,
 				geniusSearchArtist,
 				musicBrainzApi,
@@ -881,12 +879,12 @@ export default class MediaDbPlugin extends Plugin {
 				return;
 			}
 
-			const importSongs = this.settings.musicReleaseAutomaticallyImportSongs;
+			const importRecordings = this.settings.musicReleaseAutomaticallyImportRecordings;
 			new Notice(
-				`Importing ${releaseGroupIds.length} releases${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+				`Importing ${releaseGroupIds.length} releases${importRecordings ? ' and tracks' : ''} for ${artist.title}…`,
 			);
 			console.log(
-				`Importing ${releaseGroupIds.length} releases${importSongs ? ' and tracks' : ''} for ${artist.title}…`,
+				`Importing ${releaseGroupIds.length} releases${importRecordings ? ' and tracks' : ''} for ${artist.title}…`,
 			);
 
 			const discographyChain: ChainedImportControl = { abort: false };
@@ -915,7 +913,7 @@ export default class MediaDbPlugin extends Plugin {
 						...childOptions,
 						chainedImport: discographyChain,
 						chainedImportStopLabel: 'Abort',
-						...(importSongs ? { musicReleaseSongsOverwrite: true } : {}),
+						...(importRecordings ? { musicReleaseRecordingsOverwrite: true } : {}),
 					};
 
 					const releaseNoteCreated = await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
@@ -923,7 +921,7 @@ export default class MediaDbPlugin extends Plugin {
 						return;
 					}
 
-					if (!importSongs || discographyChain.abort) {
+					if (!importRecordings || discographyChain.abort) {
 						return;
 					}
 
@@ -934,7 +932,7 @@ export default class MediaDbPlugin extends Plugin {
 						chainedImport: releaseTracksChain,
 						chainedImportStopLabel: 'Abort',
 					};
-					await this.importSongNotesForMusicReleaseTracks(
+					await this.importRecordingNotesForMusicReleaseTracks(
 						release,
 						artist.title,
 						musicBrainzApi,
@@ -1086,10 +1084,10 @@ export default class MediaDbPlugin extends Plugin {
 		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
 		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 
-		if (mediaTypeModel.getMediaType() === MediaType.Song) {
-			const song = mediaTypeModel as SongModel;
-			if(song.lyrics.length > 0) {
-				fileContent += `# Lyrics\n\`\`\`\n${song.lyrics}\n\`\`\`\n`;
+		if (mediaTypeModel.getMediaType() === MediaType.Recording) {
+			const recording = mediaTypeModel as RecordingModel;
+			if (recording.lyrics.length > 0) {
+				fileContent += `# Lyrics\n\`\`\`\n${recording.lyrics}\n\`\`\`\n`;
 			}
 		}
 
@@ -1225,7 +1223,7 @@ export default class MediaDbPlugin extends Plugin {
 			const showAbortRemainingLegacy = !!chain && stopLabel.length > 0;
 			const extendedOverwriteDetail = options.artistDiscographyOverwrite
 				? `The artist note "${fileName}" already exists. Do you want to overwrite it? "No" does not stop importing discography.`
-				: options.musicReleaseSongsOverwrite
+				: options.musicReleaseRecordingsOverwrite
 					? `The release note "${fileName}" already exists. Do you want to overwrite it? "No" does not stop importing tracks.`
 					: undefined;
 
@@ -1349,7 +1347,7 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		const diskSettings: MediaDbPluginSettings = (await this.loadData()) as MediaDbPluginSettings;
+		const diskSettings: MediaDbPluginSettings = ((await this.loadData()) ?? {}) as MediaDbPluginSettings;
 		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
 		const loadedSettings: MediaDbPluginSettings = Object.assign({}, defaultSettings, diskSettings);
 		loadedSettings.enabledReleaseGroupPrimaryTypes = normalizeReleaseGroupPrimaryTypes(loadedSettings.enabledReleaseGroupPrimaryTypes);

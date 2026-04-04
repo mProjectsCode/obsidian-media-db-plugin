@@ -259,7 +259,7 @@ export interface CreateNoteOptions {
 	 * While auto-importing tracks, an existing release note triggers the same four-button overwrite dialog
 	 * as for artists. Use with {@link releaseBatchImport} when importing multiple releases in one batch.
 	 */
-	musicReleaseSongsOverwrite?: boolean;
+	musicReleaseRecordingsOverwrite?: boolean;
 	/** When multiple releases are imported in one batch (sequential), Abort sets this and the batch loop stops. */
 	releaseBatchImport?: ChainedImportControl;
 }

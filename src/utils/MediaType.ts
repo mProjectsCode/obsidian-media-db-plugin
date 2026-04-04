@@ -8,6 +8,6 @@ export enum MediaType {
 	MusicRelease = 'musicRelease',
 	Season = 'season',
 	Series = 'series',
-	Song = 'song',
+	Recording = 'recording',
 	Wiki = 'wiki',
 }

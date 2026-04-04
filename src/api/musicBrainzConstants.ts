@@ -1,6 +1,6 @@
 import { MediaType } from '../utils/MediaType';
 
-/** Stored on notes for any row backed by MusicBrainz (release, artist, or song). */
+/** Stored on notes for any row backed by MusicBrainz (release, artist, or recording). */
 export const MUSICBRAINZ_NOTE_DATA_SOURCE = 'MusicBrainz';
 
 export function isMusicBrainzFamilyDataSource(dataSource: string): boolean {
@@ -12,7 +12,7 @@ export function musicBrainzRegisteredApiName(mediaType: MediaType): 'MusicBrainz
 	if (mediaType === MediaType.Artist) {
 		return 'MusicBrainz Artist API';
 	}
-	if (mediaType === MediaType.MusicRelease || mediaType === MediaType.Song) {
+	if (mediaType === MediaType.MusicRelease || mediaType === MediaType.Recording) {
 		return 'MusicBrainz API';
 	}
 	return undefined;

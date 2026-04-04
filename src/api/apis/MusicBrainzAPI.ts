@@ -1,7 +1,7 @@
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MusicReleaseModel } from '../../models/MusicReleaseModel';
-import { SongModel } from '../../models/SongModel';
+import { RecordingModel } from '../../models/RecordingModel';
 import { MediaType } from '../../utils/MediaType';
 import { contactEmail, coerceYear, getLanguageName, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
@@ -175,7 +175,7 @@ export class MusicBrainzAPI extends APIModel {
 		this.apiName = 'MusicBrainz API';
 		this.apiDescription = 'Free API for music releases.';
 		this.apiUrl = 'https://musicbrainz.org/';
-		this.types = [MediaType.MusicRelease, MediaType.Song];
+		this.types = [MediaType.MusicRelease, MediaType.Recording];
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
@@ -253,7 +253,7 @@ export class MusicBrainzAPI extends APIModel {
 				if (!recordingSearchHitPassesFilters(rec, primaryAllowed, secondaryAllowed)) {
 					continue;
 				}
-				ret.push(songModelFromRecordingSearchHit(rec, this.plugin, this.apiDateFormat));
+				ret.push(recordingModelFromRecordingSearchHit(rec, this.plugin, this.apiDateFormat));
 			}
 		}
 
@@ -346,7 +346,7 @@ export class MusicBrainzAPI extends APIModel {
 		});
 	}
 
-	private async getRecordingById(recordingId: string): Promise<SongModel> {
+	private async getRecordingById(recordingId: string): Promise<RecordingModel> {
 		const recordingUrl = `https://musicbrainz.org/ws/2/recording/${encodeURIComponent(recordingId)}?inc=artists+releases+release-groups+tags+genres+media&fmt=json`;
 		const recordingResponse = await requestUrlRateLimited(
 			{
@@ -379,8 +379,8 @@ export class MusicBrainzAPI extends APIModel {
 			: 'unknown';
 		const trackNumber = trackNumberFromDetailReleaseMedia(release, data.title, data.length);
 
-		return new SongModel({
-			type: 'song',
+		return new RecordingModel({
+			type: MediaType.Recording,
 			title: data.title,
 			englishTitle: data.title,
 			year,
@@ -391,7 +391,7 @@ export class MusicBrainzAPI extends APIModel {
 			image: albumReleaseGroupId
 				? `https://coverartarchive.org/release-group/${albumReleaseGroupId}/front-500.jpg`
 				: '',
-			subType: 'song',
+			subType: MediaType.Recording,
 			genres: data.genres.map(g => g.name),
 			artists: data['artist-credit'].map(a => a.name),
 			albumTitle: rg?.title ?? release.title,
@@ -503,11 +503,11 @@ function trackNumberFromDetailReleaseMedia(
 	return 0;
 }
 
-function songModelFromRecordingSearchHit(
+function recordingModelFromRecordingSearchHit(
 	rec: RecordingSearchHit,
 	plugin: MediaDbPlugin,
 	apiDateFormat: string,
-): SongModel {
+): RecordingModel {
 	const firstRel = rec.releases?.find(r => r.status !== 'Bootleg') ?? rec.releases?.[0];
 	const rg = firstRel?.['release-group'];
 	const dateStr = rg?.['first-release-date'] ?? rec['first-release-date'] ?? firstRel?.date;
@@ -516,8 +516,8 @@ function songModelFromRecordingSearchHit(
 	const albumReleaseGroupId = rg?.id ?? '';
 	const trackNumber = trackNumberFromSearchRecordingRelease(firstRel, rec.title, rec.length);
 
-	return new SongModel({
-		type: 'song',
+	return new RecordingModel({
+		type: MediaType.Recording,
 		title: rec.title,
 		englishTitle: rec.title,
 		year,
@@ -528,7 +528,7 @@ function songModelFromRecordingSearchHit(
 		image: albumReleaseGroupId
 			? `https://coverartarchive.org/release-group/${albumReleaseGroupId}/front-500.jpg`
 			: '',
-		subType: 'song',
+		subType: MediaType.Recording,
 		genres: [],
 		artists: rec['artist-credit'].map(a => a.name),
 		albumTitle: rg?.title ?? firstRel?.title ?? '',

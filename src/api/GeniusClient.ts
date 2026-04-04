@@ -34,14 +34,14 @@ export class GeniusClient {
 		return Boolean(this.accessToken?.trim());
 	}
 
-	async searchFirstSongHit(query: string): Promise<{ url: string; title: string } | null> {
+	async searchFirstGeniusHit(query: string): Promise<{ url: string; title: string } | null> {
 		if (!this.accessToken?.trim()) {
 			return null;
 		}
 
 		const url = `https://api.genius.com/search?q=${encodeURIComponent(query)}`;
-		console.log(`MDB | Genius song search fetch: ${url}`)
-		
+		console.log(`MDB | Genius search fetch: ${url}`);
+
 		const res = await requestUrl({
 			url,
 			throw: false,
@@ -69,11 +69,11 @@ export class GeniusClient {
 		return { url: hit.url, title: hit.title };
 	}
 
-	async fetchLyricsFromSongPage(songPageUrl: string): Promise<string> {
-		console.log(`MDB | Genius lyrics fetch: ${songPageUrl}`)
+	async fetchLyricsFromGeniusPage(pageUrl: string): Promise<string> {
+		console.log(`MDB | Genius lyrics fetch: ${pageUrl}`);
 
 		const res = await requestUrl({
-			url: songPageUrl,
+			url: pageUrl,
 			throw: false,
 			headers: {
 				'User-Agent': this.userAgent,
@@ -81,7 +81,7 @@ export class GeniusClient {
 		});
 
 		if (res.status !== 200) {
-			console.warn(`MDB | Genius song page returned ${res.status}`);
+			console.warn(`MDB | Genius page returned ${res.status}`);
 			return '';
 		}
 

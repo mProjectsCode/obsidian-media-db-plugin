@@ -12,7 +12,7 @@ const MEDIA_TYPE_TO_NOTE_TYPE_KEY: Record<MediaType, keyof MediaDbPluginSettings
 	[MediaType.MusicRelease]: 'musicReleaseNoteType',
 	[MediaType.Season]: 'seasonNoteType',
 	[MediaType.Series]: 'seriesNoteType',
-	[MediaType.Song]: 'songNoteType',
+	[MediaType.Recording]: 'recordingNoteType',
 	[MediaType.Wiki]: 'wikiNoteType',
 };
 

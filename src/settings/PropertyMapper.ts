@@ -50,15 +50,15 @@ export class PropertyMapper {
 					if (propertyMapping.wikilink) {
 						const useArtistFileNameForArtists =
 							propertyMapping.property === 'artists' &&
-							(internalMediaType === MediaType.Song || internalMediaType === MediaType.MusicRelease);
+							(internalMediaType === MediaType.Recording || internalMediaType === MediaType.MusicRelease);
 						const useMusicReleaseFileNameForAlbumTitle =
-							propertyMapping.property === 'albumTitle' && internalMediaType === MediaType.Song;
+							propertyMapping.property === 'albumTitle' && internalMediaType === MediaType.Recording;
 
 						if (typeof value === 'string') {
 							if (useArtistFileNameForArtists) {
 								finalValue = this.artistTitleWikilink(value);
 							} else if (useMusicReleaseFileNameForAlbumTitle) {
-								finalValue = this.songAlbumTitleWikilink(value, obj);
+								finalValue = this.recordingAlbumTitleWikilink(value, obj);
 							} else {
 								finalValue = `[[${value}]]`;
 							}
@@ -71,7 +71,7 @@ export class PropertyMapper {
 									return this.artistTitleWikilink(v);
 								}
 								if (useMusicReleaseFileNameForAlbumTitle) {
-									return this.songAlbumTitleWikilink(v, obj);
+									return this.recordingAlbumTitleWikilink(v, obj);
 								}
 								return `[[${v}]]`;
 							});
@@ -229,15 +229,15 @@ export class PropertyMapper {
 	}
 
 	/**
-	 * Wikilink for a song's release title using the Music Release file name template; fills artists/year from the song metadata when present.
+	 * Wikilink for a recording's release title using the Music Release file name template; fills artists/year from the recording metadata when present.
 	 */
-	private songAlbumTitleWikilink(albumTitle: string, songMeta: Record<string, unknown>): string {
+	private recordingAlbumTitleWikilink(albumTitle: string, recordingMeta: Record<string, unknown>): string {
 		const title = albumTitle.trim();
-		const artistsRaw = songMeta.artists;
+		const artistsRaw = recordingMeta.artists;
 		const artists = Array.isArray(artistsRaw)
 			? artistsRaw.filter((a): a is string => typeof a === 'string')
 			: [];
-		const year = coerceYear(songMeta.year);
+		const year = coerceYear(recordingMeta.year);
 		const releaseModel = new MusicReleaseModel({
 			type: 'musicRelease',
 			title,

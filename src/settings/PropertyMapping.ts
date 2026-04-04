@@ -90,7 +90,7 @@ export class PropertyMappingModel {
 			return {
 				res: false,
 				err: new PropertyMappingValidationError(
-					`Removing dataSource is only allowed for artist, music release, and song (MusicBrainz). For "${this.type}" notes, dataSource is required to choose an API.`,
+					`Removing dataSource is only allowed for artist, music release, and recording (MusicBrainz). For "${this.type}" notes, dataSource is required to choose an API.`,
 				),
 			};
 		}

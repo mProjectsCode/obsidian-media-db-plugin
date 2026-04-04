@@ -3,9 +3,9 @@ import type { ModelToData } from '../utils/Utils';
 import { applyPlainObject, mediaDbTag } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
-export type SongData = ModelToData<SongModel>;
+export type RecordingData = ModelToData<RecordingModel>;
 
-export class SongModel extends MediaTypeModel {
+export class RecordingModel extends MediaTypeModel {
 	genres: string[];
 	artists: string[];
 	albumTitle: string;
@@ -24,7 +24,7 @@ export class SongModel extends MediaTypeModel {
 		personalRating: number;
 	};
 
-	constructor(obj: SongData) {
+	constructor(obj: RecordingData) {
 		super();
 
 		this.genres = [];
@@ -63,11 +63,11 @@ export class SongModel extends MediaTypeModel {
 	}
 
 	getTags(): string[] {
-		return [mediaDbTag, 'music', 'song'];
+		return [mediaDbTag, 'music', 'recording'];
 	}
 
 	getMediaType(): MediaType {
-		return MediaType.Song;
+		return MediaType.Recording;
 	}
 
 	getSummary(): string {
