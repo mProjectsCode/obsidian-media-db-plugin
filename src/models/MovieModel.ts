@@ -1,6 +1,6 @@
 import { MediaType } from '../utils/MediaType';
 import type { ModelToData } from '../utils/Utils';
-import { coerceMovieDurationMinutes, mediaDbTag, migrateObject } from '../utils/Utils';
+import { applyPlainObject, coerceMovieDurationMinutes, mediaDbTag } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
 export type MovieData = ModelToData<MovieModel>;
@@ -62,11 +62,11 @@ export class MovieModel extends MediaTypeModel {
 			personalRating: 0,
 		};
 
-		migrateObject(this, obj, this);
+		applyPlainObject(this, obj, this);
 		this.duration = coerceMovieDurationMinutes(this.duration as unknown);
 
 		if (!Object.hasOwn(obj, 'userData')) {
-			migrateObject(this.userData, obj, this.userData);
+			applyPlainObject(this.userData, obj, this.userData);
 		}
 
 		this.type = this.getMediaType();

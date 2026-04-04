@@ -1,6 +1,6 @@
 import { MediaType } from '../utils/MediaType';
 import type { ModelToData } from '../utils/Utils';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { applyPlainObject, mediaDbTag } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
 export type SongData = ModelToData<SongModel>;
@@ -44,10 +44,10 @@ export class SongModel extends MediaTypeModel {
 			personalRating: 0,
 		};
 
-		migrateObject(this, obj, this);
+		applyPlainObject(this, obj, this);
 
 		if (!Object.hasOwn(obj, 'userData')) {
-			migrateObject(this.userData, obj, this.userData);
+			applyPlainObject(this.userData, obj, this.userData);
 		}
 
 		this.type = this.getMediaType();

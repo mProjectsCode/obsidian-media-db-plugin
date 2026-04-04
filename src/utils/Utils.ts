@@ -279,7 +279,8 @@ export function coerceYear(value: unknown): number {
 	return 0;
 }
 
-export function migrateObject<T extends object>(object: T, oldData: Record<string, unknown>, defaultData: T): void {
+/** Copy plain saved fields onto a model instance, using defaults for missing keys and coercing `year`. */
+export function applyPlainObject<T extends object>(object: T, oldData: Record<string, unknown>, defaultData: T): void {
 	for (const key in object) {
 		const has = Object.hasOwn(oldData, key) && oldData[key] !== undefined && oldData[key] !== null;
 		if (!has) {

@@ -1,7 +1,7 @@
 import type { App, IconName } from 'obsidian';
 import { Platform, PluginSettingTab, SecretComponent, SettingGroup, setIcon } from 'obsidian';
 import { MediaType } from 'src/utils/MediaType';
-import type { ReleaseGroupPrimaryTypes, ReleaseGroupSecondaryTypeId } from '../api/musicBrainzReleaseGroupTypes';
+import type { MusicBrainzReleaseGroupPrimaryTypeId, ReleaseGroupSecondaryTypeId } from '../api/musicBrainzReleaseGroupTypes';
 import {
 	DEFAULT_RELEASE_GROUP_PRIMARY_TYPES,
 	DEFAULT_RELEASE_GROUP_SECONDARY_TYPES,
@@ -134,7 +134,7 @@ export interface MediaDbPluginSettings {
 	/** When true, each imported release also creates a note per track (standalone release import or artist discography). */
 	musicReleaseAutomaticallyImportSongs: boolean;
 	/** MusicBrainz release group primary types shown in release search and included when importing an artist discography. */
-	enabledReleaseGroupPrimaryTypes: ReleaseGroupPrimaryTypes;
+	enabledReleaseGroupPrimaryTypes: Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean>;
 	/** Allowed release group secondary-type tags (and inferred title tags); disallowed or unknown tags exclude a release from search and import. */
 	enabledReleaseGroupSecondaryTypes: Record<ReleaseGroupSecondaryTypeId, boolean>;
 	boardgameFolder: string;
@@ -467,22 +467,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 };
 
 export const lockedPropertyMappings: string[] = [];
-
-/** Forward-compatible hook for merging persisted settings with new defaults. */
-export function migrateLoadedPluginSettings(settings: MediaDbPluginSettings): void {
-	const raw = settings as unknown as Record<string, unknown>;
-	delete raw.artistUseFileTreeForSongs;
-	if (raw.artistDiscographyReleasePrimaryTypes !== undefined) {
-		raw.releaseGroupPrimaryTypes = raw.artistDiscographyReleasePrimaryTypes;
-		delete raw.artistDiscographyReleasePrimaryTypes;
-	}
-	if (raw.artistDiscographyReleaseSecondaryTypes !== undefined) {
-		raw.releaseGroupSecondaryTypes = raw.artistDiscographyReleaseSecondaryTypes;
-		delete raw.artistDiscographyReleaseSecondaryTypes;
-	}
-	settings.enabledReleaseGroupPrimaryTypes = normalizeReleaseGroupPrimaryTypes(settings.enabledReleaseGroupPrimaryTypes);
-	settings.enabledReleaseGroupSecondaryTypes = normalizeReleaseGroupSecondaryTypes(settings.enabledReleaseGroupSecondaryTypes);
-}
 
 export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings {
 	const defaultSettings = DEFAULT_SETTINGS;

@@ -123,62 +123,6 @@ export class PropertyMappingModel {
 			json.properties.map(p => PropertyMapping.fromJSON(p)),
 		);
 	}
-
-	/**
-	 * Migrates loaded settings to match the structure of default settings.
-	 * - Adds new properties from defaults that don't exist in loaded settings
-	 * - Preserves user customizations from loaded settings
-	 * - Updates locked status from defaults
-	 *
-	 * @param loadedModels - Models loaded from disk (may be outdated)
-	 * @param defaultModels - Current default models (source of truth for structure)
-	 * @returns Migrated models with correct structure and preserved user settings
-	 */
-	static migrateModels(loadedModels: PropertyMappingModelData[], defaultModels: PropertyMappingModel[]): PropertyMappingModel[] {
-		const migratedModels: PropertyMappingModel[] = [];
-
-		for (const m of loadedModels) {
-			if ((m.type as string) === 'band') {
-				(m as { type: MediaType }).type = MediaType.Artist;
-			}
-		}
-
-		for (const defaultModel of defaultModels) {
-			const loadedModel = loadedModels.find(m => m.type === defaultModel.type);
-
-			if (!loadedModel) {
-				// New model type - use default
-				migratedModels.push(defaultModel);
-				continue;
-			}
-
-			// Migrate properties
-			const migratedProperties: PropertyMapping[] = [];
-			for (const defaultProperty of defaultModel.properties) {
-				const loadedProperty = loadedModel.properties.find(p => p.property === defaultProperty.property);
-
-				if (!loadedProperty) {
-					// New property - use default
-					migratedProperties.push(defaultProperty);
-				} else {
-					// Existing property - merge: take locked from default, customizations from loaded
-					migratedProperties.push(
-						new PropertyMapping(
-							loadedProperty.property,
-							loadedProperty.newProperty,
-							loadedProperty.mapping,
-							defaultProperty.locked, // locked status from default
-							loadedProperty.wikilink ?? false,
-						),
-					);
-				}
-			}
-
-			migratedModels.push(new PropertyMappingModel(defaultModel.type, migratedProperties));
-		}
-
-		return migratedModels;
-	}
 }
 
 export class PropertyMapping {

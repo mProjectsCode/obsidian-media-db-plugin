@@ -74,9 +74,7 @@ export const MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES = [
 
 export type MusicBrainzReleaseGroupPrimaryTypeId = (typeof MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES)[number]['id'];
 
-export type ReleaseGroupPrimaryTypes = Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean>;
-
-export const DEFAULT_RELEASE_GROUP_PRIMARY_TYPES: ReleaseGroupPrimaryTypes = {
+export const DEFAULT_RELEASE_GROUP_PRIMARY_TYPES: Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean> = {
 	Album: true,
 	EP: false,
 	Single: false,
@@ -84,12 +82,16 @@ export const DEFAULT_RELEASE_GROUP_PRIMARY_TYPES: ReleaseGroupPrimaryTypes = {
 	Other: false,
 };
 
-export function enabledReleaseGroupPrimaryTypeIds(settings: ReleaseGroupPrimaryTypes): MusicBrainzReleaseGroupPrimaryTypeId[] {
+export function enabledReleaseGroupPrimaryTypeIds(
+	settings: Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean>,
+): MusicBrainzReleaseGroupPrimaryTypeId[] {
 	return MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES.filter(t => settings[t.id]).map(t => t.id);
 }
 
-export function normalizeReleaseGroupPrimaryTypes(raw: ReleaseGroupPrimaryTypes | undefined): ReleaseGroupPrimaryTypes {
-	const out: ReleaseGroupPrimaryTypes = { ...DEFAULT_RELEASE_GROUP_PRIMARY_TYPES };
+export function normalizeReleaseGroupPrimaryTypes(
+	raw: Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean> | undefined,
+): Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean> {
+	const out: Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean> = { ...DEFAULT_RELEASE_GROUP_PRIMARY_TYPES };
 	if (!raw || typeof raw !== 'object') {
 		return out;
 	}
@@ -105,7 +107,7 @@ export function normalizeReleaseGroupPrimaryTypes(raw: ReleaseGroupPrimaryTypes 
  */
 export function releaseGroupMatchesPrimaryTypeImportFilter(
 	primaryType: string | undefined,
-	enabled: ReleaseGroupPrimaryTypes,
+	enabled: Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean>,
 ): boolean {
 	if (!primaryType) {
 		return false;

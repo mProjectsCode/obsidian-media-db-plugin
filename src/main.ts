@@ -22,7 +22,11 @@ import { VNDBAPI } from './api/apis/VNDBAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { GeniusClient } from './api/GeniusClient';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE, musicBrainzRegisteredApiName } from './api/musicBrainzConstants';
-import { enabledReleaseGroupPrimaryTypeIds } from './api/musicBrainzReleaseGroupTypes';
+import {
+	enabledReleaseGroupPrimaryTypeIds,
+	normalizeReleaseGroupPrimaryTypes,
+	normalizeReleaseGroupSecondaryTypes,
+} from './api/musicBrainzReleaseGroupTypes';
 import { SpotifyClient } from './api/SpotifyClient';
 import { ConfirmOverwriteModal, ConfirmOverwriteChoice } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
@@ -34,9 +38,8 @@ import type { SeasonModel } from './models/SeasonModel';
 import { SongModel } from './models/SongModel';
 import { ApiSecretID, getApiSecretValue } from './settings/apiSecretsHelper';
 import { PropertyMapper } from './settings/PropertyMapper';
-import { PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
-import { getDefaultSettings, MediaDbSettingTab, migrateLoadedPluginSettings, propertyMappingModelsInDisplayOrder } from './settings/Settings';
+import { getDefaultSettings, MediaDbSettingTab, propertyMappingModelsInDisplayOrder } from './settings/Settings';
 import { BulkImportHelper } from './utils/BulkImportHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
@@ -1217,16 +1220,12 @@ export default class MediaDbPlugin extends Plugin {
 		const diskSettings: MediaDbPluginSettings = (await this.loadData()) as MediaDbPluginSettings;
 		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
 		const loadedSettings: MediaDbPluginSettings = Object.assign({}, defaultSettings, diskSettings);
-		migrateLoadedPluginSettings(loadedSettings);
+		loadedSettings.enabledReleaseGroupPrimaryTypes = normalizeReleaseGroupPrimaryTypes(loadedSettings.enabledReleaseGroupPrimaryTypes);
+		loadedSettings.enabledReleaseGroupSecondaryTypes = normalizeReleaseGroupSecondaryTypes(loadedSettings.enabledReleaseGroupSecondaryTypes);
 
-		// Migrate property mappings using the dedicated migration method
-		const migratedModels = PropertyMappingModel.migrateModels(
-			loadedSettings.propertyMappingModels || [],
-			defaultSettings.propertyMappingModels.map(m => PropertyMappingModel.fromJSON(m)),
+		loadedSettings.propertyMappingModels = propertyMappingModelsInDisplayOrder(
+			loadedSettings.propertyMappingModels ?? defaultSettings.propertyMappingModels,
 		);
-
-		// Store as plain data for serialization (canonical order matches settings UI)
-		loadedSettings.propertyMappingModels = propertyMappingModelsInDisplayOrder(migratedModels.map(m => m.toJSON()));
 
 		this.settings = loadedSettings;
 	}
