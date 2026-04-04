@@ -50,6 +50,7 @@ import type { ChainedImportControl, CreateNoteOptions } from './utils/Utils';
 import { normalizeTitleForAsciiAlias } from './utils/normalizeTitleForAlias';
 import {
 	parseUsdWholeDollarsFromDisplayString,
+	omitEmptyMetadataFields,
 	replaceIllegalFileNameCharactersInString,
 	unCamelCase,
 	hasTemplaterPlugin,
@@ -942,7 +943,10 @@ export default class MediaDbPlugin extends Plugin {
 
 	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
 		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
-		const fileMetadata = this.modelPropertyMapper.convertObject(this.metadataRecordForNewNote(mediaTypeModel));
+		let fileMetadata = this.modelPropertyMapper.convertObject(this.metadataRecordForNewNote(mediaTypeModel));
+		if (this.settings.useDefaultFrontMatter && !this.settings.includeEmptyFrontmatterFields) {
+			fileMetadata = omitEmptyMetadataFields(fileMetadata);
+		}
 		return stringifyYaml(fileMetadata);
 	}
 
@@ -985,6 +989,10 @@ export default class MediaDbPlugin extends Plugin {
 			if(song.lyrics.length > 0) {
 				fileContent += `# Lyrics\n\`\`\`\n${song.lyrics}\n\`\`\`\n`;
 			}
+		}
+
+		if (this.settings.useDefaultFrontMatter && !this.settings.includeEmptyFrontmatterFields) {
+			fileMetadata = omitEmptyMetadataFields(fileMetadata);
 		}
 
 		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {

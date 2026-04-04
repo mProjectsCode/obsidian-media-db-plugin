@@ -1,6 +1,11 @@
 import { musicBrainzRegisteredApiName } from '../api/musicBrainzConstants';
 import { MediaType } from '../utils/MediaType';
-import { containsOnlyLettersAndUnderscores, PropertyMappingNameConflictError, PropertyMappingValidationError } from '../utils/Utils';
+import {
+	containsOnlyLettersAndUnderscores,
+	isValidRemappedFrontmatterKey,
+	PropertyMappingNameConflictError,
+	PropertyMappingValidationError,
+} from '../utils/Utils';
 
 // Plain object interfaces for serialization
 export interface PropertyMappingData {
@@ -183,11 +188,11 @@ export class PropertyMapping {
 			};
 		}
 
-		if (!this.newProperty || !containsOnlyLettersAndUnderscores(this.newProperty)) {
+		if (!this.newProperty || !isValidRemappedFrontmatterKey(this.newProperty)) {
 			return {
 				res: false,
 				err: new PropertyMappingValidationError(
-					`Error in property mapping "${this.toString()}": new property may not be empty and may only contain letters and underscores.`,
+					`Error in property mapping "${this.toString()}": new property may not be empty; use letters, numbers, underscores, and single spaces between words (no leading/trailing spaces).`,
 				),
 			};
 		}

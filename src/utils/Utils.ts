@@ -21,6 +21,41 @@ export function containsOnlyLettersAndUnderscores(str: string): boolean {
 	return /^[\p{Letter}\p{M}_]+$/u.test(str);
 }
 
+/** Keys written to YAML frontmatter after remapping; allows internal spaces (and digits) between runs of word chars. */
+export function isValidRemappedFrontmatterKey(str: string): boolean {
+	return /^[\p{Letter}\p{M}_\p{N}]+(\s[\p{Letter}\p{M}_\p{N}]+)*$/u.test(str);
+}
+
+function isEmptyForFrontmatter(value: unknown): boolean {
+	if (value == null) {
+		return true;
+	}
+	if (typeof value === 'string') {
+		return value.trim().length === 0;
+	}
+	if (Array.isArray(value)) {
+		return value.length === 0;
+	}
+	if (typeof value === 'object') {
+		if (value instanceof Date) {
+			return false;
+		}
+		return Object.keys(value as object).length === 0;
+	}
+	return false;
+}
+
+/** Drops top-level keys whose values look unset: null/undefined, blank strings, empty arrays, empty plain objects. */
+export function omitEmptyMetadataFields(meta: Record<string, unknown>): Record<string, unknown> {
+	const out: Record<string, unknown> = {};
+	for (const [k, v] of Object.entries(meta)) {
+		if (!isEmptyForFrontmatter(v)) {
+			out[k] = v;
+		}
+	}
+	return out;
+}
+
 export function replaceIllegalFileNameCharactersInString(string: string): string {
 	return string
 		.replaceAll('&', 'and')

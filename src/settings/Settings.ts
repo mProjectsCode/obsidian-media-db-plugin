@@ -56,6 +56,8 @@ export interface MediaDbPluginSettings {
 	customDateFormat: string;
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
+	/** When default front matter is on: if true, write every field; if false, omit empty strings, empty arrays, and empty objects. */
+	includeEmptyFrontmatterFields: boolean;
 	/** When true, add an Obsidian `aliases` entry with an ASCII form of the title when it uses diacritics or letters like ø (e.g. Likbør → Likbor). */
 	addNormalizeTitlesAsAlias: boolean;
 	/** When true, movie Budget and Revenue front matter use `{ value, currency }` instead of a formatted string. */
@@ -371,6 +373,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	customDateFormat: 'L',
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
+	includeEmptyFrontmatterFields: false,
 	addNormalizeTitlesAsAlias: true,
 	useObjectFormatForCurrencyValues: true,
 	enableTemplaterIntegration: false,
@@ -904,8 +907,25 @@ export class MediaDbSettingTab extends PluginSettingTab {
 								// Redraw settings to display/remove the property mappings
 								this.display();
 							});
-						}),
+					}),
 			);
+
+			if (this.plugin.settings.useDefaultFrontMatter) {
+				generalGroup.addSetting(
+					setting =>
+						void setting
+							.setName('Include empty fields')
+							.setDesc(
+								'When on, all default metadata keys are written even if empty. When off, blank strings, empty lists, and empty objects are omitted from front matter.',
+							)
+							.addToggle(cb => {
+								cb.setValue(this.plugin.settings.includeEmptyFrontmatterFields).onChange(data => {
+									this.plugin.settings.includeEmptyFrontmatterFields = data;
+									void this.plugin.saveSettings();
+								});
+							}),
+				);
+			}
 
 			generalGroup.addSetting(
 				setting =>
