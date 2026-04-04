@@ -20,16 +20,16 @@ import { ensureVaultFolderPath, replaceIllegalFileNameCharactersInString, replac
 // All media types in alphabetical order
 export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Artist,
-	MediaType.BoardGame,
+	MediaType.MusicRelease,
+	MediaType.Song,
 	MediaType.Book,
 	MediaType.ComicManga,
 	MediaType.Game,
 	MediaType.Movie,
-	MediaType.MusicRelease,
 	MediaType.Series,
 	MediaType.Season,
-	MediaType.Song,
 	MediaType.Wiki,
+	MediaType.BoardGame,
 ];
 
 export class MediaTypeManager {

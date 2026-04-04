@@ -40,6 +40,8 @@ export class GeniusClient {
 		}
 
 		const url = `https://api.genius.com/search?q=${encodeURIComponent(query)}`;
+		console.log(`MDB | Genius song search fetch: ${url}`)
+		
 		const res = await requestUrl({
 			url,
 			throw: false,
@@ -68,6 +70,8 @@ export class GeniusClient {
 	}
 
 	async fetchLyricsFromSongPage(songPageUrl: string): Promise<string> {
+		console.log(`MDB | Genius lyrics fetch: ${songPageUrl}`)
+
 		const res = await requestUrl({
 			url: songPageUrl,
 			throw: false,

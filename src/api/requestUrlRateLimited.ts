@@ -1,8 +1,8 @@
 import type { RequestUrlParam, RequestUrlResponse } from 'obsidian';
 import { requestUrl } from 'obsidian';
 
-/** Retries after the first attempt (4 attempts total). */
-const RATE_LIMIT_MAX_RETRIES = 3;
+/** Retries after the first attempt (5 HTTP attempts total; backoffs 1s, 2s, 4s, 8s). */
+const RATE_LIMIT_MAX_RETRIES = 4;
 
 const BACKOFF_BASE_MS = 1000;
 const RETRY_AFTER_CAP_MS = 15_000;
@@ -22,7 +22,8 @@ function parseRetryAfterMs(headers: Record<string, string>): number | undefined 
 		}
 		const raw = String(headers[key]).trim();
 		const sec = parseInt(raw, 10);
-		if (Number.isFinite(sec) && sec >= 0) {
+		// sec === 0 means "retry immediately" in HTTP; for throttling that yields useless 0ms sleeps — use backoff instead.
+		if (Number.isFinite(sec) && sec > 0) {
 			return Math.min(sec * 1000, RETRY_AFTER_CAP_MS);
 		}
 		return undefined;
@@ -37,7 +38,7 @@ export interface RequestUrlRateLimitedOptions {
 }
 
 /**
- * HTTP request with retries on 429 / 503: honors `Retry-After` (capped) or exponential backoff (1s, 2s, 4s).
+ * HTTP request with retries on 429 / 503: honors `Retry-After` (capped) or exponential backoff (1s, 2s, 4s, 8s).
  */
 export async function requestUrlRateLimited(
 	param: RequestUrlParam,

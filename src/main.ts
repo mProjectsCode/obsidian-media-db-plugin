@@ -534,6 +534,8 @@ export default class MediaDbPlugin extends Plugin {
 
 			options.openNote ??= this.settings.openNoteInNewTab;
 
+			await this.enrichStandaloneMusicBrainzSongIfNeeded(mediaTypeModel, options);
+
 			if (this.settings.imageDownload) {
 				await this.downloadImageForMediaModel(mediaTypeModel);
 			}
@@ -564,6 +566,85 @@ export default class MediaDbPlugin extends Plugin {
 			console.warn(e);
 			new Notice(`${e}`);
 			return false;
+		}
+	}
+
+	/**
+	 * Release imports create per-track songs with ids `{releaseGroupId}-t{n}`. Those already carry lyrics/URLs from
+	 * {@link importSongNotesForMusicReleaseTracks}. Standalone recording imports use a bare MusicBrainz recording id.
+	 */
+	private isMusicBrainzStandaloneRecordingSongId(songId: string): boolean {
+		return !/-t\d+$/i.test(songId);
+	}
+
+	private async enrichStandaloneMusicBrainzSongIfNeeded(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
+		if (mediaTypeModel.getMediaType() !== MediaType.Song) {
+			return;
+		}
+		const song = mediaTypeModel as SongModel;
+		if (song.dataSource !== MUSICBRAINZ_NOTE_DATA_SOURCE || !this.isMusicBrainzStandaloneRecordingSongId(song.id)) {
+			return;
+		}
+		if (options.chainedImport?.abort) {
+			return;
+		}
+
+		const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
+		const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
+		const genius = new GeniusClient(geniusToken);
+		const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
+		const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
+		const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
+
+		const geniusSearchArtist = song.artists[0] ?? song.title;
+
+		if (genius.isConfigured() && !song.lyrics) {
+			await new Promise(r => setTimeout(r, 500));
+			if (options.chainedImport?.abort) {
+				return;
+			}
+			if (song.geniusUrl) {
+				await new Promise(r => setTimeout(r, 600));
+				if (options.chainedImport?.abort) {
+					return;
+				}
+				song.lyrics = await genius.fetchLyricsFromSongPage(song.geniusUrl);
+			} else {
+				const hit = await genius.searchFirstSongHit(`${geniusSearchArtist} ${song.title}`);
+				if (hit) {
+					song.geniusUrl = hit.url;
+					song.url = song.geniusUrl || song.url;
+					await new Promise(r => setTimeout(r, 600));
+					if (options.chainedImport?.abort) {
+						return;
+					}
+					song.lyrics = await genius.fetchLyricsFromSongPage(hit.url);
+				}
+			}
+		}
+
+		if (options.chainedImport?.abort) {
+			return;
+		}
+
+		if (!song.spotifyUrl && musicBrainzApi) {
+			await new Promise(r => setTimeout(r, 1100));
+			if (options.chainedImport?.abort) {
+				return;
+			}
+			try {
+				song.spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(song.id);
+			} catch (e) {
+				console.warn(`MDB | Spotify URL for recording ${song.id}:`, e);
+			}
+		}
+		if (!song.spotifyUrl && spotify.isConfigured()) {
+			console.log(`MDB | Spotify API fallback for track "${song.title}" (artist: ${geniusSearchArtist})`);
+			try {
+				song.spotifyUrl = await spotify.searchFirstTrackUrl(song.title, geniusSearchArtist);
+			} catch (e) {
+				console.warn(`MDB | Spotify search for "${song.title}":`, e);
+			}
 		}
 	}
 

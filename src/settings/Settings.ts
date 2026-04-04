@@ -1023,7 +1023,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			this.addApiSecretSetting(
 				apiKeyGroup,
 				'Genius API access token',
-				'Client access token from https://genius.com/api-clients — used to search songs and load lyrics when importing an artist.',
+				'Client access token from https://genius.com/api-clients — used to search songs and load lyrics when importing songs (standalone, from a release, or via an artist).',
 				ApiSecretID.genius,
 			);
 			this.addApiSecretSetting(
