@@ -22,7 +22,7 @@ import { VNDBAPI } from './api/apis/VNDBAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { GeniusClient } from './api/GeniusClient';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE, musicBrainzRegisteredApiName } from './api/musicBrainzConstants';
-import { enabledMusicBrainzPrimaryTypeIds } from './api/musicBrainzReleaseGroupTypes';
+import { enabledReleaseGroupPrimaryTypeIds } from './api/musicBrainzReleaseGroupTypes';
 import { SpotifyClient } from './api/SpotifyClient';
 import { ConfirmOverwriteModal, ConfirmOverwriteChoice } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
@@ -734,7 +734,7 @@ export default class MediaDbPlugin extends Plugin {
 				return;
 			}
 
-			const enabledPrimaryTypes = enabledMusicBrainzPrimaryTypeIds(this.settings.artistDiscographyReleasePrimaryTypes);
+			const enabledPrimaryTypes = enabledReleaseGroupPrimaryTypeIds(this.settings.enabledReleaseGroupPrimaryTypes);
 			if (enabledPrimaryTypes.length === 0) {
 				console.log('MDB | Discography skipped: no release types enabled in settings.');
 				new Notice(
@@ -767,7 +767,7 @@ export default class MediaDbPlugin extends Plugin {
 				releaseGroupIds = await artistApi.listArtistDiscographyReleaseGroupIds(
 					artist.id,
 					enabledPrimaryTypes,
-					this.settings.artistDiscographyReleaseSecondaryTypes,
+					this.settings.enabledReleaseGroupSecondaryTypes,
 				);
 			} catch (e) {
 				new Notice(`Could not load releases: ${e}`);

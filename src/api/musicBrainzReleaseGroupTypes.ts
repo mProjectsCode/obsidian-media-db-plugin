@@ -30,45 +30,6 @@ export const MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES = [
 	},
 ] as const;
 
-export type MusicBrainzReleaseGroupPrimaryTypeId = (typeof MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES)[number]['id'];
-
-export type ArtistDiscographyReleasePrimaryTypes = Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean>;
-
-export const DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_PRIMARY_TYPES: ArtistDiscographyReleasePrimaryTypes = {
-	Album: true,
-	EP: false,
-	Single: false,
-	Broadcast: false,
-	Other: false,
-};
-
-export function enabledMusicBrainzPrimaryTypeIds(settings: ArtistDiscographyReleasePrimaryTypes): MusicBrainzReleaseGroupPrimaryTypeId[] {
-	return MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES.filter(t => settings[t.id]).map(t => t.id);
-}
-
-export function normalizeArtistDiscographyReleasePrimaryTypes(
-	raw: ArtistDiscographyReleasePrimaryTypes | undefined,
-): ArtistDiscographyReleasePrimaryTypes {
-	const out: ArtistDiscographyReleasePrimaryTypes = { ...DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_PRIMARY_TYPES };
-	if (!raw || typeof raw !== 'object') {
-		return out;
-	}
-	for (const t of MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES) {
-		const v = raw[t.id];
-		out[t.id] = typeof v === 'boolean' ? v : DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_PRIMARY_TYPES[t.id];
-	}
-	return out;
-}
-
-/** Short summary for the settings row (e.g. “Album, EP”). */
-export function formatArtistDiscographyReleaseTypesSummary(types: ArtistDiscographyReleasePrimaryTypes): string {
-	const labels = MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES.filter(t => types[t.id]).map(t => t.label);
-	if (labels.length === 0) {
-		return 'None';
-	}
-	return labels.join(', ');
-}
-
 /**
  * MusicBrainz `secondary-types` values for release groups (exact API strings).
  * @see https://musicbrainz.org/doc/Release_Group/Type
@@ -111,23 +72,91 @@ export const MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES = [
 	}
 ] as const;
 
+export type MusicBrainzReleaseGroupPrimaryTypeId = (typeof MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES)[number]['id'];
+
+export type ReleaseGroupPrimaryTypes = Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean>;
+
+export const DEFAULT_RELEASE_GROUP_PRIMARY_TYPES: ReleaseGroupPrimaryTypes = {
+	Album: true,
+	EP: false,
+	Single: false,
+	Broadcast: false,
+	Other: false,
+};
+
+export function enabledReleaseGroupPrimaryTypeIds(settings: ReleaseGroupPrimaryTypes): MusicBrainzReleaseGroupPrimaryTypeId[] {
+	return MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES.filter(t => settings[t.id]).map(t => t.id);
+}
+
+export function normalizeReleaseGroupPrimaryTypes(raw: ReleaseGroupPrimaryTypes | undefined): ReleaseGroupPrimaryTypes {
+	const out: ReleaseGroupPrimaryTypes = { ...DEFAULT_RELEASE_GROUP_PRIMARY_TYPES };
+	if (!raw || typeof raw !== 'object') {
+		return out;
+	}
+	for (const t of MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES) {
+		const v = raw[t.id];
+		out[t.id] = typeof v === 'boolean' ? v : DEFAULT_RELEASE_GROUP_PRIMARY_TYPES[t.id];
+	}
+	return out;
+}
+
+/**
+ * Whether a release group’s `primary-type` is enabled for import/search.
+ */
+export function releaseGroupMatchesPrimaryTypeImportFilter(
+	primaryType: string | undefined,
+	enabled: ReleaseGroupPrimaryTypes,
+): boolean {
+	if (!primaryType) {
+		return false;
+	}
+	for (const t of MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES) {
+		if (t.id === primaryType) {
+			return enabled[t.id];
+		}
+	}
+	return false;
+}
+
+/**
+ * Import filters not represented as MusicBrainz `secondary-types`; inferred from the release group title.
+ */
+export const INFERRED_RELEASE_GROUP_SECONDARY_TYPES = [
+	{
+		id: 'Instrumental',
+		label: 'Instrumental',
+		/** When the title contains this substring, treat like a secondary tag for filtering. */
+		titleIncludes: '(Instrumental)',
+		defaultAllowed: true,
+	},
+] as const;
+
 export type MusicBrainzReleaseGroupSecondaryTypeId = (typeof MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES)[number]['id'];
 
-export type ArtistDiscographyReleaseSecondaryTypes = Record<MusicBrainzReleaseGroupSecondaryTypeId, boolean>;
+export type InferredReleaseGroupSecondaryTypeId =
+	(typeof INFERRED_RELEASE_GROUP_SECONDARY_TYPES)[number]['id'];
 
-export const DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_SECONDARY_TYPES: ArtistDiscographyReleaseSecondaryTypes =
-	Object.fromEntries(MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES.map(t => [t.id, t.defaultAllowed])) as ArtistDiscographyReleaseSecondaryTypes;
+export type ReleaseGroupSecondaryTypeId = MusicBrainzReleaseGroupSecondaryTypeId | InferredReleaseGroupSecondaryTypeId;
 
-export function normalizeArtistDiscographyReleaseSecondaryTypes(
-	raw: ArtistDiscographyReleaseSecondaryTypes | undefined,
-): ArtistDiscographyReleaseSecondaryTypes {
-	const out: ArtistDiscographyReleaseSecondaryTypes = { ...DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_SECONDARY_TYPES };
+export const DEFAULT_RELEASE_GROUP_SECONDARY_TYPES: Record<ReleaseGroupSecondaryTypeId, boolean> = {
+	...Object.fromEntries(MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES.map(t => [t.id, t.defaultAllowed])),
+	...Object.fromEntries(INFERRED_RELEASE_GROUP_SECONDARY_TYPES.map(t => [t.id, t.defaultAllowed])),
+} as Record<ReleaseGroupSecondaryTypeId, boolean>;
+
+export function normalizeReleaseGroupSecondaryTypes(
+	raw: Record<ReleaseGroupSecondaryTypeId, boolean> | undefined,
+): Record<ReleaseGroupSecondaryTypeId, boolean> {
+	const out: Record<ReleaseGroupSecondaryTypeId, boolean> = { ...DEFAULT_RELEASE_GROUP_SECONDARY_TYPES };
 	if (!raw || typeof raw !== 'object') {
 		return out;
 	}
 	for (const t of MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES) {
 		const v = raw[t.id];
-		out[t.id] = typeof v === 'boolean' ? v : DEFAULT_ARTIST_DISCOGRAPHY_RELEASE_SECONDARY_TYPES[t.id];
+		out[t.id] = typeof v === 'boolean' ? v : DEFAULT_RELEASE_GROUP_SECONDARY_TYPES[t.id];
+	}
+	for (const t of INFERRED_RELEASE_GROUP_SECONDARY_TYPES) {
+		const v = raw[t.id];
+		out[t.id] = typeof v === 'boolean' ? v : DEFAULT_RELEASE_GROUP_SECONDARY_TYPES[t.id];
 	}
 	return out;
 }
@@ -135,12 +164,12 @@ export function normalizeArtistDiscographyReleaseSecondaryTypes(
 const CONFIGURABLE_SECONDARY_IDS = new Set<string>(MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES.map(t => t.id));
 
 /**
- * Whether a release group may be imported given its `secondary-types` and the user’s toggles.
+ * Whether a release group may be imported given its MusicBrainz `secondary-types` and the user’s toggles.
  * Any secondary tag not in {@link MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES} blocks import.
  */
-export function releaseGroupPassesSecondaryTypeFilter(
+function releaseGroupPassesMusicBrainzSecondaryTypeFilter(
 	secondaryTypes: string[] | undefined,
-	allowed: ArtistDiscographyReleaseSecondaryTypes,
+	allowed: Record<ReleaseGroupSecondaryTypeId, boolean>,
 ): boolean {
 	for (const sec of secondaryTypes ?? []) {
 		if (!CONFIGURABLE_SECONDARY_IDS.has(sec)) {
@@ -154,11 +183,22 @@ export function releaseGroupPassesSecondaryTypeFilter(
 	return true;
 }
 
-/** Short summary of allowed secondary tags (for settings copy). */
-export function formatArtistDiscographyReleaseSecondarySummary(allowed: ArtistDiscographyReleaseSecondaryTypes): string {
-	const labels = MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES.filter(t => allowed[t.id]).map(t => t.label);
-	if (labels.length === 0) {
-		return 'None';
+/**
+ * Whether a release group may be imported or listed in search given MB `secondary-types`, inferred title-based tags
+ * (see {@link INFERRED_RELEASE_GROUP_SECONDARY_TYPES}), and the user’s toggles.
+ */
+export function releaseGroupPassesImportSecondaryFilter(
+	secondaryTypes: string[] | undefined,
+	releaseGroupTitle: string,
+	allowed: Record<ReleaseGroupSecondaryTypeId, boolean>,
+): boolean {
+	if (!releaseGroupPassesMusicBrainzSecondaryTypeFilter(secondaryTypes, allowed)) {
+		return false;
 	}
-	return labels.join(', ');
+	for (const t of INFERRED_RELEASE_GROUP_SECONDARY_TYPES) {
+		if (releaseGroupTitle.includes(t.titleIncludes) && !allowed[t.id]) {
+			return false;
+		}
+	}
+	return true;
 }

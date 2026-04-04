@@ -5,6 +5,10 @@ import { MusicReleaseModel } from '../../models/MusicReleaseModel';
 import { MediaType } from '../../utils/MediaType';
 import { contactEmail, coerceYear, getLanguageName, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
+import {
+	releaseGroupMatchesPrimaryTypeImportFilter,
+	releaseGroupPassesImportSecondaryFilter,
+} from '../musicBrainzReleaseGroupTypes';
 import { APIModel } from '../APIModel';
 
 // sadly no open api schema available
@@ -52,6 +56,7 @@ interface SearchResponse {
 	title: string;
 	'first-release-date': string;
 	'primary-type': string;
+	'secondary-types'?: string[];
 	'artist-credit': ArtistCredit[];
 	releases: Release[];
 	tags: Tag[];
@@ -112,7 +117,7 @@ export class MusicBrainzAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `https://musicbrainz.org/ws/2/release-group?query=${encodeURIComponent(title)}&limit=20&fmt=json`;
+		const searchUrl = `https://musicbrainz.org/ws/2/release-group?query=${encodeURIComponent(title)}&limit=50&fmt=json`;
 
 		const fetchData = await requestUrl({
 			url: searchUrl,
@@ -132,8 +137,16 @@ export class MusicBrainzAPI extends APIModel {
 		};
 		// console.debug(data);
 		const ret: MediaTypeModel[] = [];
+		const primaryAllowed = this.plugin.settings.enabledReleaseGroupPrimaryTypes;
+		const secondaryAllowed = this.plugin.settings.enabledReleaseGroupSecondaryTypes;
 
 		for (const result of data['release-groups']) {
+			if (!releaseGroupMatchesPrimaryTypeImportFilter(result['primary-type'], primaryAllowed)) {
+				continue;
+			}
+			if (!releaseGroupPassesImportSecondaryFilter(result['secondary-types'], result.title, secondaryAllowed)) {
+				continue;
+			}
 			ret.push(
 				new MusicReleaseModel({
 					type: 'musicRelease',

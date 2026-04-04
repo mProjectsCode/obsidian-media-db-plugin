@@ -6,8 +6,8 @@ import { MediaType } from '../../utils/MediaType';
 import { coerceYear, contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
-import type { ArtistDiscographyReleaseSecondaryTypes, MusicBrainzReleaseGroupPrimaryTypeId } from '../musicBrainzReleaseGroupTypes';
-import { MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES, releaseGroupPassesSecondaryTypeFilter } from '../musicBrainzReleaseGroupTypes';
+import type { MusicBrainzReleaseGroupPrimaryTypeId, ReleaseGroupSecondaryTypeId } from '../musicBrainzReleaseGroupTypes';
+import { MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES, releaseGroupPassesImportSecondaryFilter } from '../musicBrainzReleaseGroupTypes';
 
 interface ArtistTag {
 	name: string;
@@ -187,7 +187,7 @@ export class MusicBrainzArtistAPI extends APIModel {
 	async listArtistDiscographyReleaseGroupIds(
 		artistId: string,
 		enabledPrimaryTypeIds: MusicBrainzReleaseGroupPrimaryTypeId[],
-		secondaryTypesAllowed: ArtistDiscographyReleaseSecondaryTypes,
+		secondaryTypesAllowed: Record<ReleaseGroupSecondaryTypeId, boolean>,
 	): Promise<string[]> {
 		if (enabledPrimaryTypeIds.length === 0) {
 			return [];
@@ -228,7 +228,9 @@ export class MusicBrainzArtistAPI extends APIModel {
 					if (rg['primary-type'] !== primaryTypeId) {
 						continue;
 					}
-					if (!releaseGroupPassesSecondaryTypeFilter(rg['secondary-types'], secondaryTypesAllowed)) {
+					if (
+						!releaseGroupPassesImportSecondaryFilter(rg['secondary-types'], rg.title, secondaryTypesAllowed)
+					) {
 						continue;
 					}
 					collected.push({

@@ -1,6 +1,7 @@
 import type { App } from 'obsidian';
 import { Modal, Setting } from 'obsidian';
 import {
+	INFERRED_RELEASE_GROUP_SECONDARY_TYPES,
 	MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES,
 	MUSICBRAINZ_RELEASE_GROUP_SECONDARY_TYPES,
 } from '../api/musicBrainzReleaseGroupTypes';
@@ -24,8 +25,8 @@ export class ReleaseTypesModal extends Modal {
 			new Setting(contentEl)
 				.setName(t.label)
 				.addToggle(cb => {
-					cb.setValue(this.plugin.settings.artistDiscographyReleasePrimaryTypes[t.id]).onChange(async on => {
-						this.plugin.settings.artistDiscographyReleasePrimaryTypes[t.id] = on;
+					cb.setValue(this.plugin.settings.enabledReleaseGroupPrimaryTypes[t.id]).onChange(async on => {
+						this.plugin.settings.enabledReleaseGroupPrimaryTypes[t.id] = on;
 						await this.plugin.saveSettings();
 					});
 				});
@@ -35,8 +36,19 @@ export class ReleaseTypesModal extends Modal {
 			new Setting(contentEl)
 				.setName(t.label)
 				.addToggle(cb => {
-					cb.setValue(this.plugin.settings.artistDiscographyReleaseSecondaryTypes[t.id]).onChange(async on => {
-						this.plugin.settings.artistDiscographyReleaseSecondaryTypes[t.id] = on;
+					cb.setValue(this.plugin.settings.enabledReleaseGroupSecondaryTypes[t.id]).onChange(async on => {
+						this.plugin.settings.enabledReleaseGroupSecondaryTypes[t.id] = on;
+						await this.plugin.saveSettings();
+					});
+				});
+		}
+
+		for (const t of INFERRED_RELEASE_GROUP_SECONDARY_TYPES) {
+			new Setting(contentEl)
+				.setName(`${t.label} (title contains "${t.titleIncludes}")`)
+				.addToggle(cb => {
+					cb.setValue(this.plugin.settings.enabledReleaseGroupSecondaryTypes[t.id]).onChange(async on => {
+						this.plugin.settings.enabledReleaseGroupSecondaryTypes[t.id] = on;
 						await this.plugin.saveSettings();
 					});
 				});
