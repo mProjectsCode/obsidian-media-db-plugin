@@ -33,7 +33,7 @@ export class BulkUpdateHelper {
 
 			for (const file of mediaFiles) {
 				try {
-					await this.plugin.updateNote(file, true, false, silent);
+					await this.plugin.updateNote(file, true, false, false, silent);
 					successCount++;
 				} catch (e) {
 					console.error(`MDB | Failed to bulk update ${file.path}: `, e);

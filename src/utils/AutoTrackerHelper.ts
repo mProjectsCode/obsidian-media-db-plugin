@@ -57,7 +57,7 @@ export class AutoTrackerHelper {
 
 		for (const file of filesToUpdate) {
 			try {
-				await this.plugin.updateNote(file, true, false, silent);
+				await this.plugin.updateNote(file, true, false, false, silent);
 				successCount++;
 			} catch (e) {
 				console.warn(`MDB Tracker | Failed to auto-update ${file.path}: `, e);

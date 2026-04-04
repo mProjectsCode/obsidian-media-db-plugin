@@ -37,7 +37,7 @@ export class BulkRecreateHelper {
 
 			for (const file of mediaFiles) {
 				try {
-					await this.plugin.updateNote(file, onlyMetadata, false, silent);
+					await this.plugin.updateNote(file, onlyMetadata, false, false, silent);
 					successCount++;
 				} catch (e) {
 					console.error(`MDB | Failed to bulk recreate ${file.path}: `, e);
