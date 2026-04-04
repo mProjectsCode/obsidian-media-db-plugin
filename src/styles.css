@@ -41,6 +41,46 @@ small.media-db-plugin-list-text {
 	font-size: 16px;
 }
 
+.media-db-plugin-select-element-flex {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+}
+
+.media-db-plugin-select-thumb {
+	width: 48px;
+	height: 72px;
+	flex: 0 0 48px;
+	background: var(--background-modifier-hover);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.media-db-plugin-select-thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.media-db-plugin-select-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.media-db-plugin-select-title {
+	font-weight: 600;
+}
+
+.media-db-plugin-select-thumb span {
+	color: var(--text-muted);
+	font-size: 12px;
+	text-align: center;
+}
+
 .media-db-plugin-select-element-selected {
 	border-left: 5px solid var(--interactive-accent) !important;
 	background: var(--background-secondary-alt);
@@ -101,6 +141,10 @@ small.media-db-plugin-list-text {
 	gap: var(--size-4-3);
 }
 
+.media-db-plugin-property-mappings-model-header--actions-only {
+	justify-content: flex-end;
+}
+
 .media-db-plugin-property-mappings-model-header .setting-item-name {
 	font-weight: var(--font-semibold);
 	font-size: var(--font-ui-medium);
@@ -145,9 +189,15 @@ small.media-db-plugin-list-text {
 	overflow-x: auto;
 }
 
+/* Widen the property-mapping popup to fit all columns comfortably */
+.modal:has(.media-db-plugin-property-mappings-table) {
+	width: min(92vw, 750px) !important;
+}
+
 .media-db-plugin-property-mappings-table {
 	width: 100%;
 	border-collapse: collapse;
+	table-layout: fixed;
 	border-spacing: 0;
 	font-size: var(--font-ui-small);
 }
@@ -182,22 +232,64 @@ small.media-db-plugin-list-text {
 	border-bottom: none;
 }
 
+.col-drag {
+	width: 4%;
+	text-align: center;
+	vertical-align: middle;
+}
+
 .col-property {
-	width: 25%;
+	width: 19%;
 	white-space: nowrap;
 }
 
 .col-mapping {
-	width: 20%;
+	width: 12%;
 }
 
 .col-new-name {
-	width: 40%;
+	width: 21%;
 }
 
 .col-wikilink {
+	width: 11%;
+	text-align: center !important;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.col-pin {
+	width: 9%;
+	text-align: center !important;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.col-tag {
+	width: 9%;
+	text-align: center !important;
+	vertical-align: middle;
+	white-space: nowrap;
+	padding-left: 2px !important;
+}
+
+.col-tag-prefix {
 	width: 15%;
-	text-align: center;
+	vertical-align: middle;
+	padding-right: 4px !important;
+}
+
+.media-db-plugin-tag-prefix-input {
+	width: calc(100% + 14px);
+	box-sizing: border-box;
+	margin-right: -14px;
+	font-size: var(--font-ui-smaller);
+	padding: 2px 4px;
+	border-radius: var(--radius-s);
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	min-width: 0;
 }
 
 .col-locked {
@@ -244,16 +336,223 @@ small.media-db-plugin-list-text {
 	font-size: var(--font-ui-medium);
 }
 
-.media-db-plugin-property-mapping-wikilink-label {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
+.media-db-plugin-property-mapping-wikilink-label,
+.media-db-plugin-property-mapping-pin-label {
+	display: inline-block;
 	cursor: pointer;
-	padding: var(--size-4-1);
+	padding: 0;
+	margin: 0;
+	line-height: 0;
 }
 
-.media-db-plugin-property-mapping-wikilink-label input[type='checkbox'] {
+.media-db-plugin-property-mapping-wikilink-label input[type='checkbox'],
+.media-db-plugin-property-mapping-pin-label input[type='checkbox'] {
 	cursor: pointer;
 	width: var(--checkbox-size);
 	height: var(--checkbox-size);
+	margin: 0;
+}
+
+/*
+ * Settings tabs: same layout pattern as Obsidian Linter (horizontal icon tabs).
+ * Adapted from https://github.com/platers/obsidian-linter/blob/master/src/styles.css (MIT).
+ */
+.media-db-navigation-item {
+	cursor: pointer;
+	border-radius: 8px 8px 2px 2px;
+	border: 1px solid var(--background-modifier-border);
+	font-weight: bold;
+	font-size: 16px;
+	display: flex;
+	flex-direction: row;
+	white-space: nowrap;
+	padding: 4px 6px;
+	align-items: center;
+	gap: 4px;
+	overflow: hidden;
+	background-color: var(--background-primary-secondary-alt);
+	transition:
+		color 0.25s ease-in-out,
+		padding 0.25s ease-in-out,
+		background-color 0.35s cubic-bezier(0.45, 0.25, 0.83, 0.67),
+		max-width 0.35s cubic-bezier(0.57, 0.04, 0.58, 1);
+	height: 32px;
+}
+
+@media screen and (max-width: 1325px) {
+	.media-db-navigation-item.media-db-desktop {
+		max-width: 32px;
+	}
+}
+
+@media screen and (max-width: 800px) {
+	.media-db-navigation-item.media-db-mobile {
+		max-width: 32px;
+	}
+}
+
+.media-db-navigation-item-icon {
+	padding-top: 5px;
+}
+
+.media-db-navigation-item:hover {
+	border-color: var(--interactive-accent-hover);
+	border-bottom: 0;
+}
+
+.media-db-navigation-item-selected {
+	background-color: var(--interactive-accent) !important;
+	color: var(--text-on-accent);
+	padding: 4px 9px !important;
+	max-width: 100% !important;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px 8px 2px 2px;
+	border-bottom: 0;
+	transition:
+		color 0.25s ease-in-out,
+		padding 0.25s ease-in-out,
+		background-color 0.35s cubic-bezier(0.45, 0.25, 0.83, 0.67),
+		max-width 0.45s cubic-bezier(0.57, 0.04, 0.58, 1) 0.2s;
+}
+
+.media-db-setting-header {
+	margin-bottom: 24px;
+	overflow-y: hidden;
+	overflow-x: auto;
+}
+
+.media-db-setting-header .media-db-setting-tab-group {
+	display: flex;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	width: 100%;
+}
+
+.media-db-setting-tab-group {
+	margin-top: 6px;
+	padding-left: 2px;
+	padding-right: 2px;
+	border-bottom: 2px solid var(--background-modifier-border);
+}
+
+.media-db-tab-settings--hidden {
+	display: none !important;
+}
+
+.media-db-navigation-item:not(.media-db-navigation-item-selected) > span:nth-child(2),
+.media-db-visually-hidden {
+	border: 0;
+	clip: rect(0 0 0 0);
+	clip-path: rect(0 0 0 0);
+	height: auto;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	white-space: nowrap;
+}
+
+/* ── Completion Modal ─────────────────────────────── */
+.mdb-completion-modal {
+	padding: 8px 4px 4px;
+	min-width: 280px;
+}
+
+.mdb-completion-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 20px;
+}
+
+.mdb-completion-icon {
+	font-size: 1.6em;
+	line-height: 1;
+}
+
+.mdb-completion-title {
+	margin: 0;
+	font-size: 1.15em;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.mdb-completion-stats {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 24px;
+}
+
+.mdb-completion-row {
+	display: grid;
+	grid-template-columns: 32px 1fr 32px;
+	align-items: center;
+	padding: 7px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.mdb-completion-row-icon {
+	display: flex;
+	align-items: center;
+	color: var(--text-muted);
+}
+
+.mdb-completion-label {
+	color: var(--text-muted);
+	font-size: 0.92em;
+	text-align: center;
+}
+
+.mdb-completion-value {
+	font-weight: 600;
+	color: var(--text-normal);
+	font-size: 0.95em;
+	text-align: right;
+}
+
+.mdb-stat-success {
+	color: var(--color-green);
+}
+.mdb-stat-error {
+	color: var(--color-red);
+}
+.mdb-stat-skipped {
+	color: var(--text-muted);
+}
+
+.mdb-completion-notes {
+	margin-bottom: 20px;
+	padding: 8px 12px;
+	background: var(--background-secondary);
+	border-radius: var(--radius-s);
+	font-size: 0.88em;
+	color: var(--text-muted);
+}
+
+.mdb-completion-notes p {
+	margin: 0;
+}
+
+.mdb-completion-footer {
+	display: flex;
+	justify-content: flex-end;
+	padding-top: 12px;
+}
+
+/* ── Modals Inline Style Replacements ─────────────────────────────── */
+
+.media-db-list-item-flex {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+}
+
+.media-db-list-item-thumb {
+	background: var(--background-modifier-hover);
+	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }

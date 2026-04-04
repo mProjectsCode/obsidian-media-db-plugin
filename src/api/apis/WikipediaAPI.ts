@@ -68,7 +68,7 @@ export class WikipediaAPI extends APIModel {
 					type: 'wiki',
 					title: result.title,
 					englishTitle: result.title,
-					year: '',
+					year: 0,
 					dataSource: this.apiName,
 					id: result.pageid.toString(),
 				}),

@@ -1,5 +1,5 @@
 import createClient from 'openapi-fetch';
-import { isTruthy, obsidianFetch } from 'src/utils/Utils';
+import { coerceMovieDurationMinutes, coerceYear, isTruthy, obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
@@ -55,7 +55,7 @@ export class MALAPI extends APIModel {
 		for (const result of data ?? []) {
 			const resType = result.type?.toLowerCase();
 			const type = resType ? this.typeMappings.get(resType) : undefined;
-			const year = result.year?.toString() ?? result.aired?.prop?.from?.year?.toString() ?? '';
+			const year = coerceYear(result.year ?? result.aired?.prop?.from?.year);
 			const id = result.mal_id?.toString();
 
 			if (type === undefined) {
@@ -124,7 +124,7 @@ export class MALAPI extends APIModel {
 
 		const resType = result.type?.toLowerCase();
 		const type = resType ? this.typeMappings.get(resType) : undefined;
-		const year = result.year?.toString() ?? result.aired?.prop?.from?.year?.toString();
+		const year = coerceYear(result.year ?? result.aired?.prop?.from?.year);
 		const new_id = result.mal_id?.toString();
 
 		if (type === undefined) {
@@ -141,7 +141,7 @@ export class MALAPI extends APIModel {
 				plot: result.synopsis,
 				genres: result.genres?.map(x => x.name).filter(isTruthy),
 				studio: result.studios?.map(x => x.name).filter(isTruthy),
-				duration: result.duration,
+				duration: coerceMovieDurationMinutes(result.duration),
 				onlineRating: result.score,
 				image: result.images?.jpg?.image_url,
 
@@ -172,7 +172,7 @@ export class MALAPI extends APIModel {
 				plot: result.synopsis,
 				genres: result.genres?.map(x => x.name).filter(isTruthy),
 				studio: result.studios?.map(x => x.name).filter(isTruthy),
-				duration: result.duration,
+				duration: coerceMovieDurationMinutes(result.duration),
 				onlineRating: result.score,
 				image: result.images?.jpg?.image_url,
 

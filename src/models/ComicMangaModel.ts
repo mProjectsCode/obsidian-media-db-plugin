@@ -75,6 +75,6 @@ export class ComicMangaModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		return this.title + ' (' + this.year + ')';
+		return this.title + (this.year > 0 ? ` (${this.year})` : '');
 	}
 }

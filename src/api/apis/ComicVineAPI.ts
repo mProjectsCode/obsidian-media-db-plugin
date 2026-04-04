@@ -4,7 +4,9 @@ import { requestUrl } from 'obsidian';
 import { ComicMangaModel } from 'src/models/ComicMangaModel';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
+import { coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 // sadly no open api schema available
@@ -25,7 +27,12 @@ export class ComicVineAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `${this.apiUrl}/search/?api_key=${this.plugin.settings.ComicVineKey}&format=json&resources=volume&query=${encodeURIComponent(title)}`;
+		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.comicVine);
+		if (!apiKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
+		}
+
+		const searchUrl = `${this.apiUrl}/search/?api_key=${apiKey}&format=json&resources=volume&query=${encodeURIComponent(title)}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -42,7 +49,7 @@ export class ComicVineAPI extends APIModel {
 				new ComicMangaModel({
 					title: result.name,
 					englishTitle: result.name,
-					year: result.start_year,
+					year: coerceYear(result.start_year),
 					dataSource: this.apiName,
 					id: `4050-${result.id}`,
 					publishers: result.publisher?.name,
@@ -56,7 +63,12 @@ export class ComicVineAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `${this.apiUrl}/volume/${encodeURIComponent(id)}/?api_key=${this.plugin.settings.ComicVineKey}&format=json`;
+		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.comicVine);
+		if (!apiKey) {
+			throw Error(`MDB | API key for ${this.apiName} missing.`);
+		}
+
+		const searchUrl = `${this.apiUrl}/volume/${encodeURIComponent(id)}/?api_key=${apiKey}&format=json`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -82,7 +94,7 @@ export class ComicVineAPI extends APIModel {
 			englishTitle: result.name,
 			alternateTitles: result.aliases,
 			plot: result.deck,
-			year: result.start_year,
+			year: coerceYear(result.start_year),
 			dataSource: this.apiName,
 			url: result.site_detail_url,
 			id: `4050-${result.id}`,

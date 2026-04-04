@@ -19,6 +19,8 @@ export class MusicReleaseModel extends MediaTypeModel {
 		title: string;
 		duration: string;
 		featuredArtists: string[];
+		/** MusicBrainz recording MBID; used to resolve Spotify and other links. */
+		recordingId?: string;
 	}[];
 
 	userData: {
@@ -60,7 +62,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		let summary = this.title + ' (' + this.year + ')';
+		let summary = this.title + (this.year > 0 ? ` (${this.year})` : '');
 		if (this.artists.length > 0) summary += ' - ' + this.artists.join(', ');
 		return summary;
 	}

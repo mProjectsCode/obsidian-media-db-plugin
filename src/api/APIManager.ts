@@ -1,5 +1,6 @@
 import { Notice } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
+import type { MediaType } from '../utils/MediaType';
 import type { APIModel } from './APIModel';
 
 export class APIManager {
@@ -40,24 +41,28 @@ export class APIManager {
 	 * @param item
 	 */
 	async queryDetailedInfo(item: MediaTypeModel): Promise<MediaTypeModel | undefined> {
-		return await this.queryDetailedInfoById(item.id, item.dataSource);
+		return await this.queryDetailedInfoById(item.id, item.dataSource, item.getMediaType());
 	}
 
 	/**
 	 * Queries detailed info for an id from an API.
+	 * MusicBrainz-backed notes use on-disk dataSource `MusicBrainz`; `mediaType` picks Artist vs release/song API.
 	 *
 	 * @param id
-	 * @param apiName
+	 * @param apiName Stored dataSource on the note, or an exact {@link APIModel.apiName} (e.g. bulk import / ID search).
+	 * @param mediaType When set with a MusicBrainz family dataSource, selects which MusicBrainz API handles {@link getById}.
 	 */
-	async queryDetailedInfoById(id: string, apiName: string): Promise<MediaTypeModel | undefined> {
+	async queryDetailedInfoById(id: string, apiName: string, mediaType?: MediaType): Promise<MediaTypeModel | undefined> {
+		const effectiveApiName = apiName.trim() || apiName;
+
+		// Delegate to each registered API — APIs override canHandleDataSource() for special logic
 		for (const api of this.apis) {
-			if (api.apiName === apiName) {
+			if (api.canHandleDataSource(effectiveApiName, mediaType)) {
 				try {
-					return api.getById(id);
+					return await api.getById(id);
 				} catch (e) {
 					new Notice(`Error querying ${api.apiName}: ${e}`);
 					console.warn(e);
-
 					return undefined;
 				}
 			}

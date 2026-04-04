@@ -19,6 +19,8 @@ export class SeriesModel extends MediaTypeModel {
 
 	released: boolean;
 	country: string[];
+	language: string[];
+	network: string[];
 	ageRating: string;
 	streamingServices: string[];
 	airing: boolean;
@@ -47,6 +49,8 @@ export class SeriesModel extends MediaTypeModel {
 
 		this.released = false;
 		this.country = [];
+		this.language = [];
+		this.network = [];
 		this.ageRating = '';
 		this.streamingServices = [];
 		this.airing = false;
@@ -77,6 +81,6 @@ export class SeriesModel extends MediaTypeModel {
 	}
 
 	getSummary(): string {
-		return this.title + ' (' + this.year + ')';
+		return this.title + (this.year > 0 ? ` (${this.year})` : '');
 	}
 }

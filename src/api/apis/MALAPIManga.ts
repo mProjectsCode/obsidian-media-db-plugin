@@ -1,5 +1,5 @@
 import createClient from 'openapi-fetch';
-import { isTruthy, obsidianFetch } from 'src/utils/Utils';
+import { coerceYear, isTruthy, obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import { ComicMangaModel } from '../../models/ComicMangaModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
@@ -57,7 +57,7 @@ export class MALAPIManga extends APIModel {
 		for (const result of data ?? []) {
 			const resType = result.type?.toLowerCase();
 			const type = resType ? this.typeMappings.get(resType) : undefined;
-			const year = result.published?.prop?.from?.year?.toString() ?? '';
+			const year = coerceYear(result.published?.prop?.from?.year);
 			const id = result.mal_id?.toString();
 
 			ret.push(
@@ -122,7 +122,7 @@ export class MALAPIManga extends APIModel {
 
 		const resType = result.type?.toLowerCase();
 		const type = resType ? this.typeMappings.get(resType) : undefined;
-		const year = result.published?.prop?.from?.year?.toString() ?? '';
+		const year = coerceYear(result.published?.prop?.from?.year);
 		const new_id = result.mal_id?.toString();
 
 		return new ComicMangaModel({

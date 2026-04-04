@@ -44,35 +44,35 @@ I also published my own templates [here](https://github.com/mProjectsCode/obsidi
 
 The plugin offers a setting to automatically download the poster images for a new media, ensuring offline access. The images are saved as `type_title (year)` e.g. `movie_The Perfect Storm (2000)`, in a user-chosen folder.
 
-#### Metadata field customization
+#### Property Mapping & Customization
 
-Allows you to rename the metadata fields this plugin generates through mappings. The mappings can be set in the plugin's settings.
-The three options for mapping are:
+The plugin allows you to completely reorganize and customize how metadata fields are generated into your Obsidian notes. In the plugin settings, you can edit mappings with the following granular controls:
 
-- `default`: Keep the original name
-- `remap`: Rename the property
-- `remove`: Removes the property entirely
+- **Mapping Types**: Choose to keep original names (`default`), rename properties (`remap`), or skip them entirely (`remove`).
+- **Drag & Drop Ordering**: Easily drag and rearrange properties to dictate their exact output order in your frontmatter.
+- **Wikilink**: Convert specific properties into safe `[[Wiki-links]]` directly within the frontmatter.
+- **Pin to Bottom**: Pin specific properties to the absolute bottom of the frontmatter. If multiple properties are pinned, they strictly follow your drag-and-drop order.
+- **Auto-Tagging**: Dynamically convert property values into Obsidian tags, complete with a custom nested prefix input box (e.g., configuring `genres` to generate `#genre/action`).
 
-#### Bulk Import
+#### Bulk Operations
 
-The plugin allows you to import your preexisting media collection and upgrade it to Media DB entries.
+The plugin offers powerful bulk actions accessible via right-clicking a folder or the left-side Ribbon:
 
-##### Prerequisites
+- **Bulk Download Images**: Automatically downloads and stores remote poster images locally for all notes in a folder.
+- **Bulk Update Metadata**: Refresh API data for multiple existing notes at once.
+- **Bulk Recreate Metadata**: Features two unique modes: **Reset** (completely wipes and reconstructs the metadata) and **Safe** (preserves your manual text/content while safely reorganizing properties to match your latest mapping layout).
+- **Import Folder as Media**: Convert a folder of basic notes (e.g. from a CSV import) into rich Media DB entries by searching their titles.
 
-The preexisting media notes must be inside a folder in your vault.
-For the plugin to be able to query them, they need one metadata field that is used as the title the piece of media is searched by.
-This can be achieved by, for example, using a `csv` import plugin to import an existing list from outside of Obsidian.
+#### Auto-Tracker Engine
 
-##### Importing
+An automated tracking system that periodically checks for `airing` and `released` state changes of your ongoing media (Series, Games, Movies, etc.).
 
-To start the import process, right-click on the folder and select the `Import folder as Media DB entries` option.
-Then specify the API to search, if the current note content and metadata should be appended to the Media DB entry, and the name of the metadata field that contains the title of the piece of media.
+- The tracker scans on Obsidian startup or can be triggered manually via the Ribbon icon or bulk menus.
+- **Custom Statuses**: You can customize the exact keywords the plugin looks for (e.g., matching your personalized vocabulary for "Airing", "Released", or "Upcoming") in the Settings panel.
 
-Then the plugin will go through every file in the folder and prompt you to select from the search results.
+#### Intelligent Ghost Tag Purging
 
-##### Post import
-
-After all files have been imported or the import was canceled, you will find the new entries as well as an error report that contains any errors or skipped/canceled files in the folder specified in the setting of the plugin.
+The plugin's granular Auto-Tag generator is strictly non-destructive. Whenever a piece of media updates (e.g., a game's genre changes on the API), the plugin intelligently calculates which old tags it previously auto-generated and safely removes only those, leaving any manual tags you typed yourself perfectly preserved!
 
 ### How to install
 
@@ -130,6 +130,8 @@ Now you select the result you want, and the plugin will cast its magic, creating
 | Comic Vine                                           | The Comic Vine API offers metadata for comic books                                                | comicbooks                                            | Yes, by making an account [here](https://comicvine.gamespot.com/login-signup/) and going to the [api section](https://comicvine.gamespot.com/api/) of the site                     | 200 requests per resource, per hour. There is also a velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources.                                         | No                 |
 | [VNDB](https://vndb.org/)                            | The VNDB API offers metadata for visual novels                                                    | games                                                 | No                                                                                                                                                                                 | 200 requests per 5 minutes                                                                                                                                                                                                         | Yes                |
 | [Boardgame Geek](https://boardgamegeek.com)          | The Boardgame Geek API offers metadata for boardgames                                             | boardgames                                            | Yes, by making an account [here](https://boardgamegeek.com/join/) and then [requesting an application token](https://boardgamegeek.com/applications)                               | Exact usage limits are still undetermined                                                                                                                                                                                          | No                 |
+| [IGDB](https://www.igdb.com/)                        | IGDB is a community-driven game database offering rich metadata for video games.                  | games                                                 | Yes, requires a free Twitch Developer account. Create an app at [dev.twitch.tv](https://dev.twitch.tv/console/apps) to get a Client ID and Client Secret.                          | 4 requests per second                                                                                                                                                                                                              | No                 |
+| [RAWG](https://rawg.io/)                             | RAWG is one of the largest open video game databases with Metacritic scores and platform data.    | games                                                 | Yes, get a free API key at [rawg.io/apidocs](https://rawg.io/apidocs)                                                                                                              | None stated                                                                                                                                                                                                                        | No                 |
 
 #### Notes
 

@@ -1,3 +1,4 @@
+import { musicBrainzRegisteredApiName } from '../api/musicBrainzConstants';
 import type { MediaType } from '../utils/MediaType';
 import { containsOnlyLettersAndUnderscores, PropertyMappingNameConflictError, PropertyMappingValidationError } from '../utils/Utils';
 
@@ -8,6 +9,9 @@ export interface PropertyMappingData {
 	mapping: PropertyMappingOption;
 	locked?: boolean;
 	wikilink?: boolean;
+	pinBottom?: boolean;
+	autoTag?: boolean;
+	autoTagPrefix?: string;
 }
 
 export interface PropertyMappingModelData {
@@ -22,6 +26,8 @@ export enum PropertyMappingOption {
 }
 
 export const propertyMappingOptions = [PropertyMappingOption.Default, PropertyMappingOption.Map, PropertyMappingOption.Remove];
+
+const METADATA_KEYS_REQUIRED_IN_NOTE = ['type', 'id'] as const;
 
 export class PropertyMappingModel {
 	type: MediaType;
@@ -77,6 +83,16 @@ export class PropertyMappingModel {
 			}
 		}
 
+		const dataSourceRule = this.properties.find(p => p.property === 'dataSource');
+		if (dataSourceRule?.mapping === PropertyMappingOption.Remove && !musicBrainzRegisteredApiName(this.type)) {
+			return {
+				res: false,
+				err: new PropertyMappingValidationError(
+					`Removing dataSource is only allowed for artist, music release, and song (MusicBrainz). For "${this.type}" notes, dataSource is required to choose an API.`,
+				),
+			};
+		}
+
 		return {
 			res: true,
 		};
@@ -89,7 +105,16 @@ export class PropertyMappingModel {
 	copy(): PropertyMappingModel {
 		const copy = new PropertyMappingModel(this.type);
 		for (const property of this.properties) {
-			const propertyCopy = new PropertyMapping(property.property, property.newProperty, property.mapping, property.locked, property.wikilink);
+			const propertyCopy = new PropertyMapping(
+				property.property,
+				property.newProperty,
+				property.mapping,
+				property.locked,
+				property.wikilink,
+				property.pinBottom,
+				property.autoTag,
+				property.autoTagPrefix,
+			);
 			copy.properties.push(propertyCopy);
 		}
 		return copy;
@@ -148,8 +173,11 @@ export class PropertyMappingModel {
 							loadedProperty.property,
 							loadedProperty.newProperty,
 							loadedProperty.mapping,
-							defaultProperty.locked, // locked status from default
+							defaultProperty.locked,
 							loadedProperty.wikilink ?? false,
+							loadedProperty.pinBottom ?? false,
+							loadedProperty.autoTag ?? false,
+						loadedProperty.autoTagPrefix ?? '',
 						),
 					);
 				}
@@ -168,13 +196,19 @@ export class PropertyMapping {
 	locked: boolean;
 	mapping: PropertyMappingOption;
 	wikilink: boolean;
+	pinBottom: boolean;
+	autoTag: boolean;
+	autoTagPrefix: string;
 
-	constructor(property: string, newProperty: string, mapping: PropertyMappingOption, locked?: boolean, wikilink?: boolean) {
+	constructor(property: string, newProperty: string, mapping: PropertyMappingOption, locked?: boolean, wikilink?: boolean, pinBottom?: boolean, autoTag?: boolean, autoTagPrefix?: string) {
 		this.property = property;
 		this.newProperty = newProperty;
 		this.mapping = mapping;
 		this.locked = locked ?? false;
 		this.wikilink = wikilink ?? false;
+		this.pinBottom = pinBottom ?? false;
+		this.autoTag = autoTag ?? false;
+		this.autoTagPrefix = autoTagPrefix ?? '';
 	}
 
 	validate(): { res: boolean; err?: Error } {
@@ -192,6 +226,15 @@ export class PropertyMapping {
 					err: new PropertyMappingValidationError(`Error in property mapping "${this.toString()}": locked property may not be remapped.`),
 				};
 			}
+		}
+
+		if ((METADATA_KEYS_REQUIRED_IN_NOTE as readonly string[]).includes(this.property) && this.mapping === PropertyMappingOption.Remove) {
+			return {
+				res: false,
+				err: new PropertyMappingValidationError(
+					`Error in property mapping "${this.toString()}": type and id must appear in the note (you can remap them, but not remove them).`,
+				),
+			};
 		}
 
 		if (this.mapping === PropertyMappingOption.Default) {
@@ -242,11 +285,13 @@ export class PropertyMapping {
 			mapping: this.mapping,
 			locked: this.locked,
 			wikilink: this.wikilink,
+			pinBottom: this.pinBottom,
+			autoTag: this.autoTag,
+			autoTagPrefix: this.autoTagPrefix,
 		};
 	}
 
-	// Deserialization - creates a PropertyMapping from a plain object
 	static fromJSON(json: PropertyMappingData): PropertyMapping {
-		return new PropertyMapping(json.property, json.newProperty, json.mapping, json.locked, json.wikilink);
+		return new PropertyMapping(json.property, json.newProperty, json.mapping, json.locked, json.wikilink, json.pinBottom, json.autoTag, json.autoTagPrefix);
 	}
 }
