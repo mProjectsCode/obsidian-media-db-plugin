@@ -409,42 +409,6 @@ export class MusicBrainzAPI extends APIModel {
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.MusicBrainzAPI_disabledMediaTypes;
 	}
-
-	/**
-	 * Loads MusicBrainz recording URL relations and returns the open.spotify.com track URL if present.
-	 * Callers should throttle requests (~1/s) per MusicBrainz etiquette.
-	 */
-	async fetchSpotifyUrlForRecording(recordingId: string): Promise<string> {
-		if (!recordingId) {
-			return '';
-		}
-		const recordingUrl = `https://musicbrainz.org/ws/2/recording/${encodeURIComponent(recordingId)}?inc=url-rels&fmt=json`;
-		const fetchData = await requestUrlRateLimited(
-			{
-				url: recordingUrl,
-				headers: {
-					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
-				},
-			},
-			{ logLabel: 'MusicBrainz' },
-		);
-		if (fetchData.status !== 200) {
-			console.warn(`MDB | Recording ${recordingId} url-rels returned ${fetchData.status}`);
-			return '';
-		}
-		const data = (await fetchData.json) as RecordingUrlRelsResponse;
-		for (const rel of data.relations ?? []) {
-			const resource = rel.url?.resource;
-			if (typeof resource === 'string' && resource.includes('open.spotify.com')) {
-				return resource;
-			}
-		}
-		return '';
-	}
-}
-
-interface RecordingUrlRelsResponse {
-	relations?: { type: string; url?: { resource: string } }[];
 }
 
 function recordingSearchHitPassesFilters(

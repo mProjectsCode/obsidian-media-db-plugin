@@ -34,7 +34,7 @@ export class ReleaseTypesModal extends Modal {
 
 		for (const t of INFERRED_RELEASE_GROUP_SECONDARY_TYPES) {
 			new Setting(contentEl)
-				.setName(`${t.label}")`)
+				.setName(`t.label`)
 				.addToggle(cb => {
 					cb.setValue(this.plugin.settings.enabledReleaseGroupSecondaryTypes[t.id]).onChange(async on => {
 						this.plugin.settings.enabledReleaseGroupSecondaryTypes[t.id] = on;

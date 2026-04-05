@@ -589,7 +589,6 @@ export default class MediaDbPlugin extends Plugin {
 			return;
 		}
 
-		const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
 		const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
 		const genius = new GeniusClient(geniusToken);
 		const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
@@ -627,17 +626,6 @@ export default class MediaDbPlugin extends Plugin {
 			return;
 		}
 
-		if (!recording.spotifyUrl && musicBrainzApi) {
-			await new Promise(r => setTimeout(r, 1100));
-			if (options.chainedImport?.abort) {
-				return;
-			}
-			try {
-				recording.spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(recording.id);
-			} catch (e) {
-				console.warn(`MDB | Spotify URL for recording ${recording.id}:`, e);
-			}
-		}
 		if (!recording.spotifyUrl && spotify.isConfigured()) {
 			try {
 				recording.spotifyUrl = await spotify.searchFirstTrackUrl(recording.title, geniusSearchArtist);
@@ -680,18 +668,7 @@ export default class MediaDbPlugin extends Plugin {
 				}
 
 				let spotifyUrl = '';
-				if (track.recordingId) {
-					await new Promise(r => setTimeout(r, 1100));
-					if (childOptions.chainedImport?.abort) {
-						return;
-					}
-					try {
-						spotifyUrl = await musicBrainzApi.fetchSpotifyUrlForRecording(track.recordingId);
-					} catch (e) {
-						console.warn(`MDB | Spotify URL for recording ${track.recordingId}:`, e);
-					}
-				}
-				if (!spotifyUrl && spotify.isConfigured()) {
+				if (spotify.isConfigured()) {
 					const primaryArtist = release.artists[0] ?? geniusSearchArtist;
 					try {
 						spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);

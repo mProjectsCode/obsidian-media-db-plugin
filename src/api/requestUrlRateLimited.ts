@@ -1,8 +1,8 @@
 import type { RequestUrlParam, RequestUrlResponse } from 'obsidian';
 import { requestUrl } from 'obsidian';
 
-/** Retries after the first attempt (5 HTTP attempts total; backoffs 1s, 2s, 4s, 8s). */
-const RATE_LIMIT_MAX_RETRIES = 4;
+/** Retries after the first attempt (10 HTTP attempts total; exponential backoffs 1s … 256s). */
+const RATE_LIMIT_MAX_RETRIES = 8;
 
 const BACKOFF_BASE_MS = 1000;
 const RETRY_AFTER_CAP_MS = 15_000;
@@ -38,7 +38,7 @@ export interface RequestUrlRateLimitedOptions {
 }
 
 /**
- * HTTP request with retries on 429 / 503: honors `Retry-After` (capped) or exponential backoff (1s, 2s, 4s, 8s).
+ * HTTP request with retries on 429 / 503: honors `Retry-After` (capped) or exponential backoff (1s through 256s).
  */
 export async function requestUrlRateLimited(
 	param: RequestUrlParam,
