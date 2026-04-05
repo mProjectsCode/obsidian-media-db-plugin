@@ -57,6 +57,10 @@ export class MediaDbPreviewModal extends Modal {
 			} catch (e) {
 				console.warn(`mdb | error during rendering of preview`, e);
 			}
+
+			const importPath = this.plugin.getResolvedImportPath(result);
+			const pathRow = previewWrapper.createDiv({ cls: 'media-db-plugin-preview-import-path' });
+			pathRow.createEl('code', { text: importPath });
 		}
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });

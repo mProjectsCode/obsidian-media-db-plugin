@@ -1,7 +1,8 @@
 import { iso6392 } from 'iso-639-2';
 import type { TFile, TFolder, App } from 'obsidian';
-import { requestUrl } from 'obsidian';
+import { normalizePath, requestUrl } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
+import { MediaType } from './MediaType';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -20,8 +21,46 @@ export function containsOnlyLettersAndUnderscores(str: string): boolean {
 	return /^[\p{Letter}\p{M}_]+$/u.test(str);
 }
 
+/** Keys written to YAML frontmatter after remapping; allows internal spaces (and digits) between runs of word chars. */
+export function isValidRemappedFrontmatterKey(str: string): boolean {
+	return /^[\p{Letter}\p{M}_\p{N}]+(\s[\p{Letter}\p{M}_\p{N}]+)*$/u.test(str);
+}
+
+function isEmptyForFrontmatter(value: unknown): boolean {
+	if (value == null) {
+		return true;
+	}
+	if (typeof value === 'string') {
+		return value.trim().length === 0;
+	}
+	if (Array.isArray(value)) {
+		return value.length === 0;
+	}
+	if (typeof value === 'object') {
+		if (value instanceof Date) {
+			return false;
+		}
+		return Object.keys(value as object).length === 0;
+	}
+	return false;
+}
+
+/** Drops top-level keys whose values look unset: null/undefined, blank strings, empty arrays, empty plain objects. */
+export function omitEmptyMetadataFields(meta: Record<string, unknown>): Record<string, unknown> {
+	const out: Record<string, unknown> = {};
+	for (const [k, v] of Object.entries(meta)) {
+		if (!isEmptyForFrontmatter(v)) {
+			out[k] = v;
+		}
+	}
+	return out;
+}
+
 export function replaceIllegalFileNameCharactersInString(string: string): string {
-	return string.replace(/[\\,#%&{}/*<>$"@.?]*/g, '').replace(/:+/g, ' -');
+	return string
+		.replaceAll('&', 'and')
+		.replace(/[\\,#%{}/*<>$"@.?]*/g, '')
+		.replace(/:+/g, ' -');
 }
 
 export function replaceTags(template: string, mediaTypeModel: MediaTypeModel, ignoreUndefined: boolean = false): string {
@@ -190,6 +229,11 @@ export class PropertyMappingNameConflictError extends Error {
 	}
 }
 
+/** Mutable handle: set by the overwrite dialog when the user stops a chained import. */
+export interface ChainedImportControl {
+	abort: boolean;
+}
+
 /**
  * - attachTemplate: whether to attach the template (DEFAULT: false)
  * - attachFie: a file to attach (DEFAULT: undefined)
@@ -201,11 +245,89 @@ export interface CreateNoteOptions {
 	attachFile?: TFile;
 	openNote?: boolean;
 	folder?: TFolder;
+	/** With chainedImportStopLabel, the overwrite dialog offers a third action that sets abort. */
+	chainedImport?: ChainedImportControl;
+	chainedImportStopLabel?: string;
+	/**
+	 * While auto-importing discography, an existing artist note triggers a four-button overwrite dialog
+	 * (Abort / optional Skip / No keeps file / Yes overwrites). Use with {@link artistBatchImport} when importing multiple artists.
+	 */
+	artistDiscographyOverwrite?: boolean;
+	/** When multiple artists are imported in one batch, Abort sets this and the batch loop stops. */
+	artistBatchImport?: ChainedImportControl;
+	/**
+	 * While auto-importing tracks, an existing release note triggers the same four-button overwrite dialog
+	 * as for artists. Use with {@link releaseBatchImport} when importing multiple releases in one batch.
+	 */
+	musicReleaseRecordingsOverwrite?: boolean;
+	/** When multiple releases are imported in one batch (sequential), Abort sets this and the batch loop stops. */
+	releaseBatchImport?: ChainedImportControl;
 }
 
-export function migrateObject<T extends object>(object: T, oldData: Record<string, unknown>, defaultData: T): void {
+/** Runtime in whole minutes (TMDB/OMDb/MAL). 0 when unknown. Parses legacy string frontmatter (e.g. "136 min", "2 hr 5 min"). */
+export function coerceMovieDurationMinutes(value: unknown): number {
+	if (value === undefined || value === null) {
+		return 0;
+	}
+	if (typeof value === 'number') {
+		const n = Math.trunc(value);
+		return Number.isFinite(n) && n >= 0 ? n : 0;
+	}
+	if (typeof value === 'string') {
+		const t = value.trim();
+		if (t === '' || t.toLowerCase() === 'unknown' || t.toUpperCase() === 'N/A' || t === 'TBA') {
+			return 0;
+		}
+		let total = 0;
+		const hours = t.match(/(\d+)\s*(?:hours?|hrs?)\b/i) ?? t.match(/(\d+)\s*h\b/i);
+		const mins = t.match(/(\d+)\s*(?:minutes?|mins?)\b/i) ?? t.match(/(\d+)\s*min\b/i);
+		if (hours) {
+			total += parseInt(hours[1], 10) * 60;
+		}
+		if (mins) {
+			total += parseInt(mins[1], 10);
+		}
+		if (total > 0) {
+			return total;
+		}
+		const n = parseInt(t, 10);
+		return Number.isFinite(n) && n >= 0 ? n : 0;
+	}
+	return 0;
+}
+
+/** Normalizes release year for metadata: integer, 0 when unknown or non-numeric. */
+export function coerceYear(value: unknown): number {
+	if (value === undefined || value === null) return 0;
+	if (typeof value === 'number') {
+		const n = Math.trunc(value);
+		return Number.isFinite(n) ? n : 0;
+	}
+	if (typeof value === 'string') {
+		const t = value.trim();
+		if (t === '' || t.toLowerCase() === 'unknown' || t === 'TBA' || t.toUpperCase() === 'N/A') {
+			return 0;
+		}
+		const n = parseInt(t, 10);
+		return Number.isFinite(n) ? n : 0;
+	}
+	return 0;
+}
+
+/** Copy plain saved fields onto a model instance, using defaults for missing keys and coercing `year`. */
+export function applyPlainObject<T extends object>(object: T, oldData: Record<string, unknown>, defaultData: T): void {
 	for (const key in object) {
-		object[key] = Object.hasOwn(oldData, key) && oldData[key] !== undefined && oldData[key] !== null ? (oldData[key] as T[typeof key]) : defaultData[key];
+		const has = Object.hasOwn(oldData, key) && oldData[key] !== undefined && oldData[key] !== null;
+		if (!has) {
+			object[key] = defaultData[key];
+			continue;
+		}
+		const raw = oldData[key];
+		if (key === 'year') {
+			(object as Record<string, unknown>)[key] = coerceYear(raw);
+			continue;
+		}
+		object[key] = raw as T[typeof key];
 	}
 }
 
@@ -221,6 +343,14 @@ export function unCamelCase(str: string): string {
 				return str.toUpperCase();
 			})
 	);
+}
+
+/** User-facing label for a media type (e.g. MusicRelease → Release). */
+export function mediaTypeDisplayName(mediaType: MediaType): string {
+	if (mediaType === MediaType.MusicRelease) {
+		return 'Release';
+	}
+	return unCamelCase(mediaType);
 }
 
 /* eslint-disable */
@@ -240,7 +370,56 @@ export async function useTemplaterPluginInFile(app: App, file: TFile): Promise<v
 	}
 }
 
+/**
+ * Creates a folder if missing. Tolerates parallel callers creating the same path (Obsidian throws "Folder already exists").
+ */
+export async function ensureVaultFolderPath(app: App, folderPath: string): Promise<void> {
+	const normalized = normalizePath(folderPath);
+	if (normalized === '/' || normalized === '.' || normalized === '') {
+		return;
+	}
+	if (await app.vault.adapter.exists(normalized)) {
+		return;
+	}
+	try {
+		await app.vault.createFolder(normalized);
+	} catch (e) {
+		if (await app.vault.adapter.exists(normalized)) {
+			return;
+		}
+		throw e;
+	}
+}
+
 /* eslint-enable */
+
+/** Whole USD amounts as used by TMDB (empty when unknown or non-positive). */
+export function formatUsdWholeDollars(amount: number): string {
+	if (!Number.isFinite(amount) || amount <= 0) {
+		return '';
+	}
+	return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+}
+
+/**
+ * Parses whole-dollar amounts from API display strings (TMDB Intl format, OMDb box office, etc.).
+ * Returns null when empty or not parseable.
+ */
+export function parseUsdWholeDollarsFromDisplayString(s: string): number | null {
+	const t = s.trim();
+	if (!t) {
+		return null;
+	}
+	const numeric = t.replace(/[^\d.,-]/g, '').replace(/,/g, '');
+	if (!numeric) {
+		return null;
+	}
+	const n = Number.parseFloat(numeric);
+	if (!Number.isFinite(n) || n <= 0) {
+		return null;
+	}
+	return Math.round(n);
+}
 
 export type ModelToData<T> = {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type

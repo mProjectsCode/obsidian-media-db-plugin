@@ -1,41 +1,62 @@
-import type { TFile } from 'obsidian';
-import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFolder } from 'obsidian';
+import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFile, TFolder } from 'obsidian';
 import { requestUrl, normalizePath } from 'obsidian';
-import type { MediaType } from 'src/utils/MediaType';
+import { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { GiantBombAPI } from './api/apis/GiantBombAPI';
 import { IGDBAPI } from './api/apis/IGDBAPI';
-import { RAWGAPI } from './api/apis/RAWGAPI';
 import { MALAPI } from './api/apis/MALAPI';
 import { MALAPIManga } from './api/apis/MALAPIManga';
 import { MobyGamesAPI } from './api/apis/MobyGamesAPI';
 import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
+import { MusicBrainzArtistAPI } from './api/apis/MusicBrainzArtistAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
+import { RAWGAPI } from './api/apis/RAWGAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
 import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
 import { TMDBSeriesAPI } from './api/apis/TMDBSeriesAPI';
 import { VNDBAPI } from './api/apis/VNDBAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
-import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
+import { GeniusClient } from './api/GeniusClient';
+import { MUSICBRAINZ_NOTE_DATA_SOURCE, musicBrainzRegisteredApiName } from './api/musicBrainzConstants';
+import {
+	enabledReleaseGroupPrimaryTypeIds,
+	normalizeReleaseGroupPrimaryTypes,
+	normalizeReleaseGroupSecondaryTypes,
+} from './api/musicBrainzReleaseGroupTypes';
+import { SpotifyClient } from './api/SpotifyClient';
+import { ConfirmOverwriteModal, ConfirmOverwriteChoice } from './modals/ConfirmOverwriteModal';
 import type { SeasonSelectModalElement } from './modals/MediaDbSeasonSelectModal';
 import { MediaDbSeasonSelectModal } from './modals/MediaDbSeasonSelectModal';
+import type { ArtistModel } from './models/ArtistModel';
 import type { MediaTypeModel } from './models/MediaTypeModel';
+import type { MusicReleaseModel } from './models/MusicReleaseModel';
+import { RecordingModel } from './models/RecordingModel';
 import type { SeasonModel } from './models/SeasonModel';
+import { ApiSecretID, getApiSecretValue } from './settings/apiSecretsHelper';
 import { PropertyMapper } from './settings/PropertyMapper';
-import { PropertyMappingModel } from './settings/PropertyMapping';
 import type { MediaDbPluginSettings } from './settings/Settings';
-import { getDefaultSettings, MediaDbSettingTab } from './settings/Settings';
+import { getDefaultSettings, MediaDbSettingTab, propertyMappingModelsInDisplayOrder } from './settings/Settings';
 import { BulkImportHelper } from './utils/BulkImportHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
+import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from './utils/noteTypeSettings';
 import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
-import type { CreateNoteOptions } from './utils/Utils';
-import { replaceIllegalFileNameCharactersInString, unCamelCase, hasTemplaterPlugin, useTemplaterPluginInFile } from './utils/Utils';
+import type { ChainedImportControl, CreateNoteOptions } from './utils/Utils';
+import { normalizeTitleForAsciiAlias } from './utils/normalizeTitleForAlias';
+import {
+	parseUsdWholeDollarsFromDisplayString,
+	omitEmptyMetadataFields,
+	replaceIllegalFileNameCharactersInString,
+	unCamelCase,
+	hasTemplaterPlugin,
+	useTemplaterPluginInFile,
+	ensureVaultFolderPath,
+} from './utils/Utils';
 import 'src/styles.css';
 
 export type Metadata = Record<string, unknown>;
@@ -57,6 +78,9 @@ export default class MediaDbPlugin extends Plugin {
 
 	frontMatterRexExpPattern: string = '^(---)\\n[\\s\\S]*?\\n---';
 
+	/** Serializes vault writes and overwrite modals during chained imports so parallel release/track jobs do not stack dialogs. */
+	private chainedVaultOperationQueue: Promise<unknown> = Promise.resolve();
+
 	async onload(): Promise<void> {
 		this.apiManager = new APIManager();
 		// register APIs
@@ -65,6 +89,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new MALAPIManga(this));
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
+		this.apiManager.registerAPI(new MusicBrainzArtistAPI(this));
 		this.apiManager.registerAPI(new SteamAPI(this));
 		this.apiManager.registerAPI(new TMDBSeriesAPI(this));
 		this.apiManager.registerAPI(new TMDBSeasonAPI(this));
@@ -117,7 +142,7 @@ export default class MediaDbPlugin extends Plugin {
 		for (const mediaType of MEDIA_TYPES) {
 			this.addCommand({
 				id: `open-media-db-search-modal-with-${mediaType}`,
-				name: `Create Media DB entry (${unCamelCase(mediaType)})`,
+				name: `Create Media DB entry: ${unCamelCase(mediaType)}`,
 				callback: () => this.createEntryWithSearchModal({ preselectedTypes: [mediaType] }),
 			});
 		}
@@ -333,7 +358,7 @@ export default class MediaDbPlugin extends Plugin {
 				season_number: s.seasonNumber,
 				name: s.seasonTitle || s.title,
 				episode_count: s.episodes || 0,
-				air_date: s.year,
+				air_date: s.year > 0 ? String(s.year) : 'unknown',
 				poster_path: s.image,
 			})),
 			true,
@@ -425,10 +450,41 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<void> {
-		// Create notes in parallel for better performance
+		const hasArtist = models.some(m => m.getMediaType() === MediaType.Artist);
+		const artistBatchImport =
+			hasArtist && models.filter(m => m.getMediaType() === MediaType.Artist).length >= 2
+				? { abort: false }
+				: undefined;
+		const musicReleaseCount = models.filter(m => m.getMediaType() === MediaType.MusicRelease).length;
+		const releaseBatchImport =
+			!hasArtist &&
+			musicReleaseCount >= 2 &&
+			this.settings.musicReleaseAutomaticallyImportRecordings
+				? { abort: false }
+				: undefined;
+
+		if (hasArtist) {
+			for (const model of models) {
+				if (artistBatchImport?.abort) {
+					break;
+				}
+				await this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile, artistBatchImport });
+			}
+			return;
+		}
+
+		if (releaseBatchImport) {
+			for (const model of models) {
+				if (releaseBatchImport.abort) {
+					break;
+				}
+				await this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile, releaseBatchImport });
+			}
+			return;
+		}
+
 		const results = await Promise.allSettled(models.map(model => this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile: attachFile })));
 
-		// Report any failures
 		const failures = results.filter(r => r.status === 'rejected');
 		if (failures.length > 0) {
 			console.warn('MDB | Some notes failed to create:', failures);
@@ -455,10 +511,30 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
+		if (mediaTypeModel.getMediaType() === MediaType.Artist) {
+			await this.importArtistDiscography(mediaTypeModel as ArtistModel, options);
+			return;
+		}
+		if (mediaTypeModel.getMediaType() === MediaType.MusicRelease) {
+			await this.importMusicReleaseWithOptionalRecordings(mediaTypeModel as MusicReleaseModel, options);
+			return;
+		}
+
+		await this.createStandardMediaDbNoteFromModel(mediaTypeModel, options);
+	}
+
+	/** @returns whether the note file was created (false if the user cancelled overwrite or an error occurred before the file was written). */
+	private async createStandardMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<boolean> {
 		try {
 			console.debug('MDB | creating new note');
 
-			options.openNote = this.settings.openNoteInNewTab;
+			if (options.chainedImport?.abort) {
+				return false;
+			}
+
+			options.openNote ??= this.settings.openNoteInNewTab;
+
+			await this.enrichStandaloneMusicBrainzRecordingIfNeeded(mediaTypeModel, options);
 
 			if (this.settings.imageDownload) {
 				await this.downloadImageForMediaModel(mediaTypeModel);
@@ -468,10 +544,388 @@ export default class MediaDbPlugin extends Plugin {
 
 			options.folder ??= await this.mediaTypeManager.getFolder(mediaTypeModel, this.app);
 
-			const targetFile = await this.createNote(this.mediaTypeManager.getFileName(mediaTypeModel), fileContent, options);
+			const { file: targetFile, keptExisting } = await this.createNote(
+				this.mediaTypeManager.getFileName(mediaTypeModel),
+				fileContent,
+				options,
+			);
+			if (!targetFile) {
+				return false;
+			}
 
-			if (this.settings.enableTemplaterIntegration) {
-				await useTemplaterPluginInFile(this.app, targetFile);
+			if (!keptExisting && this.settings.enableTemplaterIntegration) {
+				try {
+					await useTemplaterPluginInFile(this.app, targetFile);
+				} catch (e) {
+					console.warn(e);
+					new Notice(`${e}`);
+				}
+			}
+			return true;
+		} catch (e) {
+			console.warn(e);
+			new Notice(`${e}`);
+			return false;
+		}
+	}
+
+	/**
+	 * Release imports create per-track recordings with ids `{releaseGroupId}-t{n}`. Those already carry lyrics/URLs from
+	 * {@link importRecordingNotesForMusicReleaseTracks}. Standalone recording imports use a bare MusicBrainz recording id.
+	 */
+	private isMusicBrainzStandaloneRecordingId(recordingId: string): boolean {
+		return !/-t\d+$/i.test(recordingId);
+	}
+
+	private async enrichStandaloneMusicBrainzRecordingIfNeeded(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<void> {
+		if (mediaTypeModel.getMediaType() !== MediaType.Recording) {
+			return;
+		}
+		const recording = mediaTypeModel as RecordingModel;
+		if (recording.dataSource !== MUSICBRAINZ_NOTE_DATA_SOURCE || !this.isMusicBrainzStandaloneRecordingId(recording.id)) {
+			return;
+		}
+		if (options.chainedImport?.abort) {
+			return;
+		}
+
+		const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
+		const genius = new GeniusClient(geniusToken);
+		const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
+		const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
+		const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
+
+		const geniusSearchArtist = recording.artists[0] ?? recording.title;
+
+		if (genius.isConfigured() && !recording.lyrics) {
+			await new Promise(r => setTimeout(r, 500));
+			if (options.chainedImport?.abort) {
+				return;
+			}
+			if (recording.geniusUrl) {
+				await new Promise(r => setTimeout(r, 600));
+				if (options.chainedImport?.abort) {
+					return;
+				}
+				recording.lyrics = await genius.fetchLyricsFromGeniusPage(recording.geniusUrl);
+			} else {
+				const hit = await genius.searchFirstGeniusHit(`${geniusSearchArtist} ${recording.title}`);
+				if (hit) {
+					recording.geniusUrl = hit.url;
+					recording.url = recording.geniusUrl || recording.url;
+					await new Promise(r => setTimeout(r, 600));
+					if (options.chainedImport?.abort) {
+						return;
+					}
+					recording.lyrics = await genius.fetchLyricsFromGeniusPage(hit.url);
+				}
+			}
+		}
+
+		if (options.chainedImport?.abort) {
+			return;
+		}
+
+		if (!recording.spotifyUrl && spotify.isConfigured()) {
+			try {
+				recording.spotifyUrl = await spotify.searchFirstTrackUrl(recording.title, geniusSearchArtist);
+			} catch (e) {
+				console.warn(`MDB | Spotify search for "${recording.title}":`, e);
+			}
+		}
+	}
+
+	private async importRecordingNotesForMusicReleaseTracks(
+		release: MusicReleaseModel,
+		geniusSearchArtist: string,
+		musicBrainzApi: MusicBrainzAPI,
+		genius: GeniusClient,
+		spotify: SpotifyClient,
+		childOptions: CreateNoteOptions,
+	): Promise<void> {
+		await Promise.allSettled(
+			release.tracks.map(async track => {
+				if (childOptions.chainedImport?.abort) {
+					return;
+				}
+
+				let lyrics = '';
+				let geniusUrl = '';
+				if (genius.isConfigured()) {
+					await new Promise(r => setTimeout(r, 500));
+					if (childOptions.chainedImport?.abort) {
+						return;
+					}
+					const hit = await genius.searchFirstGeniusHit(`${geniusSearchArtist} ${track.title}`);
+					if (hit) {
+						geniusUrl = hit.url;
+						await new Promise(r => setTimeout(r, 600));
+						if (childOptions.chainedImport?.abort) {
+							return;
+						}
+						lyrics = await genius.fetchLyricsFromGeniusPage(hit.url);
+					}
+				}
+
+				let spotifyUrl = '';
+				if (spotify.isConfigured()) {
+					const primaryArtist = release.artists[0] ?? geniusSearchArtist;
+					try {
+						spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
+					} catch (e) {
+						console.warn(`MDB | Spotify search for "${track.title}":`, e);
+					}
+				}
+
+				if (childOptions.chainedImport?.abort) {
+					return;
+				}
+
+				const recording = new RecordingModel({
+					type: MediaType.Recording,
+					title: track.title,
+					englishTitle: track.title,
+					year: release.year,
+					releaseDate: release.releaseDate,
+					dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
+					url: geniusUrl || release.url,
+					id: `${release.id}-t${track.number}`,
+					image: release.image,
+					subType: MediaType.Recording,
+					genres: release.genres ?? [],
+					artists: release.artists.length > 0 ? release.artists : [geniusSearchArtist],
+					albumTitle: release.title,
+					albumReleaseGroupId: release.id,
+					trackNumber: track.number,
+					duration: track.duration,
+					featuredArtists: track.featuredArtists,
+					geniusUrl,
+					spotifyUrl,
+					lyrics,
+					userData: { personalRating: 0 },
+				});
+
+				await this.createStandardMediaDbNoteFromModel(recording, { ...childOptions });
+			}),
+		);
+	}
+
+	private async importMusicReleaseWithOptionalRecordings(release: MusicReleaseModel, options: CreateNoteOptions): Promise<void> {
+		try {
+			const releaseNotesFolder = options.folder ?? (await this.mediaTypeManager.getFolder(release, this.app));
+			const importRecordings = this.settings.musicReleaseAutomaticallyImportRecordings;
+
+			const releaseCreated = await this.createStandardMediaDbNoteFromModel(release, {
+				...options,
+				folder: releaseNotesFolder,
+				...(importRecordings ? { musicReleaseRecordingsOverwrite: true } : {}),
+			});
+			if (!releaseCreated) {
+				return;
+			}
+
+			if (!importRecordings || release.tracks.length === 0) {
+				new Notice(`✅ Finished music release import for ${release.title}.`);
+				console.log(`✅ Finished music release import for ${release.title}.`);
+				return;
+			}
+
+			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
+			if (!musicBrainzApi) {
+				new Notice('MusicBrainz API not available; recording notes were skipped.');
+				console.warn('MusicBrainz API not available; recording notes were skipped.');
+				return;
+			}
+
+			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
+			const genius = new GeniusClient(geniusToken);
+			if (!genius.isConfigured()) {
+				new Notice('Release import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+				console.warn('Release import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+			}
+
+			const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
+			const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
+			const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
+
+			const geniusSearchArtist = release.artists[0] ?? release.title;
+			const childOptions: CreateNoteOptions = {
+				attachTemplate: true,
+				openNote: false,
+				attachFile: undefined,
+				folder: undefined,
+			};
+
+			const tracksChain: ChainedImportControl = { abort: false };
+			const trackImportOptions: CreateNoteOptions = {
+				...options,
+				...childOptions,
+				chainedImport: tracksChain,
+				chainedImportStopLabel: 'Abort',
+			};
+
+			new Notice(`Importing ${release.tracks.length} tracks for ${release.title}…`);
+			console.log(`Importing ${release.tracks.length} tracks for ${release.title}…`);
+
+			await this.importRecordingNotesForMusicReleaseTracks(
+				release,
+				geniusSearchArtist,
+				musicBrainzApi,
+				genius,
+				spotify,
+				trackImportOptions,
+			);
+
+			if (tracksChain.abort) {
+				new Notice(`Stopped track import for ${release.title}.`);
+				console.log(`Stopped track import for ${release.title}.`);
+			} else {
+				new Notice(`✅ Finished music release import for ${release.title}.`);
+				console.log(`✅ Finished music release import for ${release.title}.`);
+			}
+		} catch (e) {
+			console.warn(e);
+			new Notice(`${e}`);
+		}
+	}
+
+	private async importArtistDiscography(artist: ArtistModel, options: CreateNoteOptions): Promise<void> {
+		try {
+			const childOptions: CreateNoteOptions = {
+				attachTemplate: true,
+				openNote: false,
+				attachFile: undefined,
+				folder: undefined,
+			};
+
+			const artistNoteFolder = await this.mediaTypeManager.getFolder(artist, this.app);
+
+			const artistNoteCreated = await this.createStandardMediaDbNoteFromModel(artist, {
+				...options,
+				folder: artistNoteFolder,
+				...(this.settings.artistAutomaticallyImportReleases ? { artistDiscographyOverwrite: true } : {}),
+			});
+			if (!artistNoteCreated) {
+				return;
+			}
+
+			if (!this.settings.artistAutomaticallyImportReleases) {
+				new Notice(`✅ Finished artist import for ${artist.title}.`);
+				console.log(`✅ Finished artist import for ${artist.title}.`);
+				return;
+			}
+
+			const enabledPrimaryTypes = enabledReleaseGroupPrimaryTypeIds(this.settings.enabledReleaseGroupPrimaryTypes);
+			if (enabledPrimaryTypes.length === 0) {
+				console.log('MDB | Discography skipped: no release types enabled in settings.');
+				new Notice(
+					`✅ Finished artist import for ${artist.title}. Discography was skipped — no release types are enabled (Settings → Music → Release → Release types).`,
+				);
+				return;
+			}
+
+			const geniusToken = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.genius) || undefined;
+			const genius = new GeniusClient(geniusToken);
+			if (!genius.isConfigured()) {
+				new Notice('Artist import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+				console.warn('Artist import: Genius token not found! Add a Genius API access token in settings to fetch lyrics.');
+			}
+
+			const spotifyClientId = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientId) || undefined;
+			const spotifyClientSecret = getApiSecretValue(this.app, this.settings.linkedApiSecretIds, ApiSecretID.spotifyClientSecret) || undefined;
+			const spotify = new SpotifyClient(spotifyClientId, spotifyClientSecret);
+
+			const artistApi = this.apiManager.getApiByName('MusicBrainz Artist API') as MusicBrainzArtistAPI | undefined;
+			const musicBrainzApi = this.apiManager.getApiByName('MusicBrainz API') as MusicBrainzAPI | undefined;
+			if (!artistApi || !musicBrainzApi) {
+				new Notice('MusicBrainz APIs not available.');
+				console.warn('MusicBrainz APIs not available.');
+				return;
+			}
+
+			let releaseGroupIds: string[];
+			try {
+				releaseGroupIds = await artistApi.listArtistDiscographyReleaseGroupIds(
+					artist.id,
+					enabledPrimaryTypes,
+					this.settings.enabledReleaseGroupSecondaryTypes,
+				);
+			} catch (e) {
+				new Notice(`Could not load releases: ${e}`);
+				console.log(`Could not load releases: ${e}`);
+				return;
+			}
+
+			const importRecordings = this.settings.musicReleaseAutomaticallyImportRecordings;
+			new Notice(
+				`Importing ${releaseGroupIds.length} releases${importRecordings ? ' and tracks' : ''} for ${artist.title}…`,
+			);
+			console.log(
+				`Importing ${releaseGroupIds.length} releases${importRecordings ? ' and tracks' : ''} for ${artist.title}…`,
+			);
+
+			const discographyChain: ChainedImportControl = { abort: false };
+
+			await Promise.allSettled(
+				releaseGroupIds.map(async rgId => {
+					if (discographyChain.abort) {
+						return;
+					}
+
+					let release: MusicReleaseModel;
+					try {
+						const model = await musicBrainzApi.getById(rgId);
+						release = model as MusicReleaseModel;
+					} catch (e) {
+						console.warn(`MDB | Skipping release group ${rgId}:`, e);
+						return;
+					}
+
+					if (discographyChain.abort) {
+						return;
+					}
+
+					const releaseOpts: CreateNoteOptions = {
+						...options,
+						...childOptions,
+						chainedImport: discographyChain,
+						chainedImportStopLabel: 'Abort',
+						...(importRecordings ? { musicReleaseRecordingsOverwrite: true } : {}),
+					};
+
+					const releaseNoteCreated = await this.createStandardMediaDbNoteFromModel(release, releaseOpts);
+					if (!releaseNoteCreated) {
+						return;
+					}
+
+					if (!importRecordings || discographyChain.abort) {
+						return;
+					}
+
+					const releaseTracksChain: ChainedImportControl = { abort: false };
+					const trackImportOpts: CreateNoteOptions = {
+						...options,
+						...childOptions,
+						chainedImport: releaseTracksChain,
+						chainedImportStopLabel: 'Abort',
+					};
+					await this.importRecordingNotesForMusicReleaseTracks(
+						release,
+						artist.title,
+						musicBrainzApi,
+						genius,
+						spotify,
+						trackImportOpts,
+					);
+				}),
+			);
+
+			if (discographyChain.abort) {
+				new Notice(`Stopped release import for ${artist.title}.`);
+				console.log(`Stopped release import for ${artist.title}.`);
+			} else {
+				new Notice(`✅ Finished artist import for ${artist.title}.`);
+				console.log(`✅ Finished artist import for ${artist.title}.`);
 			}
 		} catch (e) {
 			console.warn(e);
@@ -493,9 +947,7 @@ export default class MediaDbPlugin extends Plugin {
 				const imageFileName = `${replaceIllegalFileNameCharactersInString(`${mediaTypeModel.type}_${mediaTypeModel.title} (${mediaTypeModel.year})`)}.${imageExt}`;
 				const imagePath = normalizePath(`${this.settings.imageFolder}/${imageFileName}`);
 
-				if (!this.app.vault.getAbstractFileByPath(this.settings.imageFolder)) {
-					await this.app.vault.createFolder(this.settings.imageFolder);
-				}
+				await ensureVaultFolderPath(this.app, this.settings.imageFolder);
 
 				if (!this.app.vault.getAbstractFileByPath(imagePath)) {
 					const response = await requestUrl({ url: imageUrl, method: 'GET' });
@@ -513,9 +965,80 @@ export default class MediaDbPlugin extends Plugin {
 		return false;
 	}
 
+	private metadataRecordForNewNote(mediaTypeModel: MediaTypeModel): Record<string, unknown> {
+		let meta: Record<string, unknown>;
+		if (this.settings.useDefaultFrontMatter) {
+			meta = mediaTypeModel.toMetaDataObject();
+		} else {
+			meta = {
+				id: mediaTypeModel.id,
+				type: mediaTypeModel.type,
+				dataSource: mediaTypeModel.dataSource,
+			};
+		}
+		meta = this.withMovieCurrencyObjectFormat(meta, mediaTypeModel);
+		return this.withNormalizedTitleAliasMetadata(meta, mediaTypeModel.title);
+	}
+
+	/** When enabled, movie budget/revenue become `{ value, currency }` for YAML front matter. */
+	private withMovieCurrencyObjectFormat(meta: Record<string, unknown>, mediaTypeModel: MediaTypeModel): Record<string, unknown> {
+		if (!this.settings.useObjectFormatForCurrencyValues || mediaTypeModel.getMediaType() !== MediaType.Movie) {
+			return meta;
+		}
+		const next = { ...meta };
+		for (const key of ['budget', 'revenue'] as const) {
+			const raw = next[key];
+			if (typeof raw !== 'string') {
+				continue;
+			}
+			const amount = parseUsdWholeDollarsFromDisplayString(raw);
+			next[key] = amount !== null ? { value: amount, currency: 'USD' } : null;
+		}
+		return next;
+	}
+
+	private withNormalizedTitleAliasMetadata(meta: Record<string, unknown>, title: string): Record<string, unknown> {
+		if (!this.settings.addNormalizeTitlesAsAlias) {
+			return meta;
+		}
+		const alias = normalizeTitleForAsciiAlias(title);
+		if (alias === null) {
+			return meta;
+		}
+		const prev = meta['aliases'];
+		let list: string[] = [];
+		if (Array.isArray(prev)) {
+			list = prev.filter((x): x is string => typeof x === 'string');
+		} else if (typeof prev === 'string' && prev.length > 0) {
+			list = [prev];
+		}
+		if (!list.includes(alias)) {
+			list = [...list, alias];
+		}
+		return { ...meta, aliases: list };
+	}
+
 	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
-		const fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
+		let fileMetadata = this.modelPropertyMapper.convertObject(this.metadataRecordForNewNote(mediaTypeModel));
+		if (this.settings.useDefaultFrontMatter && !this.settings.includeEmptyFrontmatterFields) {
+			fileMetadata = omitEmptyMetadataFields(fileMetadata);
+		}
 		return stringifyYaml(fileMetadata);
+	}
+
+	/**
+	 * Vault-relative path where a new note for this model would be written, using the same folder templates,
+	 * tag expansion, and filename rules as {@link createNote} (folders are not created on disk).
+	 */
+	getResolvedImportPath(mediaTypeModel: MediaTypeModel): string {
+		let folderPath = this.mediaTypeManager.mediaFolderMap.get(mediaTypeModel.getMediaType()) ?? '/';
+		folderPath = this.mediaTypeManager.expandFolderPathForModel(folderPath, mediaTypeModel);
+		let fileName = this.mediaTypeManager.getFileName(mediaTypeModel);
+		fileName = replaceIllegalFileNameCharactersInString(fileName);
+		const dir = folderPath.replace(/^\/+|\/+$/g, '');
+		const relative = dir.length > 0 ? `${dir}/${fileName}.md` : `${fileName}.md`;
+		return normalizePath(relative);
 	}
 
 	/**
@@ -525,18 +1048,12 @@ export default class MediaDbPlugin extends Plugin {
 	 * @param options
 	 */
 	async generateMediaDbNoteContents(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<string> {
-		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
-		let fileMetadata: Record<string, unknown>;
+		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
 
-		if (this.settings.useDefaultFrontMatter) {
-			fileMetadata = this.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
-		} else {
-			fileMetadata = {
-				id: mediaTypeModel.id,
-				type: mediaTypeModel.type,
-				dataSource: mediaTypeModel.dataSource,
-			};
-		}
+		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
+		let fileMetadata: Record<string, unknown> = this.modelPropertyMapper.convertObject(
+			this.metadataRecordForNewNote(mediaTypeModel),
+		);
 
 		let fileContent = '';
 		template = options.attachTemplate ? template : '';
@@ -544,9 +1061,21 @@ export default class MediaDbPlugin extends Plugin {
 		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
 		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 
+		if (mediaTypeModel.getMediaType() === MediaType.Recording) {
+			const recording = mediaTypeModel as RecordingModel;
+			if (recording.lyrics.length > 0) {
+				fileContent += `# Lyrics\n\`\`\`\n${recording.lyrics}\n\`\`\`\n`;
+			}
+		}
+
+		if (this.settings.useDefaultFrontMatter && !this.settings.includeEmptyFrontmatterFields) {
+			fileMetadata = omitEmptyMetadataFields(fileMetadata);
+		}
+
 		if (this.settings.enableTemplaterIntegration && hasTemplaterPlugin(this.app)) {
 			// Include the media variable in all templater commands by using a top level JavaScript execution command.
-			fileContent = `---\n<%* const media = ${JSON.stringify(mediaTypeModel)} %>\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
+			const mediaJson = JSON.stringify(mediaTypeModel, (key, value: unknown) => (key === 'lyrics' ? undefined : value));
+			fileContent = `---\n<%* const media = ${mediaJson} -%>\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
 		} else {
 			fileContent = `---\n${stringifyYaml(fileMetadata)}---\n${fileContent}`;
 		}
@@ -622,11 +1151,35 @@ export default class MediaDbPlugin extends Plugin {
 	/**
 	 * Creates a note in the vault.
 	 *
-	 * @param fileName
-	 * @param fileContent
-	 * @param options
+	 * @returns The created or kept file, or null if the user skipped overwrite or chose to stop a chained import.
 	 */
-	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions): Promise<TFile> {
+	async createNote(
+		fileName: string,
+		fileContent: string,
+		options: CreateNoteOptions,
+	): Promise<{ file: TFile | null; keptExisting: boolean }> {
+		const run = (): Promise<{ file: TFile | null; keptExisting: boolean }> =>
+			this.createNoteInternal(fileName, fileContent, options);
+		if (options.chainedImport) {
+			const pending = this.chainedVaultOperationQueue.then(run);
+			this.chainedVaultOperationQueue = pending.then(
+				() => undefined,
+				() => undefined,
+			);
+			return pending;
+		}
+		return run();
+	}
+
+	private async createNoteInternal(
+		fileName: string,
+		fileContent: string,
+		options: CreateNoteOptions,
+	): Promise<{ file: TFile | null; keptExisting: boolean }> {
+		if (options.chainedImport?.abort) {
+			return { file: null, keptExisting: false };
+		}
+
 		// find and possibly create the folder set in settings or passed in folder
 		const folder = options.folder ?? this.app.vault.getAbstractFileByPath('/');
 
@@ -640,12 +1193,59 @@ export default class MediaDbPlugin extends Plugin {
 		// look if file already exists and ask if it should be overwritten
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (file) {
-			const shouldOverwrite = await new Promise<boolean>(resolve => {
-				new ConfirmOverwriteModal(this.app, fileName, resolve).open();
+			const chain = options.chainedImport;
+			const stopLabel =
+				options.chainedImportStopLabel?.trim() ||
+				(chain ? 'Abort' : '');
+			const showAbortRemainingLegacy = !!chain && stopLabel.length > 0;
+			const extendedOverwriteDetail = options.artistDiscographyOverwrite
+				? `The artist note "${fileName}" already exists. Do you want to overwrite it? "No" does not stop importing discography.`
+				: options.musicReleaseRecordingsOverwrite
+					? `The release note "${fileName}" already exists. Do you want to overwrite it? "No" does not stop importing tracks.`
+					: undefined;
+
+			const choice = await new Promise<ConfirmOverwriteChoice>(resolve => {
+				new ConfirmOverwriteModal(this.app, fileName, resolve, {
+					detail: extendedOverwriteDetail,
+					showAbortRemaining: extendedOverwriteDetail ? true : showAbortRemainingLegacy,
+					showSkip: extendedOverwriteDetail
+						? options.artistDiscographyOverwrite
+							? !!options.artistBatchImport
+							: !!(options.releaseBatchImport || options.chainedImport)
+						: false,
+				}).open();
 			});
 
-			if (!shouldOverwrite) {
-				throw new Error('MDB | file creation cancelled by user');
+			if (choice === ConfirmOverwriteChoice.Skip) {
+				return { file: null, keptExisting: false };
+			}
+			if (choice === ConfirmOverwriteChoice.Abort) {
+				if (chain) {
+					chain.abort = true;
+				}
+				// Nested imports (discography, tracks) spread batch handles onto options; only stop the
+				// multi-artist / multi-release batch when this dialog is not scoped to an inner chain.
+				if (options.artistBatchImport && !chain) {
+					options.artistBatchImport.abort = true;
+				}
+				if (options.releaseBatchImport && !chain) {
+					options.releaseBatchImport.abort = true;
+				}
+				return { file: null, keptExisting: false };
+			}
+			if (choice === ConfirmOverwriteChoice.KeepExisting) {
+				if (!(file instanceof TFile)) {
+					return { file: null, keptExisting: false };
+				}
+				if (options.openNote) {
+					const activeLeaf = this.app.workspace.getUnpinnedLeaf();
+					if (!activeLeaf) {
+						console.warn('MDB | no active leaf, not opening existing note');
+					} else {
+						await activeLeaf.openFile(file, { state: { mode: 'source' } });
+					}
+				}
+				return { file, keptExisting: true };
 			}
 
 			await this.app.vault.delete(file);
@@ -660,17 +1260,17 @@ export default class MediaDbPlugin extends Plugin {
 			const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 			if (!activeLeaf) {
 				console.warn('MDB | no active leaf, not opening newly created note');
-				return targetFile;
+				return { file: targetFile, keptExisting: false };
 			}
 			await activeLeaf.openFile(targetFile, { state: { mode: 'source' } });
 		}
 
-		return targetFile;
+		return { file: targetFile, keptExisting: false };
 	}
 
 	/**
 	 * Update the active note by querying the API again.
-	 * Tries to read the type, id and dataSource of the active note. If successful it will query the api, delete the old note and create a new one.
+	 * Tries to read the type and id of the active note (and dataSource when required). If successful it will query the api, delete the old note and create a new one.
 	 */
 	async updateActiveNote(onlyMetadata: boolean = false): Promise<void> {
 		const activeFile = this.app.workspace.getActiveFile() ?? undefined;
@@ -683,17 +1283,32 @@ export default class MediaDbPlugin extends Plugin {
 
 		console.debug(`MDB | read metadata`, metadata);
 
-		if (!metadata?.type || !metadata?.dataSource || !metadata?.id) {
+		if (!metadata?.type || !metadata?.id) {
 			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
 		}
 
-		const validOldMetadata: MediaTypeModelObj = metadata as unknown as MediaTypeModelObj;
+		const mediaType = resolveMetadataTypeToMediaType(this.settings, metadata.type);
+		if (mediaType === undefined) {
+			throw new Error('MDB | active note type is not recognized; check Settings → Note type for each media kind');
+		}
+		let dataSource = typeof metadata.dataSource === 'string' ? metadata.dataSource.trim() : '';
+		if (
+			!dataSource &&
+			musicBrainzRegisteredApiName(mediaType)
+		) {
+			dataSource = MUSICBRAINZ_NOTE_DATA_SOURCE;
+		}
+		if (!dataSource) {
+			throw new Error('MDB | active note is missing dataSource (required for this media type)');
+		}
+
+		const validOldMetadata: MediaTypeModelObj = { ...metadata, dataSource } as unknown as MediaTypeModelObj;
 		console.debug(`MDB | validOldMetadata`, validOldMetadata);
 
-		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(validOldMetadata, validOldMetadata.type);
+		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(validOldMetadata, mediaType);
 		console.debug(`MDB | oldMediaTypeModel created`, oldMediaTypeModel);
 
-		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(validOldMetadata.id, validOldMetadata.dataSource);
+		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(validOldMetadata.id, validOldMetadata.dataSource, mediaType);
 		if (!newMediaTypeModel) {
 			return;
 		}
@@ -709,18 +1324,15 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		const diskSettings: MediaDbPluginSettings = (await this.loadData()) as MediaDbPluginSettings;
+		const diskSettings: MediaDbPluginSettings = ((await this.loadData()) ?? {}) as MediaDbPluginSettings;
 		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
 		const loadedSettings: MediaDbPluginSettings = Object.assign({}, defaultSettings, diskSettings);
+		loadedSettings.enabledReleaseGroupPrimaryTypes = normalizeReleaseGroupPrimaryTypes(loadedSettings.enabledReleaseGroupPrimaryTypes);
+		loadedSettings.enabledReleaseGroupSecondaryTypes = normalizeReleaseGroupSecondaryTypes(loadedSettings.enabledReleaseGroupSecondaryTypes);
 
-		// Migrate property mappings using the dedicated migration method
-		const migratedModels = PropertyMappingModel.migrateModels(
-			loadedSettings.propertyMappingModels || [],
-			defaultSettings.propertyMappingModels.map(m => PropertyMappingModel.fromJSON(m)),
+		loadedSettings.propertyMappingModels = propertyMappingModelsInDisplayOrder(
+			loadedSettings.propertyMappingModels ?? defaultSettings.propertyMappingModels,
 		);
-
-		// Store as plain data for serialization
-		loadedSettings.propertyMappingModels = migratedModels.map(m => m.toJSON());
 
 		this.settings = loadedSettings;
 	}

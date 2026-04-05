@@ -4,7 +4,9 @@ import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
 import { SeriesModel } from '../../models/SeriesModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
+import { coerceMovieDurationMinutes, coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 interface ErrorResponse {
@@ -77,12 +79,13 @@ export class OMDbAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!this.plugin.settings.OMDbKey) {
+		const omdbKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.omdb);
+		if (!omdbKey) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const response = await requestUrl({
-			url: `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`,
+			url: `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${omdbKey}`,
 			method: 'GET',
 		});
 
@@ -125,7 +128,7 @@ export class OMDbAPI extends APIModel {
 						type: type,
 						title: result.Title,
 						englishTitle: result.Title,
-						year: result.Year,
+						year: coerceYear(result.Year),
 						dataSource: this.apiName,
 						id: result.imdbID,
 					}),
@@ -136,7 +139,7 @@ export class OMDbAPI extends APIModel {
 						type: type,
 						title: result.Title,
 						englishTitle: result.Title,
-						year: result.Year,
+						year: coerceYear(result.Year),
 						dataSource: this.apiName,
 						id: result.imdbID,
 					}),
@@ -147,7 +150,7 @@ export class OMDbAPI extends APIModel {
 						type: type,
 						title: result.Title,
 						englishTitle: result.Title,
-						year: result.Year,
+						year: coerceYear(result.Year),
 						dataSource: this.apiName,
 						id: result.imdbID,
 					}),
@@ -161,12 +164,13 @@ export class OMDbAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!this.plugin.settings.OMDbKey) {
+		const omdbKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.omdb);
+		if (!omdbKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const response = await requestUrl({
-			url: `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${this.plugin.settings.OMDbKey}`,
+			url: `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${omdbKey}`,
 			method: 'GET',
 		});
 
@@ -197,7 +201,7 @@ export class OMDbAPI extends APIModel {
 				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
-				year: result.Year,
+				year: coerceYear(result.Year),
 				dataSource: this.apiName,
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
@@ -206,14 +210,14 @@ export class OMDbAPI extends APIModel {
 				genres: result.Genre?.split(', '),
 				director: result.Director?.split(', '),
 				writer: result.Writer?.split(', '),
-				duration: result.Runtime,
+				duration: coerceMovieDurationMinutes(result.Runtime),
 				onlineRating: Number.parseFloat(result.imdbRating ?? 0),
 				actors: result.Actors?.split(', '),
 				image: result.Poster.replace('_SX300', '_SX600'),
 
 				released: true,
 				country: result.Country?.split(', '),
-				boxOffice: result.BoxOffice,
+				revenue: result.BoxOffice && result.BoxOffice !== 'N/A' ? result.BoxOffice : '',
 				ageRating: result.Rated,
 				premiere: this.plugin.dateFormatter.format(result.Released, this.apiDateFormat),
 
@@ -228,7 +232,7 @@ export class OMDbAPI extends APIModel {
 				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
-				year: result.Year,
+				year: coerceYear(result.Year),
 				dataSource: this.apiName,
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,
@@ -259,7 +263,7 @@ export class OMDbAPI extends APIModel {
 				type: type,
 				title: result.Title,
 				englishTitle: result.Title,
-				year: result.Year,
+				year: coerceYear(result.Year),
 				dataSource: this.apiName,
 				url: `https://www.imdb.com/title/${result.imdbID}/`,
 				id: result.imdbID,

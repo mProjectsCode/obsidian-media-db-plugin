@@ -5,7 +5,7 @@ import type { MediaType } from '../utils/MediaType';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import type { SearchModalData, SearchModalOptions } from '../utils/ModalHelper';
 import { SEARCH_MODAL_DEFAULT_OPTIONS } from '../utils/ModalHelper';
-import { unCamelCase } from '../utils/Utils';
+import { mediaTypeDisplayName } from '../utils/Utils';
 
 export class MediaDbSearchModal extends Modal {
 	plugin: MediaDbPlugin;
@@ -92,12 +92,12 @@ export class MediaDbSearchModal extends Modal {
 			const apiToggleListElementWrapper = contentEl.createEl('div', { cls: 'media-db-plugin-list-wrapper' });
 
 			const apiToggleTextWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-text-wrapper' });
-			apiToggleTextWrapper.createEl('span', { text: unCamelCase(mediaType), cls: 'media-db-plugin-list-text' });
+			apiToggleTextWrapper.createEl('span', { text: mediaTypeDisplayName(mediaType), cls: 'media-db-plugin-list-text' });
 
 			const apiToggleComponentWrapper = apiToggleListElementWrapper.createEl('div', { cls: 'media-db-plugin-list-toggle' });
 
 			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
-			apiToggleComponent.setTooltip(unCamelCase(mediaType));
+			apiToggleComponent.setTooltip(mediaTypeDisplayName(mediaType));
 			apiToggleComponent.setValue(this.selectedTypes.contains(mediaType));
 			if (apiToggleComponent.getValue()) {
 				currentToggle = apiToggleComponent;

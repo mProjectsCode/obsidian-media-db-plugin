@@ -3,6 +3,7 @@
 import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -28,14 +29,15 @@ export class TMDBSeriesAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!this.plugin.settings.TMDBKey) {
+		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
+		if (!bearer) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
 		const response = await client.GET('/3/search/tv', {
 			headers: {
-				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
+				Authorization: `Bearer ${bearer}`,
 			},
 			params: {
 				query: {
@@ -73,7 +75,7 @@ export class TMDBSeriesAPI extends APIModel {
 					type: 'series',
 					title: result.original_name,
 					englishTitle: result.name,
-					year: result.first_air_date ? new Date(result.first_air_date).getFullYear().toString() : 'unknown',
+					year: result.first_air_date ? new Date(result.first_air_date).getFullYear() : 0,
 					dataSource: this.apiName,
 					id: result.id.toString(),
 				}),
@@ -86,14 +88,15 @@ export class TMDBSeriesAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!this.plugin.settings.TMDBKey) {
+		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
+		if (!bearer) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
 		const response = await client.GET('/3/tv/{series_id}', {
 			headers: {
-				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
+				Authorization: `Bearer ${bearer}`,
 			},
 			params: {
 				path: { series_id: parseInt(id) },
@@ -122,7 +125,7 @@ export class TMDBSeriesAPI extends APIModel {
 			type: 'series',
 			title: result.original_name,
 			englishTitle: result.name,
-			year: result.first_air_date ? new Date(result.first_air_date).getFullYear().toString() : 'unknown',
+			year: result.first_air_date ? new Date(result.first_air_date).getFullYear() : 0,
 			dataSource: this.apiName,
 			url: `https://www.themoviedb.org/tv/${result.id}`,
 			id: result.id.toString(),

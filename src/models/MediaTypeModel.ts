@@ -5,7 +5,7 @@ export abstract class MediaTypeModel {
 	subType: string;
 	title: string;
 	englishTitle: string;
-	year: string;
+	year: number;
 	dataSource: string;
 	url: string;
 	id: string;
@@ -18,7 +18,7 @@ export abstract class MediaTypeModel {
 		this.subType = '';
 		this.title = '';
 		this.englishTitle = '';
-		this.year = '';
+		this.year = 0;
 		this.dataSource = '';
 		this.url = '';
 		this.id = '';

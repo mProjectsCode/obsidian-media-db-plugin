@@ -1,6 +1,6 @@
 import { MediaType } from '../utils/MediaType';
 import type { ModelToData } from '../utils/Utils';
-import { mediaDbTag, migrateObject } from '../utils/Utils';
+import { applyPlainObject, coerceMovieDurationMinutes, mediaDbTag } from '../utils/Utils';
 import { MediaTypeModel } from './MediaTypeModel';
 
 export type MovieData = ModelToData<MovieModel>;
@@ -12,14 +12,18 @@ export class MovieModel extends MediaTypeModel {
 	director: string[];
 	writer: string[];
 	studio: string[];
-	duration: string;
+	/** Total runtime in minutes. */
+	duration: number;
 	onlineRating: number;
 	actors: string[];
 	image: string;
 
 	released: boolean;
 	country: string[];
-	boxOffice: string;
+	/** Production budget in USD (e.g. from TMDB). */
+	budget: string;
+	/** Box-office gross (e.g. worldwide from TMDB; OMDb US figure when from IMDb). */
+	revenue: string;
 	ageRating: string;
 	streamingServices: string[];
 	premiere: string;
@@ -39,14 +43,15 @@ export class MovieModel extends MediaTypeModel {
 		this.director = [];
 		this.writer = [];
 		this.studio = [];
-		this.duration = '';
+		this.duration = 0;
 		this.onlineRating = 0;
 		this.actors = [];
 		this.image = '';
 
 		this.released = false;
 		this.country = [];
-		this.boxOffice = '';
+		this.budget = '';
+		this.revenue = '';
 		this.ageRating = '';
 		this.streamingServices = [];
 		this.premiere = '';
@@ -57,10 +62,11 @@ export class MovieModel extends MediaTypeModel {
 			personalRating: 0,
 		};
 
-		migrateObject(this, obj, this);
+		applyPlainObject(this, obj, this);
+		this.duration = coerceMovieDurationMinutes(this.duration as unknown);
 
 		if (!Object.hasOwn(obj, 'userData')) {
-			migrateObject(this.userData, obj, this.userData);
+			applyPlainObject(this.userData, obj, this.userData);
 		}
 
 		this.type = this.getMediaType();

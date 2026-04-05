@@ -1,5 +1,11 @@
-import type { MediaType } from '../utils/MediaType';
-import { containsOnlyLettersAndUnderscores, PropertyMappingNameConflictError, PropertyMappingValidationError } from '../utils/Utils';
+import { musicBrainzRegisteredApiName } from '../api/musicBrainzConstants';
+import { MediaType } from '../utils/MediaType';
+import {
+	containsOnlyLettersAndUnderscores,
+	isValidRemappedFrontmatterKey,
+	PropertyMappingNameConflictError,
+	PropertyMappingValidationError,
+} from '../utils/Utils';
 
 // Plain object interfaces for serialization
 export interface PropertyMappingData {
@@ -22,6 +28,8 @@ export enum PropertyMappingOption {
 }
 
 export const propertyMappingOptions = [PropertyMappingOption.Default, PropertyMappingOption.Map, PropertyMappingOption.Remove];
+
+const METADATA_KEYS_REQUIRED_IN_NOTE = ['type', 'id'] as const;
 
 export class PropertyMappingModel {
 	type: MediaType;
@@ -77,6 +85,16 @@ export class PropertyMappingModel {
 			}
 		}
 
+		const dataSourceRule = this.properties.find(p => p.property === 'dataSource');
+		if (dataSourceRule?.mapping === PropertyMappingOption.Remove && !musicBrainzRegisteredApiName(this.type)) {
+			return {
+				res: false,
+				err: new PropertyMappingValidationError(
+					`Removing dataSource is only allowed for artist, music release, and recording (MusicBrainz). For "${this.type}" notes, dataSource is required to choose an API.`,
+				),
+			};
+		}
+
 		return {
 			res: true,
 		};
@@ -109,56 +127,6 @@ export class PropertyMappingModel {
 			json.type,
 			json.properties.map(p => PropertyMapping.fromJSON(p)),
 		);
-	}
-
-	/**
-	 * Migrates loaded settings to match the structure of default settings.
-	 * - Adds new properties from defaults that don't exist in loaded settings
-	 * - Preserves user customizations from loaded settings
-	 * - Updates locked status from defaults
-	 *
-	 * @param loadedModels - Models loaded from disk (may be outdated)
-	 * @param defaultModels - Current default models (source of truth for structure)
-	 * @returns Migrated models with correct structure and preserved user settings
-	 */
-	static migrateModels(loadedModels: PropertyMappingModelData[], defaultModels: PropertyMappingModel[]): PropertyMappingModel[] {
-		const migratedModels: PropertyMappingModel[] = [];
-
-		for (const defaultModel of defaultModels) {
-			const loadedModel = loadedModels.find(m => m.type === defaultModel.type);
-
-			if (!loadedModel) {
-				// New model type - use default
-				migratedModels.push(defaultModel);
-				continue;
-			}
-
-			// Migrate properties
-			const migratedProperties: PropertyMapping[] = [];
-			for (const defaultProperty of defaultModel.properties) {
-				const loadedProperty = loadedModel.properties.find(p => p.property === defaultProperty.property);
-
-				if (!loadedProperty) {
-					// New property - use default
-					migratedProperties.push(defaultProperty);
-				} else {
-					// Existing property - merge: take locked from default, customizations from loaded
-					migratedProperties.push(
-						new PropertyMapping(
-							loadedProperty.property,
-							loadedProperty.newProperty,
-							loadedProperty.mapping,
-							defaultProperty.locked, // locked status from default
-							loadedProperty.wikilink ?? false,
-						),
-					);
-				}
-			}
-
-			migratedModels.push(new PropertyMappingModel(defaultModel.type, migratedProperties));
-		}
-
-		return migratedModels;
 	}
 }
 
@@ -194,6 +162,18 @@ export class PropertyMapping {
 			}
 		}
 
+		if (
+			(METADATA_KEYS_REQUIRED_IN_NOTE as readonly string[]).includes(this.property) &&
+			this.mapping === PropertyMappingOption.Remove
+		) {
+			return {
+				res: false,
+				err: new PropertyMappingValidationError(
+					`Error in property mapping "${this.toString()}": type and id must appear in the note (you can remap them, but not remove them).`,
+				),
+			};
+		}
+
 		if (this.mapping === PropertyMappingOption.Default) {
 			return { res: true };
 		}
@@ -208,11 +188,11 @@ export class PropertyMapping {
 			};
 		}
 
-		if (!this.newProperty || !containsOnlyLettersAndUnderscores(this.newProperty)) {
+		if (!this.newProperty || !isValidRemappedFrontmatterKey(this.newProperty)) {
 			return {
 				res: false,
 				err: new PropertyMappingValidationError(
-					`Error in property mapping "${this.toString()}": new property may not be empty and may only contain letters and underscores.`,
+					`Error in property mapping "${this.toString()}": new property may not be empty; use letters, numbers, underscores, and single spaces between words (no leading/trailing spaces).`,
 				),
 			};
 		}

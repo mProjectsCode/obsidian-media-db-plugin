@@ -3,6 +3,7 @@ import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { coerceYear } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 enum VNDevStatus {
@@ -190,7 +191,9 @@ export class VNDBAPI extends APIModel {
 					type: MediaType.Game,
 					title: vn.title,
 					englishTitle: vn.titles.find(t => t.lang === 'en')?.title ?? vn.title,
-					year: vn.released && vn.released !== 'TBA' ? new Date(vn.released).getFullYear().toString() : 'TBA',
+					year: coerceYear(
+						vn.released && vn.released !== 'TBA' ? new Date(vn.released).getFullYear() : 0,
+					),
 					dataSource: this.apiName,
 					id: vn.id,
 				}),
@@ -228,7 +231,7 @@ export class VNDBAPI extends APIModel {
 			type: MediaType.Game,
 			title: vn.title,
 			englishTitle: vn.titles.find(t => t.lang === 'en')?.title ?? vn.title,
-			year: releasedIsDate ? new Date(vn.released).getFullYear().toString() : vn.released,
+			year: coerceYear(releasedIsDate ? new Date(vn.released).getFullYear() : vn.released),
 			dataSource: this.apiName,
 			url: `https://vndb.org/${vn.id}`,
 			id: vn.id,

@@ -1,10 +1,17 @@
-import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MusicReleaseModel } from '../../models/MusicReleaseModel';
+import { RecordingModel } from '../../models/RecordingModel';
 import { MediaType } from '../../utils/MediaType';
-import { contactEmail, getLanguageName, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { contactEmail, coerceYear, getLanguageName, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
+import {
+	releaseGroupMatchesPrimaryTypeImportFilter,
+	releaseGroupPassesImportSecondaryFilter,
+} from '../musicBrainzReleaseGroupTypes';
+import type { MusicBrainzReleaseGroupPrimaryTypeId, ReleaseGroupSecondaryTypeId } from '../musicBrainzReleaseGroupTypes';
 import { APIModel } from '../APIModel';
+import { requestUrlRateLimited } from '../requestUrlRateLimited';
 
 // sadly no open api schema available
 
@@ -23,6 +30,10 @@ interface Release {
 	'status-id': string;
 	title: string;
 	status: string;
+}
+
+function pickNonBootlegRelease(releases: Release[] | undefined): Release | undefined {
+	return releases?.find(r => r.status !== 'Bootleg');
 }
 
 interface ArtistCredit {
@@ -47,9 +58,72 @@ interface SearchResponse {
 	title: string;
 	'first-release-date': string;
 	'primary-type': string;
+	'secondary-types'?: string[];
 	'artist-credit': ArtistCredit[];
 	releases: Release[];
 	tags: Tag[];
+}
+
+interface RecordingSearchReleaseGroup {
+	id: string;
+	title: string;
+	'primary-type'?: string;
+	'secondary-types'?: string[];
+	'first-release-date'?: string;
+}
+
+interface RecordingSearchTrack {
+	number?: string;
+	position?: number;
+	title?: string;
+	length?: number | null;
+}
+
+interface RecordingSearchRelease {
+	id?: string;
+	title?: string;
+	date?: string;
+	status?: string;
+	'release-group'?: RecordingSearchReleaseGroup;
+	media?: { track?: RecordingSearchTrack[] }[];
+}
+
+interface RecordingSearchHit {
+	id: string;
+	title: string;
+	length?: number | null;
+	'artist-credit': ArtistCredit[];
+	'first-release-date'?: string;
+	releases?: RecordingSearchRelease[];
+}
+
+interface RecordingDetailTrack {
+	number?: string;
+	position?: number;
+	title?: string;
+	length?: number | null;
+}
+
+interface RecordingDetailMedium {
+	tracks?: RecordingDetailTrack[];
+}
+
+interface RecordingDetailRelease extends Release {
+	'release-group'?: RecordingSearchReleaseGroup;
+	media?: RecordingDetailMedium[];
+	date?: string;
+}
+
+interface RecordingDetailResponse {
+	id: string;
+	title: string;
+	length?: number | null;
+	disambiguation?: string;
+	'first-release-date'?: string;
+	'artist-credit': ArtistCredit[];
+	releases?: RecordingDetailRelease[];
+	tags: Tag[];
+	genres: Genre[];
 }
 
 interface IdResponse {
@@ -78,6 +152,7 @@ interface MediaResponse {
 			position: number;
 			title: string;
 			recording: {
+				id?: string;
 				length: number;
 				title: string;
 			};
@@ -98,44 +173,70 @@ export class MusicBrainzAPI extends APIModel {
 
 		this.plugin = plugin;
 		this.apiName = 'MusicBrainz API';
-		this.apiDescription = 'Free API for music albums.';
+		this.apiDescription = 'Free API for music releases.';
 		this.apiUrl = 'https://musicbrainz.org/';
-		this.types = [MediaType.MusicRelease];
+		this.types = [MediaType.MusicRelease, MediaType.Recording];
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `https://musicbrainz.org/ws/2/release-group?query=${encodeURIComponent(title)}&limit=20&fmt=json`;
+		const searchUrlReleaseGroup = `https://musicbrainz.org/ws/2/release-group?query=${encodeURIComponent(title)}&limit=50&fmt=json`;
+		const searchUrlRecording = `https://musicbrainz.org/ws/2/recording?query=${encodeURIComponent(title)}&limit=50&fmt=json`;
 
-		const fetchData = await requestUrl({
-			url: searchUrl,
-			headers: {
-				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
-			},
-		});
+		const [fetchReleaseGroups, fetchRecordings] = await Promise.all([
+			requestUrlRateLimited(
+				{
+					url: searchUrlReleaseGroup,
+					headers: {
+						'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+					},
+				},
+				{ logLabel: 'MusicBrainz' },
+			),
+			requestUrlRateLimited(
+				{
+					url: searchUrlRecording,
+					headers: {
+						'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+					},
+				},
+				{ logLabel: 'MusicBrainz' },
+			),
+		]);
 
-		// console.debug(fetchData);
-
-		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+		if (fetchReleaseGroups.status !== 200) {
+			throw Error(`MDB | Received status code ${fetchReleaseGroups.status} from ${this.apiName}.`);
+		}
+		if (fetchRecordings.status !== 200) {
+			console.warn(`MDB | ${this.apiName} recording search returned ${fetchRecordings.status} (release results still returned).`);
 		}
 
-		const data = (await fetchData.json) as {
+		const primaryAllowed = this.plugin.settings.enabledReleaseGroupPrimaryTypes;
+		const secondaryAllowed = this.plugin.settings.enabledReleaseGroupSecondaryTypes;
+
+		const rgData = (await fetchReleaseGroups.json) as {
 			'release-groups': SearchResponse[];
 		};
-		// console.debug(data);
 		const ret: MediaTypeModel[] = [];
 
-		for (const result of data['release-groups']) {
+		for (const result of rgData['release-groups']) {
+			if (!releaseGroupMatchesPrimaryTypeImportFilter(result['primary-type'], primaryAllowed)) {
+				continue;
+			}
+			if (!releaseGroupPassesImportSecondaryFilter(result['secondary-types'], result.title, secondaryAllowed)) {
+				continue;
+			}
 			ret.push(
 				new MusicReleaseModel({
 					type: 'musicRelease',
 					title: result.title,
 					englishTitle: result.title,
-					year: new Date(result['first-release-date']).getFullYear().toString(),
+					year: coerceYear(
+						result['first-release-date'] ? new Date(result['first-release-date']).getFullYear() : 0,
+					),
 					releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
-					dataSource: this.apiName,
+					dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
 					url: 'https://musicbrainz.org/release-group/' + result.id,
 					id: result.id,
 					image: 'https://coverartarchive.org/release-group/' + result.id + '/front-500.jpg',
@@ -146,6 +247,16 @@ export class MusicBrainzAPI extends APIModel {
 			);
 		}
 
+		if (fetchRecordings.status === 200) {
+			const recData = (await fetchRecordings.json) as { recordings?: RecordingSearchHit[] };
+			for (const rec of recData.recordings ?? []) {
+				if (!recordingSearchHitPassesFilters(rec, primaryAllowed, secondaryAllowed)) {
+					continue;
+				}
+				ret.push(recordingModelFromRecordingSearchHit(rec, this.plugin, this.apiDateFormat));
+			}
+		}
+
 		return ret;
 	}
 
@@ -154,35 +265,43 @@ export class MusicBrainzAPI extends APIModel {
 
 		// Fetch release group
 		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
-		const groupResponse = await requestUrl({
-			url: groupUrl,
-			headers: {
-				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+		const groupResponse = await requestUrlRateLimited(
+			{
+				url: groupUrl,
+				headers: {
+					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+				},
 			},
-		});
+			{ logLabel: 'MusicBrainz' },
+		);
 
+		if (groupResponse.status === 404) {
+			return await this.getRecordingById(id);
+		}
 		if (groupResponse.status !== 200) {
 			throw Error(`MDB | Received status code ${groupResponse.status} from ${this.apiName}.`);
 		}
 
 		const result = (await groupResponse.json) as IdResponse;
 
-		// Get ID of the first release
-		const firstRelease = result.releases?.[0];
+		const firstRelease = pickNonBootlegRelease(result.releases);
 		if (!firstRelease) {
-			throw Error('MDB | No releases found in release group.');
+			throw Error('MDB | No non-bootleg release found in release group.');
 		}
 
-		// Fetch recordings for the first release
+		// Fetch recordings for the chosen release (skip MusicBrainz status=Bootleg when another edition exists)
 		const releaseUrl = `https://musicbrainz.org/ws/2/release/${firstRelease.id}?inc=recordings+artists&fmt=json`;
 		console.log(`MDB | Fetching release recordings from: ${releaseUrl}`);
 
-		const releaseResponse = await requestUrl({
-			url: releaseUrl,
-			headers: {
-				'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+		const releaseResponse = await requestUrlRateLimited(
+			{
+				url: releaseUrl,
+				headers: {
+					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+				},
 			},
-		});
+			{ logLabel: 'MusicBrainz' },
+		);
 
 		if (releaseResponse.status !== 200) {
 			throw Error(`MDB | Received status code ${releaseResponse.status} from ${this.apiName}.`);
@@ -191,7 +310,7 @@ export class MusicBrainzAPI extends APIModel {
 		const releaseData = (await releaseResponse.json) as MediaResponse;
 		const tracks = extractTracksFromMedia(releaseData.media);
 
-		// Calculate total album length for the first release
+		// Calculate total length for the first release
 		const totalrawLength =
 			releaseData.media[0]?.tracks.reduce((sum, track) => {
 				const len = track.length ?? track.recording?.length;
@@ -199,15 +318,15 @@ export class MusicBrainzAPI extends APIModel {
 			}, 0) ?? 0;
 		const albumLengthCalc = millisecondsToMinutes(totalrawLength);
 
-		console.log(releaseData);
-
 		return new MusicReleaseModel({
 			type: 'musicRelease',
 			title: result.title,
 			englishTitle: result.title,
-			year: new Date(result['first-release-date']).getFullYear().toString(),
+			year: coerceYear(
+				result['first-release-date'] ? new Date(result['first-release-date']).getFullYear() : 0,
+			),
 			releaseDate: this.plugin.dateFormatter.format(result['first-release-date'], this.apiDateFormat) ?? 'unknown',
-			dataSource: this.apiName,
+			dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
 			url: 'https://musicbrainz.org/release-group/' + result.id,
 			id: result.id,
 			image: 'https://coverartarchive.org/release-group/' + result.id + '/front-500.jpg',
@@ -226,9 +345,166 @@ export class MusicBrainzAPI extends APIModel {
 			},
 		});
 	}
+
+	private async getRecordingById(recordingId: string): Promise<RecordingModel> {
+		const recordingUrl = `https://musicbrainz.org/ws/2/recording/${encodeURIComponent(recordingId)}?inc=artists+releases+release-groups+tags+genres+media&fmt=json`;
+		const recordingResponse = await requestUrlRateLimited(
+			{
+				url: recordingUrl,
+				headers: {
+					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
+				},
+			},
+			{ logLabel: 'MusicBrainz' },
+		);
+
+		if (recordingResponse.status !== 200) {
+			throw Error(`MDB | Received status code ${recordingResponse.status} from ${this.apiName} (recording lookup).`);
+		}
+
+		const data = (await recordingResponse.json) as RecordingDetailResponse;
+		const candidates = data.releases ?? [];
+		const release: RecordingDetailRelease | undefined =
+			candidates.find(r => r.status !== 'Bootleg') ?? candidates[0];
+		if (!release) {
+			throw Error('MDB | Recording has no linked releases.');
+		}
+
+		const rg = release['release-group'];
+		const albumReleaseGroupId = rg?.id ?? '';
+		const dateStr = data['first-release-date'] ?? rg?.['first-release-date'] ?? release.date;
+		const year = dateStr ? coerceYear(new Date(dateStr).getFullYear()) : 0;
+		const releaseDate = dateStr
+			? this.plugin.dateFormatter.format(dateStr, this.apiDateFormat) ?? 'unknown'
+			: 'unknown';
+		const trackNumber = trackNumberFromDetailReleaseMedia(release, data.title, data.length);
+
+		return new RecordingModel({
+			type: MediaType.Recording,
+			title: data.title,
+			englishTitle: data.title,
+			year,
+			releaseDate,
+			dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
+			url: `https://musicbrainz.org/recording/${data.id}`,
+			id: data.id,
+			image: albumReleaseGroupId
+				? `https://coverartarchive.org/release-group/${albumReleaseGroupId}/front-500.jpg`
+				: '',
+			subType: MediaType.Recording,
+			genres: data.genres.map(g => g.name),
+			artists: data['artist-credit'].map(a => a.name),
+			albumTitle: rg?.title ?? release.title,
+			albumReleaseGroupId,
+			trackNumber,
+			duration: data.length ? millisecondsToMinutes(data.length) : 'unknown',
+			featuredArtists: [],
+			geniusUrl: '',
+			spotifyUrl: '',
+			lyrics: '',
+			userData: { personalRating: 0 },
+		});
+	}
+
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.MusicBrainzAPI_disabledMediaTypes;
 	}
+}
+
+function recordingSearchHitPassesFilters(
+	rec: RecordingSearchHit,
+	primaryAllowed: Record<MusicBrainzReleaseGroupPrimaryTypeId, boolean>,
+	secondaryAllowed: Record<ReleaseGroupSecondaryTypeId, boolean>,
+): boolean {
+	const rg = rec.releases?.[0]?.['release-group'];
+	if (!rg) {
+		return true;
+	}
+	if (!releaseGroupMatchesPrimaryTypeImportFilter(rg['primary-type'], primaryAllowed)) {
+		return false;
+	}
+	return releaseGroupPassesImportSecondaryFilter(rg['secondary-types'], rg.title, secondaryAllowed);
+}
+
+function trackNumberFromSearchRecordingRelease(
+	release: RecordingSearchRelease | undefined,
+	recTitle: string,
+	recLength: number | null | undefined,
+): number {
+	if (!release?.media) {
+		return 0;
+	}
+	for (const medium of release.media) {
+		for (const t of medium.track ?? []) {
+			if (t.title === recTitle && (recLength == null || recLength === undefined || t.length === recLength)) {
+				if (typeof t.position === 'number') {
+					return t.position;
+				}
+				const n = parseInt(String(t.number ?? ''), 10);
+				return Number.isFinite(n) ? n : 0;
+			}
+		}
+	}
+	return 0;
+}
+
+function trackNumberFromDetailReleaseMedia(
+	release: RecordingDetailRelease,
+	recTitle: string,
+	recLength: number | null | undefined,
+): number {
+	for (const medium of release.media ?? []) {
+		for (const t of medium.tracks ?? []) {
+			if (t.title === recTitle && (recLength == null || recLength === undefined || t.length === recLength)) {
+				if (typeof t.position === 'number') {
+					return t.position;
+				}
+				const n = parseInt(String(t.number ?? ''), 10);
+				return Number.isFinite(n) ? n : 0;
+			}
+		}
+	}
+	return 0;
+}
+
+function recordingModelFromRecordingSearchHit(
+	rec: RecordingSearchHit,
+	plugin: MediaDbPlugin,
+	apiDateFormat: string,
+): RecordingModel {
+	const firstRel = rec.releases?.find(r => r.status !== 'Bootleg') ?? rec.releases?.[0];
+	const rg = firstRel?.['release-group'];
+	const dateStr = rg?.['first-release-date'] ?? rec['first-release-date'] ?? firstRel?.date;
+	const year = dateStr ? coerceYear(new Date(dateStr).getFullYear()) : 0;
+	const releaseDate = dateStr ? plugin.dateFormatter.format(dateStr, apiDateFormat) ?? 'unknown' : 'unknown';
+	const albumReleaseGroupId = rg?.id ?? '';
+	const trackNumber = trackNumberFromSearchRecordingRelease(firstRel, rec.title, rec.length);
+
+	return new RecordingModel({
+		type: MediaType.Recording,
+		title: rec.title,
+		englishTitle: rec.title,
+		year,
+		releaseDate,
+		dataSource: MUSICBRAINZ_NOTE_DATA_SOURCE,
+		url: `https://musicbrainz.org/recording/${rec.id}`,
+		id: rec.id,
+		image: albumReleaseGroupId
+			? `https://coverartarchive.org/release-group/${albumReleaseGroupId}/front-500.jpg`
+			: '',
+		subType: MediaType.Recording,
+		genres: [],
+		artists: rec['artist-credit'].map(a => a.name),
+		albumTitle: rg?.title ?? firstRel?.title ?? '',
+		albumReleaseGroupId,
+		trackNumber,
+		duration: rec.length ? millisecondsToMinutes(rec.length) : 'unknown',
+		featuredArtists: [],
+		geniusUrl: '',
+		spotifyUrl: '',
+		lyrics: '',
+		userData: { personalRating: 0 },
+	});
 }
 
 function extractTracksFromMedia(media: MediaResponse['media']): {
@@ -239,17 +515,19 @@ function extractTracksFromMedia(media: MediaResponse['media']): {
 }[] {
 	if (!media || media.length === 0 || !media[0].tracks) return [];
 
-	return media[0].tracks.map((track, index) => {
+		return media[0].tracks.map((track, index) => {
 		const title = track.title ?? track.recording?.title ?? 'Unknown Title';
 		const rawLength = track.length ?? track.recording?.length;
 		const duration = rawLength ? millisecondsToMinutes(rawLength) : 'unknown';
 		const featuredArtists = track['artist-credit']?.map(ac => ac.name) ?? [];
+		const recordingId = track.recording?.id;
 
 		return {
 			number: index + 1,
 			title,
 			duration,
 			featuredArtists,
+			...(recordingId ? { recordingId } : {}),
 		};
 	});
 }

@@ -3,6 +3,7 @@
 import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -28,11 +29,12 @@ export class MobyGamesAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!this.plugin.settings.MobyGamesKey) {
+		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.mobyGames);
+		if (!apiKey) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${this.plugin.settings.MobyGamesKey}`;
+		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${apiKey}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -58,7 +60,7 @@ export class MobyGamesAPI extends APIModel {
 					type: MediaType.Game,
 					title: result.title,
 					englishTitle: result.title,
-					year: new Date(result.platforms[0].first_release_date).getFullYear().toString(),
+					year: new Date(result.platforms[0].first_release_date).getFullYear(),
 					dataSource: this.apiName,
 					id: result.game_id,
 				}),
@@ -71,11 +73,12 @@ export class MobyGamesAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!this.plugin.settings.MobyGamesKey) {
+		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.mobyGames);
+		if (!apiKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${this.plugin.settings.MobyGamesKey}`;
+		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${apiKey}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -93,7 +96,7 @@ export class MobyGamesAPI extends APIModel {
 			type: MediaType.Game,
 			title: result.title,
 			englishTitle: result.title,
-			year: new Date(result.platforms[0].first_release_date).getFullYear().toString(),
+			year: new Date(result.platforms[0].first_release_date).getFullYear(),
 			dataSource: this.apiName,
 			url: `https://www.mobygames.com/game/${result.game_id}`,
 			id: result.game_id,

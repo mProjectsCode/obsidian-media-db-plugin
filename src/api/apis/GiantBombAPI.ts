@@ -1,7 +1,8 @@
 import createClient from 'openapi-fetch';
-import { obsidianFetch } from 'src/utils/Utils';
+import { coerceYear, obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -24,7 +25,8 @@ export class GiantBombAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!this.plugin.settings.GiantBombKey) {
+		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.giantBomb);
+		if (!apiKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
@@ -32,7 +34,7 @@ export class GiantBombAPI extends APIModel {
 		const response = await client.GET('/games', {
 			params: {
 				query: {
-					api_key: this.plugin.settings.GiantBombKey,
+					api_key: apiKey,
 					filter: `name:${title}`,
 					format: 'json',
 					limit: 20,
@@ -55,13 +57,13 @@ export class GiantBombAPI extends APIModel {
 
 		const ret: MediaTypeModel[] = [];
 		for (const result of data ?? []) {
-			const year = result.original_release_date ? new Date(result.original_release_date).getFullYear().toString() : undefined;
+			const year = result.original_release_date ? new Date(result.original_release_date).getFullYear() : undefined;
 
 			ret.push(
 				new GameModel({
 					title: result.name,
 					englishTitle: result.name,
-					year: year,
+					year: coerceYear(year),
 					dataSource: this.apiName,
 					id: result.guid?.toString(),
 				}),
@@ -74,7 +76,8 @@ export class GiantBombAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!this.plugin.settings.GiantBombKey) {
+		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.giantBomb);
+		if (!apiKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
@@ -85,7 +88,7 @@ export class GiantBombAPI extends APIModel {
 					guid: id,
 				},
 				query: {
-					api_key: this.plugin.settings.GiantBombKey,
+					api_key: apiKey,
 					format: 'json',
 				},
 			},
@@ -111,7 +114,7 @@ export class GiantBombAPI extends APIModel {
 		console.log(result);
 
 		// sadly the only OpenAPI definition I could find doesn't have the right types
-		const year = result.original_release_date ? new Date(result.original_release_date).getFullYear().toString() : undefined;
+		const year = result.original_release_date ? new Date(result.original_release_date).getFullYear() : undefined;
 		const developers = result.developers as
 			| {
 					name: string;
@@ -139,7 +142,7 @@ export class GiantBombAPI extends APIModel {
 			type: MediaType.Game,
 			title: result.name,
 			englishTitle: result.name,
-			year: year,
+			year: coerceYear(year),
 			dataSource: this.apiName,
 			url: result.site_detail_url,
 			id: result.guid?.toString(),

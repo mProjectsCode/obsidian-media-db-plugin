@@ -3,7 +3,7 @@ import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
-import { imageUrlExists } from '../../utils/Utils';
+import { coerceYear, imageUrlExists } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 
 interface SearchResponse {
@@ -167,7 +167,7 @@ export class SteamAPI extends APIModel {
 					type: MediaType.Game,
 					title: result.name,
 					englishTitle: result.name,
-					year: '',
+					year: 0,
 					dataSource: this.apiName,
 					id: result.appid,
 				}),
@@ -219,7 +219,7 @@ export class SteamAPI extends APIModel {
 			type: MediaType.Game,
 			title: result.name,
 			englishTitle: result.name,
-			year: new Date(result.release_date.date).getFullYear().toString(),
+			year: coerceYear(new Date(result.release_date.date).getFullYear()),
 			dataSource: this.apiName,
 			url: `https://store.steampowered.com/app/${result.steam_appid}`,
 			id: result.steam_appid.toString(),
