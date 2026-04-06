@@ -27,12 +27,13 @@ export class MobyGamesAPI extends APIModel {
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.MobyGamesKeyId);
 
-		if (!this.plugin.settings.MobyGamesKey) {
+		if (!key) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${this.plugin.settings.MobyGamesKey}`;
+		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${key}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -70,12 +71,13 @@ export class MobyGamesAPI extends APIModel {
 
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.MobyGamesKeyId);
 
-		if (!this.plugin.settings.MobyGamesKey) {
+		if (!key) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
-		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${this.plugin.settings.MobyGamesKey}`;
+		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${key}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});

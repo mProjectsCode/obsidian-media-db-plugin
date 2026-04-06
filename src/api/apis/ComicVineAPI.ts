@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 
 import { requestUrl } from 'obsidian';
-import { ComicMangaModel } from 'src/models/ComicMangaModel';
 import type MediaDbPlugin from '../../main';
+import { ComicMangaModel } from '../../models/ComicMangaModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
@@ -24,8 +24,12 @@ export class ComicVineAPI extends APIModel {
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.ComicVineKeyId);
+		if (!key) {
+			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+		}
 
-		const searchUrl = `${this.apiUrl}/search/?api_key=${this.plugin.settings.ComicVineKey}&format=json&resources=volume&query=${encodeURIComponent(title)}`;
+		const searchUrl = `${this.apiUrl}/search/?api_key=${key}&format=json&resources=volume&query=${encodeURIComponent(title)}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
@@ -55,8 +59,12 @@ export class ComicVineAPI extends APIModel {
 
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.ComicVineKeyId);
+		if (!key) {
+			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+		}
 
-		const searchUrl = `${this.apiUrl}/volume/${encodeURIComponent(id)}/?api_key=${this.plugin.settings.ComicVineKey}&format=json`;
+		const searchUrl = `${this.apiUrl}/volume/${encodeURIComponent(id)}/?api_key=${key}&format=json`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});

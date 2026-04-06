@@ -1,8 +1,8 @@
 import type { ButtonComponent } from 'obsidian';
 import { DropdownComponent, Modal, Setting, TextComponent, ToggleComponent } from 'obsidian';
-import type { APIModel } from 'src/api/APIModel';
-import { BulkImportLookupMethod } from 'src/utils/BulkImportHelper';
+import type { APIModel } from '../api/APIModel';
 import type MediaDbPlugin from '../main';
+import { BulkImportLookupMethod } from '../utils/BulkImportHelper';
 
 export class MediaDbBulkImportModal extends Modal {
 	plugin: MediaDbPlugin;
