@@ -2,8 +2,8 @@ import esbuild from 'esbuild';
 import copy from 'esbuild-plugin-copy-watch';
 import esbuildSvelte from 'esbuild-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
-import manifest from '../../manifest.json' assert { type: 'json' };
-import { getBuildBanner } from 'build/buildBanner';
+import manifest from '../../manifest.json' with { type: 'json' };
+import { getBuildBanner } from './buildBanner';
 
 const banner = getBuildBanner('Dev Build', _ => 'Dev Build');
 
