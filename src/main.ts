@@ -5,12 +5,14 @@ import { APIManager } from './api/APIManager';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { GiantBombAPI } from './api/apis/GiantBombAPI';
+import { IGDBAPI } from './api/apis/IGDBAPI';
 import { MALAPI } from './api/apis/MALAPI';
 import { MALAPIManga } from './api/apis/MALAPIManga';
 import { MobyGamesAPI } from './api/apis/MobyGamesAPI';
 import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
+import { RAWGAPI } from './api/apis/RAWGAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
 import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
@@ -72,6 +74,8 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new ComicVineAPI(this));
 		this.apiManager.registerAPI(new MobyGamesAPI(this));
 		this.apiManager.registerAPI(new GiantBombAPI(this));
+		this.apiManager.registerAPI(new IGDBAPI(this));
+		this.apiManager.registerAPI(new RAWGAPI(this));
 		this.apiManager.registerAPI(new VNDBAPI(this));
 
 		this.mediaTypeManager = new MediaTypeManager();

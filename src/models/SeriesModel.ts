@@ -6,6 +6,7 @@ import { MediaTypeModel } from './MediaTypeModel';
 export type SeriesData = ModelToData<SeriesModel>;
 
 export class SeriesModel extends MediaTypeModel {
+	japaneseTitle: string;
 	plot: string;
 	genres: string[];
 	writer: string[];
@@ -33,6 +34,7 @@ export class SeriesModel extends MediaTypeModel {
 	constructor(obj: SeriesData) {
 		super();
 
+		this.japaneseTitle = '';
 		this.plot = '';
 		this.genres = [];
 		this.writer = [];

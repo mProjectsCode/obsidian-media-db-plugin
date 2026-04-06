@@ -18,6 +18,9 @@ export interface MediaDbPluginSettings {
 	TMDBKeyId: string;
 	MobyGamesKeyId: string;
 	GiantBombKeyId: string;
+	IGDBClientId: string;
+	IGDBClientSecret: string;
+	RAWGAPIKeyId: string;
 	ComicVineKeyId: string;
 	BoardgameGeekKeyId: string;
 
@@ -33,6 +36,8 @@ export interface MediaDbPluginSettings {
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
 	GiantBombAPI_disabledMediaTypes: MediaType[];
+	IGDBAPI_disabledMediaTypes: MediaType[];
+	RAWGAPI_disabledMediaTypes: MediaType[];
 	MALAPI_disabledMediaTypes: MediaType[];
 	MALAPIManga_disabledMediaTypes: MediaType[];
 	MobyGamesAPI_disabledMediaTypes: MediaType[];
@@ -272,6 +277,9 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	TMDBKeyId: '',
 	MobyGamesKeyId: '',
 	GiantBombKeyId: '',
+	IGDBClientId: '',
+	IGDBClientSecret: '',
+	RAWGAPIKeyId: '',
 	ComicVineKeyId: '',
 	BoardgameGeekKeyId: '',
 
@@ -287,6 +295,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
 	GiantBombAPI_disabledMediaTypes: [],
+	IGDBAPI_disabledMediaTypes: [],
+	RAWGAPI_disabledMediaTypes: [],
 	MALAPI_disabledMediaTypes: [],
 	MALAPIManga_disabledMediaTypes: [],
 	MobyGamesAPI_disabledMediaTypes: [],
@@ -551,7 +561,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			setting =>
 				void setting
 					.setName('TMDB API key')
-					.setDesc('API key for "https://www.themoviedb.org".')
+					.setDesc('API Read Access Token for "https://www.themoviedb.org".')
 					.addComponent(el => {
 						const component = new SecretComponent(this.app, el);
 
@@ -589,6 +599,54 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 						component.setValue(this.plugin.settings.GiantBombKeyId).onChange(data => {
 							this.plugin.settings.GiantBombKeyId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
+					}),
+		);
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('IGDB Client ID')
+					.setDesc('Client ID for IGDB API (Required for Twitch OAuth).')
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.IGDBClientId).onChange(data => {
+							this.plugin.settings.IGDBClientId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
+					}),
+		);
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('IGDB Client Secret')
+					.setDesc('Client Secret for IGDB API.')
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.IGDBClientSecret).onChange(data => {
+							this.plugin.settings.IGDBClientSecret = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
+					}),
+		);
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('RAWG API Key')
+					.setDesc('API key for "rawg.io".')
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.RAWGAPIKeyId).onChange(data => {
+							this.plugin.settings.RAWGAPIKeyId = data;
 							void this.plugin.saveSettings();
 						});
 

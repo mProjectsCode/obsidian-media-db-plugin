@@ -6,6 +6,7 @@ import { MediaTypeModel } from './MediaTypeModel';
 export type MovieData = ModelToData<MovieModel>;
 
 export class MovieModel extends MediaTypeModel {
+	japaneseTitle: string;
 	plot: string;
 	genres: string[];
 	director: string[];
@@ -32,6 +33,7 @@ export class MovieModel extends MediaTypeModel {
 	constructor(obj: MovieData) {
 		super();
 
+		this.japaneseTitle = '';
 		this.plot = '';
 		this.genres = [];
 		this.director = [];
