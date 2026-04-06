@@ -10,7 +10,7 @@
 		"moduleResolution": "bundler",
 		"importHelpers": true,
 		"isolatedModules": true,
-		"lib": ["DOM", "ES5", "ES6", "ES7", "Es2021"],
+		"lib": ["DOM", "ES5", "ES6", "ES7", "Es2022"],
 		"types": ["bun-types"],
 		"allowSyntheticDefaultImports": true,
 		"resolveJsonModule": true
