@@ -96,7 +96,7 @@ export default function PropertyMappingModelComponent(props: PropertyMappingMode
 										<td class="col-new-name">
 											<Show
 												when={property.mapping === PropertyMappingOption.Map}
-												fallback={<span class="media-db-plugin-property-mapping-to-disabled">—</span>}
+												fallback={<span class="media-db-plugin-property-mapping-to-disabled">N/A</span>}
 											>
 												<div class="media-db-plugin-property-mapping-to">
 													<Icon iconName="arrow-right" />

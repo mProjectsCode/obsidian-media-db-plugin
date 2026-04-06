@@ -1,6 +1,12 @@
-import { moment } from 'obsidian';
+import type momentType from 'moment';
+import type { Moment } from 'moment';
+import { moment as obsidianMoment } from 'obsidian';
+
+const moment: typeof momentType = obsidianMoment as unknown as typeof momentType;
 
 export class DateFormatter {
+	private static readonly RFC2822_FORMAT = 'ddd, DD MMM YYYY HH:mm:ss ZZ';
+
 	toFormat: string;
 	locale: string;
 
@@ -38,18 +44,10 @@ export class DateFormatter {
 			return null;
 		}
 
-		let date: moment.Moment;
+		let date: Moment;
 
 		if (!dateFormat) {
-			// reading date formats other then C2822 or ISO with moment is deprecated
-			// see https://momentjs.com/docs/#/parsing/string/
-			if (this.hasMomentFormat(dateString)) {
-				// expect C2822 or ISO format
-				date = moment(dateString);
-			} else {
-				// try to read date string with native Date
-				date = moment(new Date(dateString));
-			}
+			date = this.parseWithoutFormat(dateString);
 		} else {
 			date = moment(dateString, dateFormat, locale);
 		}
@@ -58,8 +56,20 @@ export class DateFormatter {
 		return date.isValid() ? date.locale(this.locale).format(this.toFormat) : null;
 	}
 
+	private parseWithoutFormat(dateString: string): Moment {
+		// reading date formats other than C2822 or ISO with moment is deprecated
+		// see https://momentjs.com/docs/#/parsing/string/
+		if (this.hasMomentFormat(dateString)) {
+			// expect C2822 or ISO format
+			return moment(dateString);
+		}
+
+		// fall back to native Date parsing for unknown formats
+		return moment(new Date(dateString));
+	}
+
 	private hasMomentFormat(dateString: string): boolean {
-		const date = moment(dateString, true); // strict mode
+		const date = moment(dateString, [moment.ISO_8601, DateFormatter.RFC2822_FORMAT], true); // strict mode
 		return date.isValid();
 	}
 }

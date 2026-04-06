@@ -8,7 +8,7 @@ export class FileSuggest extends AbstractInputSuggest<TFile> {
 		return this.app.vault
 			.getAllLoadedFiles()
 			.filter(file => file instanceof TFile)
-			.filter(file => file.path.toLowerCase().contains(lowerCaseInputStr));
+			.filter(file => file.path.toLowerCase().includes(lowerCaseInputStr));
 	}
 
 	renderSuggestion(value: TFile, el: HTMLElement): void {

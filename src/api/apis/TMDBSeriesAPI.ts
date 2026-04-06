@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
-
 import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
@@ -7,6 +5,27 @@ import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/TMDB';
+
+interface TMDBCreditMember {
+	name?: string | null;
+}
+
+interface TMDBCreditsResponse {
+	credits?: {
+		cast?: TMDBCreditMember[];
+	};
+}
+
+function isNonEmptyString(value: unknown): value is string {
+	return typeof value === 'string' && value.length > 0;
+}
+
+function getTopCastNames(credits: TMDBCreditsResponse['credits'], size: number): string[] {
+	return (credits?.cast ?? [])
+		.map(c => c.name)
+		.filter(isNonEmptyString)
+		.slice(0, size);
+}
 
 export class TMDBSeriesAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -28,14 +47,15 @@ export class TMDBSeriesAPI extends APIModel {
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!this.plugin.settings.TMDBKey) {
+		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.TMDBKeyId);
+		if (!key) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
 		const response = await client.GET('/3/search/tv', {
 			headers: {
-				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
+				Authorization: `Bearer ${key}`,
 			},
 			params: {
 				query: {
@@ -85,15 +105,16 @@ export class TMDBSeriesAPI extends APIModel {
 
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.TMDBKeyId);
 
-		if (!this.plugin.settings.TMDBKey) {
+		if (!key) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
 		const response = await client.GET('/3/tv/{series_id}', {
 			headers: {
-				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
+				Authorization: `Bearer ${key}`,
 			},
 			params: {
 				path: { series_id: parseInt(id) },
@@ -117,6 +138,7 @@ export class TMDBSeriesAPI extends APIModel {
 			throw Error(`MDB | No data received from ${this.apiName}.`);
 		}
 		// console.debug(result);
+		const credits = (result as TMDBCreditsResponse).credits;
 
 		return new SeriesModel({
 			type: 'series',
@@ -128,15 +150,13 @@ export class TMDBSeriesAPI extends APIModel {
 			id: result.id.toString(),
 
 			plot: result.overview ?? '',
-			genres: result.genres?.map((g: any) => g.name) ?? [],
-			writer: result.created_by?.map((c: any) => c.name) ?? [],
-			studio: result.production_companies?.map((s: any) => s.name) ?? [],
+			genres: result.genres?.map(g => g.name).filter(isNonEmptyString) ?? [],
+			writer: result.created_by?.map(c => c.name).filter(isNonEmptyString) ?? [],
+			studio: result.production_companies?.map(s => s.name).filter(isNonEmptyString) ?? [],
 			episodes: result.number_of_episodes,
 			duration: result.episode_run_time?.[0]?.toString() ?? 'unknown',
 			onlineRating: result.vote_average,
-			// TMDB's spec allows for 'append_to_response' but doesn't seem to account for it in the type
-			// @ts-ignore
-			actors: result.credits?.cast.map((c: any) => c.name).slice(0, 5) ?? [],
+			actors: getTopCastNames(credits, 5),
 			image: result.poster_path ? `https://image.tmdb.org/t/p/w780${result.poster_path}` : null,
 
 			released: ['Returning Series', 'Cancelled', 'Ended'].includes(result.status!),

@@ -1,9 +1,9 @@
 import createClient from 'openapi-fetch';
-import { isTruthy, obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import { ComicMangaModel } from '../../models/ComicMangaModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { isTruthy, obsidianFetch } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/MALAPI';
 

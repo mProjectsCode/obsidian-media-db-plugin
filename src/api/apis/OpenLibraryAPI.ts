@@ -1,9 +1,9 @@
 import createClient from 'openapi-fetch';
-import { BookModel } from 'src/models/BookModel';
-import { obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
+import { BookModel } from '../../models/BookModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { obsidianFetch } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/OpenLibrary';
 

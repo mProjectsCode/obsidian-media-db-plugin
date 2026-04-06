@@ -1,10 +1,10 @@
 import createClient from 'openapi-fetch';
-import { isTruthy, obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
 import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
+import { isTruthy, obsidianFetch } from '../../utils/Utils';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/MALAPI';
 

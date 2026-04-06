@@ -1,8 +1,8 @@
 import { Notice } from 'obsidian';
-import { MediaDbPreviewModal } from 'src/modals/MediaDbPreviewModal';
 import type MediaDbPlugin from '../main';
 import { MediaDbAdvancedSearchModal } from '../modals/MediaDbAdvancedSearchModal';
 import { MediaDbIdSearchModal } from '../modals/MediaDbIdSearchModal';
+import { MediaDbPreviewModal } from '../modals/MediaDbPreviewModal';
 import { MediaDbSearchModal } from '../modals/MediaDbSearchModal';
 import { MediaDbSearchResultModal } from '../modals/MediaDbSearchResultModal';
 import type { MediaTypeModel } from '../models/MediaTypeModel';

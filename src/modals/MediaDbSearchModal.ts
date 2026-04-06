@@ -98,7 +98,7 @@ export class MediaDbSearchModal extends Modal {
 
 			const apiToggleComponent = new ToggleComponent(apiToggleComponentWrapper);
 			apiToggleComponent.setTooltip(unCamelCase(mediaType));
-			apiToggleComponent.setValue(this.selectedTypes.contains(mediaType));
+			apiToggleComponent.setValue(this.selectedTypes.includes(mediaType));
 			if (apiToggleComponent.getValue()) {
 				currentToggle = apiToggleComponent;
 			}

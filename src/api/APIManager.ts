@@ -19,7 +19,7 @@ export class APIManager {
 		console.debug(`MDB | api manager queried with "${query}"`);
 
 		const promises = this.apis
-			.filter(api => apisToQuery.contains(api.apiName))
+			.filter(api => apisToQuery.includes(api.apiName))
 			.map(async api => {
 				try {
 					return await api.searchByTitle(query);
@@ -53,7 +53,7 @@ export class APIManager {
 		for (const api of this.apis) {
 			if (api.apiName === apiName) {
 				try {
-					return api.getById(id);
+					return await api.getById(id);
 				} catch (e) {
 					new Notice(`Error querying ${api.apiName}: ${e}`);
 					console.warn(e);
