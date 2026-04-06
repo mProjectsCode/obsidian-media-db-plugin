@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
-import builtins from 'builtin-modules';
+import { builtinModules } from 'node:module';
 import { getBuildBanner } from './automation/build/buildBanner';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import banner from 'vite-plugin-banner';
@@ -72,7 +72,7 @@ export default defineConfig(({ mode }) => {
 					'@lezer/common',
 					'@lezer/highlight',
 					'@lezer/lr',
-					...builtins,
+					...builtinModules,
 				],
 			},
 		},
