@@ -1,8 +1,8 @@
-import builtins from 'builtin-modules';
+import { builtinModules } from 'node:module';
 import esbuild from 'esbuild';
 import esbuildSvelte from 'esbuild-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
-import { getBuildBanner } from 'build/buildBanner';
+import { getBuildBanner } from './buildBanner';
 
 const banner = getBuildBanner('Release Build', version => version);
 
@@ -26,7 +26,7 @@ const build = await esbuild.build({
 		'@lezer/common',
 		'@lezer/highlight',
 		'@lezer/lr',
-		...builtins,
+		...builtinModules,
 	],
 	format: 'cjs',
 	target: 'es2018',
