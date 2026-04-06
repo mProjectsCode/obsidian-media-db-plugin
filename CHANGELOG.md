@@ -1,5 +1,31 @@
 # Changelog
 
+# Unreleased
+
+- Added support for the `VNDB` API [#165](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/165) (thanks Senyksia)
+- Added support for comic books through the `Comic Vine` API [#176](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/176) (thanks ltctceplrm)
+- Fixed a typo issue in Steam search [#180](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/180) (thanks ltctceplrm)
+- Added API toggle improvements and image download options [#183](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/183) (thanks ltctceplrm)
+- Added a confirmation step before overwriting existing notes [#184](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/184) (thanks ltctceplrm)
+- Improved Open Library integration and added plot/description support [#190](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/190) [#192](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/192) [#237](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/237) [#238](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/238) (thanks ltctceplrm)
+- Added country, box office and age rating fields for movies and series [#196](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/196) (thanks ltctceplrm)
+- Added release date support for MusicBrainz releases [#198](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/198) (thanks ZackBoe)
+- Limited MusicBrainz cover art images to 500px [#199](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/199) (thanks ZackBoe)
+- Added tracks, language, track count, and total duration support for music releases [#202](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/202) [#233](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/233) (thanks ltctceplrm)
+- Cleaned up generated file names to remove illegal characters [#206](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/206) (thanks Spydarlee)
+- Added batch/folder import by ID [#207](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/207) (thanks Spydarlee)
+- Fixed double URI encoding when querying the Giant Bomb API by title [#209](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/209) (thanks Spydarlee)
+- Improved property mappings with table view, wiki links option, and bug fixes [#195](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/195) [#231](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/231) (thanks ltctceplrm)
+- Added TMDB season selection modal and improved season metadata handling [#220](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/220) (thanks ltctceplrm)
+- Added board game API authorization and improved related error handling [#223](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/223) [#227](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/227) (thanks ltctceplrm)
+- Swapped TMDB API key usage to TMDB API token [#246](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/246) (thanks ZackBoe)
+- Updated comic/manga tags to vary based on subtype [#247](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/247) (thanks ltctceplrm)
+- Re-implemented `IGDB` and `RAWG` providers with improved type safety and conflict resolution [#239](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/239) (thanks m24ih)
+- Added support for Japanese titles in MyAnimeList [#253](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/253) (thanks ltctceplrm)
+- Migrated plugin secrets to Obsidian secret storage
+- Migrated settings UI from Svelte to Solid
+- Various internal refactors, dependency updates, and bug fixes
+
 # 0.8.0
 
 - Fixed bugs when API keys for certain APIs were missing [#161](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/161) (thanks ltctceplrm)
