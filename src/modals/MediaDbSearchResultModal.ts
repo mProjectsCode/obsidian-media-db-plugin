@@ -58,7 +58,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 			onImageLoad: () => {
 				console.debug('MDB | Image loaded for', item.id);
 			},
-			renderContent: (contentEl) => {
+			renderContent: contentEl => {
 				const titleEl = contentEl.createEl('div', {
 					text: this.plugin.mediaTypeManager.getFileName(item),
 					cls: 'media-db-plugin-select-title',
@@ -95,15 +95,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		const element = document.getElementById(`media-db-plugin-select-element-${this.selectModalElements.length}`);
 		const delayMs = element ? (parseInt(element.id.split('-').pop() ?? '0') ?? 0) * apiDelay : 0;
 
-		console.debug(
-			'MDB | will auto-fetch detail for',
-			item.dataSource,
-			item.id,
-			'in',
-			delayMs,
-			'ms',
-			`(${apiDelay}ms per request)`
-		);
+		console.debug('MDB | will auto-fetch detail for', item.dataSource, item.id, 'in', delayMs, 'ms', `(${apiDelay}ms per request)`);
 
 		setTimeout(async () => {
 			if (item.image && item.year) return;
