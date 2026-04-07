@@ -2,6 +2,7 @@ import type MediaDbPlugin from '../main';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import type { SelectModalData, SelectModalOptions } from '../utils/ModalHelper';
 import { SELECTMODALOPTIONSDEFAULT } from '../utils/ModalHelper';
+import { MediaItemComponent } from './MediaItemComponent';
 import { SelectModal } from './SelectModal';
 
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
@@ -47,108 +48,87 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 	// Renders each suggestion item.
 	renderElement(item: MediaTypeModel, el: HTMLElement): void {
-		el.addClass('media-db-plugin-select-element-flex');
-		el.style.display = 'flex';
-		el.style.gap = '8px';
-		el.style.alignItems = 'flex-start';
+		// Create the media item component
+		const mediaComponent = new MediaItemComponent(el, {
+			imageUrl: this.getImageUrl(item),
+			imageAlt: item.title,
+			onImageError: () => {
+				console.debug('MDB | Image failed to load for', item.id);
+			},
+			onImageLoad: () => {
+				console.debug('MDB | Image loaded for', item.id);
+			},
+			renderContent: (contentEl) => {
+				const titleEl = contentEl.createEl('div', {
+					text: this.plugin.mediaTypeManager.getFileName(item),
+					cls: 'media-db-plugin-select-title',
+				});
+				const summaryEl = contentEl.createEl('small', { text: `${item.getSummary()}\n` });
+				contentEl.createEl('small', {
+					text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}`,
+				});
 
-		const thumb = el.createDiv({ cls: 'media-db-plugin-select-thumb' });
-		thumb.style.width = '48px';
-		thumb.style.height = '72px';
-		thumb.style.flex = '0 0 48px';
-		thumb.style.overflow = 'hidden';
-		thumb.style.background = 'var(--background-modifier-hover)';
-		thumb.style.borderRadius = '4px';
-		thumb.style.display = 'flex';
-		thumb.style.alignItems = 'center';
-		thumb.style.justifyContent = 'center';
+				// Store references for later updates
+				(item as any).__titleEl = titleEl;
+				(item as any).__summaryEl = summaryEl;
+			},
+		});
 
-		let imgEl: HTMLImageElement | undefined;
+		// Auto-fetch detailed info if needed
+		this.autoFetchDetails(item, mediaComponent);
+	}
 
-		const setImage = (url: string) => {
-			if (!imgEl) {
-				imgEl = document.createElement('img');
-				imgEl.loading = 'lazy';
-				imgEl.alt = item.title;
-				thumb.empty();
-				thumb.appendChild(imgEl);
-
-				imgEl.style.width = '100%';
-				imgEl.style.height = '100%';
-				imgEl.style.objectFit = 'cover';
-
-				// Show photograph emoticon if the link to the image fails to load
-				imgEl.onerror = () => {
-					thumb.empty();
-					const placeholderSpan = thumb.createEl('span', { text: '📷' });
-					placeholderSpan.style.fontSize = '24px';
-				};
-			}
-
-			imgEl.src = url;
-		};
-
-		// Create content early so updateSummary can reference its elements
-		const content = el.createDiv({ cls: 'media-db-plugin-select-content' });
-		content.style.flex = '1';
-		content.style.minWidth = '0';
-
-		const titleEl = content.createEl('div', { text: this.plugin.mediaTypeManager.getFileName(item), cls: 'media-db-plugin-select-title' });
-		const summaryEl = content.createEl('small', { text: `${item.getSummary()}\n` });
-		content.createEl('small', { text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}` });
-
-		// Helper to update both title and summary when year is fetched
-		const updateSummary = () => {
-			titleEl.textContent = this.plugin.mediaTypeManager.getFileName(item);
-			summaryEl.textContent = `${item.getSummary()}\n`;
-		};
-
+	private getImageUrl(item: MediaTypeModel): string | undefined {
 		if (item.image && item.image !== 'NSFW') {
-			if (String(item.image).includes('null')) {
-				console.debug('MDB | image URL invalid (contains null), skipping', item.image);
-				thumb.empty();
-				const placeholderSpan = thumb.createEl('span', { text: '📷' });
-				placeholderSpan.style.fontSize = '24px';
-			} else {
-				setImage(item.image);
-			}
-		} else if (item.image === 'NSFW') {
-			thumb.createEl('span', { text: 'NSFW' });
-		} else {
-			thumb.empty();
-			const placeholderSpan = thumb.createEl('span', { text: '📷' });
-			placeholderSpan.style.fontSize = '24px';
-
-			// Auto-fetch detailed info with staggered delays to avoid rate limits + fetch detailed info if no image (most API's except for MusicBrainz) OR no year (like SteamAPI)
-			const needsFetch = !item.image || !item.year;
-			if (needsFetch) {
-				const apiDelay = this.getDelayForApi(item.dataSource);
-				const delayMs = (parseInt(el.id.split('-').pop() ?? '0') ?? 0) * apiDelay;
-				console.debug('MDB | will auto-fetch detail for', item.dataSource, item.id, 'in', delayMs, 'ms', `(${apiDelay}ms per request)`);
-
-				setTimeout(async () => {
-					if (item.image && item.year) return;
-					console.debug('MDB | auto-fetching detail for', item.dataSource, item.id);
-					try {
-						console.debug('MDB | fetching detailed info for', item.dataSource, item.id);
-						const detailed = await this.plugin.apiManager.queryDetailedInfo(item);
-						console.debug('MDB | detailed fetch result', detailed?.dataSource, detailed?.id, detailed?.image, detailed?.year);
-
-						if (detailed?.image && !item.image) {
-							item.image = detailed.image;
-							setImage(detailed.image);
-						}
-
-						if (!item.year && detailed?.year) {
-							item.year = detailed.year;
-							updateSummary();
-						}
-					} catch (e) {
-						console.warn('MDB | Failed to fetch detail', e);
-					}
-				}, delayMs);
+			if (!String(item.image).includes('null')) {
+				return item.image;
 			}
 		}
+		return item.image;
+	}
+
+	private autoFetchDetails(item: MediaTypeModel, mediaComponent: MediaItemComponent): void {
+		const needsFetch = !item.image || !item.year;
+		if (!needsFetch) return;
+
+		const apiDelay = this.getDelayForApi(item.dataSource);
+		const element = document.getElementById(`media-db-plugin-select-element-${this.selectModalElements.length}`);
+		const delayMs = element ? (parseInt(element.id.split('-').pop() ?? '0') ?? 0) * apiDelay : 0;
+
+		console.debug(
+			'MDB | will auto-fetch detail for',
+			item.dataSource,
+			item.id,
+			'in',
+			delayMs,
+			'ms',
+			`(${apiDelay}ms per request)`
+		);
+
+		setTimeout(async () => {
+			if (item.image && item.year) return;
+			console.debug('MDB | auto-fetching detail for', item.dataSource, item.id);
+			try {
+				console.debug('MDB | fetching detailed info for', item.dataSource, item.id);
+				const detailed = await this.plugin.apiManager.queryDetailedInfo(item);
+				console.debug('MDB | detailed fetch result', detailed?.dataSource, detailed?.id, detailed?.image, detailed?.year);
+
+				if (detailed?.image && !item.image) {
+					item.image = detailed.image;
+					mediaComponent.updateImage(item.image);
+				}
+
+				if (!item.year && detailed?.year) {
+					item.year = detailed.year;
+					const titleEl = (item as any).__titleEl;
+					const summaryEl = (item as any).__summaryEl;
+					if (titleEl) titleEl.textContent = this.plugin.mediaTypeManager.getFileName(item);
+					if (summaryEl) summaryEl.textContent = `${item.getSummary()}\n`;
+				}
+			} catch (e) {
+				console.warn('MDB | Failed to fetch detail', e);
+			}
+		}, delayMs);
 	}
 
 	// Perform action on the selected suggestion.
