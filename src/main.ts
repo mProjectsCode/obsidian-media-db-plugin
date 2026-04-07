@@ -379,11 +379,21 @@ export default class MediaDbPlugin extends Plugin {
 
 		const selectResults =
 			(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
+					// Skip queryDetails for TMDBSeasonAPI to avoid ID parsing errors
+					if (selectModalData.selected.some(r => r.dataSource === 'TMDBSeasonAPI')) {
+						return selectModalData.selected;
+					}
 				return await this.queryDetails(selectModalData.selected);
 			})) ?? [];
 		if (selectResults.length < 1) {
 			return;
 		}
+		
+			// Handle season selection for TMDBSeasonAPI results
+			const seasonHandlingResult = await this.handleSeasonWorkflow(['season'], selectResults);
+			if (seasonHandlingResult.handled) {
+				return;
+			}
 
 		const confirmed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
 			return previewModalData.confirmed;
