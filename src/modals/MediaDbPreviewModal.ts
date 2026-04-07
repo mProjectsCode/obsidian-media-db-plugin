@@ -1,6 +1,6 @@
 import { Component, MarkdownRenderer, Modal, Setting } from 'obsidian';
-import type MediaDbPlugin from 'src/main';
-import type { MediaTypeModel } from 'src/models/MediaTypeModel';
+import type MediaDbPlugin from '../main';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
 import type { PreviewModalData, PreviewModalOptions } from '../utils/ModalHelper';
 import { PREVIEW_MODAL_DEFAULT_OPTIONS } from '../utils/ModalHelper';
 

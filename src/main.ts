@@ -1,19 +1,18 @@
 import type { TFile } from 'obsidian';
 import { MarkdownView, Notice, parseYaml, Plugin, stringifyYaml, TFolder } from 'obsidian';
 import { requestUrl, normalizePath } from 'obsidian';
-import type { MediaType } from 'src/utils/MediaType';
 import { APIManager } from './api/APIManager';
 import { BoardGameGeekAPI } from './api/apis/BoardGameGeekAPI';
 import { ComicVineAPI } from './api/apis/ComicVineAPI';
 import { GiantBombAPI } from './api/apis/GiantBombAPI';
 import { IGDBAPI } from './api/apis/IGDBAPI';
-import { RAWGAPI } from './api/apis/RAWGAPI';
 import { MALAPI } from './api/apis/MALAPI';
 import { MALAPIManga } from './api/apis/MALAPIManga';
 import { MobyGamesAPI } from './api/apis/MobyGamesAPI';
 import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
+import { RAWGAPI } from './api/apis/RAWGAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { TMDBMovieAPI } from './api/apis/TMDBMovieAPI';
 import { TMDBSeasonAPI } from './api/apis/TMDBSeasonAPI';
@@ -31,6 +30,7 @@ import type { MediaDbPluginSettings } from './settings/Settings';
 import { getDefaultSettings, MediaDbSettingTab } from './settings/Settings';
 import { BulkImportHelper } from './utils/BulkImportHelper';
 import { DateFormatter } from './utils/DateFormatter';
+import type { MediaType } from './utils/MediaType';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
 import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
@@ -222,7 +222,7 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		// filter the results
-		apiSearchResults = apiSearchResults.filter(x => types.contains(x.type));
+		apiSearchResults = apiSearchResults.filter(x => types.includes(x.type));
 
 		if (apiSearchResults.length === 0) {
 			new Notice('No results found for the selected types.');
@@ -377,28 +377,22 @@ export default class MediaDbPlugin extends Plugin {
 			return;
 		}
 
-		let selectResults: MediaTypeModel[];
-		const proceed: boolean = false;
-
-		while (!proceed) {
-			selectResults =
-				(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
-					return await this.queryDetails(selectModalData.selected);
-				})) ?? [];
-			if (!selectResults || selectResults.length < 1) {
-				return;
-			}
-
-			const confirmed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
-				return previewModalData.confirmed;
-			});
-			if (!confirmed) {
-				return;
-			}
-			break;
+		const selectResults =
+			(await this.modalHelper.openSelectModal({ elements: apiSearchResults }, async selectModalData => {
+				return await this.queryDetails(selectModalData.selected);
+			})) ?? [];
+		if (selectResults.length < 1) {
+			return;
 		}
 
-		await this.createMediaDbNotes(selectResults!);
+		const confirmed = await this.modalHelper.openPreviewModal({ elements: selectResults }, async previewModalData => {
+			return previewModalData.confirmed;
+		});
+		if (!confirmed) {
+			return;
+		}
+
+		await this.createMediaDbNotes(selectResults);
 	}
 
 	async createEntryWithIdSearchModal(): Promise<void> {
@@ -560,8 +554,7 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		const attachFileMetadata = this.getMetadataFromFileCache(fileToAttach);
-		// TODO: better object merging
-		fileMetadata = Object.assign(attachFileMetadata, fileMetadata);
+		fileMetadata = { ...attachFileMetadata, ...fileMetadata };
 
 		let attachFileContent: string = await this.app.vault.read(fileToAttach);
 		const regExp = new RegExp(this.frontMatterRexExpPattern);
@@ -578,8 +571,7 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		const templateMetadata = this.getMetaDataFromFileContent(template);
-		// TODO: better object merging
-		fileMetadata = Object.assign(templateMetadata, fileMetadata);
+		fileMetadata = { ...templateMetadata, ...fileMetadata };
 
 		const regExp = new RegExp(this.frontMatterRexExpPattern);
 		const attachFileContent = template.replace(regExp, '');
@@ -713,6 +705,20 @@ export default class MediaDbPlugin extends Plugin {
 		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
 		const loadedSettings: MediaDbPluginSettings = Object.assign({}, defaultSettings, diskSettings);
 
+		// delete old api keys
+		// @ts-ignore
+		delete loadedSettings.BoardgameGeekKey;
+		// @ts-ignore
+		delete loadedSettings.ComicVineKey;
+		// @ts-ignore
+		delete loadedSettings.GiantBombKey;
+		// @ts-ignore
+		delete loadedSettings.MobyGamesKey;
+		// @ts-ignore
+		delete loadedSettings.OMDbKey;
+		// @ts-ignore
+		delete loadedSettings.TMDBKey;
+
 		// Migrate property mappings using the dedicated migration method
 		const migratedModels = PropertyMappingModel.migrateModels(
 			loadedSettings.propertyMappingModels || [],
@@ -723,6 +729,8 @@ export default class MediaDbPlugin extends Plugin {
 		loadedSettings.propertyMappingModels = migratedModels.map(m => m.toJSON());
 
 		this.settings = loadedSettings;
+
+		await this.saveSettings();
 	}
 
 	async saveSettings(): Promise<void> {

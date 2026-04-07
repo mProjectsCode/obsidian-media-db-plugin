@@ -1,9 +1,9 @@
 import type { App } from 'obsidian';
-import { Notice, PluginSettingTab, SettingGroup } from 'obsidian';
+import { Notice, PluginSettingTab, SecretComponent, SettingGroup } from 'obsidian';
 import { render } from 'solid-js/web';
-import { MediaType } from 'src/utils/MediaType';
 import type MediaDbPlugin from '../main';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
+import { MediaType } from '../utils/MediaType';
 import { MEDIA_TYPES } from '../utils/MediaTypeManager';
 import { fragWithHTML, unCamelCase } from '../utils/Utils';
 import type { PropertyMappingModelData } from './PropertyMapping';
@@ -14,15 +14,16 @@ import { FolderSuggest } from './suggesters/FolderSuggest';
 
 // MARK: Settings
 export interface MediaDbPluginSettings {
-	OMDbKey: string;
-	TMDBKey: string;
-	MobyGamesKey: string;
-	GiantBombKey: string;
+	OMDbKeyId: string;
+	TMDBKeyId: string;
+	MobyGamesKeyId: string;
+	GiantBombKeyId: string;
 	IGDBClientId: string;
 	IGDBClientSecret: string;
-	RAWGAPIKey: string;
-	ComicVineKey: string;
-	BoardgameGeekKey: string;
+	RAWGAPIKeyId: string;
+	ComicVineKeyId: string;
+	BoardgameGeekKeyId: string;
+
 	sfwFilter: boolean;
 	templates: boolean;
 	customDateFormat: string;
@@ -272,15 +273,16 @@ class MediaTypeMappedSettings {
 
 // MARK: Defaults
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
-	OMDbKey: '',
-	TMDBKey: '',
-	MobyGamesKey: '',
-	GiantBombKey: '',
+	OMDbKeyId: '',
+	TMDBKeyId: '',
+	MobyGamesKeyId: '',
+	GiantBombKeyId: '',
 	IGDBClientId: '',
 	IGDBClientSecret: '',
-	RAWGAPIKey: '',
-	ComicVineKey: '',
-	BoardgameGeekKey: '',
+	RAWGAPIKeyId: '',
+	ComicVineKeyId: '',
+	BoardgameGeekKeyId: '',
+
 	sfwFilter: true,
 	templates: true,
 	customDateFormat: 'L',
@@ -371,7 +373,7 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 					key,
 					'',
 					PropertyMappingOption.Default,
-					lockedPropertyMappings.contains(key),
+					lockedPropertyMappings.includes(key),
 					false, // wikilink default
 				),
 			);
@@ -544,37 +546,31 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				void setting
 					.setName('OMDb API key')
 					.setDesc('API key for "www.omdbapi.com".')
-					// .addComponent((el) => {
-					// 	let component = new SecretComponent(this.app, el);
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
 
-					// 	component.setValue(this.plugin.settings.OMDbKey).onChange(data => {
-					// 		this.plugin.settings.OMDbKey = data;
-					// 		void this.plugin.saveSettings();
-					// 	});
+						component.setValue(this.plugin.settings.OMDbKeyId).onChange(data => {
+							this.plugin.settings.OMDbKeyId = data;
+							void this.plugin.saveSettings();
+						});
 
-					// 	return component;
-					// })
-					.addText(cb => {
-						cb.setPlaceholder('API key')
-							.setValue(this.plugin.settings.OMDbKey)
-							.onChange(data => {
-								this.plugin.settings.OMDbKey = data;
-								void this.plugin.saveSettings();
-							});
+						return component;
 					}),
 		);
 		apiKeyGroup.addSetting(
 			setting =>
 				void setting
-					.setName('TMDB API Token')
+					.setName('TMDB API key')
 					.setDesc('API Read Access Token for "https://www.themoviedb.org".')
-					.addText(cb => {
-						cb.setPlaceholder('API key')
-							.setValue(this.plugin.settings.TMDBKey)
-							.onChange(data => {
-								this.plugin.settings.TMDBKey = data;
-								void this.plugin.saveSettings();
-							});
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.TMDBKeyId).onChange(data => {
+							this.plugin.settings.TMDBKeyId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
 					}),
 		);
 		apiKeyGroup.addSetting(
@@ -582,13 +578,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				void setting
 					.setName('Moby Games key')
 					.setDesc('API key for "www.mobygames.com".')
-					.addText(cb => {
-						cb.setPlaceholder('API key')
-							.setValue(this.plugin.settings.MobyGamesKey)
-							.onChange(data => {
-								this.plugin.settings.MobyGamesKey = data;
-								void this.plugin.saveSettings();
-							});
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.MobyGamesKeyId).onChange(data => {
+							this.plugin.settings.MobyGamesKeyId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
 					}),
 		);
 		apiKeyGroup.addSetting(
@@ -596,13 +594,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				void setting
 					.setName('Giant Bomb Key')
 					.setDesc('API key for "www.giantbomb.com".')
-					.addText(cb => {
-						cb.setPlaceholder('API key')
-							.setValue(this.plugin.settings.GiantBombKey)
-							.onChange(data => {
-								this.plugin.settings.GiantBombKey = data;
-								void this.plugin.saveSettings();
-							});
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.GiantBombKeyId).onChange(data => {
+							this.plugin.settings.GiantBombKeyId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
 					}),
 		);
 		apiKeyGroup.addSetting(
@@ -610,13 +610,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				void setting
 					.setName('IGDB Client ID')
 					.setDesc('Client ID for IGDB API (Required for Twitch OAuth).')
-					.addText(cb => {
-						cb.setPlaceholder('Client ID')
-							.setValue(this.plugin.settings.IGDBClientId)
-							.onChange(data => {
-								this.plugin.settings.IGDBClientId = data;
-								void this.plugin.saveSettings();
-							});
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.IGDBClientId).onChange(data => {
+							this.plugin.settings.IGDBClientId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
 					}),
 		);
 		apiKeyGroup.addSetting(
@@ -624,13 +626,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				void setting
 					.setName('IGDB Client Secret')
 					.setDesc('Client Secret for IGDB API.')
-					.addText(cb => {
-						cb.setPlaceholder('Client Secret')
-							.setValue(this.plugin.settings.IGDBClientSecret)
-							.onChange(data => {
-								this.plugin.settings.IGDBClientSecret = data;
-								void this.plugin.saveSettings();
-							});
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.IGDBClientSecret).onChange(data => {
+							this.plugin.settings.IGDBClientSecret = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
 					}),
 		);
 		apiKeyGroup.addSetting(
@@ -638,13 +642,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				void setting
 					.setName('RAWG API Key')
 					.setDesc('API key for "rawg.io".')
-					.addText(cb => {
-						cb.setPlaceholder('API key')
-							.setValue(this.plugin.settings.RAWGAPIKey)
-							.onChange(data => {
-								this.plugin.settings.RAWGAPIKey = data;
-								void this.plugin.saveSettings();
-							});
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.RAWGAPIKeyId).onChange(data => {
+							this.plugin.settings.RAWGAPIKeyId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
 					}),
 		);
 		apiKeyGroup.addSetting(
@@ -652,13 +658,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				void setting
 					.setName('Comic Vine Key')
 					.setDesc('API key for "www.comicvine.gamespot.com".')
-					.addText(cb => {
-						cb.setPlaceholder('API key')
-							.setValue(this.plugin.settings.ComicVineKey)
-							.onChange(data => {
-								this.plugin.settings.ComicVineKey = data;
-								void this.plugin.saveSettings();
-							});
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.ComicVineKeyId).onChange(data => {
+							this.plugin.settings.ComicVineKeyId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
 					}),
 		);
 		apiKeyGroup.addSetting(
@@ -666,13 +674,15 @@ export class MediaDbSettingTab extends PluginSettingTab {
 				void setting
 					.setName('Boardgame Geek Key')
 					.setDesc('API key for "www.boardgamegeek.com".')
-					.addText(cb => {
-						cb.setPlaceholder('API key')
-							.setValue(this.plugin.settings.BoardgameGeekKey)
-							.onChange(data => {
-								this.plugin.settings.BoardgameGeekKey = data;
-								void this.plugin.saveSettings();
-							});
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.BoardgameGeekKeyId).onChange(data => {
+							this.plugin.settings.BoardgameGeekKeyId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
 					}),
 		);
 

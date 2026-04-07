@@ -1,8 +1,8 @@
 import type { TFolder } from 'obsidian';
 import { TFile } from 'obsidian';
-import type MediaDbPlugin from 'src/main';
-import { MediaDbBulkImportModal as MediaDbBulkImportModal } from 'src/modals/MediaDbBulkImportModal';
-import type { MediaTypeModel } from 'src/models/MediaTypeModel';
+import type MediaDbPlugin from '../main';
+import { MediaDbBulkImportModal as MediaDbBulkImportModal } from '../modals/MediaDbBulkImportModal';
+import type { MediaTypeModel } from '../models/MediaTypeModel';
 import { ModalResultCode } from './ModalHelper';
 import { dateTimeToString, markdownTable } from './Utils';
 

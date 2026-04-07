@@ -1,4 +1,4 @@
-import { $ } from 'utils/shellUtils';
+import { $ } from './utils/shellUtils';
 
 async function fetchSchema() {
 	// https://docs.api.jikan.moe/
