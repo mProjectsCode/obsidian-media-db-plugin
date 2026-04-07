@@ -41,6 +41,10 @@ small.media-db-plugin-list-text {
 	font-size: 16px;
 }
 
+.media-db-plugin-select-title {
+	font-weight: 600;
+}
+
 .media-db-plugin-select-element-selected {
 	border-left: 5px solid var(--interactive-accent) !important;
 	background: var(--background-secondary-alt);
