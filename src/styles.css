@@ -487,7 +487,7 @@ small.media-db-plugin-list-text {
 
 .mdb-completion-row {
 	display: grid;
-	grid-template-columns: 32px 1fr 32px;
+	grid-template-columns: 32px 1fr auto;
 	align-items: center;
 	padding: 7px 0;
 	border-bottom: 1px solid var(--background-modifier-border);

@@ -1115,12 +1115,13 @@ export default class MediaDbPlugin extends Plugin {
 		mediaTypeModel.type = noteTypeValueForMedia(this.settings, mediaTypeModel.getMediaType());
 
 		let template = await this.mediaTypeManager.getTemplate(mediaTypeModel, this.app);
+		const originalTemplateText = template;
 		let fileMetadata: Record<string, unknown> = this.modelPropertyMapper.convertObject(this.metadataRecordForNewNote(mediaTypeModel));
 
 		let fileContent = '';
 		template = options.attachTemplate ? template : '';
 
-		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile, options.preservePropertyOrder));
+		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile, options.preservePropertyOrder, originalTemplateText));
 		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 
 		// --- Global Wiki-Link Post-Processing (for Custom/Manual Properties) ---
@@ -1245,7 +1246,7 @@ export default class MediaDbPlugin extends Plugin {
 		return allTags.map(t => String(t).trim()).filter(t => t && !autoTagValues.has(t.toLowerCase()) && !t.toLowerCase().startsWith('mediadb/'));
 	}
 
-	async attachFile(fileMetadata: Metadata, fileContent: string, fileToAttach?: TFile, preservePropertyOrder?: boolean): Promise<{ fileMetadata: Metadata; fileContent: string }> {
+	async attachFile(fileMetadata: Metadata, fileContent: string, fileToAttach?: TFile, preservePropertyOrder?: boolean, templateStr?: string): Promise<{ fileMetadata: Metadata; fileContent: string }> {
 		if (!fileToAttach) {
 			return { fileMetadata: fileMetadata, fileContent: fileContent };
 		}
@@ -1273,6 +1274,25 @@ export default class MediaDbPlugin extends Plugin {
 			for (const key of Object.keys(fileMetadata)) {
 				orderedMetadata[key] = fileMetadata[key];
 			}
+			
+			// Smart Sort: extract predefined order from template (if available)
+			let templateMetadata: Record<string, unknown> = {};
+			const templateKeys: string[] = [];
+			if (templateStr) {
+				templateMetadata = this.getMetaDataFromFileContent(templateStr);
+				templateKeys.push(...Object.keys(templateMetadata));
+			}
+
+			// Add properties matching the template order first
+			for (const tKey of templateKeys) {
+				if (tKey in attachFileMetadata && !(tKey in orderedMetadata)) {
+					orderedMetadata[tKey] = attachFileMetadata[tKey];
+				} else if (!(tKey in attachFileMetadata) && !(tKey in orderedMetadata)) {
+					orderedMetadata[tKey] = templateMetadata[tKey];
+				}
+			}
+
+			// Then add any remaining unexpected properties (at the very bottom)
 			for (const [key, value] of Object.entries(attachFileMetadata)) {
 				if (!(key in orderedMetadata)) {
 					orderedMetadata[key] = value;
