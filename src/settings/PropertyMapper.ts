@@ -251,6 +251,7 @@ export class PropertyMapper {
 			image: '',
 			artists,
 			genres: [],
+			tags: [],
 			subType: 'album',
 			language: '',
 			rating: 0,

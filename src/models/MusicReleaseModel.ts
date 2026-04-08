@@ -7,6 +7,8 @@ export type MusicReleaseData = ModelToData<MusicReleaseModel>;
 
 export class MusicReleaseModel extends MediaTypeModel {
 	genres: string[];
+	/** Obsidian-style tags derived from MusicBrainz release-group genres, e.g. `music/genre/indie rock`. */
+	tags: string[];
 	artists: string[];
 	language: string;
 	image: string;
@@ -31,6 +33,7 @@ export class MusicReleaseModel extends MediaTypeModel {
 		super();
 
 		this.genres = [];
+		this.tags = [];
 		this.artists = [];
 		this.image = '';
 		this.rating = 0;
@@ -51,6 +54,19 @@ export class MusicReleaseModel extends MediaTypeModel {
 		this.trackCount = obj.trackCount ?? 0;
 		this.tracks = obj.tracks ?? [];
 		this.language = obj.language ?? '';
+	}
+
+	override toMetaDataObject(): Record<string, unknown> {
+		const data = this.getWithOutUserData();
+		const genreTags = Array.isArray(data.tags)
+			? (data.tags as unknown[]).filter((t): t is string => typeof t === 'string' && t.length > 0)
+			: [];
+		delete data.tags;
+		return {
+			...data,
+			...this.userData,
+			tags: [this.getTags().join('/'), ...genreTags],
+		};
 	}
 
 	getTags(): string[] {

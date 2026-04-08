@@ -91,6 +91,7 @@ interface SearchResponse {
 	'artist-credit': ArtistCredit[];
 	releases: Release[];
 	tags: Tag[];
+	genres?: Genre[];
 }
 
 interface RecordingSearchReleaseGroup {
@@ -272,6 +273,7 @@ export class MusicBrainzAPI extends APIModel {
 
 					artists: result['artist-credit'].map(a => a.name),
 					subType: result['primary-type'],
+					tags: releaseGroupGenresToTags(result.genres),
 				}),
 			);
 		}
@@ -363,6 +365,7 @@ export class MusicBrainzAPI extends APIModel {
 			artists: result['artist-credit'].map(a => a.name),
 			language: releaseData['text-representation'].language ? getLanguageName(releaseData['text-representation'].language) : 'Unknown',
 			genres: result.genres.map(g => g.name),
+			tags: releaseGroupGenresToTags(result.genres),
 			subType: result['primary-type'],
 			albumDuration: albumLengthCalc,
 			trackCount: releaseData.media[0]?.['track-count'] ?? 0,
@@ -565,4 +568,8 @@ function millisecondsToMinutes(milliseconds: number): string {
 	const minutes = Math.floor(milliseconds / 60000);
 	const seconds = Math.floor((milliseconds % 60000) / 1000);
 	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function releaseGroupGenresToTags(genres: Genre[] | undefined): string[] {
+	return (genres ?? []).map(g => `genre/music/${g.name}`);
 }

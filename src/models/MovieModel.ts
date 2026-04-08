@@ -72,6 +72,16 @@ export class MovieModel extends MediaTypeModel {
 		this.type = this.getMediaType();
 	}
 
+	override toMetaDataObject(): Record<string, unknown> {
+		const data = this.getWithOutUserData();
+		const genreTags = movieGenresToTags(this.genres);
+		return {
+			...data,
+			...this.userData,
+			tags: [this.getTags().join('/'), ...genreTags],
+		};
+	}
+
 	getTags(): string[] {
 		return [mediaDbTag, 'tv', 'movie'];
 	}
@@ -83,4 +93,8 @@ export class MovieModel extends MediaTypeModel {
 	getSummary(): string {
 		return this.englishTitle + ' (' + this.year + ')';
 	}
+}
+
+function movieGenresToTags(genres: string[]): string[] {
+	return genres.filter((g): g is string => typeof g === 'string' && g.length > 0).map(g => `genre/movie/${g}`);
 }
