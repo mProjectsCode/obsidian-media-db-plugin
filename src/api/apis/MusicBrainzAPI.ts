@@ -25,15 +25,42 @@ interface Genre {
 	id: string;
 	disambiguation: string;
 }
+interface ReleaseMedium {
+	'track-count'?: number;
+}
+
 interface Release {
 	id: string;
 	'status-id': string;
 	title: string;
 	status: string;
+	media?: ReleaseMedium[];
 }
 
-function pickNonBootlegRelease(releases: Release[] | undefined): Release | undefined {
-	return releases?.find(r => r.status !== 'Bootleg');
+function totalTracksFromReleaseMedia(release: Release): number {
+	if (!release.media?.length) {
+		return 0;
+	}
+	return release.media.reduce((sum, m) => sum + (m['track-count'] ?? 0), 0);
+}
+
+/** Prefer the edition with the most tracks (e.g. deluxe over single-disc); skips bootlegs. */
+function pickNonBootlegReleaseWithMostTracks(releases: Release[] | undefined): Release | undefined {
+	const candidates = releases?.filter(r => r.status !== 'Bootleg') ?? [];
+	if (candidates.length === 0) {
+		return undefined;
+	}
+	let best = candidates[0];
+	let bestCount = totalTracksFromReleaseMedia(best);
+	for (let i = 1; i < candidates.length; i++) {
+		const r = candidates[i];
+		const count = totalTracksFromReleaseMedia(r);
+		if (count > bestCount) {
+			best = r;
+			bestCount = count;
+		}
+	}
+	return best;
 }
 
 interface ArtistCredit {
@@ -104,7 +131,7 @@ interface RecordingDetailTrack {
 	length?: number | null;
 }
 
-interface RecordingDetailMedium {
+interface RecordingDetailMedium extends ReleaseMedium {
 	tracks?: RecordingDetailTrack[];
 }
 
@@ -264,7 +291,7 @@ export class MusicBrainzAPI extends APIModel {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		// Fetch release group
-		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
+		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+media+artists+tags+ratings+genres&fmt=json`;
 		const groupResponse = await requestUrlRateLimited(
 			{
 				url: groupUrl,
@@ -284,13 +311,13 @@ export class MusicBrainzAPI extends APIModel {
 
 		const result = (await groupResponse.json) as IdResponse;
 
-		const firstRelease = pickNonBootlegRelease(result.releases);
-		if (!firstRelease) {
+		const chosenRelease = pickNonBootlegReleaseWithMostTracks(result.releases);
+		if (!chosenRelease) {
 			throw Error('MDB | No non-bootleg release found in release group.');
 		}
 
-		// Fetch recordings for the chosen release (skip MusicBrainz status=Bootleg when another edition exists)
-		const releaseUrl = `https://musicbrainz.org/ws/2/release/${firstRelease.id}?inc=recordings+artists&fmt=json`;
+		// Fetch recordings for the chosen release (non-bootleg edition with the most tracks when MB lists several)
+		const releaseUrl = `https://musicbrainz.org/ws/2/release/${chosenRelease.id}?inc=recordings+artists&fmt=json`;
 		console.log(`MDB | Fetching release recordings from: ${releaseUrl}`);
 
 		const releaseResponse = await requestUrlRateLimited(
