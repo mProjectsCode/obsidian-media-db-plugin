@@ -43,11 +43,11 @@ import { getDefaultSettings, MediaDbSettingTab, propertyMappingModelsInDisplayOr
 import { BulkImportHelper } from './utils/BulkImportHelper';
 import { DateFormatter } from './utils/DateFormatter';
 import { MEDIA_TYPES, MediaTypeManager } from './utils/MediaTypeManager';
-import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from './utils/noteTypeSettings';
 import type { SearchModalOptions } from './utils/ModalHelper';
 import { ModalHelper } from './utils/ModalHelper';
-import type { ChainedImportControl, CreateNoteOptions } from './utils/Utils';
 import { normalizeTitleForAsciiAlias } from './utils/normalizeTitleForAlias';
+import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from './utils/noteTypeSettings';
+import type { ChainedImportControl, CreateNoteOptions } from './utils/Utils';
 import {
 	parseUsdWholeDollarsFromDisplayString,
 	omitEmptyMetadataFields,
@@ -57,6 +57,7 @@ import {
 	useTemplaterPluginInFile,
 	ensureVaultFolderPath,
 } from './utils/Utils';
+import { setVerboseLoggingSource, verboseDebug, verboseLog } from './utils/verboseLog';
 import 'src/styles.css';
 
 export type Metadata = Record<string, unknown>;
@@ -235,7 +236,7 @@ export default class MediaDbPlugin extends Plugin {
 			try {
 				return await this.apiManager.query(searchModalData.query, apis);
 			} catch (e) {
-				console.warn('MDB | Query failed:', e);
+				console.warn('Query failed:', e);
 				new Notice(`Search failed: ${e}`);
 				return [];
 			}
@@ -342,7 +343,7 @@ export default class MediaDbPlugin extends Plugin {
 			new Notice(`Successfully created ${selectedSeasons.length} season ${selectedSeasons.length === 1 ? 'entry' : 'entries'}.`);
 			return true;
 		} catch (e) {
-			console.warn('MDB | Error in season selection workflow:', e);
+			console.warn('Error in season selection workflow:', e);
 			new Notice(`Error loading seasons: ${e}`);
 			return false;
 		}
@@ -384,7 +385,7 @@ export default class MediaDbPlugin extends Plugin {
 						const fullMetadata = await tmdbSeasonAPI.getById(seasonModel.id);
 						await this.createMediaDbNotes([fullMetadata]);
 					} catch (e) {
-						console.warn(`MDB | Failed to create season ${selectedSeason.season_number}:`, e);
+						console.warn(`Failed to create season ${selectedSeason.season_number}:`, e);
 						new Notice(`Failed to create season ${selectedSeason.season_number}: ${e}`);
 					}
 				}
@@ -487,7 +488,7 @@ export default class MediaDbPlugin extends Plugin {
 
 		const failures = results.filter(r => r.status === 'rejected');
 		if (failures.length > 0) {
-			console.warn('MDB | Some notes failed to create:', failures);
+			console.warn('Some notes failed to create:', failures);
 			new Notice(`${models.length - failures.length} of ${models.length} notes created successfully.`);
 		}
 	}
@@ -504,7 +505,7 @@ export default class MediaDbPlugin extends Plugin {
 		// Log failures for debugging
 		const failures = results.filter(r => r.status === 'rejected');
 		if (failures.length > 0) {
-			console.warn('MDB | Some detail queries failed:', failures);
+			console.warn('Some detail queries failed:', failures);
 		}
 
 		return detailModels;
@@ -526,7 +527,7 @@ export default class MediaDbPlugin extends Plugin {
 	/** @returns whether the note file was created (false if the user cancelled overwrite or an error occurred before the file was written). */
 	private async createStandardMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<boolean> {
 		try {
-			console.debug('MDB | creating new note');
+			verboseDebug('creating new note');
 
 			if (options.chainedImport?.abort) {
 				return false;
@@ -630,7 +631,7 @@ export default class MediaDbPlugin extends Plugin {
 			try {
 				recording.spotifyUrl = await spotify.searchFirstTrackUrl(recording.title, geniusSearchArtist);
 			} catch (e) {
-				console.warn(`MDB | Spotify search for "${recording.title}":`, e);
+				console.warn(`Spotify search for "${recording.title}":`, e);
 			}
 		}
 	}
@@ -673,7 +674,7 @@ export default class MediaDbPlugin extends Plugin {
 					try {
 						spotifyUrl = await spotify.searchFirstTrackUrl(track.title, primaryArtist);
 					} catch (e) {
-						console.warn(`MDB | Spotify search for "${track.title}":`, e);
+						console.warn(`Spotify search for "${track.title}":`, e);
 					}
 				}
 
@@ -726,7 +727,7 @@ export default class MediaDbPlugin extends Plugin {
 
 			if (!importRecordings || release.tracks.length === 0) {
 				new Notice(`✅ Finished music release import for ${release.title}.`);
-				console.log(`✅ Finished music release import for ${release.title}.`);
+				verboseLog(`✅ Finished music release import for ${release.title}.`);
 				return;
 			}
 
@@ -765,7 +766,7 @@ export default class MediaDbPlugin extends Plugin {
 			};
 
 			new Notice(`Importing ${release.tracks.length} tracks for ${release.title}…`);
-			console.log(`Importing ${release.tracks.length} tracks for ${release.title}…`);
+			verboseLog(`Importing ${release.tracks.length} tracks for ${release.title}…`);
 
 			await this.importRecordingNotesForMusicReleaseTracks(
 				release,
@@ -778,10 +779,10 @@ export default class MediaDbPlugin extends Plugin {
 
 			if (tracksChain.abort) {
 				new Notice(`Stopped track import for ${release.title}.`);
-				console.log(`Stopped track import for ${release.title}.`);
+				verboseLog(`Stopped track import for ${release.title}.`);
 			} else {
 				new Notice(`✅ Finished music release import for ${release.title}.`);
-				console.log(`✅ Finished music release import for ${release.title}.`);
+				verboseLog(`✅ Finished music release import for ${release.title}.`);
 			}
 		} catch (e) {
 			console.warn(e);
@@ -811,13 +812,13 @@ export default class MediaDbPlugin extends Plugin {
 
 			if (!this.settings.artistAutomaticallyImportReleases) {
 				new Notice(`✅ Finished artist import for ${artist.title}.`);
-				console.log(`✅ Finished artist import for ${artist.title}.`);
+				verboseLog(`✅ Finished artist import for ${artist.title}.`);
 				return;
 			}
 
 			const enabledPrimaryTypes = enabledReleaseGroupPrimaryTypeIds(this.settings.enabledReleaseGroupPrimaryTypes);
 			if (enabledPrimaryTypes.length === 0) {
-				console.log('MDB | Discography skipped: no release types enabled in settings.');
+				verboseLog('Discography skipped: no release types enabled in settings.');
 				new Notice(
 					`✅ Finished artist import for ${artist.title}. Discography was skipped — no release types are enabled (Settings → Music → Release → Release types).`,
 				);
@@ -852,7 +853,7 @@ export default class MediaDbPlugin extends Plugin {
 				);
 			} catch (e) {
 				new Notice(`Could not load releases: ${e}`);
-				console.log(`Could not load releases: ${e}`);
+				verboseLog(`Could not load releases: ${e}`);
 				return;
 			}
 
@@ -860,7 +861,7 @@ export default class MediaDbPlugin extends Plugin {
 			new Notice(
 				`Importing ${releaseGroupIds.length} releases${importRecordings ? ' and tracks' : ''} for ${artist.title}…`,
 			);
-			console.log(
+			verboseLog(
 				`Importing ${releaseGroupIds.length} releases${importRecordings ? ' and tracks' : ''} for ${artist.title}…`,
 			);
 
@@ -877,7 +878,7 @@ export default class MediaDbPlugin extends Plugin {
 						const model = await musicBrainzApi.getById(rgId);
 						release = model as MusicReleaseModel;
 					} catch (e) {
-						console.warn(`MDB | Skipping release group ${rgId}:`, e);
+						console.warn(`Skipping release group ${rgId}:`, e);
 						return;
 					}
 
@@ -922,10 +923,10 @@ export default class MediaDbPlugin extends Plugin {
 
 			if (discographyChain.abort) {
 				new Notice(`Stopped release import for ${artist.title}.`);
-				console.log(`Stopped release import for ${artist.title}.`);
+				verboseLog(`Stopped release import for ${artist.title}.`);
 			} else {
 				new Notice(`✅ Finished artist import for ${artist.title}.`);
-				console.log(`✅ Finished artist import for ${artist.title}.`);
+				verboseLog(`✅ Finished artist import for ${artist.title}.`);
 			}
 		} catch (e) {
 			console.warn(e);
@@ -958,7 +959,7 @@ export default class MediaDbPlugin extends Plugin {
 				mediaTypeModel.image = `[[${imagePath}]]`;
 				return true;
 			} catch (e) {
-				console.warn('MDB | Failed to download image:', e);
+				console.warn('Failed to download image:', e);
 			}
 		}
 
@@ -1005,7 +1006,7 @@ export default class MediaDbPlugin extends Plugin {
 		if (alias === null) {
 			return meta;
 		}
-		const prev = meta['aliases'];
+		const prev = meta.aliases;
 		let list: string[] = [];
 		if (Array.isArray(prev)) {
 			list = prev.filter((x): x is string => typeof x === 'string');
@@ -1138,7 +1139,7 @@ export default class MediaDbPlugin extends Plugin {
 			metadata = {};
 		}
 
-		console.debug(`MDB | metadata read from file content`, metadata);
+		verboseDebug(`metadata read from file content`, metadata);
 
 		return metadata;
 	}
@@ -1184,7 +1185,7 @@ export default class MediaDbPlugin extends Plugin {
 		const folder = options.folder ?? this.app.vault.getAbstractFileByPath('/');
 
 		if (!folder || !(folder instanceof TFolder)) {
-			throw new Error('MDB | invalid folder');
+			throw new Error('[Media DB] invalid folder');
 		}
 
 		fileName = replaceIllegalFileNameCharactersInString(fileName);
@@ -1240,7 +1241,7 @@ export default class MediaDbPlugin extends Plugin {
 				if (options.openNote) {
 					const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 					if (!activeLeaf) {
-						console.warn('MDB | no active leaf, not opening existing note');
+						console.warn('no active leaf, not opening existing note');
 					} else {
 						await activeLeaf.openFile(file, { state: { mode: 'source' } });
 					}
@@ -1253,13 +1254,13 @@ export default class MediaDbPlugin extends Plugin {
 
 		// create the file
 		const targetFile = await this.app.vault.create(filePath, fileContent);
-		console.debug(`MDB | created new file at ${filePath}`);
+		verboseDebug(`created new file at ${filePath}`);
 
 		// open newly created file
 		if (options.openNote) {
 			const activeLeaf = this.app.workspace.getUnpinnedLeaf();
 			if (!activeLeaf) {
-				console.warn('MDB | no active leaf, not opening newly created note');
+				console.warn('no active leaf, not opening newly created note');
 				return { file: targetFile, keptExisting: false };
 			}
 			await activeLeaf.openFile(targetFile, { state: { mode: 'source' } });
@@ -1275,21 +1276,21 @@ export default class MediaDbPlugin extends Plugin {
 	async updateActiveNote(onlyMetadata: boolean = false): Promise<void> {
 		const activeFile = this.app.workspace.getActiveFile() ?? undefined;
 		if (!activeFile) {
-			throw new Error('MDB | there is no active note');
+			throw new Error('[Media DB] there is no active note');
 		}
 
 		let metadata = this.getMetadataFromFileCache(activeFile);
 		metadata = this.modelPropertyMapper.convertObjectBack(metadata);
 
-		console.debug(`MDB | read metadata`, metadata);
+		verboseDebug(`read metadata`, metadata);
 
 		if (!metadata?.type || !metadata?.id) {
-			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
+			throw new Error('[Media DB] active note is not a Media DB entry or is missing metadata');
 		}
 
 		const mediaType = resolveMetadataTypeToMediaType(this.settings, metadata.type);
 		if (mediaType === undefined) {
-			throw new Error('MDB | active note type is not recognized; check Settings → Note type for each media kind');
+			throw new Error('[Media DB] active note type is not recognized; check Settings → Note type for each media kind');
 		}
 		let dataSource = typeof metadata.dataSource === 'string' ? metadata.dataSource.trim() : '';
 		if (
@@ -1299,14 +1300,14 @@ export default class MediaDbPlugin extends Plugin {
 			dataSource = MUSICBRAINZ_NOTE_DATA_SOURCE;
 		}
 		if (!dataSource) {
-			throw new Error('MDB | active note is missing dataSource (required for this media type)');
+			throw new Error('[Media DB] active note is missing dataSource (required for this media type)');
 		}
 
 		const validOldMetadata: MediaTypeModelObj = { ...metadata, dataSource } as unknown as MediaTypeModelObj;
-		console.debug(`MDB | validOldMetadata`, validOldMetadata);
+		verboseDebug(`validOldMetadata`, validOldMetadata);
 
 		const oldMediaTypeModel = this.mediaTypeManager.createMediaTypeModelFromMediaType(validOldMetadata, mediaType);
-		console.debug(`MDB | oldMediaTypeModel created`, oldMediaTypeModel);
+		verboseDebug(`oldMediaTypeModel created`, oldMediaTypeModel);
 
 		let newMediaTypeModel = await this.apiManager.queryDetailedInfoById(validOldMetadata.id, validOldMetadata.dataSource, mediaType);
 		if (!newMediaTypeModel) {
@@ -1314,7 +1315,7 @@ export default class MediaDbPlugin extends Plugin {
 		}
 
 		newMediaTypeModel = Object.assign(oldMediaTypeModel, newMediaTypeModel.getWithOutUserData());
-		console.debug(`MDB | newMediaTypeModel after merge`, newMediaTypeModel);
+		verboseDebug(`newMediaTypeModel after merge`, newMediaTypeModel);
 
 		if (onlyMetadata) {
 			await this.createMediaDbNoteFromModel(newMediaTypeModel, { attachFile: activeFile, folder: activeFile.parent ?? undefined, openNote: true });
@@ -1335,6 +1336,7 @@ export default class MediaDbPlugin extends Plugin {
 		);
 
 		this.settings = loadedSettings;
+		setVerboseLoggingSource(() => this.settings.verboseMode);
 	}
 
 	async saveSettings(): Promise<void> {

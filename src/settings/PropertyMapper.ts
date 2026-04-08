@@ -4,6 +4,7 @@ import { MusicReleaseModel } from '../models/MusicReleaseModel';
 import { MediaType } from '../utils/MediaType';
 import { noteTypeValueForMedia, resolveMetadataTypeToMediaType } from '../utils/noteTypeSettings';
 import { coerceYear } from '../utils/Utils';
+import { verboseDebug } from '../utils/verboseLog';
 import { PropertyMappingOption } from './PropertyMapping';
 
 export class PropertyMapper {
@@ -157,7 +158,7 @@ export class PropertyMapper {
 			let typeVal: unknown = obj[typeKey];
 			if (typeVal === 'manga') {
 				typeVal = 'comicManga';
-				console.debug(`MDB | updated metadata type`, typeVal);
+				verboseDebug(`updated metadata type`, typeVal);
 			}
 			const typeStr = String(typeVal).trim();
 			if (

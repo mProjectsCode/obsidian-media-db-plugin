@@ -5,6 +5,7 @@ import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear } from '../../utils/Utils';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 
 interface IGDBCover { url: string; }
@@ -40,14 +41,14 @@ export class IGDBAPI extends APIModel {
 		const clientId = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.igdbClientId);
 		const clientSecret = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.igdbClientSecret);
 		if (!clientId || !clientSecret) {
-			throw Error(`MDB | Client ID or Client Secret for ${this.apiName} missing.`);
+			throw Error(`[Media DB] Client ID or Client Secret for ${this.apiName} missing.`);
 		}
-		console.log(`MDB | Refreshing Twitch Auth Token for ${this.apiName}`);
+		verboseLog(`Refreshing Twitch Auth Token for ${this.apiName}`);
 		const response = await requestUrl({
 			url: `https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`,
 			method: 'POST',
 		});
-		if (response.status !== 200) throw Error(`MDB | Auth failed for ${this.apiName}. Check Credentials.`);
+		if (response.status !== 200) throw Error(`[Media DB] Auth failed for ${this.apiName}. Check Credentials.`);
 		const data = response.json as TwitchAuthResponse;
 		this.accessToken = data.access_token;
 		this.tokenExpiry = currentTime + (data.expires_in * 1000) - 60000; 
@@ -55,7 +56,7 @@ export class IGDBAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 		const token = await this.getAuthToken();
 		const clientId = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.igdbClientId);
 		const queryBody = `search "${title}"; fields name, cover.url, first_release_date, summary, total_rating; limit 20;`;
@@ -64,7 +65,7 @@ export class IGDBAPI extends APIModel {
 			headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
 			body: queryBody,
 		});
-		if (response.status !== 200) throw Error(`MDB | Received status code ${response.status} from ${this.apiName}.`);
+		if (response.status !== 200) throw Error(`[Media DB] Received status code ${response.status} from ${this.apiName}.`);
 		
 		const data = response.json as IGDBGame[];
 		return data.map(result => {
@@ -78,7 +79,7 @@ export class IGDBAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 		const token = await this.getAuthToken();
 		const clientId = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.igdbClientId);
 		const queryBody = `fields name, cover.url, first_release_date, summary, total_rating, url, genres.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher; where id = ${id};`;
@@ -87,10 +88,10 @@ export class IGDBAPI extends APIModel {
 			headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
 			body: queryBody,
 		});
-		if (response.status !== 200) throw Error(`MDB | Received status code ${response.status} from ${this.apiName}.`);
+		if (response.status !== 200) throw Error(`[Media DB] Received status code ${response.status} from ${this.apiName}.`);
 		
 		const data = response.json as IGDBGame[];
-		if (!data || data.length === 0) throw Error(`MDB | No result found for ID ${id}`);
+		if (!data || data.length === 0) throw Error(`[Media DB] No result found for ID ${id}`);
 		const result = data[0];
 		
 		const developers: string[] = [];

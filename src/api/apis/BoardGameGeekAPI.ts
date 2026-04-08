@@ -1,10 +1,11 @@
 import { requestUrl } from 'obsidian';
 import { BoardGameModel } from 'src/models/BoardGameModel';
 import type MediaDbPlugin from '../../main';
-import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
-import { coerceYear } from '../../utils/Utils';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
+import { coerceYear } from '../../utils/Utils';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 
 // sadly no open api schema available
@@ -23,11 +24,11 @@ export class BoardGameGeekAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const bggKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.boardgameGeek);
 		if (!bggKey) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `${this.apiUrl}/search?search=${encodeURIComponent(title)}`;
@@ -39,11 +40,11 @@ export class BoardGameGeekAPI extends APIModel {
 		});
 
 		if (fetchData.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = fetchData.text;
@@ -73,11 +74,11 @@ export class BoardGameGeekAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const bggKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.boardgameGeek);
 		if (!bggKey) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `${this.apiUrl}/boardgame/${encodeURIComponent(id)}?stats=1`;
@@ -89,11 +90,11 @@ export class BoardGameGeekAPI extends APIModel {
 		});
 
 		if (fetchData.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = fetchData.text;
@@ -102,7 +103,7 @@ export class BoardGameGeekAPI extends APIModel {
 
 		const boardgame = response.querySelector('boardgame');
 		if (!boardgame) {
-			throw Error(`MDB | Received invalid data from ${this.apiName}.`);
+			throw Error(`[Media DB] Received invalid data from ${this.apiName}.`);
 		}
 
 		const title = boardgame.querySelector('name[primary=true]')?.textContent;

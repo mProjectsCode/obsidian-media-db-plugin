@@ -4,6 +4,7 @@ import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear, imageUrlExists } from '../../utils/Utils';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 
 interface SearchResponse {
@@ -144,7 +145,7 @@ export class SteamAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const searchUrl = `https://steamcommunity.com/actions/SearchApps/${encodeURIComponent(title)}`;
 		const fetchData = await requestUrl({
@@ -152,7 +153,7 @@ export class SteamAPI extends APIModel {
 		});
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = (await fetchData.json) as SearchResponse[];
@@ -178,7 +179,7 @@ export class SteamAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const searchUrl = `https://store.steampowered.com/api/appdetails?appids=${encodeURIComponent(id)}&l=en`;
 		const fetchData = await requestUrl({
@@ -186,7 +187,7 @@ export class SteamAPI extends APIModel {
 		});
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		// console.debug(await fetchData.json);
@@ -200,7 +201,7 @@ export class SteamAPI extends APIModel {
 			}
 		}
 		if (!result) {
-			throw Error(`MDB | API returned invalid data.`);
+			throw Error(`[Media DB] API returned invalid data.`);
 		}
 
 		// console.debug(result);

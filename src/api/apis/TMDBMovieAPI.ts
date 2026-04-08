@@ -7,6 +7,7 @@ import { MovieModel } from '../../models/MovieModel';
 import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
 import { formatUsdWholeDollars } from '../../utils/Utils';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/TMDB';
 
@@ -60,11 +61,11 @@ export class TMDBMovieAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
 		if (!bearer) {
-			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+			throw new Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
@@ -82,16 +83,16 @@ export class TMDBMovieAPI extends APIModel {
 		});
 
 		if (response.response.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (response.response.status !== 200) {
-			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
 		const data = response.data;
 
 		if (!data) {
-			throw Error(`MDB | No data received from ${this.apiName}.`);
+			throw Error(`[Media DB] No data received from ${this.apiName}.`);
 		}
 
 		if (data.total_results === 0 || !data.results) {
@@ -119,11 +120,11 @@ export class TMDBMovieAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
 		if (!bearer) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
@@ -141,16 +142,16 @@ export class TMDBMovieAPI extends APIModel {
 		});
 
 		if (response.response.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (response.response.status !== 200) {
-			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
 		const result = response.data;
 
 		if (!result) {
-			throw Error(`MDB | No data received from ${this.apiName}.`);
+			throw Error(`[Media DB] No data received from ${this.apiName}.`);
 		}
 		// console.debug(result);
 

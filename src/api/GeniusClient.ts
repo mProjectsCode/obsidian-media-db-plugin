@@ -1,7 +1,6 @@
 import { requestUrl } from 'obsidian';
-
 import { contactEmail, mediaDbVersion, pluginName } from '../utils/Utils';
-
+import { verboseLog } from '../utils/verboseLog';
 import { extractLyricsFromGeniusHtml } from './geniusLyricsExtract';
 
 interface GeniusSearchHit {
@@ -40,7 +39,7 @@ export class GeniusClient {
 		}
 
 		const url = `https://api.genius.com/search?q=${encodeURIComponent(query)}`;
-		console.log(`MDB | Genius search fetch: ${url}`);
+		verboseLog(`Genius search fetch: ${url}`);
 
 		const res = await requestUrl({
 			url,
@@ -53,9 +52,9 @@ export class GeniusClient {
 
 		if (res.status !== 200) {
 			if (res.status === 401) {
-				console.warn('MDB | Genius search returned 401 — access token missing, invalid, or expired. Update it in Media DB settings or clear it to skip lyrics.');
+				console.warn('Genius search returned 401 — access token missing, invalid, or expired. Update it in Media DB settings or clear it to skip lyrics.');
 			} else {
-				console.warn(`MDB | Genius search returned ${res.status}`);
+				console.warn(`Genius search returned ${res.status}`);
 			}
 			return null;
 		}
@@ -70,7 +69,7 @@ export class GeniusClient {
 	}
 
 	async fetchLyricsFromGeniusPage(pageUrl: string): Promise<string> {
-		console.log(`MDB | Genius lyrics fetch: ${pageUrl}`);
+		verboseLog(`Genius lyrics fetch: ${pageUrl}`);
 
 		const res = await requestUrl({
 			url: pageUrl,
@@ -81,7 +80,7 @@ export class GeniusClient {
 		});
 
 		if (res.status !== 200) {
-			console.warn(`MDB | Genius page returned ${res.status}`);
+			console.warn(`Genius page returned ${res.status}`);
 			return '';
 		}
 

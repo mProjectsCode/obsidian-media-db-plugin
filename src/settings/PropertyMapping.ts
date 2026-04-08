@@ -1,11 +1,12 @@
 import { musicBrainzRegisteredApiName } from '../api/musicBrainzConstants';
-import { MediaType } from '../utils/MediaType';
+import type { MediaType } from '../utils/MediaType';
 import {
 	containsOnlyLettersAndUnderscores,
 	isValidRemappedFrontmatterKey,
 	PropertyMappingNameConflictError,
 	PropertyMappingValidationError,
 } from '../utils/Utils';
+import { verboseDebug } from '../utils/verboseLog';
 
 // Plain object interfaces for serialization
 export interface PropertyMappingData {
@@ -41,7 +42,7 @@ export class PropertyMappingModel {
 	}
 
 	validate(): { res: boolean; err?: Error } {
-		console.debug(`MDB | validated property mappings for ${this.type}`);
+		verboseDebug(`validated property mappings for ${this.type}`);
 
 		// check properties
 		for (const property of this.properties) {

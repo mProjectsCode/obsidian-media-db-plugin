@@ -7,6 +7,7 @@ import { MediaDbSearchModal } from '../modals/MediaDbSearchModal';
 import { MediaDbSearchResultModal } from '../modals/MediaDbSearchResultModal';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import type { MediaType } from './MediaType';
+import { verboseDebug } from './verboseLog';
 
 export enum ModalResultCode {
 	SUCCESS = 'SUCCESS',
@@ -262,7 +263,7 @@ export class ModalHelper {
 		submitCallback: (searchModalData: SearchModalData) => Promise<MediaTypeModel[]>,
 	): Promise<MediaTypeModel[] | undefined> {
 		const { searchModalResult, searchModal } = await this.createSearchModal(searchModalOptions);
-		console.debug(`MDB | searchModal closed with code ${searchModalResult.code}`);
+		verboseDebug(`searchModal closed with code ${searchModalResult.code}`);
 
 		if (searchModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -328,7 +329,7 @@ export class ModalHelper {
 		submitCallback: (advancedSearchModalData: AdvancedSearchModalData) => Promise<MediaTypeModel[]>,
 	): Promise<MediaTypeModel[] | undefined> {
 		const { advancedSearchModalResult, advancedSearchModal } = await this.createAdvancedSearchModal(advancedSearchModalOptions);
-		console.debug(`MDB | advencedSearchModal closed with code ${advancedSearchModalResult.code}`);
+		verboseDebug(`advencedSearchModal closed with code ${advancedSearchModalResult.code}`);
 
 		if (advancedSearchModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -392,7 +393,7 @@ export class ModalHelper {
 		submitCallback: (idSearchModalData: IdSearchModalData) => Promise<MediaTypeModel | undefined>,
 	): Promise<MediaTypeModel | undefined> {
 		const { idSearchModalResult, idSearchModal } = await this.createIdSearchModal(idSearchModalOptions);
-		console.debug(`MDB | idSearchModal closed with code ${idSearchModalResult.code}`);
+		verboseDebug(`idSearchModal closed with code ${idSearchModalResult.code}`);
 
 		if (idSearchModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -457,7 +458,7 @@ export class ModalHelper {
 		submitCallback: (selectModalData: SelectModalData) => Promise<MediaTypeModel[]>,
 	): Promise<MediaTypeModel[] | undefined> {
 		const { selectModalResult, selectModal } = await this.createSelectModal(selectModalOptions);
-		console.debug(`MDB | selectModal closed with code ${selectModalResult.code}`);
+		verboseDebug(`selectModal closed with code ${selectModalResult.code}`);
 
 		if (selectModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself
@@ -508,7 +509,7 @@ export class ModalHelper {
 
 	async openPreviewModal(previewModalOptions: PreviewModalOptions, submitCallback: (previewModalData: PreviewModalData) => Promise<boolean>): Promise<boolean> {
 		const { previewModalResult, previewModal } = await this.createPreviewModal(previewModalOptions);
-		console.debug(`MDB | previewModal closed with code ${previewModalResult.code}`);
+		verboseDebug(`previewModal closed with code ${previewModalResult.code}`);
 
 		if (previewModalResult.code === ModalResultCode.ERROR) {
 			// there was an error in the modal itself

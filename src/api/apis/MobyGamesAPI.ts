@@ -3,9 +3,10 @@
 import { requestUrl } from 'obsidian';
 import type MediaDbPlugin from '../../main';
 import { GameModel } from '../../models/GameModel';
-import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
+import { verboseDebug, verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 
 // sadly no open api schema available
@@ -27,11 +28,11 @@ export class MobyGamesAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.mobyGames);
 		if (!apiKey) {
-			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+			throw new Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `${this.apiUrl}/games?title=${encodeURIComponent(title)}&api_key=${apiKey}`;
@@ -42,13 +43,13 @@ export class MobyGamesAPI extends APIModel {
 		// console.debug(fetchData);
 
 		if (fetchData.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (fetchData.status === 429) {
-			throw Error(`MDB | Too many requests for ${this.apiName}, you've exceeded your API quota.`);
+			throw Error(`[Media DB] Too many requests for ${this.apiName}, you've exceeded your API quota.`);
 		}
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json;
@@ -71,21 +72,21 @@ export class MobyGamesAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.mobyGames);
 		if (!apiKey) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `${this.apiUrl}/games?id=${encodeURIComponent(id)}&api_key=${apiKey}`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 		});
-		console.debug(fetchData);
+		verboseDebug(fetchData);
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json;

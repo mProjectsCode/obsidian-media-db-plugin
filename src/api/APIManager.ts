@@ -1,12 +1,13 @@
 import { Notice } from 'obsidian';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
 import type { MediaType } from '../utils/MediaType';
+import { verboseDebug } from '../utils/verboseLog';
+import type { APIModel } from './APIModel';
 import {
 	isMusicBrainzFamilyDataSource,
 	musicBrainzRegisteredApiName,
 	MUSICBRAINZ_NOTE_DATA_SOURCE,
 } from './musicBrainzConstants';
-import type { APIModel } from './APIModel';
 
 export class APIManager {
 	apis: APIModel[];
@@ -22,7 +23,7 @@ export class APIManager {
 	 * @param apisToQuery
 	 */
 	async query(query: string, apisToQuery: string[]): Promise<MediaTypeModel[]> {
-		console.debug(`MDB | api manager queried with "${query}"`);
+		verboseDebug(`api manager queried with "${query}"`);
 
 		const promises = this.apis
 			.filter(api => apisToQuery.contains(api.apiName))

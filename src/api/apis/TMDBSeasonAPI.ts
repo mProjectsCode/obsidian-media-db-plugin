@@ -3,9 +3,10 @@
 import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
-import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { SeasonModel } from '../../models/SeasonModel';
+import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/TMDB';
 
@@ -27,11 +28,11 @@ export class TMDBSeasonAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
 		if (!bearer) {
-			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+			throw new Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
@@ -49,11 +50,11 @@ export class TMDBSeasonAPI extends APIModel {
 		});
 
 		if (searchResponse.response.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 
 		if (searchResponse.response.status !== 200) {
-			throw Error(`MDB | Received status code ${searchResponse.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${searchResponse.response.status} from ${this.apiName}.`);
 		}
 
 		const searchData = searchResponse.data;
@@ -110,7 +111,7 @@ export class TMDBSeasonAPI extends APIModel {
 	async getSeasonsForSeries(tvId: string): Promise<SeasonModel[]> {
 		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
 		if (!bearer) {
-			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+			throw new Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
@@ -125,11 +126,11 @@ export class TMDBSeasonAPI extends APIModel {
 		});
 
 		if (seriesResponse.response.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 
 		if (seriesResponse.response.status !== 200) {
-			throw Error(`MDB | Received status code ${seriesResponse.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${seriesResponse.response.status} from ${this.apiName}.`);
 		}
 
 		const seriesData = seriesResponse.data;
@@ -160,17 +161,17 @@ export class TMDBSeasonAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const bearer = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.tmdb);
 		if (!bearer) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		// Expect season ids like "12345/season/2"
 		const m = /^(\d+)\/season\/(\d+)$/.exec(id);
 		if (!m) {
-			throw Error(`MDB | Invalid season id "${id}". Expected format "<series_id>/season/<season_number>".`);
+			throw Error(`[Media DB] Invalid season id "${id}". Expected format "<series_id>/season/<season_number>".`);
 		}
 
 		const tvId = m[1];
@@ -193,16 +194,16 @@ export class TMDBSeasonAPI extends APIModel {
 		});
 
 		if (seasonResponse.response.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 
 		if (seasonResponse.response.status !== 200) {
-			throw Error(`MDB | Received status code ${seasonResponse.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${seasonResponse.response.status} from ${this.apiName}.`);
 		}
 
 		const seasonData = seasonResponse.data;
 		if (!seasonData) {
-			throw Error(`MDB | No data received from ${this.apiName}.`);
+			throw Error(`[Media DB] No data received from ${this.apiName}.`);
 		}
 		// Fetch parent series to build consistent titles and inherit fields
 		const seriesResponse = await client.GET('/3/tv/{series_id}', {
@@ -219,17 +220,17 @@ export class TMDBSeasonAPI extends APIModel {
 		});
 
 		if (seriesResponse.response.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 
 		if (seriesResponse.response.status !== 200) {
-			throw Error(`MDB | Received status code ${seriesResponse.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${seriesResponse.response.status} from ${this.apiName}.`);
 		}
 
 		const seriesData = seriesResponse.data;
 
 		if (!seriesData) {
-			throw Error(`MDB | No data received from ${this.apiName}.`);
+			throw Error(`[Media DB] No data received from ${this.apiName}.`);
 		}
 
 		const seriesName = seriesData?.name ?? '';

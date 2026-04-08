@@ -58,7 +58,7 @@ export async function requestUrlRateLimited(
 		const fromHeader = parseRetryAfterMs(res.headers);
 		const backoffMs = fromHeader ?? BACKOFF_BASE_MS * 2 ** retry;
 		console.warn(
-			`MDB | ${options.logLabel} rate limited (HTTP ${res.status}), retry ${retry + 1}/${RATE_LIMIT_MAX_RETRIES} after ${backoffMs}ms`,
+			`${options.logLabel} rate limited (HTTP ${res.status}), retry ${retry + 1}/${RATE_LIMIT_MAX_RETRIES} after ${backoffMs}ms`,
 		);
 		await sleep(backoffMs);
 	}

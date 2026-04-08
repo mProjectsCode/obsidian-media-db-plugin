@@ -4,6 +4,7 @@ import { obsidianFetch } from 'src/utils/Utils';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/OpenLibrary';
 
@@ -44,7 +45,7 @@ export class OpenLibraryAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const client = createClient<paths>({ baseUrl: 'https://openlibrary.org/' });
 
@@ -58,7 +59,7 @@ export class OpenLibraryAPI extends APIModel {
 		});
 
 		if (response.error !== undefined) {
-			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
 		const data = response.data as {
@@ -86,7 +87,7 @@ export class OpenLibraryAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const client = createClient<paths>({ baseUrl: 'https://openlibrary.org/' });
 
@@ -101,7 +102,7 @@ export class OpenLibraryAPI extends APIModel {
 		});
 
 		if (response.error !== undefined) {
-			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
 		const data = response.data as {

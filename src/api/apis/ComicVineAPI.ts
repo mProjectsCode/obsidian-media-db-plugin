@@ -7,6 +7,7 @@ import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear } from '../../utils/Utils';
+import { verboseDebug, verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 
 // sadly no open api schema available
@@ -25,11 +26,11 @@ export class ComicVineAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.comicVine);
 		if (!apiKey) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `${this.apiUrl}/search/?api_key=${apiKey}&format=json&resources=volume&query=${encodeURIComponent(title)}`;
@@ -38,7 +39,7 @@ export class ComicVineAPI extends APIModel {
 		});
 		// console.debug(fetchData);
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json;
@@ -61,11 +62,11 @@ export class ComicVineAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.comicVine);
 		if (!apiKey) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const searchUrl = `${this.apiUrl}/volume/${encodeURIComponent(id)}/?api_key=${apiKey}&format=json`;
@@ -73,10 +74,10 @@ export class ComicVineAPI extends APIModel {
 			url: searchUrl,
 		});
 
-		console.debug(fetchData);
+		verboseDebug(fetchData);
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = await fetchData.json;

@@ -44,12 +44,12 @@ export class MediaDbIdSearchModal extends Modal {
 
 	async search(): Promise<void> {
 		if (!this.query) {
-			new Notice('MDB | no Id entered');
+			new Notice('[Media DB] no Id entered');
 			return;
 		}
 
 		if (!this.selectedApi) {
-			new Notice('MDB | No API selected');
+			new Notice('[Media DB] No API selected');
 			return;
 		}
 

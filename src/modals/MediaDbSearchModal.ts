@@ -47,14 +47,14 @@ export class MediaDbSearchModal extends Modal {
 
 	async search(): Promise<void> {
 		if (!this.query || this.query.length < 3) {
-			new Notice('MDB | Query too short');
+			new Notice('[Media DB] Query too short');
 			return;
 		}
 
 		const types: MediaType[] = this.selectedTypes;
 
 		if (types.length === 0) {
-			new Notice('MDB | No Type selected');
+			new Notice('[Media DB] No Type selected');
 			return;
 		}
 

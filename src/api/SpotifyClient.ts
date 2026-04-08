@@ -1,4 +1,5 @@
 import { contactEmail, mediaDbVersion, pluginName } from '../utils/Utils';
+import { verboseLog } from '../utils/verboseLog';
 import { requestUrlRateLimited } from './requestUrlRateLimited';
 
 interface SpotifyTokenResponse {
@@ -62,7 +63,7 @@ export class SpotifyClient {
 			{ logLabel: 'Spotify (token)' },
 		);
 		if (res.status !== 200) {
-			console.warn(`MDB | Spotify token request returned ${res.status}`);
+			console.warn(`Spotify token request returned ${res.status}`);
 			this.accessToken = null;
 			this.tokenExpiresAtMs = 0;
 			return null;
@@ -98,13 +99,13 @@ export class SpotifyClient {
 		}
 		let token = await this.getAccessToken();
 		if (!token) {
-			console.warn('MDB | Spotify search fetch skipped: could not obtain access token');
+			console.warn('Spotify search fetch skipped: could not obtain access token');
 			return '';
 		}
 
 		const params = new URLSearchParams({ q, type: 'track', limit: '1' });
 		const url = `https://api.spotify.com/v1/search?${params.toString()}`;
-		console.log(`MDB | Spotify search fetch: ${url}`);
+		verboseLog(`Spotify search fetch: ${url}`);
 		let res = await requestUrlRateLimited(
 			{
 				url,
@@ -124,7 +125,7 @@ export class SpotifyClient {
 			if (!token) {
 				return '';
 			}
-			console.log(`MDB | Spotify search fetch (retry after 401): ${url}`);
+			verboseLog(`Spotify search fetch (retry after 401): ${url}`);
 			res = await requestUrlRateLimited(
 				{
 					url,
@@ -139,7 +140,7 @@ export class SpotifyClient {
 		}
 
 		if (res.status !== 200) {
-			console.warn(`MDB | Spotify search returned ${res.status}`);
+			console.warn(`Spotify search returned ${res.status}`);
 			return '';
 		}
 

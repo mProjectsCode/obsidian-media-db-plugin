@@ -3,11 +3,12 @@ import { ArtistModel } from '../../models/ArtistModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear, contactEmail, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
-import { requestUrlRateLimited } from '../requestUrlRateLimited';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
 import type { MusicBrainzReleaseGroupPrimaryTypeId, ReleaseGroupSecondaryTypeId } from '../musicBrainzReleaseGroupTypes';
 import { MUSICBRAINZ_RELEASE_GROUP_PRIMARY_TYPES, releaseGroupPassesImportSecondaryFilter } from '../musicBrainzReleaseGroupTypes';
+import { requestUrlRateLimited } from '../requestUrlRateLimited';
 
 interface ArtistTag {
 	name: string;
@@ -88,7 +89,7 @@ export class MusicBrainzArtistAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const searchUrl = `https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(title)}&limit=20&fmt=json`;
 		const fetchData = await requestUrlRateLimited(
@@ -100,7 +101,7 @@ export class MusicBrainzArtistAPI extends APIModel {
 		);
 
 		if (fetchData.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 		}
 
 		const data = (await fetchData.json) as ArtistSearchResponse;
@@ -134,7 +135,7 @@ export class MusicBrainzArtistAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const artistUrl = `https://musicbrainz.org/ws/2/artist/${encodeURIComponent(id)}?inc=tags+genres+url-rels&fmt=json`;
 		const res = await requestUrlRateLimited(
@@ -146,7 +147,7 @@ export class MusicBrainzArtistAPI extends APIModel {
 		);
 
 		if (res.status !== 200) {
-			throw Error(`MDB | Received status code ${res.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${res.status} from ${this.apiName}.`);
 		}
 
 		const artist = (await res.json) as ArtistDetailResponse;
@@ -224,7 +225,7 @@ export class MusicBrainzArtistAPI extends APIModel {
 				);
 
 				if (res.status !== 200) {
-					throw Error(`MDB | Received status code ${res.status} browsing release groups.`);
+					throw Error(`[Media DB] Received status code ${res.status} browsing release groups.`);
 				}
 
 				const data = (await res.json) as ReleaseGroupBrowseResponse;

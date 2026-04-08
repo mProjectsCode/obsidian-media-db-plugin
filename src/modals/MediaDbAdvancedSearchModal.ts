@@ -44,14 +44,14 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 	async search(): Promise<void> {
 		if (!this.query || this.query.length < 3) {
-			new Notice('MDB | Query too short');
+			new Notice('[Media DB] Query too short');
 			return;
 		}
 
 		const apis: string[] = this.selectedApis;
 
 		if (apis.length === 0) {
-			new Notice('MDB | No API selected');
+			new Notice('[Media DB] No API selected');
 			return;
 		}
 

@@ -7,6 +7,7 @@ import { SeriesModel } from '../../models/SeriesModel';
 import { ApiSecretID, getApiSecretValue } from '../../settings/apiSecretsHelper';
 import { MediaType } from '../../utils/MediaType';
 import { coerceMovieDurationMinutes, coerceYear } from '../../utils/Utils';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 
 interface ErrorResponse {
@@ -77,11 +78,11 @@ export class OMDbAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const omdbKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.omdb);
 		if (!omdbKey) {
-			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+			throw new Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const response = await requestUrl({
@@ -90,16 +91,16 @@ export class OMDbAPI extends APIModel {
 		});
 
 		if (response.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (response.status !== 200) {
-			throw Error(`MDB | Received status code ${response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${response.status} from ${this.apiName}.`);
 		}
 
 		const data = response.json as SearchResponse | undefined;
 
 		if (!data) {
-			throw Error(`MDB | No data received from ${this.apiName}.`);
+			throw Error(`[Media DB] No data received from ${this.apiName}.`);
 		}
 
 		if (data.Response === 'False') {
@@ -107,7 +108,7 @@ export class OMDbAPI extends APIModel {
 				return [];
 			}
 
-			throw Error(`MDB | Received error from ${this.apiName}: ${data.Error}`);
+			throw Error(`[Media DB] Received error from ${this.apiName}: ${data.Error}`);
 		}
 		if (!data.Search) {
 			return [];
@@ -162,11 +163,11 @@ export class OMDbAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const omdbKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.omdb);
 		if (!omdbKey) {
-			throw Error(`MDB | API key for ${this.apiName} missing.`);
+			throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		}
 
 		const response = await requestUrl({
@@ -175,20 +176,20 @@ export class OMDbAPI extends APIModel {
 		});
 
 		if (response.status === 401) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
+			throw Error(`[Media DB] Authentication for ${this.apiName} failed. Check the API key.`);
 		}
 		if (response.status !== 200) {
-			throw Error(`MDB | Received status code ${response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${response.status} from ${this.apiName}.`);
 		}
 
 		const result = response.json as IdResponse | undefined;
 
 		if (!result) {
-			throw Error(`MDB | No data received from ${this.apiName}.`);
+			throw Error(`[Media DB] No data received from ${this.apiName}.`);
 		}
 
 		if (result.Response === 'False') {
-			throw Error(`MDB | Received error from ${this.apiName}: ${result.Error}`);
+			throw Error(`[Media DB] Received error from ${this.apiName}: ${result.Error}`);
 		}
 
 		const type = this.typeMappings.get(result.Type.toLowerCase());
@@ -282,7 +283,7 @@ export class OMDbAPI extends APIModel {
 			});
 		}
 
-		throw new Error(`MDB | Unknown media type for id ${id}`);
+		throw new Error(`[Media DB] Unknown media type for id ${id}`);
 	}
 
 	getDisabledMediaTypes(): MediaType[] {

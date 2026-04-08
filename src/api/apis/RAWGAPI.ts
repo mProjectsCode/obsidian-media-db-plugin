@@ -28,12 +28,12 @@ export class RAWGAPI extends APIModel {
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.rawg);
-		if (!apiKey) throw Error(`MDB | API key for ${this.apiName} missing.`);
+		if (!apiKey) throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		const response = await requestUrl({
 			url: `${this.apiUrl}/games?key=${apiKey}&search=${encodeURIComponent(title)}&page_size=20`,
 			method: 'GET',
 		});
-		if (response.status !== 200) throw Error(`MDB | Error ${response.status} from ${this.apiName}.`);
+		if (response.status !== 200) throw Error(`[Media DB] Error ${response.status} from ${this.apiName}.`);
 
 		const data = response.json as RAWGSearchResponse;
 		return data.results.map(result => new GameModel({
@@ -45,12 +45,12 @@ export class RAWGAPI extends APIModel {
 
 	async getById(id: string): Promise<MediaTypeModel> {
 		const apiKey = getApiSecretValue(this.plugin.app, this.plugin.settings.linkedApiSecretIds, ApiSecretID.rawg);
-		if (!apiKey) throw Error(`MDB | API key for ${this.apiName} missing.`);
+		if (!apiKey) throw Error(`[Media DB] API key for ${this.apiName} missing.`);
 		const response = await requestUrl({
 			url: `${this.apiUrl}/games/${id}?key=${apiKey}`,
 			method: 'GET',
 		});
-		if (response.status !== 200) throw Error(`MDB | Error ${response.status} from ${this.apiName}.`);
+		if (response.status !== 200) throw Error(`[Media DB] Error ${response.status} from ${this.apiName}.`);
 
 		const result = response.json as RAWGGame;
 		return new GameModel({

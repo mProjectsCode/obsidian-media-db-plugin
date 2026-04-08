@@ -4,13 +4,14 @@ import { MusicReleaseModel } from '../../models/MusicReleaseModel';
 import { RecordingModel } from '../../models/RecordingModel';
 import { MediaType } from '../../utils/MediaType';
 import { contactEmail, coerceYear, getLanguageName, mediaDbVersion, pluginName } from '../../utils/Utils';
+import { verboseLog } from '../../utils/verboseLog';
+import { APIModel } from '../APIModel';
 import { MUSICBRAINZ_NOTE_DATA_SOURCE } from '../musicBrainzConstants';
+import type { MusicBrainzReleaseGroupPrimaryTypeId, ReleaseGroupSecondaryTypeId } from '../musicBrainzReleaseGroupTypes';
 import {
 	releaseGroupMatchesPrimaryTypeImportFilter,
 	releaseGroupPassesImportSecondaryFilter,
 } from '../musicBrainzReleaseGroupTypes';
-import type { MusicBrainzReleaseGroupPrimaryTypeId, ReleaseGroupSecondaryTypeId } from '../musicBrainzReleaseGroupTypes';
-import { APIModel } from '../APIModel';
 import { requestUrlRateLimited } from '../requestUrlRateLimited';
 
 // sadly no open api schema available
@@ -207,7 +208,7 @@ export class MusicBrainzAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const searchUrlReleaseGroup = `https://musicbrainz.org/ws/2/release-group?query=${encodeURIComponent(title)}&limit=50&fmt=json`;
 		const searchUrlRecording = `https://musicbrainz.org/ws/2/recording?query=${encodeURIComponent(title)}&limit=50&fmt=json`;
@@ -234,10 +235,10 @@ export class MusicBrainzAPI extends APIModel {
 		]);
 
 		if (fetchReleaseGroups.status !== 200) {
-			throw Error(`MDB | Received status code ${fetchReleaseGroups.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${fetchReleaseGroups.status} from ${this.apiName}.`);
 		}
 		if (fetchRecordings.status !== 200) {
-			console.warn(`MDB | ${this.apiName} recording search returned ${fetchRecordings.status} (release results still returned).`);
+			console.warn(`${this.apiName} recording search returned ${fetchRecordings.status} (release results still returned).`);
 		}
 
 		const primaryAllowed = this.plugin.settings.enabledReleaseGroupPrimaryTypes;
@@ -289,7 +290,7 @@ export class MusicBrainzAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		// Fetch release group
 		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+media+artists+tags+ratings+genres&fmt=json`;
@@ -307,19 +308,19 @@ export class MusicBrainzAPI extends APIModel {
 			return await this.getRecordingById(id);
 		}
 		if (groupResponse.status !== 200) {
-			throw Error(`MDB | Received status code ${groupResponse.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${groupResponse.status} from ${this.apiName}.`);
 		}
 
 		const result = (await groupResponse.json) as IdResponse;
 
 		const chosenRelease = pickNonBootlegReleaseWithMostTracks(result.releases);
 		if (!chosenRelease) {
-			throw Error('MDB | No non-bootleg release found in release group.');
+			throw Error('[Media DB] No non-bootleg release found in release group.');
 		}
 
 		// Fetch recordings for the chosen release (single-medium non-bootleg with the most tracks when MB lists several)
 		const releaseUrl = `https://musicbrainz.org/ws/2/release/${chosenRelease.id}?inc=recordings+artists&fmt=json`;
-		console.log(`MDB | Fetching release recordings from: ${releaseUrl}`);
+		verboseLog(`Fetching release recordings from: ${releaseUrl}`);
 
 		const releaseResponse = await requestUrlRateLimited(
 			{
@@ -332,7 +333,7 @@ export class MusicBrainzAPI extends APIModel {
 		);
 
 		if (releaseResponse.status !== 200) {
-			throw Error(`MDB | Received status code ${releaseResponse.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${releaseResponse.status} from ${this.apiName}.`);
 		}
 
 		const releaseData = (await releaseResponse.json) as MediaResponse;
@@ -387,7 +388,7 @@ export class MusicBrainzAPI extends APIModel {
 		);
 
 		if (recordingResponse.status !== 200) {
-			throw Error(`MDB | Received status code ${recordingResponse.status} from ${this.apiName} (recording lookup).`);
+			throw Error(`[Media DB] Received status code ${recordingResponse.status} from ${this.apiName} (recording lookup).`);
 		}
 
 		const data = (await recordingResponse.json) as RecordingDetailResponse;
@@ -395,7 +396,7 @@ export class MusicBrainzAPI extends APIModel {
 		const release: RecordingDetailRelease | undefined =
 			candidates.find(r => r.status !== 'Bootleg') ?? candidates[0];
 		if (!release) {
-			throw Error('MDB | Recording has no linked releases.');
+			throw Error('[Media DB] Recording has no linked releases.');
 		}
 
 		const rg = release['release-group'];

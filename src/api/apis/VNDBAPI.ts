@@ -4,6 +4,7 @@ import { GameModel } from '../../models/GameModel';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { coerceYear } from '../../utils/Utils';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 
 enum VNDevStatus {
@@ -119,17 +120,17 @@ export class VNDBAPI extends APIModel {
 		if (fetchData.status !== 200) {
 			switch (fetchData.status) {
 				case 400:
-					throw Error(`MDB | Invalid request body or query [${fetchData.text}].`);
+					throw Error(`[Media DB] Invalid request body or query [${fetchData.text}].`);
 				case 404:
-					throw Error(`MDB | Invalid API path or HTTP method.`);
+					throw Error(`[Media DB] Invalid API path or HTTP method.`);
 				case 429:
-					throw Error(`MDB | Throttled.`);
+					throw Error(`[Media DB] Throttled.`);
 				case 500:
-					throw Error(`MDB | VNDB server error.`);
+					throw Error(`[Media DB] VNDB server error.`);
 				case 502:
-					throw Error(`MDB | VNDB server is down.`);
+					throw Error(`[Media DB] VNDB server is down.`);
 				default:
-					throw Error(`MDB | Received status code ${fetchData.status} from ${this.apiName}.`);
+					throw Error(`[Media DB] Received status code ${fetchData.status} from ${this.apiName}.`);
 			}
 		}
 
@@ -155,7 +156,7 @@ export class VNDBAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		/* SFW Filter: has ANY official&&complete&&standalone&&SFW release
 		            OR has NO  official&&standalone&&NSFW release
@@ -204,14 +205,14 @@ export class VNDBAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const vnData = await this.postVNQuery(`{
 			"filters": ["id", "=", "${id}"],
 			"fields": "title, titles{title, lang}, devstatus, released, image{url, sexual}, rating, tags{name, category, rating, spoiler}, developers{name}"
 		}`);
 
-		if (vnData.results.length !== 1) throw Error(`MDB | Expected 1 result from query, got ${vnData.results.length}.`);
+		if (vnData.results.length !== 1) throw Error(`[Media DB] Expected 1 result from query, got ${vnData.results.length}.`);
 		const vn = vnData.results[0];
 		const releasedIsDate = vn.released !== null && vn.released !== 'TBA';
 		vn.released ??= 'Unknown';

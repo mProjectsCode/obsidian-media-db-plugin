@@ -5,6 +5,7 @@ import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MovieModel } from '../../models/MovieModel';
 import { SeriesModel } from '../../models/SeriesModel';
 import { MediaType } from '../../utils/MediaType';
+import { verboseLog } from '../../utils/verboseLog';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/MALAPI';
 
@@ -29,7 +30,7 @@ export class MALAPI extends APIModel {
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+		verboseLog(`api "${this.apiName}" queried by Title`);
 
 		const client = createClient<paths>({ baseUrl: 'https://api.jikan.moe/v4/' });
 
@@ -45,7 +46,7 @@ export class MALAPI extends APIModel {
 		});
 
 		if (response.error !== undefined) {
-			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
 		const data = response.data?.data;
@@ -99,7 +100,7 @@ export class MALAPI extends APIModel {
 	}
 
 	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		const client = createClient<paths>({ baseUrl: 'https://api.jikan.moe/v4/' });
 
@@ -113,13 +114,13 @@ export class MALAPI extends APIModel {
 		});
 
 		if (response.error !== undefined) {
-			throw Error(`MDB | Received status code ${response.response.status} from ${this.apiName}.`);
+			throw Error(`[Media DB] Received status code ${response.response.status} from ${this.apiName}.`);
 		}
 
 		const result = response.data?.data;
 
 		if (result === undefined) {
-			throw Error(`MDB | No data found for ID ${id} in ${this.apiName}.`);
+			throw Error(`[Media DB] No data found for ID ${id} in ${this.apiName}.`);
 		}
 
 		const resType = result.type?.toLowerCase();
@@ -221,7 +222,7 @@ export class MALAPI extends APIModel {
 			});
 		}
 
-		throw new Error(`MDB | Unknown media type for id ${id}`);
+		throw new Error(`[Media DB] Unknown media type for id ${id}`);
 	}
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.MALAPI_disabledMediaTypes;

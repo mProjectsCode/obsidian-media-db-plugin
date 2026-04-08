@@ -63,6 +63,8 @@ export interface MediaDbPluginSettings {
 	/** When true, movie Budget and Revenue front matter use `{ value, currency }` instead of a formatted string. */
 	useObjectFormatForCurrencyValues: boolean;
 	enableTemplaterIntegration: boolean;
+	/** When false, omit routine `console.log` / `console.debug` output (errors and warnings still print). */
+	verboseMode: boolean;
 	imageDownload: boolean;
 	imageFolder: string;
 
@@ -377,6 +379,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	addNormalizeTitlesAsAlias: true,
 	useObjectFormatForCurrencyValues: true,
 	enableTemplaterIntegration: false,
+	verboseMode: true,
 	imageDownload: false,
 	imageFolder: 'Media DB/images',
 
@@ -836,6 +839,19 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						.addToggle(cb => {
 							cb.setValue(this.plugin.settings.sfwFilter).onChange(data => {
 								this.plugin.settings.sfwFilter = data;
+								void this.plugin.saveSettings();
+							});
+						}),
+			);
+
+			generalGroup.addSetting(
+				setting =>
+					void setting
+						.setName('Verbose mode')
+						.setDesc('When off, the plugin does not log routine messages to the developer console (warnings and errors still appear).')
+						.addToggle(cb => {
+							cb.setValue(this.plugin.settings.verboseMode).onChange(data => {
+								this.plugin.settings.verboseMode = data;
 								void this.plugin.saveSettings();
 							});
 						}),
