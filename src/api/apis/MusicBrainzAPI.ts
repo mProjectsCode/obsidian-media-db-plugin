@@ -37,24 +37,25 @@ interface Release {
 	media?: ReleaseMedium[];
 }
 
-function totalTracksFromReleaseMedia(release: Release): number {
-	if (!release.media?.length) {
-		return 0;
-	}
-	return release.media.reduce((sum, m) => sum + (m['track-count'] ?? 0), 0);
-}
-
-/** Prefer the edition with the most tracks (e.g. deluxe over single-disc); skips bootlegs. */
+/**
+ * Among non-bootleg releases, consider only those with exactly one medium (single-disc / single-sided editions),
+ * then pick the one with the highest track count on that medium. If none have a single medium, returns the first
+ * non-bootleg release.
+ */
 function pickNonBootlegReleaseWithMostTracks(releases: Release[] | undefined): Release | undefined {
-	const candidates = releases?.filter(r => r.status !== 'Bootleg') ?? [];
-	if (candidates.length === 0) {
+	const nonBootleg = releases?.filter(r => r.status !== 'Bootleg') ?? [];
+	if (nonBootleg.length === 0) {
 		return undefined;
 	}
-	let best = candidates[0];
-	let bestCount = totalTracksFromReleaseMedia(best);
-	for (let i = 1; i < candidates.length; i++) {
-		const r = candidates[i];
-		const count = totalTracksFromReleaseMedia(r);
+	const singleMedium = nonBootleg.filter(r => r.media?.length === 1);
+	if (singleMedium.length === 0) {
+		return nonBootleg[0];
+	}
+	let best = singleMedium[0];
+	let bestCount = best.media![0]['track-count'] ?? 0;
+	for (let i = 1; i < singleMedium.length; i++) {
+		const r = singleMedium[i];
+		const count = r.media![0]['track-count'] ?? 0;
 		if (count > bestCount) {
 			best = r;
 			bestCount = count;
@@ -316,7 +317,7 @@ export class MusicBrainzAPI extends APIModel {
 			throw Error('MDB | No non-bootleg release found in release group.');
 		}
 
-		// Fetch recordings for the chosen release (non-bootleg edition with the most tracks when MB lists several)
+		// Fetch recordings for the chosen release (single-medium non-bootleg with the most tracks when MB lists several)
 		const releaseUrl = `https://musicbrainz.org/ws/2/release/${chosenRelease.id}?inc=recordings+artists&fmt=json`;
 		console.log(`MDB | Fetching release recordings from: ${releaseUrl}`);
 

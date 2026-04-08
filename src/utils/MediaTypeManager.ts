@@ -102,8 +102,8 @@ export class MediaTypeManager {
 	expandFolderPathForModel(folderPath: string, mediaTypeModel: MediaTypeModel): string {
 		const expanded = replaceTags(folderPath, mediaTypeModel, true);
 		const segments = expanded
-			.split('/')
-			.map(seg => replaceIllegalFileNameCharactersInString(seg).replaceAll(/ +/g, ' ').trim())
+			.split(/[/\\]+/)
+			.map(seg => this.cleanFileName(replaceIllegalFileNameCharactersInString(seg).trim()).trim())
 			.filter(seg => seg.length > 0);
 		if (segments.length === 0) {
 			return '/';
