@@ -51,11 +51,11 @@ import type { ChainedImportControl, CreateNoteOptions } from './utils/Utils';
 import {
 	parseUsdWholeDollarsFromDisplayString,
 	omitEmptyMetadataFields,
-	replaceIllegalFileNameCharactersInString,
 	unCamelCase,
 	hasTemplaterPlugin,
 	useTemplaterPluginInFile,
 	ensureVaultFolderPath,
+	sanitizeFileName,
 } from './utils/Utils';
 import { setVerboseLoggingSource, verboseDebug, verboseLog } from './utils/verboseLog';
 import 'src/styles.css';
@@ -945,7 +945,7 @@ export default class MediaDbPlugin extends Plugin {
 			try {
 				const imageUrl = mediaTypeModel.image;
 				const imageExt = imageUrl.split('.').pop()?.split(/#|\?/)[0] ?? 'jpg';
-				const imageFileName = `${replaceIllegalFileNameCharactersInString(`${mediaTypeModel.type}_${mediaTypeModel.title} (${mediaTypeModel.year})`)}.${imageExt}`;
+				const imageFileName = `${sanitizeFileName(`${mediaTypeModel.type}_${mediaTypeModel.title} (${mediaTypeModel.year})`)}.${imageExt}`;
 				const imagePath = normalizePath(`${this.settings.imageFolder}/${imageFileName}`);
 
 				await ensureVaultFolderPath(this.app, this.settings.imageFolder);
@@ -1036,7 +1036,7 @@ export default class MediaDbPlugin extends Plugin {
 		let folderPath = this.mediaTypeManager.mediaFolderMap.get(mediaTypeModel.getMediaType()) ?? '/';
 		folderPath = this.mediaTypeManager.expandFolderPathForModel(folderPath, mediaTypeModel);
 		let fileName = this.mediaTypeManager.getFileName(mediaTypeModel);
-		fileName = replaceIllegalFileNameCharactersInString(fileName);
+		fileName = sanitizeFileName(fileName);
 		const dir = folderPath.replace(/^\/+|\/+$/g, '');
 		const relative = dir.length > 0 ? `${dir}/${fileName}.md` : `${fileName}.md`;
 		return normalizePath(relative);
@@ -1188,7 +1188,7 @@ export default class MediaDbPlugin extends Plugin {
 			throw new Error('[Media DB] invalid folder');
 		}
 
-		fileName = replaceIllegalFileNameCharactersInString(fileName);
+		fileName = sanitizeFileName(fileName);
 		const filePath = `${folder.path}/${fileName}.md`;
 
 		// look if file already exists and ask if it should be overwritten

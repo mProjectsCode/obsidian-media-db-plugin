@@ -13,9 +13,8 @@ import { SeasonModel } from '../models/SeasonModel';
 import { SeriesModel } from '../models/SeriesModel';
 import { WikiModel } from '../models/WikiModel';
 import type { MediaDbPluginSettings } from '../settings/Settings';
-import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
 import { MediaType } from './MediaType';
-import { ensureVaultFolderPath, replaceIllegalFileNameCharactersInString, replaceTags } from './Utils';
+import { ensureVaultFolderPath, replaceTags, sanitizeFileName } from './Utils';
 
 // All media types in alphabetical order
 export const MEDIA_TYPES: MediaType[] = [
@@ -89,13 +88,7 @@ export class MediaTypeManager {
 	getFileName(mediaTypeModel: MediaTypeModel): string {
 		// Ignore undefined tags since some search APIs do not return all properties in the model and produce clean file names even if errors occur
 		const fileName = replaceTags(this.mediaFileNameTemplateMap.get(mediaTypeModel.getMediaType())!, mediaTypeModel, true);
-		return this.cleanFileName(fileName);
-	}
-
-	cleanFileName(fileName: string): string {
-		const cleanedFileName = ILLEGAL_FILENAME_CHARACTERS.reduce((str, char) => str.replaceAll(char[0], char[1]), fileName);
-		// Remove all duplicate whitespace in the file name
-		return cleanedFileName.replaceAll(/ +/g, ' ');
+		return sanitizeFileName(fileName);
 	}
 
 	/** Expands {{ tags }} in a folder path and sanitizes each segment for vault paths. */
@@ -103,7 +96,7 @@ export class MediaTypeManager {
 		const expanded = replaceTags(folderPath, mediaTypeModel, true);
 		const segments = expanded
 			.split(/[/\\]+/)
-			.map(seg => this.cleanFileName(replaceIllegalFileNameCharactersInString(seg).trim()).trim())
+			.map(seg => sanitizeFileName(seg).trim())
 			.filter(seg => seg.length > 0);
 		if (segments.length === 0) {
 			return '/';

@@ -56,15 +56,8 @@ export function omitEmptyMetadataFields(meta: Record<string, unknown>): Record<s
 	return out;
 }
 
-export function replaceIllegalFileNameCharactersInString(string: string): string {
-	return string
-		.replaceAll('&', 'and')
-		.replace(/[\\,#%{}/*<>$"@.?]*/g, '')
-		.replace(/:+/g, ' -');
-}
-
 export function replaceTags(template: string, mediaTypeModel: MediaTypeModel, ignoreUndefined: boolean = false): string {
-	return template.replace(new RegExp('{{.*?}}', 'g'), (match: string) => replaceTag(match, mediaTypeModel, ignoreUndefined));
+	return template.replace(new RegExp('{{.*?}}', 'g'), (match: string) => sanitizeFileName(replaceTag(match, mediaTypeModel, ignoreUndefined)));
 }
 
 function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefined: boolean): string {
@@ -481,4 +474,26 @@ export function getLanguageName(code: string): string | null {
 	const language = iso6392.find(lang => lang.iso6392B === code || lang.iso6392T === code);
 
 	return language?.name ?? null;
+}
+
+const ILLEGAL_FILENAME_CHARACTERS = [
+	['/', ''],
+	['\\', ''],
+	['<', ''],
+	['>', ''],
+	[': ', ' - '],
+	[':', '-'],
+	['"', "'"],
+	['|', ' - '],
+	['?', ''],
+	['*', ''],
+	['^', ''],
+	['#', ''],
+	['&', 'and'],
+];
+
+export function sanitizeFileName(fileName: string): string {
+	const cleanedFileName = ILLEGAL_FILENAME_CHARACTERS.reduce((str, char) => str.replaceAll(char[0], char[1]), fileName);
+	// Remove all duplicate whitespace in the file name
+	return cleanedFileName.replaceAll(/ +/g, ' ');
 }
