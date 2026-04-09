@@ -146,6 +146,12 @@ export class SpotifyClient {
 
 		const data = res.json as SpotifySearchResponse;
 		const link = data.tracks?.items?.[0]?.external_urls?.spotify;
-		return typeof link === 'string' ? link : '';
+		if (typeof link === 'string' && link) {
+			return link;
+		}
+		console.warn(
+			`Spotify search returned no results for "${trackTitle}"${artistName.trim() ? ` — ${artistName.trim()}` : ''}`,
+		);
+		return '';
 	}
 }

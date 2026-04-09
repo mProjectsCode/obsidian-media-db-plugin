@@ -35,34 +35,17 @@ interface Release {
 	'status-id': string;
 	title: string;
 	status: string;
+	/** ISO 3166-1 alpha-2; MusicBrainz uses `XW` for [Worldwide]. */
+	country?: string | null;
 	media?: ReleaseMedium[];
 }
 
-/**
- * Among non-bootleg releases, consider only those with exactly one medium (single-disc / single-sided editions),
- * then pick the one with the highest track count on that medium. If none have a single medium, returns the first
- * non-bootleg release.
- */
-function pickNonBootlegReleaseWithMostTracks(releases: Release[] | undefined): Release | undefined {
-	const nonBootleg = releases?.filter(r => r.status !== 'Bootleg') ?? [];
-	if (nonBootleg.length === 0) {
+function pickFirstOfficialRelease(releases: Release[] | undefined): Release | undefined {
+	const official = releases?.filter(r => r.status === 'Official') ?? [];
+	if (official.length === 0) {
 		return undefined;
 	}
-	const singleMedium = nonBootleg.filter(r => r.media?.length === 1);
-	if (singleMedium.length === 0) {
-		return nonBootleg[0];
-	}
-	let best = singleMedium[0];
-	let bestCount = best.media![0]['track-count'] ?? 0;
-	for (let i = 1; i < singleMedium.length; i++) {
-		const r = singleMedium[i];
-		const count = r.media![0]['track-count'] ?? 0;
-		if (count > bestCount) {
-			best = r;
-			bestCount = count;
-		}
-	}
-	return best;
+	return official.find(r => !r.title.includes('[')) ?? official[0];
 }
 
 interface ArtistCredit {
@@ -295,7 +278,7 @@ export class MusicBrainzAPI extends APIModel {
 		verboseLog(`api "${this.apiName}" queried by ID`);
 
 		// Fetch release group
-		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+media+artists+tags+ratings+genres&fmt=json`;
+		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
 		const groupResponse = await requestUrlRateLimited(
 			{
 				url: groupUrl,
@@ -315,12 +298,12 @@ export class MusicBrainzAPI extends APIModel {
 
 		const result = (await groupResponse.json) as IdResponse;
 
-		const chosenRelease = pickNonBootlegReleaseWithMostTracks(result.releases);
+		const chosenRelease = pickFirstOfficialRelease(result.releases);
 		if (!chosenRelease) {
 			throw Error('[Media DB] No non-bootleg release found in release group.');
 		}
 
-		// Fetch recordings for the chosen release (single-medium non-bootleg with the most tracks when MB lists several)
+		// Fetch recordings for the chosen release (first non-bootleg worldwide, else first non-bootleg)
 		const releaseUrl = `https://musicbrainz.org/ws/2/release/${chosenRelease.id}?inc=recordings+artists&fmt=json`;
 		verboseLog(`Fetching release recordings from: ${releaseUrl}`);
 
