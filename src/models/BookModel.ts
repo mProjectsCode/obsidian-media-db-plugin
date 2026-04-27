@@ -8,6 +8,7 @@ export type BookData = ModelToData<BookModel>;
 export class BookModel extends MediaTypeModel {
 	author: string;
 	plot: string;
+	genres: string[];
 	pages: number;
 	image: string;
 	onlineRating: number;
@@ -27,6 +28,7 @@ export class BookModel extends MediaTypeModel {
 
 		this.author = '';
 		this.plot = '';
+		this.genres= [];
 		this.pages = 0;
 		this.image = '';
 		this.onlineRating = 0;
