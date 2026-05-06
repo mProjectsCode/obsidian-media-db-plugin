@@ -1,17 +1,25 @@
 // @ts-check
 
 import eslint from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import only_warn from 'eslint-plugin-only-warn';
-import * as plugin_import from 'eslint-plugin-import';
+import no_relative_import_paths from 'eslint-plugin-no-relative-import-paths';
+import obsidianmd from 'eslint-plugin-obsidianmd';
 
-export default tseslint.config(
+export default defineConfig(
 	{
-		ignores: ['npm/', 'node_modules/', 'exampleVault/', 'automation/', 'main.js', '*.css', 'src/api/schemas/'],
+		ignores: ['npm/', 'node_modules/', 'exampleVault/', 'automation/', 'main.js', '*.css'],
 	},
 	{
-		files: ['src/**/*.ts'],
-		extends: [eslint.configs.recommended, ...tseslint.configs.recommended, ...tseslint.configs.recommendedTypeChecked, ...tseslint.configs.stylisticTypeChecked],
+		files: ['packages/obsidian/src/**/*.ts'],
+		extends: [
+			eslint.configs.recommended,
+			...tseslint.configs.recommended,
+			...tseslint.configs.recommendedTypeChecked,
+			...tseslint.configs.stylisticTypeChecked,
+			...obsidianmd.configs.recommended,
+		],
 		languageOptions: {
 			parser: tseslint.parser,
 			parserOptions: {
@@ -21,7 +29,8 @@ export default tseslint.config(
 		plugins: {
 			// @ts-ignore
 			'only-warn': only_warn,
-			import: plugin_import,
+			'no-relative-import-paths': no_relative_import_paths,
+			obsidianmd: obsidianmd,
 		},
 		rules: {
 			'@typescript-eslint/no-explicit-any': ['warn'],
@@ -44,11 +53,15 @@ export default tseslint.config(
 			'@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
 			'@typescript-eslint/restrict-template-expressions': 'off',
 
+			'no-relative-import-paths/no-relative-import-paths': ['warn', { allowSameFolder: false }],
+
 			'@typescript-eslint/ban-ts-comment': 'off',
 			'@typescript-eslint/no-empty-function': 'off',
 			'@typescript-eslint/no-inferrable-types': 'off',
 			'@typescript-eslint/explicit-function-return-type': ['warn'],
-			'@typescript-eslint/require-await': 'off',
+			'@typescript-eslint/no-deprecated': 'off',
+
+			'obsidianmd/ui/sentence-case': 'off',
 		},
 	},
 );
