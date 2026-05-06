@@ -1,7 +1,12 @@
 {
 	"compilerOptions": {
+		"paths": {
+			"packages/*": ["./packages/*"],
+			"tests/*": ["./tests/*"]
+		},
 		"module": "ESNext",
-		"target": "ESNext",
+		"target": "ES2022",
+		"noEmit": true,
 		"allowJs": true,
 		"checkJs": true,
 		"noImplicitAny": true,
@@ -22,5 +27,5 @@
 		"jsxImportSource": "solid-js",
 		"types": ["vite/client"]
 	},
-	"include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"]
+	"include": ["packages/obsidian/**/*.ts", "packages/obsidian/**/*.tsx"]
 }
