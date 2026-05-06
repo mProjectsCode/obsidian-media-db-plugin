@@ -3,9 +3,9 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { MusicReleaseModel } from 'packages/obsidian/src/models/MusicReleaseModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind, toAppError } from 'packages/obsidian/src/utils/AppError';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
@@ -108,7 +108,7 @@ export class MusicBrainzAPI extends APIModel {
 		this.types = [MediaType.MusicRelease];
 	}
 
-	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], AppError>> {
+	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		const searchUrl = `https://musicbrainz.org/ws/2/release-group?query=${encodeURIComponent(title)}&limit=20&fmt=json`;
@@ -121,8 +121,8 @@ export class MusicBrainzAPI extends APIModel {
 				},
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, title },
@@ -137,7 +137,7 @@ export class MusicBrainzAPI extends APIModel {
 
 		if (fetchData.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${fetchData.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${fetchData.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: fetchData.status },
@@ -172,7 +172,7 @@ export class MusicBrainzAPI extends APIModel {
 		return ok(ret);
 	}
 
-	async getById(id: string): Promise<Result<MediaTypeModel, AppError>> {
+	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		// Fetch release group
@@ -185,8 +185,8 @@ export class MusicBrainzAPI extends APIModel {
 				},
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, id },
@@ -199,7 +199,7 @@ export class MusicBrainzAPI extends APIModel {
 
 		if (groupResponse.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${groupResponse.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${groupResponse.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: groupResponse.status, id },
@@ -212,7 +212,7 @@ export class MusicBrainzAPI extends APIModel {
 		const firstRelease = result.releases?.[0];
 		if (!firstRelease) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: 'MDB | No releases found in release group.',
 				userMessage: 'No releases found in release group.',
 				context: { apiName: this.apiName, id },
@@ -231,8 +231,8 @@ export class MusicBrainzAPI extends APIModel {
 				},
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, id, releaseId: firstRelease.id },
@@ -245,7 +245,7 @@ export class MusicBrainzAPI extends APIModel {
 
 		if (releaseResponse.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${releaseResponse.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${releaseResponse.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: releaseResponse.status, id, releaseId: firstRelease.id },

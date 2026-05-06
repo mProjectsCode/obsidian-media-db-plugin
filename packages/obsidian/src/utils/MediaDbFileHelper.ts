@@ -4,9 +4,9 @@ import { Notice, normalizePath, parseYaml, requestUrl, stringifyYaml } from 'obs
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { ConfirmOverwriteModal } from 'packages/obsidian/src/modals/ConfirmOverwriteModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind, toAppError } from 'packages/obsidian/src/utils/AppError';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import type { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, ok } from 'packages/obsidian/src/utils/result';
@@ -29,7 +29,7 @@ export class MediaDbFileHelper {
 		this.plugin = plugin;
 	}
 
-	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<Result<void, AppError>> {
+	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<Result<void, MDBError>> {
 		const results = await Promise.all(models.map(model => this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile })));
 
 		const failures = results.filter(result => !result.ok);
@@ -45,7 +45,7 @@ export class MediaDbFileHelper {
 		return ok(undefined);
 	}
 
-	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<Result<void, AppError>> {
+	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<Result<void, MDBError>> {
 		Logger.debug('MDB | creating new note');
 
 		options.openNote = this.plugin.settings.openNoteInNewTab;
@@ -58,7 +58,7 @@ export class MediaDbFileHelper {
 		}
 
 		const fileContentResult = await this.attempt(() => this.generateMediaDbNoteContents(mediaTypeModel, options), {
-			kind: AppErrorKind.Unexpected,
+			kind: MDBErrorKind.Unexpected,
 			message: 'Failed to generate note contents',
 			userMessage: 'Failed to generate note contents',
 		});
@@ -67,7 +67,7 @@ export class MediaDbFileHelper {
 		}
 
 		const folderResult = await this.attempt(() => this.plugin.mediaTypeManager.getFolder(mediaTypeModel, this.plugin.app), {
-			kind: AppErrorKind.Vault,
+			kind: MDBErrorKind.Vault,
 			message: 'Failed to determine note folder',
 			userMessage: 'Failed to determine note folder',
 		});
@@ -84,7 +84,7 @@ export class MediaDbFileHelper {
 
 		if (this.plugin.settings.enableTemplaterIntegration) {
 			const templaterResult = await this.attempt(() => useTemplaterPluginInFile(this.plugin.app, targetFileResult.value), {
-				kind: AppErrorKind.Unexpected,
+				kind: MDBErrorKind.Unexpected,
 				message: 'Failed to apply templater to the note',
 				userMessage: 'Failed to apply templater to the note',
 			});
@@ -240,11 +240,11 @@ export class MediaDbFileHelper {
 		return structuredClone(metadata ?? {});
 	}
 
-	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions): Promise<Result<TFile, AppError>> {
+	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions): Promise<Result<TFile, MDBError>> {
 		const folder = options.folder ?? this.plugin.app.vault.getAbstractFileByPath('/');
 
 		if (!folder || !(folder instanceof TFolder)) {
-			return err({ kind: AppErrorKind.Validation, message: 'MDB | invalid folder', userMessage: 'MDB | invalid folder' });
+			return err({ kind: MDBErrorKind.Validation, message: 'MDB | invalid folder', userMessage: 'MDB | invalid folder' });
 		}
 
 		fileName = replaceIllegalFileNameCharactersInString(fileName);
@@ -257,7 +257,7 @@ export class MediaDbFileHelper {
 			});
 
 			if (!shouldOverwrite) {
-				return err({ kind: AppErrorKind.Cancelled, message: 'MDB | file creation cancelled by user', userMessage: 'MDB | file creation cancelled by user' });
+				return err({ kind: MDBErrorKind.Cancelled, message: 'MDB | file creation cancelled by user', userMessage: 'MDB | file creation cancelled by user' });
 			}
 
 			await this.plugin.app.fileManager.trashFile(file);
@@ -278,7 +278,7 @@ export class MediaDbFileHelper {
 		return ok(targetFile);
 	}
 
-	private async downloadImageForMediaModel(mediaTypeModel: MediaTypeModel): Promise<Result<void, AppError>> {
+	private async downloadImageForMediaModel(mediaTypeModel: MediaTypeModel): Promise<Result<void, MDBError>> {
 		if (mediaTypeModel.image && typeof mediaTypeModel.image === 'string' && mediaTypeModel.image.startsWith('http')) {
 			const imageUrl = mediaTypeModel.image;
 			const imageResult = await this.attempt(
@@ -299,7 +299,7 @@ export class MediaDbFileHelper {
 					mediaTypeModel.image = `[[${imagePath}]]`;
 				},
 				{
-					kind: AppErrorKind.Network,
+					kind: MDBErrorKind.Network,
 					message: 'MDB | Failed to download image',
 					userMessage: 'Failed to download image',
 				},
@@ -314,12 +314,12 @@ export class MediaDbFileHelper {
 		return ok(undefined);
 	}
 
-	private async attempt<T>(operation: () => Promise<T> | T, fallback: Omit<AppError, 'cause'>): Promise<Result<T, AppError>> {
+	private async attempt<T>(operation: () => Promise<T> | T, fallback: Omit<MDBError, 'cause'>): Promise<Result<T, MDBError>> {
 		return await Promise.resolve()
 			.then(operation)
 			.then(
 				value => ok(value),
-				cause => err(toAppError(cause, fallback)),
+				cause => err(toMdbError(cause, fallback)),
 			);
 	}
 }

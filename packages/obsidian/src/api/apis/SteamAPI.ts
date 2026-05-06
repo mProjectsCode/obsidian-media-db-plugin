@@ -3,9 +3,9 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { GameModel } from 'packages/obsidian/src/models/GameModel';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind, toAppError } from 'packages/obsidian/src/utils/AppError';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
@@ -148,7 +148,7 @@ export class SteamAPI extends APIModel {
 		this.typeMappings.set('game', 'game');
 	}
 
-	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], AppError>> {
+	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		const searchUrl = `https://steamcommunity.com/actions/SearchApps/${encodeURIComponent(title)}`;
@@ -157,8 +157,8 @@ export class SteamAPI extends APIModel {
 				url: searchUrl,
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, title },
@@ -171,7 +171,7 @@ export class SteamAPI extends APIModel {
 
 		if (fetchData.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${fetchData.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${fetchData.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: fetchData.status },
@@ -200,7 +200,7 @@ export class SteamAPI extends APIModel {
 		return ok(ret);
 	}
 
-	async getById(id: string): Promise<Result<MediaTypeModel, AppError>> {
+	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const searchUrl = `https://store.steampowered.com/api/appdetails?appids=${encodeURIComponent(id)}&l=en`;
@@ -209,8 +209,8 @@ export class SteamAPI extends APIModel {
 				url: searchUrl,
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, id },
@@ -223,7 +223,7 @@ export class SteamAPI extends APIModel {
 
 		if (fetchData.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${fetchData.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${fetchData.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: fetchData.status, id },
@@ -242,7 +242,7 @@ export class SteamAPI extends APIModel {
 		}
 		if (!result) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: 'MDB | API returned invalid data.',
 				userMessage: 'Steam returned invalid data.',
 				context: { apiName: this.apiName, id },
@@ -254,8 +254,8 @@ export class SteamAPI extends APIModel {
 		// Check if a poster version of the image exists, else use the header image
 		const imageUrl = `https://steamcdn-a.akamaihd.net/steam/apps/${result.steam_appid}/library_600x900_2x.jpg`;
 		const existsResult = await fromPromise(imageUrlExists(imageUrl), cause =>
-			toAppError(cause, {
-				kind: AppErrorKind.Network,
+			toMdbError(cause, {
+				kind: MDBErrorKind.Network,
 				message: `MDB | Failed to validate image URL for ${this.apiName}`,
 				userMessage: `Failed to validate image URL for ${this.apiName}`,
 				context: { apiName: this.apiName, id, imageUrl },

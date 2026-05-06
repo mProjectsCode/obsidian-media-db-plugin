@@ -3,9 +3,9 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { BookModel } from 'packages/obsidian/src/models/BookModel';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind, toAppError } from 'packages/obsidian/src/utils/AppError';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
@@ -48,7 +48,7 @@ export class OpenLibraryAPI extends APIModel {
 		this.types = [MediaType.Book];
 	}
 
-	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], AppError>> {
+	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		const client = createClient<paths>({ baseUrl: 'https://openlibrary.org/' });
@@ -63,8 +63,8 @@ export class OpenLibraryAPI extends APIModel {
 				fetch: obsidianFetch,
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, title },
@@ -78,7 +78,7 @@ export class OpenLibraryAPI extends APIModel {
 
 		if (response.error !== undefined) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${response.response.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${response.response.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: response.response.status },
@@ -109,7 +109,7 @@ export class OpenLibraryAPI extends APIModel {
 		return ok(ret);
 	}
 
-	async getById(id: string): Promise<Result<MediaTypeModel, AppError>> {
+	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const client = createClient<paths>({ baseUrl: 'https://openlibrary.org/' });
@@ -125,8 +125,8 @@ export class OpenLibraryAPI extends APIModel {
 				fetch: obsidianFetch,
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, id },
@@ -140,7 +140,7 @@ export class OpenLibraryAPI extends APIModel {
 
 		if (response.error !== undefined) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${response.response.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${response.response.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: response.response.status, id },
@@ -155,7 +155,7 @@ export class OpenLibraryAPI extends APIModel {
 		const result = data.docs?.[0];
 		if (!result) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | No data found for ID ${id} in ${this.apiName}.`,
 				userMessage: `No data found for ID ${id}.`,
 				context: { apiName: this.apiName, id },

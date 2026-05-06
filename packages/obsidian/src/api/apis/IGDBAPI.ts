@@ -3,9 +3,9 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { GameModel } from 'packages/obsidian/src/models/GameModel';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind, toAppError } from 'packages/obsidian/src/utils/AppError';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
@@ -60,7 +60,7 @@ export class IGDBAPI extends APIModel {
 		this.types = [MediaType.Game];
 	}
 
-	private async getAuthToken(): Promise<Result<string, AppError>> {
+	private async getAuthToken(): Promise<Result<string, MDBError>> {
 		const currentTime = Date.now();
 		if (this.accessToken && currentTime < this.tokenExpiry) return ok(this.accessToken);
 
@@ -69,7 +69,7 @@ export class IGDBAPI extends APIModel {
 
 		if (!clientId || !clientSecret) {
 			return err({
-				kind: AppErrorKind.Validation,
+				kind: MDBErrorKind.Validation,
 				message: `MDB | Client ID or Client Secret for ${this.apiName} missing.`,
 				userMessage: `Client ID or Client Secret for ${this.apiName} missing.`,
 				context: { apiName: this.apiName },
@@ -82,8 +82,8 @@ export class IGDBAPI extends APIModel {
 				method: 'POST',
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying Twitch auth for ${this.apiName}`,
 					userMessage: `Network error querying Twitch auth for ${this.apiName}`,
 					context: { apiName: this.apiName },
@@ -96,7 +96,7 @@ export class IGDBAPI extends APIModel {
 		const response = responseResult.value;
 		if (response.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Auth failed for ${this.apiName}. Check Credentials.`,
 				userMessage: `Auth failed for ${this.apiName}. Check Credentials.`,
 				context: { apiName: this.apiName, status: response.status },
@@ -109,12 +109,12 @@ export class IGDBAPI extends APIModel {
 		return ok(this.accessToken);
 	}
 
-	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], AppError>> {
+	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 		const clientId = this.plugin.app.secretStorage.getSecret(this.plugin.settings.IGDBClientId);
 		if (!clientId) {
 			return err({
-				kind: AppErrorKind.Validation,
+				kind: MDBErrorKind.Validation,
 				message: `MDB | Client ID for ${this.apiName} missing.`,
 				userMessage: `Client ID for ${this.apiName} missing.`,
 				context: { apiName: this.apiName },
@@ -134,8 +134,8 @@ export class IGDBAPI extends APIModel {
 				body: queryBody,
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, title },
@@ -147,7 +147,7 @@ export class IGDBAPI extends APIModel {
 		const response = responseResult.value;
 		if (response.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${response.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${response.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: response.status },
@@ -172,12 +172,12 @@ export class IGDBAPI extends APIModel {
 		);
 	}
 
-	async getById(id: string): Promise<Result<MediaTypeModel, AppError>> {
+	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 		const clientId = this.plugin.app.secretStorage.getSecret(this.plugin.settings.IGDBClientId);
 		if (!clientId) {
 			return err({
-				kind: AppErrorKind.Validation,
+				kind: MDBErrorKind.Validation,
 				message: `MDB | Client ID for ${this.apiName} missing.`,
 				userMessage: `Client ID for ${this.apiName} missing.`,
 				context: { apiName: this.apiName, id },
@@ -197,8 +197,8 @@ export class IGDBAPI extends APIModel {
 				body: queryBody,
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, id },
@@ -210,7 +210,7 @@ export class IGDBAPI extends APIModel {
 		const response = responseResult.value;
 		if (response.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${response.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${response.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: response.status, id },
@@ -220,7 +220,7 @@ export class IGDBAPI extends APIModel {
 		const data = response.json as IGDBGame[];
 		if (!data || data.length === 0) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | No result found for ID ${id}`,
 				userMessage: `No result found for ID ${id}`,
 				context: { apiName: this.apiName, id },
