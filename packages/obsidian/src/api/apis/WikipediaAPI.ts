@@ -3,9 +3,9 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { WikiModel } from 'packages/obsidian/src/models/WikiModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind, toAppError } from 'packages/obsidian/src/utils/AppError';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
@@ -53,7 +53,7 @@ export class WikipediaAPI extends APIModel {
 		this.types = [MediaType.Wiki];
 	}
 
-	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], AppError>> {
+	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&srlimit=20&utf8=&format=json&origin=*`;
@@ -66,7 +66,7 @@ export class WikipediaAPI extends APIModel {
 
 		if (fetchData.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${fetchData.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${fetchData.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: fetchData.status },
@@ -75,8 +75,8 @@ export class WikipediaAPI extends APIModel {
 
 		const response = fetchData as { status: number; json(): Promise<unknown> };
 		const dataResult = await fromPromise(response.json(), cause =>
-			toAppError(cause, {
-				kind: AppErrorKind.Network,
+			toMdbError(cause, {
+				kind: MDBErrorKind.Network,
 				message: `MDB | Failed to parse response from ${this.apiName}`,
 				userMessage: `Failed to parse response from ${this.apiName}`,
 				context: { apiName: this.apiName },
@@ -105,7 +105,7 @@ export class WikipediaAPI extends APIModel {
 		return ok(ret);
 	}
 
-	async getById(id: string): Promise<Result<MediaTypeModel, AppError>> {
+	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=info&pageids=${encodeURIComponent(id)}&inprop=url&format=json&origin=*`;
@@ -117,7 +117,7 @@ export class WikipediaAPI extends APIModel {
 
 		if (fetchData.status !== 200) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${fetchData.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${fetchData.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: fetchData.status, id },
@@ -126,8 +126,8 @@ export class WikipediaAPI extends APIModel {
 
 		const response = fetchData as { status: number; json(): Promise<unknown> };
 		const dataResult = await fromPromise(response.json(), cause =>
-			toAppError(cause, {
-				kind: AppErrorKind.Network,
+			toMdbError(cause, {
+				kind: MDBErrorKind.Network,
 				message: `MDB | Failed to parse response from ${this.apiName}`,
 				userMessage: `Failed to parse response from ${this.apiName}`,
 				context: { apiName: this.apiName, id },
@@ -141,7 +141,7 @@ export class WikipediaAPI extends APIModel {
 		const result = Object.values(data?.query?.pages)[0];
 		if (!result) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | No data received from ${this.apiName}.`,
 				userMessage: `No data received from ${this.apiName}.`,
 				context: { apiName: this.apiName, id },

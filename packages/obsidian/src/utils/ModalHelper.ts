@@ -5,8 +5,8 @@ import { MediaDbPreviewModal } from 'packages/obsidian/src/modals/MediaDbPreview
 import { MediaDbSearchModal } from 'packages/obsidian/src/modals/MediaDbSearchModal';
 import { MediaDbSearchResultModal } from 'packages/obsidian/src/modals/MediaDbSearchResultModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind, toAppError } from 'packages/obsidian/src/utils/AppError';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import type { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Outcome } from 'packages/obsidian/src/utils/result';
 import { cancelled, failure, OutcomeStatus, skipped, success } from 'packages/obsidian/src/utils/result';
@@ -106,7 +106,7 @@ export const SELECTMODALOPTIONSDEFAULT: SelectModalOptions = {
 };
 
 interface ModalCoreResult<T, TModal> {
-	modalResult: Outcome<T, AppError>;
+	modalResult: Outcome<T, MDBError>;
 	modal: TModal;
 }
 
@@ -119,10 +119,10 @@ export class ModalHelper {
 
 	private async openModalCore<TData, TModal extends { open(): void; close(): void }>(
 		createModal: () => TModal,
-		wireHandlers: (modal: TModal, resolve: (result: Outcome<TData, AppError>) => void) => void,
+		wireHandlers: (modal: TModal, resolve: (result: Outcome<TData, MDBError>) => void) => void,
 	): Promise<ModalCoreResult<TData, TModal>> {
 		const modal = createModal();
-		const modalResult = await new Promise<Outcome<TData, AppError>>(resolve => {
+		const modalResult = await new Promise<Outcome<TData, MDBError>>(resolve => {
 			wireHandlers(modal, resolve);
 			modal.open();
 		});
@@ -130,7 +130,7 @@ export class ModalHelper {
 		return { modalResult, modal };
 	}
 
-	private async resolveOutcome<T>(outcomePromise: Promise<Outcome<T, AppError>>): Promise<T | undefined> {
+	private async resolveOutcome<T>(outcomePromise: Promise<Outcome<T, MDBError>>): Promise<T | undefined> {
 		const outcome = await outcomePromise;
 
 		if (outcome.status === OutcomeStatus.Ok) {
@@ -144,14 +144,14 @@ export class ModalHelper {
 		return undefined;
 	}
 
-	async createSearchModalOutcome(searchModalOptions: SearchModalOptions): Promise<Outcome<SearchModalData, AppError>> {
+	async createSearchModalOutcome(searchModalOptions: SearchModalOptions): Promise<Outcome<SearchModalData, MDBError>> {
 		const { modalResult, modal } = await this.openModalCore<SearchModalData, MediaDbSearchModal>(
 			() => new MediaDbSearchModal(this.plugin, searchModalOptions),
 			(modal, resolve) => {
 				modal.setSubmitCb(res => resolve(success(res)));
 				modal.setCloseCb(err => {
 					if (err) {
-						resolve(failure(toAppError(err, { kind: AppErrorKind.Modal, message: 'Search modal closed with an error' })));
+						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Search modal closed with an error' })));
 						return;
 					}
 
@@ -171,14 +171,14 @@ export class ModalHelper {
 		return await this.resolveOutcome(this.createSearchModalOutcome(searchModalOptions));
 	}
 
-	async createAdvancedSearchModalOutcome(advancedSearchModalOptions: AdvancedSearchModalOptions): Promise<Outcome<AdvancedSearchModalData, AppError>> {
+	async createAdvancedSearchModalOutcome(advancedSearchModalOptions: AdvancedSearchModalOptions): Promise<Outcome<AdvancedSearchModalData, MDBError>> {
 		const { modalResult, modal } = await this.openModalCore<AdvancedSearchModalData, MediaDbAdvancedSearchModal>(
 			() => new MediaDbAdvancedSearchModal(this.plugin, advancedSearchModalOptions),
 			(modal, resolve) => {
 				modal.setSubmitCb(res => resolve(success(res)));
 				modal.setCloseCb(err => {
 					if (err) {
-						resolve(failure(toAppError(err, { kind: AppErrorKind.Modal, message: 'Advanced search modal closed with an error' })));
+						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Advanced search modal closed with an error' })));
 						return;
 					}
 
@@ -198,14 +198,14 @@ export class ModalHelper {
 		return await this.resolveOutcome(this.createAdvancedSearchModalOutcome(advancedSearchModalOptions));
 	}
 
-	async createIdSearchModalOutcome(idSearchModalOptions: IdSearchModalOptions): Promise<Outcome<IdSearchModalData, AppError>> {
+	async createIdSearchModalOutcome(idSearchModalOptions: IdSearchModalOptions): Promise<Outcome<IdSearchModalData, MDBError>> {
 		const { modalResult, modal } = await this.openModalCore<IdSearchModalData, MediaDbIdSearchModal>(
 			() => new MediaDbIdSearchModal(this.plugin, idSearchModalOptions),
 			(modal, resolve) => {
 				modal.setSubmitCb(res => resolve(success(res)));
 				modal.setCloseCb(err => {
 					if (err) {
-						resolve(failure(toAppError(err, { kind: AppErrorKind.Modal, message: 'Id search modal closed with an error' })));
+						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Id search modal closed with an error' })));
 						return;
 					}
 
@@ -225,7 +225,7 @@ export class ModalHelper {
 		return await this.resolveOutcome(this.createIdSearchModalOutcome(idSearchModalOptions));
 	}
 
-	async createSelectModalOutcome(selectModalOptions: SelectModalOptions): Promise<Outcome<SelectModalData, AppError>> {
+	async createSelectModalOutcome(selectModalOptions: SelectModalOptions): Promise<Outcome<SelectModalData, MDBError>> {
 		const { modalResult, modal } = await this.openModalCore<SelectModalData, MediaDbSearchResultModal>(
 			() => new MediaDbSearchResultModal(this.plugin, selectModalOptions),
 			(modal, resolve) => {
@@ -233,7 +233,7 @@ export class ModalHelper {
 				modal.setSkipCallback(() => resolve(skipped()));
 				modal.setCloseCb(err => {
 					if (err) {
-						resolve(failure(toAppError(err, { kind: AppErrorKind.Modal, message: 'Select modal closed with an error' })));
+						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Select modal closed with an error' })));
 						return;
 					}
 
@@ -253,14 +253,14 @@ export class ModalHelper {
 		return await this.resolveOutcome(this.createSelectModalOutcome(selectModalOptions));
 	}
 
-	async createPreviewModalOutcome(previewModalOptions: PreviewModalOptions): Promise<Outcome<PreviewModalData, AppError>> {
+	async createPreviewModalOutcome(previewModalOptions: PreviewModalOptions): Promise<Outcome<PreviewModalData, MDBError>> {
 		const { modalResult, modal } = await this.openModalCore<PreviewModalData, MediaDbPreviewModal>(
 			() => new MediaDbPreviewModal(this.plugin, previewModalOptions),
 			(modal, resolve) => {
 				modal.setSubmitCb(res => resolve(success(res)));
 				modal.setCloseCb(err => {
 					if (err) {
-						resolve(failure(toAppError(err, { kind: AppErrorKind.Modal, message: 'Preview modal closed with an error' })));
+						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Preview modal closed with an error' })));
 						return;
 					}
 

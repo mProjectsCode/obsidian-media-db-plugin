@@ -1,14 +1,14 @@
 import type { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind, toAppError } from 'packages/obsidian/src/utils/AppError';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, ok } from 'packages/obsidian/src/utils/result';
 
 export interface ApiQueryOk {
 	items: MediaTypeModel[];
-	warnings: AppError[];
+	warnings: MDBError[];
 }
 
 export class APIManager {
@@ -24,14 +24,14 @@ export class APIManager {
 	 * @param query
 	 * @param apisToQuery
 	 */
-	async query(query: string, apisToQuery: string[]): Promise<Result<ApiQueryOk, AppError>> {
+	async query(query: string, apisToQuery: string[]): Promise<Result<ApiQueryOk, MDBError>> {
 		Logger.debug(`MDB | api manager queried with "${query}"`);
 
 		const apis = this.apis.filter(api => apisToQuery.includes(api.apiName));
 		const results = await Promise.all(apis.map(api => api.searchByTitle(query)));
 
 		const items: MediaTypeModel[] = [];
-		const warnings: AppError[] = [];
+		const warnings: MDBError[] = [];
 		for (const result of results) {
 			if (result.ok) {
 				items.push(...result.value);
@@ -43,8 +43,8 @@ export class APIManager {
 		if (items.length === 0 && warnings.length > 0) {
 			// If all APIs failed, surface an error (using the first as representative)
 			return err(
-				toAppError(warnings[0], {
-					kind: AppErrorKind.Api,
+				toMdbError(warnings[0], {
+					kind: MDBErrorKind.Api,
 					message: 'Failed to query APIs',
 					userMessage: 'Failed to query APIs',
 					context: { query, apisToQuery },
@@ -64,7 +64,7 @@ export class APIManager {
 	 *
 	 * @param item
 	 */
-	async queryDetailedInfo(item: MediaTypeModel): Promise<Result<MediaTypeModel | undefined, AppError>> {
+	async queryDetailedInfo(item: MediaTypeModel): Promise<Result<MediaTypeModel | undefined, MDBError>> {
 		return await this.queryDetailedInfoById(item.id, item.dataSource);
 	}
 
@@ -74,7 +74,7 @@ export class APIManager {
 	 * @param id
 	 * @param apiName
 	 */
-	async queryDetailedInfoById(id: string, apiName: string): Promise<Result<MediaTypeModel | undefined, AppError>> {
+	async queryDetailedInfoById(id: string, apiName: string): Promise<Result<MediaTypeModel | undefined, MDBError>> {
 		for (const api of this.apis) {
 			if (api.apiName === apiName) {
 				const result = await api.getById(id);
@@ -88,8 +88,8 @@ export class APIManager {
 		}
 
 		return err(
-			toAppError(new Error(`API not found: ${apiName}`), {
-				kind: AppErrorKind.Validation,
+			toMdbError(new Error(`API not found: ${apiName}`), {
+				kind: MDBErrorKind.Validation,
 				message: `API not found: ${apiName}`,
 				userMessage: `API not found: ${apiName}`,
 				context: { apiName, id },

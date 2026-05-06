@@ -3,9 +3,9 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { GameModel } from 'packages/obsidian/src/models/GameModel';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind, toAppError } from 'packages/obsidian/src/utils/AppError';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
@@ -110,7 +110,7 @@ export class VNDBAPI extends APIModel {
 	 * @returns A JSON object representing the query response.
 	 * @see {@link https://api.vndb.org/kana#api-structure}
 	 */
-	private async postQuery(endpoint: string, body: string): Promise<Result<unknown, AppError>> {
+	private async postQuery(endpoint: string, body: string): Promise<Result<unknown, MDBError>> {
 		const fetchDataResult = await fromPromise(
 			requestUrl({
 				url: `${this.apiUrl}${endpoint}`,
@@ -120,8 +120,8 @@ export class VNDBAPI extends APIModel {
 				throw: false,
 			}),
 			cause =>
-				toAppError(cause, {
-					kind: AppErrorKind.Network,
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
 					context: { apiName: this.apiName, endpoint },
@@ -136,42 +136,42 @@ export class VNDBAPI extends APIModel {
 			switch (fetchData.status) {
 				case 400:
 					return err({
-						kind: AppErrorKind.Validation,
+						kind: MDBErrorKind.Validation,
 						message: `MDB | Invalid request body or query [${fetchData.text}].`,
 						userMessage: 'Invalid VNDB request.',
 						context: { apiName: this.apiName, endpoint, status: fetchData.status },
 					});
 				case 404:
 					return err({
-						kind: AppErrorKind.Api,
+						kind: MDBErrorKind.Api,
 						message: 'MDB | Invalid API path or HTTP method.',
 						userMessage: 'VNDB endpoint not found.',
 						context: { apiName: this.apiName, endpoint, status: fetchData.status },
 					});
 				case 429:
 					return err({
-						kind: AppErrorKind.Api,
+						kind: MDBErrorKind.Api,
 						message: 'MDB | VNDB throttled the request.',
 						userMessage: 'VNDB throttled the request. Please try again later.',
 						context: { apiName: this.apiName, endpoint, status: fetchData.status },
 					});
 				case 500:
 					return err({
-						kind: AppErrorKind.Api,
+						kind: MDBErrorKind.Api,
 						message: 'MDB | VNDB server error.',
 						userMessage: 'VNDB server error.',
 						context: { apiName: this.apiName, endpoint, status: fetchData.status },
 					});
 				case 502:
 					return err({
-						kind: AppErrorKind.Api,
+						kind: MDBErrorKind.Api,
 						message: 'MDB | VNDB server is down.',
 						userMessage: 'VNDB server is down.',
 						context: { apiName: this.apiName, endpoint, status: fetchData.status },
 					});
 				default:
 					return err({
-						kind: AppErrorKind.Api,
+						kind: MDBErrorKind.Api,
 						message: `MDB | Received status code ${fetchData.status} from ${this.apiName}.`,
 						userMessage: `Received status code ${fetchData.status} from ${this.apiName}.`,
 						context: { apiName: this.apiName, endpoint, status: fetchData.status },
@@ -187,7 +187,7 @@ export class VNDBAPI extends APIModel {
 	 * Queries visual novel entries.
 	 * @see {@link https://api.vndb.org/kana#post-vn}
 	 */
-	private async postVNQuery(body: string): Promise<Result<VNJSONResponse, AppError>> {
+	private async postVNQuery(body: string): Promise<Result<VNJSONResponse, MDBError>> {
 		const result = await this.postQuery('/vn', body);
 		return result.ok ? ok(result.value as VNJSONResponse) : err(result.error);
 	}
@@ -197,12 +197,12 @@ export class VNDBAPI extends APIModel {
 	 * Queries release entries.
 	 * @see {@link https://api.vndb.org/kana#post-release}
 	 */
-	private async postReleaseQuery(body: string): Promise<Result<ReleaseJSONResponse, AppError>> {
+	private async postReleaseQuery(body: string): Promise<Result<ReleaseJSONResponse, MDBError>> {
 		const result = await this.postQuery('/release', body);
 		return result.ok ? ok(result.value as ReleaseJSONResponse) : err(result.error);
 	}
 
-	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], AppError>> {
+	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		/* SFW Filter: has ANY official&&complete&&standalone&&SFW release
@@ -253,7 +253,7 @@ export class VNDBAPI extends APIModel {
 		return ok(ret);
 	}
 
-	async getById(id: string): Promise<Result<MediaTypeModel, AppError>> {
+	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const vnDataResult = await this.postVNQuery(`{
@@ -267,7 +267,7 @@ export class VNDBAPI extends APIModel {
 
 		if (vnData.results.length !== 1) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Expected 1 result from query, got ${vnData.results.length}.`,
 				userMessage: 'Unexpected VNDB response.',
 				context: { apiName: this.apiName, id },

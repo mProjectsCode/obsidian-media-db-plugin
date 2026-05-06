@@ -5,8 +5,8 @@ import type { SeasonSelectModalElement } from 'packages/obsidian/src/modals/Medi
 import { MediaDbSeasonSelectModal } from 'packages/obsidian/src/modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import type { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind } from 'packages/obsidian/src/utils/AppError';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { SearchModalOptions } from 'packages/obsidian/src/utils/ModalHelper';
 
@@ -17,7 +17,7 @@ export class MediaDbEntryHelper {
 		this.plugin = plugin;
 	}
 
-	private reportAppError(error: AppError): void {
+	private reportMdbError(error: MDBError): void {
 		this.plugin.errorReporter.report(error);
 	}
 
@@ -29,12 +29,12 @@ export class MediaDbEntryHelper {
 
 		const apiSearchResults = await this.plugin.apiManager.query(advancedSearch.query, advancedSearch.apis);
 		if (!apiSearchResults.ok) {
-			this.reportAppError(apiSearchResults.error);
+			this.reportMdbError(apiSearchResults.error);
 			return;
 		}
 
 		if (!apiSearchResults.value.items || apiSearchResults.value.items.length === 0) {
-			this.reportAppError({ kind: AppErrorKind.Validation, message: 'No results found.', userMessage: 'No results found.' });
+			this.reportMdbError({ kind: MDBErrorKind.Validation, message: 'No results found.', userMessage: 'No results found.' });
 			return;
 		}
 
@@ -66,18 +66,18 @@ export class MediaDbEntryHelper {
 		const apis = this.plugin.apiManager.apis.filter(api => api.hasTypeOverlap(types)).map(api => api.apiName);
 		const apiSearchResults = await this.plugin.apiManager.query(searchData.query, apis);
 		if (!apiSearchResults.ok) {
-			this.reportAppError(apiSearchResults.error);
+			this.reportMdbError(apiSearchResults.error);
 			return;
 		}
 
 		if (!apiSearchResults.value.items || apiSearchResults.value.items.length === 0) {
-			this.reportAppError({ kind: AppErrorKind.Validation, message: 'No results found.', userMessage: 'No results found.' });
+			this.reportMdbError({ kind: MDBErrorKind.Validation, message: 'No results found.', userMessage: 'No results found.' });
 			return;
 		}
 
 		const filteredSearchResults = apiSearchResults.value.items.filter(result => types.includes(result.getMediaType()));
 		if (filteredSearchResults.length === 0) {
-			this.reportAppError({ kind: AppErrorKind.Validation, message: 'No results found for the selected types.', userMessage: 'No results found for the selected types.' });
+			this.reportMdbError({ kind: MDBErrorKind.Validation, message: 'No results found for the selected types.', userMessage: 'No results found for the selected types.' });
 			return;
 		}
 
@@ -121,12 +121,12 @@ export class MediaDbEntryHelper {
 
 		const apiSearchResults = await this.plugin.apiManager.query(advancedSearch.query, advancedSearch.apis);
 		if (!apiSearchResults.ok) {
-			this.reportAppError(apiSearchResults.error);
+			this.reportMdbError(apiSearchResults.error);
 			return;
 		}
 
 		if (!apiSearchResults.value.items || apiSearchResults.value.items.length === 0) {
-			this.reportAppError({ kind: AppErrorKind.Validation, message: 'No results found.', userMessage: 'No results found.' });
+			this.reportMdbError({ kind: MDBErrorKind.Validation, message: 'No results found.', userMessage: 'No results found.' });
 			return;
 		}
 
@@ -160,7 +160,7 @@ export class MediaDbEntryHelper {
 
 			const queriedIdResult = await this.plugin.apiManager.queryDetailedInfoById(idSearchData.query, idSearchData.api);
 			if (!queriedIdResult.ok) {
-				this.reportAppError(queriedIdResult.error);
+				this.reportMdbError(queriedIdResult.error);
 				return;
 			}
 
@@ -183,7 +183,7 @@ export class MediaDbEntryHelper {
 
 		const createNoteResult = await this.plugin.fileHelper.createMediaDbNoteFromModel(idSearchResult, { attachTemplate: true, openNote: true });
 		if (!createNoteResult.ok) {
-			this.reportAppError(createNoteResult.error);
+			this.reportMdbError(createNoteResult.error);
 		}
 	}
 
@@ -195,7 +195,7 @@ export class MediaDbEntryHelper {
 			if (result.ok && result.value) {
 				detailModels.push(result.value);
 			} else if (!result.ok) {
-				this.reportAppError(result.error);
+				this.reportMdbError(result.error);
 			}
 		}
 
@@ -228,7 +228,7 @@ export class MediaDbEntryHelper {
 
 		const allSeasonsResult = await tmdbSeasonAPI.getSeasonsForSeries(seriesId);
 		if (!allSeasonsResult.ok) {
-			this.reportAppError(allSeasonsResult.error);
+			this.reportMdbError(allSeasonsResult.error);
 			new Notice(`Error loading seasons: ${allSeasonsResult.error.userMessage}`);
 			return false;
 		}
@@ -276,7 +276,7 @@ export class MediaDbEntryHelper {
 				if (seasonModel) {
 					const fullMetadataResult = await tmdbSeasonAPI.getById(seasonModel.id);
 					if (!fullMetadataResult.ok) {
-						this.reportAppError(fullMetadataResult.error);
+						this.reportMdbError(fullMetadataResult.error);
 						new Notice(`Failed to load season ${selectedSeason.season_number}: ${fullMetadataResult.error.userMessage}`);
 						return;
 					}

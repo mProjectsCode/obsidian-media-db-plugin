@@ -4,9 +4,9 @@ import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { MovieModel } from 'packages/obsidian/src/models/MovieModel';
 import { SeriesModel } from 'packages/obsidian/src/models/SeriesModel';
-import type { AppError } from 'packages/obsidian/src/utils/AppError';
-import { AppErrorKind } from 'packages/obsidian/src/utils/AppError';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, ok } from 'packages/obsidian/src/utils/result';
@@ -33,7 +33,7 @@ export class MALAPI extends APIModel {
 		this.typeMappings.set('ova', 'ova');
 	}
 
-	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], AppError>> {
+	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
 		const client = createClient<paths>({ baseUrl: 'https://api.jikan.moe/v4/' });
@@ -51,7 +51,7 @@ export class MALAPI extends APIModel {
 
 		if (response.error !== undefined) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${response.response.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${response.response.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: response.response.status },
@@ -108,7 +108,7 @@ export class MALAPI extends APIModel {
 		return ok(ret);
 	}
 
-	async getById(id: string): Promise<Result<MediaTypeModel, AppError>> {
+	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
 		const client = createClient<paths>({ baseUrl: 'https://api.jikan.moe/v4/' });
@@ -124,7 +124,7 @@ export class MALAPI extends APIModel {
 
 		if (response.error !== undefined) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${response.response.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${response.response.status} from ${this.apiName}.`,
 				context: { apiName: this.apiName, status: response.response.status, id },
@@ -135,7 +135,7 @@ export class MALAPI extends APIModel {
 
 		if (result === undefined) {
 			return err({
-				kind: AppErrorKind.Api,
+				kind: MDBErrorKind.Api,
 				message: `MDB | No data found for ID ${id} in ${this.apiName}.`,
 				userMessage: `No data found for ID ${id} in ${this.apiName}.`,
 				context: { apiName: this.apiName, id },
@@ -248,7 +248,7 @@ export class MALAPI extends APIModel {
 		}
 
 		return err({
-			kind: AppErrorKind.Unexpected,
+			kind: MDBErrorKind.Unexpected,
 			message: `MDB | Unknown media type for id ${id}`,
 			userMessage: `Unknown media type for id ${id}`,
 			context: { apiName: this.apiName, id },
