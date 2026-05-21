@@ -8,7 +8,9 @@ import type { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
-import type { SearchModalOptions } from 'packages/obsidian/src/utils/ModalHelper';
+import type { ModalLifecycle, ModalSession, SearchModalOptions } from 'packages/obsidian/src/utils/ModalHelper';
+import type { Outcome } from 'packages/obsidian/src/utils/result';
+import { OutcomeStatus } from 'packages/obsidian/src/utils/result';
 
 export class MediaDbEntryHelper {
 	readonly plugin: MediaDbPlugin;
@@ -21,13 +23,34 @@ export class MediaDbEntryHelper {
 		this.plugin.errorReporter.report(error);
 	}
 
+	private getModalData<T>(modalResult: Outcome<T, MDBError>): T | undefined {
+		if (modalResult.status === OutcomeStatus.Ok) {
+			return modalResult.data;
+		}
+
+		if (modalResult.status === OutcomeStatus.Error) {
+			this.reportMdbError(modalResult.error);
+		}
+
+		return undefined;
+	}
+
+	private async runModalQuery<TData, TResult>(session: ModalSession<TData, ModalLifecycle>, query: () => Promise<TResult>): Promise<TResult | undefined> {
+		return this.getModalData(await this.plugin.modalHelper.runModalTask(session, query, { kind: MDBErrorKind.Api, message: 'API query failed' }));
+	}
+
 	async createLinkWithSearchModal(): Promise<void> {
-		const advancedSearch = await this.plugin.modalHelper.promptAdvancedSearchModal({});
+		const advancedSearchSession = await this.plugin.modalHelper.createAdvancedSearchModalSession({});
+		const advancedSearch = this.getModalData(advancedSearchSession.modalResult);
 		if (!advancedSearch) {
 			return;
 		}
 
-		const apiSearchResults = await this.plugin.apiManager.query(advancedSearch.query, advancedSearch.apis);
+		const apiSearchResults = await this.runModalQuery(advancedSearchSession, () => this.plugin.apiManager.query(advancedSearch.query, advancedSearch.apis));
+		if (!apiSearchResults) {
+			return;
+		}
+
 		if (!apiSearchResults.ok) {
 			this.reportMdbError(apiSearchResults.error);
 			return;
@@ -57,14 +80,19 @@ export class MediaDbEntryHelper {
 	}
 
 	async createEntryWithSearchModal(searchModalOptions?: SearchModalOptions): Promise<void> {
-		const searchData = await this.plugin.modalHelper.promptSearchModal(searchModalOptions ?? {});
+		const searchSession = await this.plugin.modalHelper.createSearchModalSession(searchModalOptions ?? {});
+		const searchData = this.getModalData(searchSession.modalResult);
 		if (!searchData) {
 			return;
 		}
 
 		const types = searchData.types;
 		const apis = this.plugin.apiManager.apis.filter(api => api.hasTypeOverlap(types)).map(api => api.apiName);
-		const apiSearchResults = await this.plugin.apiManager.query(searchData.query, apis);
+		const apiSearchResults = await this.runModalQuery(searchSession, () => this.plugin.apiManager.query(searchData.query, apis));
+		if (!apiSearchResults) {
+			return;
+		}
+
 		if (!apiSearchResults.ok) {
 			this.reportMdbError(apiSearchResults.error);
 			return;
@@ -114,12 +142,17 @@ export class MediaDbEntryHelper {
 	}
 
 	async createEntryWithAdvancedSearchModal(): Promise<void> {
-		const advancedSearch = await this.plugin.modalHelper.promptAdvancedSearchModal({});
+		const advancedSearchSession = await this.plugin.modalHelper.createAdvancedSearchModalSession({});
+		const advancedSearch = this.getModalData(advancedSearchSession.modalResult);
 		if (!advancedSearch) {
 			return;
 		}
 
-		const apiSearchResults = await this.plugin.apiManager.query(advancedSearch.query, advancedSearch.apis);
+		const apiSearchResults = await this.runModalQuery(advancedSearchSession, () => this.plugin.apiManager.query(advancedSearch.query, advancedSearch.apis));
+		if (!apiSearchResults) {
+			return;
+		}
+
 		if (!apiSearchResults.ok) {
 			this.reportMdbError(apiSearchResults.error);
 			return;
@@ -153,12 +186,17 @@ export class MediaDbEntryHelper {
 		let proceed = false;
 
 		while (!proceed) {
-			const idSearchData = await this.plugin.modalHelper.promptIdSearchModal({});
+			const idSearchSession = await this.plugin.modalHelper.createIdSearchModalSession({});
+			const idSearchData = this.getModalData(idSearchSession.modalResult);
 			if (!idSearchData) {
 				return;
 			}
 
-			const queriedIdResult = await this.plugin.apiManager.queryDetailedInfoById(idSearchData.query, idSearchData.api);
+			const queriedIdResult = await this.runModalQuery(idSearchSession, () => this.plugin.apiManager.queryDetailedInfoById(idSearchData.query, idSearchData.api));
+			if (!queriedIdResult) {
+				return;
+			}
+
 			if (!queriedIdResult.ok) {
 				this.reportMdbError(queriedIdResult.error);
 				return;
