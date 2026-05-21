@@ -65,11 +65,38 @@ small.media-db-plugin-list-text {
 }
 
 .media-db-plugin-search-input {
+	box-sizing: border-box;
+	display: block;
+	max-width: 100%;
+	min-width: 100%;
 	width: 100%;
 }
 
 .media-db-plugin-button:focus {
 	/*outline: 1px solid white;*/
+}
+
+.media-db-plugin-button-loading {
+	align-items: center;
+	display: inline-flex;
+	gap: var(--size-4-2);
+	justify-content: center;
+}
+
+.media-db-plugin-button-loading::before {
+	animation: media-db-plugin-button-loading-spin 0.8s linear infinite;
+	border: 2px solid currentColor;
+	border-radius: 50%;
+	border-top-color: transparent;
+	content: '';
+	height: 14px;
+	width: 14px;
+}
+
+@keyframes media-db-plugin-button-loading-spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .media-db-plugin-preview {

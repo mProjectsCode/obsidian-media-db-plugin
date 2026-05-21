@@ -38,6 +38,8 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 	keyPressCallback(event: KeyboardEvent): void {
 		if (event.key === 'Enter') {
+			event.preventDefault();
+			event.stopImmediatePropagation();
 			void this.search();
 		}
 	}
@@ -57,8 +59,9 @@ export class MediaDbAdvancedSearchModal extends Modal {
 
 		if (!this.isBusy) {
 			this.isBusy = true;
-			this.searchBtn?.setDisabled(false);
+			this.searchBtn?.setDisabled(true);
 			this.searchBtn?.setButtonText('Searching...');
+			this.searchBtn?.buttonEl.addClass('media-db-plugin-button-loading');
 
 			this.submitCallback?.({ query: this.query, apis: apis });
 		}
