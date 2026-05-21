@@ -2,7 +2,6 @@ import { MarkdownView, Notice } from 'obsidian';
 import type { TMDBSeasonAPI } from 'packages/obsidian/src/api/apis/TMDBSeasonAPI';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { SeasonSelectModalElement } from 'packages/obsidian/src/modals/MediaDbSeasonSelectModal';
-import { MediaDbSeasonSelectModal } from 'packages/obsidian/src/modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import type { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
@@ -288,22 +287,16 @@ export class MediaDbEntryHelper {
 	}
 
 	private async showSeasonSelectModal(allSeasons: SeasonModel[], seriesTitle: string): Promise<SeasonSelectModalElement[] | undefined> {
-		const modal = new MediaDbSeasonSelectModal(
-			this.plugin,
-			allSeasons.map(season => ({
+		return await this.plugin.modalHelper.promptSeasonSelectModal({
+			seasons: allSeasons.map(season => ({
 				season_number: season.seasonNumber,
 				name: season.seasonTitle || season.title,
 				episode_count: season.episodes || 0,
 				air_date: season.year,
 				poster_path: season.image,
 			})),
-			true,
-			seriesTitle,
-		);
-
-		return await new Promise(resolve => {
-			modal.setSubmitCb(resolve);
-			modal.open();
+			multiSelect: true,
+			seriesName: seriesTitle,
 		});
 	}
 

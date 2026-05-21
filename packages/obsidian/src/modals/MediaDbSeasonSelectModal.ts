@@ -4,6 +4,7 @@ import { SelectModal } from 'packages/obsidian/src/modals/SelectModal';
 export interface SeasonSelectModalElement {
 	season_number: number;
 	name: string;
+	episode_count?: number;
 	air_date?: string;
 	poster_path?: string;
 }
@@ -33,7 +34,6 @@ export class MediaDbSeasonSelectModal extends SelectModal<SeasonSelectModalEleme
 	submit(): void {
 		const selected = this.selectModalElements.filter(x => x.isActive()).map(x => x.value);
 		this.submitCallback?.(selected);
-		this.close();
 	}
 
 	skip(): void {
@@ -46,5 +46,10 @@ export class MediaDbSeasonSelectModal extends SelectModal<SeasonSelectModalEleme
 
 	setCloseCb(cb: (err?: Error) => void): void {
 		this.closeCallback = cb;
+	}
+
+	onClose(): void {
+		this.closeCallback?.();
+		super.onClose();
 	}
 }

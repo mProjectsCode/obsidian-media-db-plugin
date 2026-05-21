@@ -109,12 +109,13 @@ export class MediaDbSearchModal extends Modal {
 				if (value) {
 					if (currentToggle && currentToggle !== apiToggleComponent) {
 						currentToggle.setValue(false);
-						this.selectedTypes = this.selectedTypes.filter(x => x !== mediaType);
 					}
 					currentToggle = apiToggleComponent;
-					this.selectedTypes.push(mediaType);
+					this.selectedTypes = [mediaType];
 				} else {
-					currentToggle = undefined;
+					if (currentToggle === apiToggleComponent) {
+						currentToggle = undefined;
+					}
 					this.selectedTypes = this.selectedTypes.filter(x => x !== mediaType);
 				}
 			});

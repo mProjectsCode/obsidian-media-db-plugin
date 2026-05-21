@@ -22,7 +22,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		super(plugin.app);
 
 		this.plugin = plugin;
-		this.selectedApis = [];
+		this.selectedApis = [...(advancedSearchModalOptions.preselectedAPIs ?? [])];
 		this.title = advancedSearchModalOptions.modalTitle ?? '';
 		this.query = advancedSearchModalOptions.prefilledSearchString ?? '';
 		this.isBusy = false;
@@ -101,7 +101,9 @@ export class MediaDbAdvancedSearchModal extends Modal {
 			apiToggleComponent.setValue(this.selectedApis.some(x => x === api.apiName));
 			apiToggleComponent.onChange(value => {
 				if (value) {
-					this.selectedApis.push(api.apiName);
+					if (!this.selectedApis.includes(api.apiName)) {
+						this.selectedApis.push(api.apiName);
+					}
 				} else {
 					this.selectedApis = this.selectedApis.filter(x => x !== api.apiName);
 				}

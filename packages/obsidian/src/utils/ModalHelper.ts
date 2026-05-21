@@ -4,6 +4,8 @@ import { MediaDbIdSearchModal } from 'packages/obsidian/src/modals/MediaDbIdSear
 import { MediaDbPreviewModal } from 'packages/obsidian/src/modals/MediaDbPreviewModal';
 import { MediaDbSearchModal } from 'packages/obsidian/src/modals/MediaDbSearchModal';
 import { MediaDbSearchResultModal } from 'packages/obsidian/src/modals/MediaDbSearchResultModal';
+import type { SeasonSelectModalElement } from 'packages/obsidian/src/modals/MediaDbSeasonSelectModal';
+import { MediaDbSeasonSelectModal } from 'packages/obsidian/src/modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
@@ -66,6 +68,12 @@ export interface PreviewModalOptions {
 	elements?: MediaTypeModel[];
 }
 
+export interface SeasonSelectModalOptions {
+	seasons?: SeasonSelectModalElement[];
+	multiSelect?: boolean;
+	seriesName?: string;
+}
+
 export const SEARCH_MODAL_DEFAULT_OPTIONS: SearchModalOptions = {
 	modalTitle: 'Media DB Search',
 	preselectedTypes: [],
@@ -110,6 +118,14 @@ export interface ModalLifecycle {
 	close(): void;
 }
 
+interface CloseAwareModal extends ModalLifecycle {
+	setCloseCb(closeCallback: (err?: Error) => void): void;
+}
+
+interface SubmitModal<TData> extends CloseAwareModal {
+	setSubmitCb(submitCallback: (res: TData) => void): void;
+}
+
 export interface ModalSession<T, TModal extends ModalLifecycle> {
 	modalResult: Outcome<T, MDBError>;
 	modal: TModal;
@@ -134,11 +150,11 @@ export class ModalHelper {
 		let resolved = false;
 		const modalResult = await new Promise<Outcome<TData, MDBError>>(resolve => {
 			const resolveSession = (result: Outcome<TData, MDBError>): void => {
-				if (result.status === OutcomeStatus.Cancelled && !closeRequested) {
-					cancelledByUser = true;
-				}
-
 				if (!resolved) {
+					if (result.status === OutcomeStatus.Cancelled && !closeRequested) {
+						cancelledByUser = true;
+					}
+
 					resolved = true;
 					resolve(result);
 				}
@@ -157,6 +173,40 @@ export class ModalHelper {
 			},
 			isCancelled: (): boolean => cancelledByUser,
 		};
+	}
+
+	private createCloseOutcome(err: Error | undefined, message: string): Outcome<never, MDBError> {
+		if (err) {
+			return failure(toMdbError(err, { kind: MDBErrorKind.Modal, message }));
+		}
+
+		return cancelled();
+	}
+
+	private async openSubmitModalSession<TData, TModal extends SubmitModal<TData>>(
+		createModal: () => TModal,
+		closeErrorMessage: string,
+		wireExtraHandlers?: (modal: TModal, resolve: (result: Outcome<TData, MDBError>) => void) => void,
+	): Promise<ModalSession<TData, TModal>> {
+		return await this.openModalCore<TData, TModal>(createModal, (modal, resolve) => {
+			modal.setSubmitCb(res => resolve(success(res)));
+			modal.setCloseCb(err => resolve(this.createCloseOutcome(err, closeErrorMessage)));
+			wireExtraHandlers?.(modal, resolve);
+		});
+	}
+
+	private async resolveModalSessionOutcome<TData, TModal extends ModalLifecycle>(
+		sessionPromise: Promise<ModalSession<TData, TModal>>,
+		closeOn: readonly OutcomeStatus[] = [OutcomeStatus.Ok],
+	): Promise<Outcome<TData, MDBError>> {
+		const session = await sessionPromise;
+		const { modalResult } = session;
+
+		if (closeOn.includes(modalResult.status)) {
+			session.close();
+		}
+
+		return modalResult;
 	}
 
 	private async resolveOutcome<T>(outcomePromise: Promise<Outcome<T, MDBError>>): Promise<T | undefined> {
@@ -200,30 +250,13 @@ export class ModalHelper {
 	}
 
 	async createSearchModalOutcome(searchModalOptions: SearchModalOptions): Promise<Outcome<SearchModalData, MDBError>> {
-		const session = await this.createSearchModalSession(searchModalOptions);
-		const { modalResult } = session;
-
-		if (modalResult.status === OutcomeStatus.Ok) {
-			session.close();
-		}
-
-		return modalResult;
+		return await this.resolveModalSessionOutcome(this.createSearchModalSession(searchModalOptions));
 	}
 
 	async createSearchModalSession(searchModalOptions: SearchModalOptions): Promise<ModalSession<SearchModalData, MediaDbSearchModal>> {
-		return await this.openModalCore<SearchModalData, MediaDbSearchModal>(
+		return await this.openSubmitModalSession<SearchModalData, MediaDbSearchModal>(
 			() => new MediaDbSearchModal(this.plugin, searchModalOptions),
-			(modal, resolve) => {
-				modal.setSubmitCb(res => resolve(success(res)));
-				modal.setCloseCb(err => {
-					if (err) {
-						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Search modal closed with an error' })));
-						return;
-					}
-
-					resolve(cancelled());
-				});
-			},
+			'Search modal closed with an error',
 		);
 	}
 
@@ -232,30 +265,13 @@ export class ModalHelper {
 	}
 
 	async createAdvancedSearchModalOutcome(advancedSearchModalOptions: AdvancedSearchModalOptions): Promise<Outcome<AdvancedSearchModalData, MDBError>> {
-		const session = await this.createAdvancedSearchModalSession(advancedSearchModalOptions);
-		const { modalResult } = session;
-
-		if (modalResult.status === OutcomeStatus.Ok) {
-			session.close();
-		}
-
-		return modalResult;
+		return await this.resolveModalSessionOutcome(this.createAdvancedSearchModalSession(advancedSearchModalOptions));
 	}
 
 	async createAdvancedSearchModalSession(advancedSearchModalOptions: AdvancedSearchModalOptions): Promise<ModalSession<AdvancedSearchModalData, MediaDbAdvancedSearchModal>> {
-		return await this.openModalCore<AdvancedSearchModalData, MediaDbAdvancedSearchModal>(
+		return await this.openSubmitModalSession<AdvancedSearchModalData, MediaDbAdvancedSearchModal>(
 			() => new MediaDbAdvancedSearchModal(this.plugin, advancedSearchModalOptions),
-			(modal, resolve) => {
-				modal.setSubmitCb(res => resolve(success(res)));
-				modal.setCloseCb(err => {
-					if (err) {
-						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Advanced search modal closed with an error' })));
-						return;
-					}
-
-					resolve(cancelled());
-				});
-			},
+			'Advanced search modal closed with an error',
 		);
 	}
 
@@ -264,30 +280,13 @@ export class ModalHelper {
 	}
 
 	async createIdSearchModalOutcome(idSearchModalOptions: IdSearchModalOptions): Promise<Outcome<IdSearchModalData, MDBError>> {
-		const session = await this.createIdSearchModalSession(idSearchModalOptions);
-		const { modalResult } = session;
-
-		if (modalResult.status === OutcomeStatus.Ok) {
-			session.close();
-		}
-
-		return modalResult;
+		return await this.resolveModalSessionOutcome(this.createIdSearchModalSession(idSearchModalOptions));
 	}
 
 	async createIdSearchModalSession(idSearchModalOptions: IdSearchModalOptions): Promise<ModalSession<IdSearchModalData, MediaDbIdSearchModal>> {
-		return await this.openModalCore<IdSearchModalData, MediaDbIdSearchModal>(
+		return await this.openSubmitModalSession<IdSearchModalData, MediaDbIdSearchModal>(
 			() => new MediaDbIdSearchModal(this.plugin, idSearchModalOptions),
-			(modal, resolve) => {
-				modal.setSubmitCb(res => resolve(success(res)));
-				modal.setCloseCb(err => {
-					if (err) {
-						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Id search modal closed with an error' })));
-						return;
-					}
-
-					resolve(cancelled());
-				});
-			},
+			'Id search modal closed with an error',
 		);
 	}
 
@@ -296,28 +295,16 @@ export class ModalHelper {
 	}
 
 	async createSelectModalOutcome(selectModalOptions: SelectModalOptions): Promise<Outcome<SelectModalData, MDBError>> {
-		const session = await this.openModalCore<SelectModalData, MediaDbSearchResultModal>(
-			() => new MediaDbSearchResultModal(this.plugin, selectModalOptions),
-			(modal, resolve) => {
-				modal.setSubmitCb(res => resolve(success(res)));
-				modal.setSkipCallback(() => resolve(skipped()));
-				modal.setCloseCb(err => {
-					if (err) {
-						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Select modal closed with an error' })));
-						return;
-					}
-
-					resolve(cancelled());
-				});
-			},
+		return await this.resolveModalSessionOutcome(
+			this.openSubmitModalSession<SelectModalData, MediaDbSearchResultModal>(
+				() => new MediaDbSearchResultModal(this.plugin, selectModalOptions),
+				'Select modal closed with an error',
+				(modal, resolve) => {
+					modal.setSkipCallback(() => resolve(skipped()));
+				},
+			),
+			[OutcomeStatus.Ok, OutcomeStatus.Skipped],
 		);
-		const { modalResult } = session;
-
-		if (modalResult.status === OutcomeStatus.Ok || modalResult.status === OutcomeStatus.Skipped) {
-			session.close();
-		}
-
-		return modalResult;
 	}
 
 	async promptSelectModal(selectModalOptions: SelectModalOptions): Promise<SelectModalData | undefined> {
@@ -325,30 +312,34 @@ export class ModalHelper {
 	}
 
 	async createPreviewModalOutcome(previewModalOptions: PreviewModalOptions): Promise<Outcome<PreviewModalData, MDBError>> {
-		const session = await this.openModalCore<PreviewModalData, MediaDbPreviewModal>(
-			() => new MediaDbPreviewModal(this.plugin, previewModalOptions),
-			(modal, resolve) => {
-				modal.setSubmitCb(res => resolve(success(res)));
-				modal.setCloseCb(err => {
-					if (err) {
-						resolve(failure(toMdbError(err, { kind: MDBErrorKind.Modal, message: 'Preview modal closed with an error' })));
-						return;
-					}
-
-					resolve(cancelled());
-				});
-			},
+		return await this.resolveModalSessionOutcome(
+			this.openSubmitModalSession<PreviewModalData, MediaDbPreviewModal>(
+				() => new MediaDbPreviewModal(this.plugin, previewModalOptions),
+				'Preview modal closed with an error',
+			),
 		);
-		const { modalResult } = session;
-
-		if (modalResult.status === OutcomeStatus.Ok) {
-			session.close();
-		}
-
-		return modalResult;
 	}
 
 	async promptPreviewModal(previewModalOptions: PreviewModalOptions): Promise<PreviewModalData | undefined> {
 		return await this.resolveOutcome(this.createPreviewModalOutcome(previewModalOptions));
+	}
+
+	async createSeasonSelectModalOutcome(seasonSelectModalOptions: SeasonSelectModalOptions): Promise<Outcome<SeasonSelectModalElement[], MDBError>> {
+		return await this.resolveModalSessionOutcome(
+			this.openSubmitModalSession<SeasonSelectModalElement[], MediaDbSeasonSelectModal>(
+				() =>
+					new MediaDbSeasonSelectModal(
+						this.plugin,
+						seasonSelectModalOptions.seasons ?? [],
+						seasonSelectModalOptions.multiSelect ?? true,
+						seasonSelectModalOptions.seriesName,
+					),
+				'Season select modal closed with an error',
+			),
+		);
+	}
+
+	async promptSeasonSelectModal(seasonSelectModalOptions: SeasonSelectModalOptions): Promise<SeasonSelectModalElement[] | undefined> {
+		return await this.resolveOutcome(this.createSeasonSelectModalOutcome(seasonSelectModalOptions));
 	}
 }
