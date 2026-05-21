@@ -23,8 +23,8 @@ export class MediaDbIdSearchModal extends Modal {
 
 		this.plugin = plugin;
 		this.title = idSearchModalOptions.modalTitle ?? '';
-		this.selectedApi = idSearchModalOptions.preselectedAPI ?? plugin.apiManager.apis[0].apiName;
-		this.query = '';
+		this.selectedApi = idSearchModalOptions.preselectedAPI ?? plugin.apiManager.apis[0]?.apiName ?? '';
+		this.query = idSearchModalOptions.prefilledSearchString ?? '';
 		this.isBusy = false;
 	}
 
@@ -74,6 +74,7 @@ export class MediaDbIdSearchModal extends Modal {
 		const searchComponent = new TextComponent(contentEl);
 		searchComponent.inputEl.addClass('media-db-plugin-search-input');
 		searchComponent.setPlaceholder(placeholder);
+		searchComponent.setValue(this.query);
 		searchComponent.onChange(value => (this.query = value));
 		searchComponent.inputEl.addEventListener('keydown', this.keyPressCallback.bind(this));
 
@@ -93,6 +94,7 @@ export class MediaDbIdSearchModal extends Modal {
 		for (const api of this.plugin.apiManager.apis) {
 			apiSelectorComponent.addOption(api.apiName, api.apiName);
 		}
+		apiSelectorComponent.setValue(this.selectedApi);
 		apiSelectorWrapper.appendChild(apiSelectorComponent.selectEl);
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });

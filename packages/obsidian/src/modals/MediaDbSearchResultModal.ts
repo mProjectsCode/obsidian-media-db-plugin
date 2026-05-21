@@ -140,5 +140,6 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 	onClose(): void {
 		this.closeCallback?.();
+		super.onClose();
 	}
 }

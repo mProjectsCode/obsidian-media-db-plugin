@@ -81,6 +81,7 @@ export abstract class SelectModal<T> extends Modal {
 	onOpen(): void {
 		const { contentEl, titleEl } = this;
 
+		this.selectModalElements = [];
 		titleEl.createEl('h2', { text: this.title });
 		contentEl.addClass('media-db-plugin-select-modal');
 		contentEl.createEl('p', { text: this.description });
@@ -123,6 +124,11 @@ export abstract class SelectModal<T> extends Modal {
 			btn.buttonEl.addClass('media-db-plugin-button');
 			this.submitButton = btn;
 		});
+	}
+
+	onClose(): void {
+		this.selectModalElements = [];
+		this.contentEl.empty();
 	}
 
 	activateHighlighted(): void {
