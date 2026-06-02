@@ -32,7 +32,7 @@ import { ModalHelper } from 'packages/obsidian/src/utils/ModalHelper';
 import { unCamelCase } from 'packages/obsidian/src/utils/Utils';
 
 export default class MediaDbPlugin extends Plugin {
-	settings!: MediaDbPluginSettings;
+	declare settings: MediaDbPluginSettings;
 	apiManager!: APIManager;
 	mediaTypeManager!: MediaTypeManager;
 	modelPropertyMapper!: PropertyMapper;
