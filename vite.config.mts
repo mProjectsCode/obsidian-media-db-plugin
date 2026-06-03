@@ -1,5 +1,4 @@
 import { UserConfig, defineConfig } from 'vite';
-import solid from 'vite-plugin-solid';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import banner from 'vite-plugin-banner';
 import path from 'path';
@@ -14,7 +13,6 @@ export default defineConfig(async ({ mode }) => {
 	const outDir = prod ? 'dist/' : `exampleVault/.obsidian/plugins/${manifest.id}/`;
 
 	let plugins = [
-		solid(),
 		banner({
 			outDir: outDir,
 			content: getBuildBanner(prod ? 'Release Build' : 'Dev Build', version => version),

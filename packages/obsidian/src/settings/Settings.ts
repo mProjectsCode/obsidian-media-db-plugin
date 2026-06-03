@@ -10,7 +10,6 @@ import { FolderSuggest } from 'packages/obsidian/src/settings/suggesters/FolderS
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import { MEDIA_TYPES } from 'packages/obsidian/src/utils/MediaTypeManager';
 import { unCamelCase } from 'packages/obsidian/src/utils/Utils';
-import { render } from 'solid-js/web';
 
 function createDateFormatDescription(preview: string): DocumentFragment {
 	return createFragment(frag => {
@@ -425,14 +424,25 @@ export function getDefaultSettings(plugin: MediaDbPlugin): MediaDbPluginSettings
 // MARK: Settings Tab
 export class MediaDbSettingTab extends PluginSettingTab {
 	plugin: MediaDbPlugin;
+	private propertyMappingModelsComponent?: PropertyMappingModelsComponent;
 
 	constructor(app: App, plugin: MediaDbPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
+	override hide(): void {
+		this.propertyMappingModelsComponent?.unload();
+		this.propertyMappingModelsComponent = undefined;
+		super.hide();
+	}
+
 	display(): void {
 		const { containerEl } = this;
+		if (this.propertyMappingModelsComponent) {
+			this.propertyMappingModelsComponent.unload();
+			this.propertyMappingModelsComponent = undefined;
+		}
 		containerEl.empty();
 
 		const mediaTypeSettings = MEDIA_TYPES.map(mt => new MediaTypeMappedSettings(mt));
@@ -837,24 +847,21 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			mappingGroup.setHeading('Property mappings');
 			mappingGroup.addSetting(setting => {
 				setting.setName('Property mappings explanation').setDesc(createPropertyMappingsDescription());
+				const propertyMappingsEl = setting.descEl.createDiv();
+				this.propertyMappingModelsComponent = new PropertyMappingModelsComponent(propertyMappingsEl, {
+					models: structuredClone(this.plugin.settings.propertyMappingModels),
+					save: (model: PropertyMappingModelData): void => {
+						// Update the matching model in settings (stored as plain data)
+						const index = this.plugin.settings.propertyMappingModels.findIndex(m => m.type === model.type);
+						if (index !== -1) {
+							this.plugin.settings.propertyMappingModels[index] = model;
+						}
 
-				render(
-					() =>
-						PropertyMappingModelsComponent({
-							models: structuredClone(this.plugin.settings.propertyMappingModels),
-							save: (model: PropertyMappingModelData): void => {
-								// Update the matching model in settings (stored as plain data)
-								const index = this.plugin.settings.propertyMappingModels.findIndex(m => m.type === model.type);
-								if (index !== -1) {
-									this.plugin.settings.propertyMappingModels[index] = model;
-								}
-
-								new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
-								void this.plugin.saveSettings();
-							},
-						}),
-					setting.descEl,
-				);
+						new Notice(`MDB: Property mappings for ${model.type} saved successfully.`);
+						void this.plugin.saveSettings();
+					},
+				});
+				this.propertyMappingModelsComponent.load();
 			});
 		}
 	}

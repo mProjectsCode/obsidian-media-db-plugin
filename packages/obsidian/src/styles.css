@@ -120,6 +120,13 @@ small.media-db-plugin-list-text {
 }
 
 /* Property Mapping Component Styles */
+.media-db-plugin-property-mappings-models-container {
+	display: flex;
+	gap: 10px;
+	flex-direction: column;
+	align-items: stretch;
+}
+
 .media-db-plugin-property-mappings-model-container {
 	margin-bottom: var(--size-4-8);
 }

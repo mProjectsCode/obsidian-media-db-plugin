@@ -1,8 +1,17 @@
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import type { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import type { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import type { Result } from 'packages/obsidian/src/utils/result';
+
+export interface SeasonListAPIModel extends APIModel {
+	getSeasonsForSeries(seriesId: string): Promise<Result<SeasonModel[], MDBError>>;
+}
+
+export function isSeasonListAPIModel(api: APIModel | undefined): api is SeasonListAPIModel {
+	return typeof api?.getSeasonsForSeries === 'function';
+}
 
 export abstract class APIModel {
 	apiName!: string;
@@ -21,6 +30,12 @@ export abstract class APIModel {
 	abstract getById(id: string): Promise<Result<MediaTypeModel, MDBError>>;
 
 	abstract getDisabledMediaTypes(): MediaType[];
+
+	getSeasonsForSeries?(seriesId: string): Promise<Result<SeasonModel[], MDBError>>;
+
+	getSeasonApiNameForSeries(_series: MediaTypeModel): string | undefined {
+		return undefined;
+	}
 
 	hasType(type: MediaType): boolean {
 		const disabledMediaTypes = this.getDisabledMediaTypes();
