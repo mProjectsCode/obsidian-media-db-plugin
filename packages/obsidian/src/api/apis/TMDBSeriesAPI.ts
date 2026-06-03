@@ -252,4 +252,8 @@ export class TMDBSeriesAPI extends APIModel {
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.TMDBSeriesAPI_disabledMediaTypes;
 	}
+
+	getSeasonApiNameForSeries(_series: MediaTypeModel): string {
+		return 'TMDBSeasonAPI';
+	}
 }

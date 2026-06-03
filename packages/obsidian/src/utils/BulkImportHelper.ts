@@ -1,7 +1,7 @@
 import type { TFolder } from 'obsidian';
 import { TFile } from 'obsidian';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
-import { MediaDbBulkImportModal as MediaDbBulkImportModal } from 'packages/obsidian/src/modals/MediaDbBulkImportModal';
+import { MediaDbBulkImportModal } from 'packages/obsidian/src/modals/MediaDbBulkImportModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { OutcomeStatus } from 'packages/obsidian/src/utils/result';
 import { dateTimeToString, markdownTable } from 'packages/obsidian/src/utils/Utils';
@@ -26,7 +26,7 @@ export class BulkImportHelper {
 
 	async import(folder: TFolder): Promise<void> {
 		const erroredFiles: BulkImportError[] = [];
-		let canceled: boolean = false;
+		let canceled = false;
 
 		const { selectedAPI, lookupMethod, fieldName, appendContent } = await new Promise<{
 			selectedAPI: string;
@@ -87,7 +87,11 @@ export class BulkImportHelper {
 		}
 
 		if (modelResult.value) {
-			await this.plugin.fileHelper.createMediaDbNotes([modelResult.value], appendContent ? file : undefined);
+			const createResult = await this.plugin.fileHelper.createMediaDbNotes([modelResult.value], appendContent ? file : undefined);
+			if (!createResult.ok) {
+				return { filePath: file.path, error: createResult.error.userMessage ?? createResult.error.message };
+			}
+
 			return undefined;
 		}
 
@@ -127,8 +131,25 @@ export class BulkImportHelper {
 			return { filePath: file.path, error: `no search results selected` };
 		}
 
+		const seasonSelectionResult = await this.plugin.entryHelper.handleSeasonSearchSelections(selectModalResult.data.selected, appendContent ? file : undefined);
+		if (seasonSelectionResult.handled) {
+			if (!seasonSelectionResult.created) {
+				return { filePath: file.path, error: 'season selection canceled or no season note was created' };
+			}
+
+			return undefined;
+		}
+
 		const detailedResults = await this.plugin.entryHelper.queryDetails(selectModalResult.data.selected);
-		await this.plugin.fileHelper.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
+		if (detailedResults.length === 0) {
+			return { filePath: file.path, error: 'failed to load details for selected search results' };
+		}
+
+		const createResult = await this.plugin.fileHelper.createMediaDbNotes(detailedResults, appendContent ? file : undefined);
+		if (!createResult.ok) {
+			return { filePath: file.path, error: createResult.error.userMessage ?? createResult.error.message };
+		}
+
 		return undefined;
 	}
 

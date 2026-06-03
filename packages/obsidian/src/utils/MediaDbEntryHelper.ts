@@ -1,9 +1,12 @@
+import type { TFile } from 'obsidian';
 import { MarkdownView, Notice } from 'obsidian';
-import type { TMDBSeasonAPI } from 'packages/obsidian/src/api/apis/TMDBSeasonAPI';
+import type { SeasonListAPIModel } from 'packages/obsidian/src/api/APIModel';
+import { isSeasonListAPIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { SeasonSelectModalElement } from 'packages/obsidian/src/modals/MediaDbSeasonSelectModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import type { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
+import { SeasonSearchResultModel } from 'packages/obsidian/src/models/SeasonSearchResultModel';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
@@ -112,6 +115,7 @@ export class MediaDbEntryHelper {
 			types.length === 1 && types[0] === MediaType.Season
 				? await this.plugin.modalHelper.promptSelectModal({
 						elements: filteredSearchResults,
+						multiSelect: false,
 						description: 'Select one search result to proceed.',
 						submitButtonText: 'Ok',
 					})
@@ -121,7 +125,11 @@ export class MediaDbEntryHelper {
 			return;
 		}
 
-		const selectResults = types.length === 1 && types[0] === MediaType.Season ? selectResultsData.selected : await this.queryDetails(selectResultsData.selected);
+		if ((await this.handleSeasonSearchSelections(selectResultsData.selected)).handled) {
+			return;
+		}
+
+		const selectResults = await this.queryDetails(selectResultsData.selected);
 
 		if (selectResults.length === 0) {
 			return;
@@ -164,6 +172,10 @@ export class MediaDbEntryHelper {
 
 		const selectResultsData = await this.plugin.modalHelper.promptSelectModal({ elements: apiSearchResults.value.items });
 		if (!selectResultsData) {
+			return;
+		}
+
+		if ((await this.handleSeasonSearchSelections(selectResultsData.selected)).handled) {
 			return;
 		}
 
@@ -239,31 +251,62 @@ export class MediaDbEntryHelper {
 		return detailModels;
 	}
 
-	private async handleSeasonWorkflow(types: string[], selectResults: MediaTypeModel[]): Promise<{ handled: boolean; seasonsCreated?: boolean }> {
-		if (types.length === 1 && types[0] === 'season' && selectResults.length === 1 && selectResults[0].dataSource === 'TMDBSeasonAPI') {
-			const created = await this.showSeasonSelectAndCreate(selectResults[0].id, selectResults[0].englishTitle || selectResults[0].title);
-			return { handled: true, seasonsCreated: created };
+	private async handleSeasonWorkflow(types: MediaType[], selectResults: MediaTypeModel[]): Promise<{ handled: boolean; seasonsCreated?: boolean }> {
+		if (!types.includes(MediaType.Series) || !types.includes(MediaType.Season)) {
+			return { handled: false };
 		}
 
-		if (types.includes('series') && selectResults.some(result => result.dataSource === 'TMDBSeriesAPI')) {
-			const seriesResults = selectResults.filter(result => result.dataSource === 'TMDBSeriesAPI');
-			if (seriesResults.length === 1 && types.includes('season')) {
-				const created = await this.showSeasonSelectAndCreate(seriesResults[0].id, seriesResults[0].title);
-				return { handled: true, seasonsCreated: created };
-			}
+		const seriesResults = selectResults.filter(result => result.getMediaType() === MediaType.Series);
+		if (seriesResults.length !== 1) {
+			return { handled: false };
+		}
+
+		const seriesResult = seriesResults[0];
+		const sourceApi = this.plugin.apiManager.getApiByName(seriesResult.dataSource);
+		const seasonApiName = sourceApi?.getSeasonApiNameForSeries(seriesResult);
+		if (seasonApiName) {
+			const created = await this.showSeasonSelectAndCreate(seriesResult.id, seriesResult.title, undefined, seasonApiName);
+			return { handled: true, seasonsCreated: created };
 		}
 
 		return { handled: false };
 	}
 
-	private async showSeasonSelectAndCreate(seriesId: string, seriesTitle: string): Promise<boolean> {
-		const tmdbSeasonAPI = this.plugin.apiManager.getApiByName('TMDBSeasonAPI') as TMDBSeasonAPI | undefined;
-		if (!tmdbSeasonAPI) {
-			new Notice('TMDBSeasonAPI not available.');
+	private isSeasonSearchResult(model: MediaTypeModel): model is SeasonSearchResultModel {
+		return model instanceof SeasonSearchResultModel || (model.getMediaType() === MediaType.Season && typeof (model as { seasonCount?: unknown }).seasonCount === 'number');
+	}
+
+	async handleSeasonSearchSelections(selectedResults: MediaTypeModel[], attachFile?: TFile): Promise<{ handled: boolean; created: boolean }> {
+		const seasonSearchResults = selectedResults.filter(result => this.isSeasonSearchResult(result));
+		if (seasonSearchResults.length === 0) {
+			return { handled: false, created: false };
+		}
+
+		if (selectedResults.length !== 1) {
+			new Notice('Select exactly one season search result before choosing seasons.');
+			return { handled: true, created: false };
+		}
+
+		const selectedResult = seasonSearchResults[0];
+		return {
+			handled: true,
+			created: await this.showSeasonSelectAndCreate(selectedResult.id, selectedResult.englishTitle || selectedResult.title, attachFile, selectedResult.dataSource),
+		};
+	}
+
+	private getSeasonListApi(apiName: string): SeasonListAPIModel | undefined {
+		const api = this.plugin.apiManager.getApiByName(apiName);
+		return isSeasonListAPIModel(api) ? api : undefined;
+	}
+
+	private async showSeasonSelectAndCreate(seriesId: string, seriesTitle: string, attachFile: TFile | undefined, seasonApiName: string): Promise<boolean> {
+		const seasonAPI = this.getSeasonListApi(seasonApiName);
+		if (!seasonAPI) {
+			new Notice(`${seasonApiName} does not support season selection.`);
 			return false;
 		}
 
-		const allSeasonsResult = await tmdbSeasonAPI.getSeasonsForSeries(seriesId);
+		const allSeasonsResult = await seasonAPI.getSeasonsForSeries(seriesId);
 		if (!allSeasonsResult.ok) {
 			this.reportMdbError(allSeasonsResult.error);
 			new Notice(`Error loading seasons: ${allSeasonsResult.error.userMessage}`);
@@ -281,8 +324,13 @@ export class MediaDbEntryHelper {
 			return false;
 		}
 
-		await this.createNotesForSelectedSeasons(selectedSeasons, allSeasons, tmdbSeasonAPI);
-		new Notice(`Successfully created ${selectedSeasons.length} season ${selectedSeasons.length === 1 ? 'entry' : 'entries'}.`);
+		const createdCount = await this.createNotesForSelectedSeasons(selectedSeasons, allSeasons, seasonAPI, attachFile);
+		if (createdCount === 0) {
+			new Notice('No season entries were created.');
+			return false;
+		}
+
+		new Notice(`Successfully created ${createdCount} season ${createdCount === 1 ? 'entry' : 'entries'}.`);
 		return true;
 	}
 
@@ -300,21 +348,36 @@ export class MediaDbEntryHelper {
 		});
 	}
 
-	private async createNotesForSelectedSeasons(selectedSeasons: SeasonSelectModalElement[], allSeasons: SeasonModel[], tmdbSeasonAPI: TMDBSeasonAPI): Promise<void> {
-		await Promise.all(
+	private async createNotesForSelectedSeasons(
+		selectedSeasons: SeasonSelectModalElement[],
+		allSeasons: SeasonModel[],
+		seasonAPI: SeasonListAPIModel,
+		attachFile?: TFile,
+	): Promise<number> {
+		const results = await Promise.all(
 			selectedSeasons.map(async selectedSeason => {
 				const seasonModel = allSeasons.find(season => season.seasonNumber === selectedSeason.season_number);
 				if (seasonModel) {
-					const fullMetadataResult = await tmdbSeasonAPI.getById(seasonModel.id);
+					const fullMetadataResult = await seasonAPI.getById(seasonModel.id);
 					if (!fullMetadataResult.ok) {
 						this.reportMdbError(fullMetadataResult.error);
 						new Notice(`Failed to load season ${selectedSeason.season_number}: ${fullMetadataResult.error.userMessage}`);
-						return;
+						return false;
 					}
 
-					await this.plugin.fileHelper.createMediaDbNotes([fullMetadataResult.value]);
+					const createResult = await this.plugin.fileHelper.createMediaDbNotes([fullMetadataResult.value], attachFile);
+					if (!createResult.ok) {
+						this.reportMdbError(createResult.error);
+						return false;
+					}
+
+					return true;
 				}
+
+				return false;
 			}),
 		);
+
+		return results.filter(created => created).length;
 	}
 }
