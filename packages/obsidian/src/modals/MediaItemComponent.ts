@@ -16,8 +16,8 @@ export class MediaItemComponent {
 	constructor(container: HTMLElement, options: MediaItemComponentOptions) {
 		this.container = container;
 		this.options = options;
-		this.thumbEl = null as any; // Will be initialized in setup
-		this.contentEl = null as any;
+		this.thumbEl = null as unknown; // Will be initialized in setup
+		this.contentEl = null as unknown;
 
 		this.setup();
 	}

@@ -1,10 +1,9 @@
 import type MediaDbPlugin from 'packages/obsidian/src/main';
+import { MediaItemComponent } from 'packages/obsidian/src/modals/MediaItemComponent';
 import { SelectModal } from 'packages/obsidian/src/modals/SelectModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import type { SelectModalData, SelectModalOptions } from 'packages/obsidian/src/utils/ModalHelper';
 import { SELECTMODALOPTIONSDEFAULT } from 'packages/obsidian/src/utils/ModalHelper';
-import { MediaItemComponent } from 'packages/obsidian/src/Modals/MediaItemComponent';
-
 
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
@@ -70,8 +69,8 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 				});
 
 				// Store references for later updates
-				(item as any).__titleEl = titleEl;
-				(item as any).__summaryEl = summaryEl;
+				(item as unknown).__titleEl = titleEl;
+				(item as unknown).__summaryEl = summaryEl;
 			},
 		});
 
@@ -98,12 +97,18 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 		console.debug('MDB | will auto-fetch detail for', item.dataSource, item.id, 'in', delayMs, 'ms', `(${apiDelay}ms per request)`);
 
-		setTimeout(async () => {
+		window.setTimeout(async () => {
 			if (item.image && item.year) return;
 			console.debug('MDB | auto-fetching detail for', item.dataSource, item.id);
 			try {
 				console.debug('MDB | fetching detailed info for', item.dataSource, item.id);
-				const detailed = await this.plugin.apiManager.queryDetailedInfo(item);
+				const detailedResult = await this.plugin.apiManager.queryDetailedInfo(item);
+				if (!detailedResult.ok) {
+					console.warn('MDB | failed to fetch detailed info', detailedResult.error);
+					return;
+				}
+
+				const detailed = detailedResult.value;
 				console.debug('MDB | detailed fetch result', detailed?.dataSource, detailed?.id, detailed?.image, detailed?.year);
 
 				if (detailed?.image && !item.image) {
@@ -113,8 +118,8 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 				if (!item.year && detailed?.year) {
 					item.year = detailed.year;
-					const titleEl = (item as any).__titleEl;
-					const summaryEl = (item as any).__summaryEl;
+					const titleEl = (item as unknown).__titleEl;
+					const summaryEl = (item as unknown).__summaryEl;
 					if (titleEl) titleEl.textContent = this.plugin.mediaTypeManager.getFileName(item);
 					if (summaryEl) summaryEl.textContent = `${item.getSummary()}\n`;
 				}

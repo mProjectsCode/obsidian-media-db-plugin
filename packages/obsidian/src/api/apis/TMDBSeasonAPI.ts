@@ -162,7 +162,6 @@ export class TMDBSeasonAPI extends APIModel {
 					id: result.id?.toString() ?? '',
 					seasonCount: totalSeasons,
 					image: result.poster_path ? `https://image.tmdb.org/t/p/w780${result.poster_path}` : '',
-
 				});
 			}),
 		);

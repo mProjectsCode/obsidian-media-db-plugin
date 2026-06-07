@@ -1,6 +1,6 @@
 import type MediaDbPlugin from 'packages/obsidian/src/main';
+import { MediaItemComponent } from 'packages/obsidian/src/modals/MediaItemComponent';
 import { SelectModal } from 'packages/obsidian/src/modals/SelectModal';
-import { MediaItemComponent } from 'packages/obsidian/src/Modals/MediaItemComponent';
 
 export interface SeasonSelectModalElement {
 	season_number: number;
