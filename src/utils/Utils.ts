@@ -223,28 +223,10 @@ export function unCamelCase(str: string): string {
 	);
 }
 
-interface TemplaterPlugin {
-	settings?: {
-		trigger_on_file_creation?: boolean;
-	};
-	templater?: {
-		overwrite_file_commands: (file: TFile) => Promise<void>;
-	};
-}
-
-function getTemplaterPlugin(app: App): TemplaterPlugin | null {
-	const pluginContainer = (app as App & { plugins?: { plugins?: Record<string, unknown> } }).plugins;
-	const candidate = pluginContainer?.plugins?.['templater-obsidian'];
-
-	if (!candidate || typeof candidate !== 'object') {
-		return null;
-	}
-
-	return candidate as TemplaterPlugin;
-}
+/* eslint-disable */
 
 export function hasTemplaterPlugin(app: App): boolean {
-	const templater = getTemplaterPlugin(app);
+	const templater = (app as any).plugins.plugins['templater-obsidian'];
 
 	return !!templater;
 }
@@ -252,14 +234,17 @@ export function hasTemplaterPlugin(app: App): boolean {
 // Copied from https://github.com/anpigon/obsidian-book-search-plugin
 // Licensed under the MIT license. Copyright (c) 2020 Jake Runzer
 export async function useTemplaterPluginInFile(app: App, file: TFile): Promise<void> {
-	const templater = getTemplaterPlugin(app);
-	if (templater && !templater.settings?.trigger_on_file_creation && templater.templater) {
+	const templater = (app as any).plugins.plugins['templater-obsidian'];
+	if (templater && !templater?.settings.trigger_on_file_creation) {
 		await templater.templater.overwrite_file_commands(file);
 	}
 }
 
+/* eslint-enable */
+
 export type ModelToData<T> = {
-	[K in keyof T as T[K] extends (...args: never[]) => unknown ? never : K]?: T[K] | null;
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+	[K in keyof T as T[K] extends Function ? never : K]?: T[K] | null;
 };
 
 // Checks if a given URL points to an existing image (status 200), or returns false for 404/other errors.
@@ -287,8 +272,8 @@ export function isTruthy<T>(value: T): value is Exclude<T, false | 0 | '' | null
  */
 export async function obsidianFetch(input: Request): Promise<Response> {
 	const obs_headers: Record<string, string> = {};
-	input.headers.forEach((value, key) => {
-		obs_headers[key] = value;
+	input.headers.forEach((header, value) => {
+		obs_headers[header] = value;
 	});
 
 	const res = await requestUrl({

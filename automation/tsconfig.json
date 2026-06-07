@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"baseUrl": ".",
 		"module": "ESNext",
 		"target": "ESNext",
 		"allowJs": true,
@@ -7,10 +8,10 @@
 		"strict": true,
 		"strictNullChecks": true,
 		"noImplicitReturns": true,
-		"moduleResolution": "bundler",
+		"moduleResolution": "node",
 		"importHelpers": true,
 		"isolatedModules": true,
-		"lib": ["DOM", "ES5", "ES6", "ES7", "Es2022"],
+		"lib": ["DOM", "ES5", "ES6", "ES7", "Es2021"],
 		"types": ["bun-types"],
 		"allowSyntheticDefaultImports": true,
 		"resolveJsonModule": true

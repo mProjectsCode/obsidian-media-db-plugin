@@ -76,14 +76,13 @@ export class OMDbAPI extends APIModel {
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
-		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.OMDbKeyId);
 
-		if (!key) {
+		if (!this.plugin.settings.OMDbKey) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const response = await requestUrl({
-			url: `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${key}`,
+			url: `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${this.plugin.settings.OMDbKey}`,
 			method: 'GET',
 		});
 
@@ -161,14 +160,13 @@ export class OMDbAPI extends APIModel {
 
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
-		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.OMDbKeyId);
 
-		if (!key) {
+		if (!this.plugin.settings.OMDbKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const response = await requestUrl({
-			url: `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${key}`,
+			url: `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${this.plugin.settings.OMDbKey}`,
 			method: 'GET',
 		});
 

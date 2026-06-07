@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+
 import createClient from 'openapi-fetch';
 import type MediaDbPlugin from '../../main';
 import type { MediaTypeModel } from '../../models/MediaTypeModel';
@@ -5,36 +7,6 @@ import { MovieModel } from '../../models/MovieModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 import type { paths } from '../schemas/TMDB';
-
-interface TMDBCreditMember {
-	name?: string | null;
-	job?: string | null;
-}
-
-interface TMDBCreditsResponse {
-	credits?: {
-		cast?: TMDBCreditMember[];
-		crew?: TMDBCreditMember[];
-	};
-}
-
-function isNonEmptyString(value: unknown): value is string {
-	return typeof value === 'string' && value.length > 0;
-}
-
-function getTopCastNames(credits: TMDBCreditsResponse['credits'], size: number): string[] {
-	return (credits?.cast ?? [])
-		.map(c => c.name)
-		.filter(isNonEmptyString)
-		.slice(0, size);
-}
-
-function getCrewNamesByJob(credits: TMDBCreditsResponse['credits'], job: string): string[] {
-	return (credits?.crew ?? [])
-		.filter(c => c.job === job)
-		.map(c => c.name)
-		.filter(isNonEmptyString);
-}
 
 export class TMDBMovieAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -55,16 +27,15 @@ export class TMDBMovieAPI extends APIModel {
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
-		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.TMDBKeyId);
 
-		if (!key) {
+		if (!this.plugin.settings.TMDBKey) {
 			throw new Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
 		const response = await client.GET('/3/search/movie', {
 			headers: {
-				Authorization: `Bearer ${key}`,
+				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
 			},
 			params: {
 				query: {
@@ -114,16 +85,15 @@ export class TMDBMovieAPI extends APIModel {
 
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
-		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.TMDBKeyId);
 
-		if (!key) {
+		if (!this.plugin.settings.TMDBKey) {
 			throw Error(`MDB | API key for ${this.apiName} missing.`);
 		}
 
 		const client = createClient<paths>({ baseUrl: 'https://api.themoviedb.org' });
 		const response = await client.GET('/3/movie/{movie_id}', {
 			headers: {
-				Authorization: `Bearer ${key}`,
+				Authorization: `Bearer ${this.plugin.settings.TMDBKey}`,
 			},
 			params: {
 				path: { movie_id: parseInt(id) },
@@ -147,7 +117,6 @@ export class TMDBMovieAPI extends APIModel {
 			throw Error(`MDB | No data received from ${this.apiName}.`);
 		}
 		// console.debug(result);
-		const credits = (result as TMDBCreditsResponse).credits;
 
 		return new MovieModel({
 			type: 'movie',
@@ -160,14 +129,18 @@ export class TMDBMovieAPI extends APIModel {
 			id: result.id.toString(),
 
 			plot: result.overview ?? '',
-			genres: result.genres?.map(g => g.name).filter(isNonEmptyString) ?? [],
-			writer: getCrewNamesByJob(credits, 'Screenplay'),
-			director: getCrewNamesByJob(credits, 'Director'),
-			studio: result.production_companies?.map(s => s.name).filter(isNonEmptyString) ?? [],
+			genres: result.genres?.map((g: any) => g.name) ?? [],
+			// TMDB's spec allows for 'append_to_response' but doesn't seem to account for it in the type
+			// @ts-ignore
+			writer: result.credits.crew?.filter((c: any) => c.job === 'Screenplay').map((c: any) => c.name) ?? [],
+			// @ts-ignore
+			director: result.credits.crew?.filter((c: any) => c.job === 'Director').map((c: any) => c.name) ?? [],
+			studio: result.production_companies?.map((s: any) => s.name) ?? [],
 
 			duration: result.runtime?.toString() ?? 'unknown',
 			onlineRating: result.vote_average,
-			actors: getTopCastNames(credits, 5),
+			// @ts-ignore
+			actors: result.credits.cast.map((c: any) => c.name).slice(0, 5) ?? [],
 			image: `https://image.tmdb.org/t/p/w780${result.poster_path}`,
 
 			released: ['Released'].includes(result.status!),
