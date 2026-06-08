@@ -1,3 +1,5 @@
+import { setIcon } from 'obsidian';
+
 export interface MediaItemComponentOptions {
 	imageUrl?: string;
 	imageAlt?: string;
@@ -66,7 +68,9 @@ export class MediaItemComponent {
 
 	private showPlaceholder(): void {
 		this.thumbEl.empty();
-		this.thumbEl.createEl('span', { text: '📷', cls: 'media-db-plugin-select-media-item-placeholder' });
+		const iconEl = this.thumbEl.createDiv('icon');
+		setIcon(iconEl, 'image');
+		iconEl.className = 'media-db-plugin-select-media-item-placeholder';
 	}
 
 	public updateImage(url: string | undefined): void {
