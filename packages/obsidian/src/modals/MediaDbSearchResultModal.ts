@@ -5,6 +5,11 @@ import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel
 import type { SelectModalData, SelectModalOptions } from 'packages/obsidian/src/utils/ModalHelper';
 import { SELECTMODALOPTIONSDEFAULT } from 'packages/obsidian/src/utils/ModalHelper';
 
+interface RenderedMediaItem extends MediaTypeModel {
+	titleEl?: HTMLElement;
+	summaryEl?: HTMLElement;
+}
+
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
 
@@ -17,6 +22,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	submitButtonText: string;
 
 	private autoFetchIndex: number;
+
 	constructor(plugin: MediaDbPlugin, selectModalOptions: SelectModalOptions) {
 		selectModalOptions = Object.assign({}, SELECTMODALOPTIONSDEFAULT, selectModalOptions);
 		super(plugin.app, selectModalOptions.elements ?? [], selectModalOptions.multiSelect);
@@ -42,15 +48,23 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		this.skipCallback = skipCallback;
 	}
 
-	// Different rate limit delay based on API source, MAL APIs = max 3 per second but that still seems to trigger rate limits, so using 750ms delay
+	/**
+	 * Returns the rate limit delay based on API source. MAL APIs allow max 3 per second, but that still triggers rate limits, so using 750ms delay.
+	 * @param dataSource The API source name (e.g., 'MALAPI', 'MALAPIManga')
+	 * @returns The delay in milliseconds (750ms for MAL, 200ms for others)
+	 */
 	private getDelayForApi(dataSource: string): number {
 		const isMalApi = dataSource === 'MALAPI' || dataSource === 'MALAPIManga';
 		return isMalApi ? 750 : 200;
 	}
 
-	// Renders each suggestion item.
+	/**
+	 * Renders a media suggestion item in the modal.
+	 * Creates the MediaItemComponent and auto-fetches detailed info if the item lacks image or year.
+	 * @param item The media type model to render
+	 * @param el The HTMLElement to render into
+	 */
 	renderElement(item: MediaTypeModel, el: HTMLElement): void {
-		// Create the media item component
 		const mediaComponent = new MediaItemComponent(el, {
 			imageUrl: this.getImageUrl(item),
 			imageAlt: item.title,
@@ -61,7 +75,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 				console.debug('MDB | Image loaded for', item.id);
 			},
 			renderContent: (contentEl: HTMLElement): void => {
-				const titleEl = contentEl.createEl('div', {
+				const titleEl = contentEl.createDiv({
 					text: this.plugin.mediaTypeManager.getFileName(item),
 					cls: 'media-db-plugin-select-title',
 				});
@@ -70,13 +84,12 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 					text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}`,
 				});
 
-				const typedItem = item as MediaTypeModel & { __titleEl?: HTMLElement; __summaryEl?: HTMLElement };
-				typedItem.__titleEl = titleEl;
-				typedItem.__summaryEl = summaryEl;
+				const renderedItem: RenderedMediaItem = item;
+				renderedItem.titleEl = titleEl;
+				renderedItem.summaryEl = summaryEl;
 			},
 		});
 
-		// Auto-fetch detailed info if needed
 		this.autoFetchDetails(item, mediaComponent);
 	}
 
@@ -120,11 +133,14 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 				if (!item.year && detailed?.year) {
 					item.year = detailed.year;
-					const typedItem = item as MediaTypeModel & { __titleEl?: HTMLElement; __summaryEl?: HTMLElement };
-					const titleEl = typedItem.__titleEl;
-					const summaryEl = typedItem.__summaryEl;
-					if (titleEl) titleEl.textContent = this.plugin.mediaTypeManager.getFileName(item);
-					if (summaryEl) summaryEl.textContent = `${item.getSummary()}\n`;
+
+					const renderedItem: RenderedMediaItem = item;
+					if (renderedItem.titleEl) {
+						renderedItem.titleEl.textContent = this.plugin.mediaTypeManager.getFileName(item);
+					}
+					if (renderedItem.summaryEl) {
+						renderedItem.summaryEl.textContent = `${item.getSummary()}\n`;
+					}
 				}
 			} catch (e) {
 				console.warn('MDB | Failed to fetch detail', e);
@@ -132,7 +148,6 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		}, delayMs);
 	}
 
-	// Perform action on the selected suggestion.
 	submit(): void {
 		if (!this.busy) {
 			this.busy = true;
