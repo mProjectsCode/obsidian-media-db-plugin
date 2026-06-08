@@ -16,6 +16,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	skipCallback?: () => void;
 	submitButtonText: string;
 
+	private autoFetchIndex: number;
 	constructor(plugin: MediaDbPlugin, selectModalOptions: SelectModalOptions) {
 		selectModalOptions = Object.assign({}, SELECTMODALOPTIONSDEFAULT, selectModalOptions);
 		super(plugin.app, selectModalOptions.elements ?? [], selectModalOptions.multiSelect);
@@ -26,6 +27,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		this.submitButtonText = selectModalOptions.submitButtonText ?? 'Ok';
 		this.busy = false;
 		this.sendCallback = false;
+		this.autoFetchIndex = 0;
 	}
 
 	setSubmitCb(submitCallback: (res: SelectModalData) => void): void {
@@ -40,10 +42,10 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		this.skipCallback = skipCallback;
 	}
 
-	// Different rate limit delay based on API source, MAL APIs = max 3 per second so 400ms between requests to be safe
+	// Different rate limit delay based on API source, MAL APIs = max 3 per second but that still seems to trigger rate limits, so using 750ms delay
 	private getDelayForApi(dataSource: string): number {
 		const isMalApi = dataSource === 'MALAPI' || dataSource === 'MALAPIManga';
-		return isMalApi ? 400 : 200;
+		return isMalApi ? 750 : 200;
 	}
 
 	// Renders each suggestion item.
@@ -52,13 +54,13 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		const mediaComponent = new MediaItemComponent(el, {
 			imageUrl: this.getImageUrl(item),
 			imageAlt: item.title,
-			onImageError: () => {
+			onImageError: (): void => {
 				console.debug('MDB | Image failed to load for', item.id);
 			},
-			onImageLoad: () => {
+			onImageLoad: (): void => {
 				console.debug('MDB | Image loaded for', item.id);
 			},
-			renderContent: contentEl => {
+			renderContent: (contentEl: HTMLElement): void => {
 				const titleEl = contentEl.createEl('div', {
 					text: this.plugin.mediaTypeManager.getFileName(item),
 					cls: 'media-db-plugin-select-title',
@@ -68,9 +70,9 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 					text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}`,
 				});
 
-				// Store references for later updates
-				(item as unknown).__titleEl = titleEl;
-				(item as unknown).__summaryEl = summaryEl;
+				const typedItem = item as MediaTypeModel & { __titleEl?: HTMLElement; __summaryEl?: HTMLElement };
+				typedItem.__titleEl = titleEl;
+				typedItem.__summaryEl = summaryEl;
 			},
 		});
 
@@ -92,8 +94,8 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		if (!needsFetch) return;
 
 		const apiDelay = this.getDelayForApi(item.dataSource);
-		const element = document.getElementById(`media-db-plugin-select-element-${this.selectModalElements.length}`);
-		const delayMs = element ? (parseInt(element.id.split('-').pop() ?? '0') ?? 0) * apiDelay : 0;
+		const index = this.autoFetchIndex++;
+		const delayMs = index * apiDelay;
 
 		console.debug('MDB | will auto-fetch detail for', item.dataSource, item.id, 'in', delayMs, 'ms', `(${apiDelay}ms per request)`);
 
@@ -118,8 +120,9 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 
 				if (!item.year && detailed?.year) {
 					item.year = detailed.year;
-					const titleEl = (item as unknown).__titleEl;
-					const summaryEl = (item as unknown).__summaryEl;
+					const typedItem = item as MediaTypeModel & { __titleEl?: HTMLElement; __summaryEl?: HTMLElement };
+					const titleEl = typedItem.__titleEl;
+					const summaryEl = typedItem.__summaryEl;
 					if (titleEl) titleEl.textContent = this.plugin.mediaTypeManager.getFileName(item);
 					if (summaryEl) summaryEl.textContent = `${item.getSummary()}\n`;
 				}

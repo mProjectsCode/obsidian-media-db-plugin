@@ -8,16 +8,14 @@ export interface MediaItemComponentOptions {
 
 export class MediaItemComponent {
 	private container: HTMLElement;
-	private thumbEl: HTMLElement;
-	private contentEl: HTMLElement;
+	private thumbEl!: HTMLElement;
+	private contentEl!: HTMLElement;
 	private imgEl: HTMLImageElement | undefined;
 	private options: MediaItemComponentOptions;
 
 	constructor(container: HTMLElement, options: MediaItemComponentOptions) {
 		this.container = container;
 		this.options = options;
-		this.thumbEl = null as unknown; // Will be initialized in setup
-		this.contentEl = null as unknown;
 
 		this.setup();
 	}
