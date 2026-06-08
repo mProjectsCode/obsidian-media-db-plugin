@@ -23,26 +23,12 @@ export class MediaItemComponent {
 	private setup(): void {
 		// Set container layout
 		this.container.addClass('media-item-component');
-		this.container.style.display = 'flex';
-		this.container.style.gap = '8px';
-		this.container.style.alignItems = 'flex-start';
 
 		// Create thumbnail
 		this.thumbEl = this.container.createDiv({ cls: 'media-item-thumb' });
-		this.thumbEl.style.width = '48px';
-		this.thumbEl.style.height = '72px';
-		this.thumbEl.style.flex = '0 0 48px';
-		this.thumbEl.style.overflow = 'hidden';
-		this.thumbEl.style.background = 'var(--background-modifier-hover)';
-		this.thumbEl.style.borderRadius = '4px';
-		this.thumbEl.style.display = 'flex';
-		this.thumbEl.style.alignItems = 'center';
-		this.thumbEl.style.justifyContent = 'center';
 
 		// Create content area
 		this.contentEl = this.container.createDiv({ cls: 'media-item-content' });
-		this.contentEl.style.flex = '1';
-		this.contentEl.style.minWidth = '0';
 
 		// Render custom content
 		this.options.renderContent(this.contentEl);
@@ -61,10 +47,6 @@ export class MediaItemComponent {
 			this.imgEl.loading = 'lazy';
 			this.imgEl.alt = this.options.imageAlt || 'Media item';
 			this.imgEl.className = 'media-item-image';
-			this.imgEl.style.width = '100%';
-			this.imgEl.style.height = '100%';
-			this.imgEl.style.objectFit = 'cover';
-			this.imgEl.style.display = 'block';
 
 			this.imgEl.onerror = () => {
 				this.showPlaceholder();
@@ -84,9 +66,7 @@ export class MediaItemComponent {
 
 	private showPlaceholder(): void {
 		this.thumbEl.empty();
-		const span = this.thumbEl.createEl('span', { text: '📷' });
-		span.style.fontSize = '24px';
-		span.style.color = 'var(--text-muted)';
+		this.thumbEl.createEl('span', { text: '📷', cls: 'media-item-placeholder' });
 	}
 
 	public updateImage(url: string | undefined): void {
@@ -98,7 +78,7 @@ export class MediaItemComponent {
 			}
 		} else if (url === 'NSFW') {
 			this.thumbEl.empty();
-			this.thumbEl.createEl('span', { text: 'NSFW' });
+			this.thumbEl.createEl('span', { text: 'NSFW', cls: 'media-item-placeholder' });
 		} else {
 			this.showPlaceholder();
 		}
