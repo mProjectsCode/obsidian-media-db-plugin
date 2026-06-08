@@ -1,4 +1,5 @@
 import type MediaDbPlugin from 'packages/obsidian/src/main';
+import { MediaItemComponent } from 'packages/obsidian/src/modals/MediaItemComponent';
 import { SelectModal } from 'packages/obsidian/src/modals/SelectModal';
 
 export interface SeasonSelectModalElement {
@@ -25,10 +26,16 @@ export class MediaDbSeasonSelectModal extends SelectModal<SeasonSelectModalEleme
 	}
 
 	renderElement(season: SeasonSelectModalElement, el: HTMLElement): void {
-		el.createDiv({ text: `${season.name}` });
-		if (season.air_date) {
-			el.createEl('small', { text: `Air date: ${season.air_date}` });
-		}
+		new MediaItemComponent(el, {
+			imageUrl: season.poster_path ? (season.poster_path.startsWith('http') ? season.poster_path : `https://image.tmdb.org/t/p/w780${season.poster_path}`) : undefined,
+			imageAlt: season.name,
+			renderContent: (contentEl: HTMLElement): void => {
+				contentEl.createDiv({ text: `${season.name}` });
+				if (season.air_date) {
+					contentEl.createEl('small', { text: `Air date: ${season.air_date}` });
+				}
+			},
+		});
 	}
 
 	submit(): void {
