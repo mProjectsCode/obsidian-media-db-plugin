@@ -22,13 +22,13 @@ export class MediaItemComponent {
 
 	private setup(): void {
 		// Set container layout
-		this.container.addClass('media-item-component');
+		this.container.addClass('media-db-plugin-select-media-item-component');
 
 		// Create thumbnail
-		this.thumbEl = this.container.createDiv({ cls: 'media-item-thumb' });
+		this.thumbEl = this.container.createDiv({ cls: 'media-db-plugin-select-media-item-thumb' });
 
 		// Create content area
-		this.contentEl = this.container.createDiv({ cls: 'media-item-content' });
+		this.contentEl = this.container.createDiv({ cls: 'media-db-plugin-select-media-item-content' });
 
 		// Render custom content
 		this.options.renderContent(this.contentEl);
@@ -43,17 +43,17 @@ export class MediaItemComponent {
 
 	private loadImage(url: string): void {
 		if (!this.imgEl) {
-			this.imgEl = document.createElement('img');
+			this.imgEl = activeDocument.createElement('img');
 			this.imgEl.loading = 'lazy';
-			this.imgEl.alt = this.options.imageAlt || 'Media item';
-			this.imgEl.className = 'media-item-image';
+			this.imgEl.alt = this.options.imageAlt ?? 'Media item';
+			this.imgEl.className = 'media-db-plugin-select-media-item-image';
 
-			this.imgEl.onerror = () => {
+			this.imgEl.onerror = (): void => {
 				this.showPlaceholder();
 				this.options.onImageError?.();
 			};
 
-			this.imgEl.onload = () => {
+			this.imgEl.onload = (): void => {
 				this.options.onImageLoad?.();
 			};
 
@@ -66,7 +66,7 @@ export class MediaItemComponent {
 
 	private showPlaceholder(): void {
 		this.thumbEl.empty();
-		this.thumbEl.createEl('span', { text: '📷', cls: 'media-item-placeholder' });
+		this.thumbEl.createEl('span', { text: '📷', cls: 'media-db-plugin-select-media-item-placeholder' });
 	}
 
 	public updateImage(url: string | undefined): void {
@@ -78,7 +78,7 @@ export class MediaItemComponent {
 			}
 		} else if (url === 'NSFW') {
 			this.thumbEl.empty();
-			this.thumbEl.createEl('span', { text: 'NSFW', cls: 'media-item-placeholder' });
+			this.thumbEl.createEl('span', { text: 'NSFW', cls: 'media-db-plugin-select-media-item-placeholder' });
 		} else {
 			this.showPlaceholder();
 		}

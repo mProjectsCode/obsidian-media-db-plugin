@@ -41,13 +41,13 @@ small.media-db-plugin-list-text {
 	font-size: 16px;
 }
 
-.media-item-component {
+.media-db-plugin-select-media-item-component {
 	display: flex;
 	gap: 8px;
 	align-items: flex-start;
 }
 
-.media-item-thumb {
+.media-db-plugin-select-media-item-thumb {
 	width: 48px;
 	height: 72px;
 	flex: 0 0 48px;
@@ -59,19 +59,19 @@ small.media-db-plugin-list-text {
 	justify-content: center;
 }
 
-.media-item-content {
+.media-db-plugin-select-media-item-content {
 	flex: 1;
 	min-width: 0;
 }
 
-.media-item-image {
+.media-db-plugin-select-media-item-image {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
 	display: block;
 }
 
-.media-item-placeholder {
+.media-db-plugin-select-media-item-placeholder {
 	font-size: 24px;
 	color: var(--text-muted);
 }
