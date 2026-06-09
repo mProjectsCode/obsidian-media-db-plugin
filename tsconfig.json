@@ -1,7 +1,12 @@
 {
 	"compilerOptions": {
+		"paths": {
+			"packages/*": ["./packages/*"],
+			"tests/*": ["./tests/*"]
+		},
 		"module": "ESNext",
-		"target": "ESNext",
+		"target": "ES2022",
+		"noEmit": true,
 		"allowJs": true,
 		"checkJs": true,
 		"noImplicitAny": true,
@@ -18,9 +23,7 @@
 		"sourceMap": true,
 		"lib": ["DOM", "ESNext"],
 		"allowSyntheticDefaultImports": true,
-		"jsx": "preserve",
-		"jsxImportSource": "solid-js",
 		"types": ["vite/client"]
 	},
-	"include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"]
+	"include": ["packages/obsidian/**/*.ts"]
 }
