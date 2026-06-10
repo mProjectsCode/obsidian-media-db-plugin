@@ -261,6 +261,7 @@ export class OpenLibraryAPI extends APIModel {
 				plot: this.pickDescription(search?.description),
 				genres: search?.subject,
 				pages,
+				onlineRating: search?.ratings_average,
 				image: coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : undefined,
 				released: true,
 				userData: {
