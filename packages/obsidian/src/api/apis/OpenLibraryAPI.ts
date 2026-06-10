@@ -57,6 +57,7 @@ export class OpenLibraryAPI extends APIModel {
 
 	private detectIdKind(id: string): OpenLibraryIdKind {
 		if (/\/books\/OL\d+M/i.test(id)) return 'book';
+		if (/\/isbn\/\d+/i.test(id)) return 'book';
 		return 'search';
 	}
 
@@ -137,7 +138,7 @@ export class OpenLibraryAPI extends APIModel {
 				params: {
 					query: {
 						q: title,
-						fields: 'key,title,author_name,first_publish_year,cover_i,subject,number_of_pages,number_of_pages_median,description,ratings_average',
+						fields: 'key,title,author_name,first_publish_year,cover_i,subject,number_of_pages,number_of_pages_median,description,ratings_average,isbn',
 					},
 				},
 				fetch: obsidianFetch,
@@ -151,11 +152,9 @@ export class OpenLibraryAPI extends APIModel {
 				}),
 		);
 
-		if (!responseResult.ok) {
-			return err(responseResult.error);
-		}
-		const response = responseResult.value;
+		if (!responseResult.ok) return err(responseResult.error);
 
+		const response = responseResult.value;
 		if (response.error !== undefined) {
 			return err({
 				kind: MDBErrorKind.Api,
@@ -179,6 +178,7 @@ export class OpenLibraryAPI extends APIModel {
 					year: result.first_publish_year?.toString() ?? 'unknown',
 					dataSource: this.apiName,
 					id: result.key ?? title,
+					url: result.key ? `https://openlibrary.org${result.key}` : undefined,
 					author: result.author_name?.join(', '),
 					plot: this.pickDescription(result.description),
 					genres: result.subject,
@@ -187,6 +187,12 @@ export class OpenLibraryAPI extends APIModel {
 					isbn: isbn10 ? Number(isbn10) : undefined,
 					isbn13: isbn13 ? Number(isbn13) : undefined,
 					image: result.cover_i ? `https://covers.openlibrary.org/b/id/${result.cover_i}-L.jpg` : undefined,
+					released: true,
+					userData: {
+						read: false,
+						lastRead: '',
+						personalRating: 0,
+					},
 				}),
 			);
 		}
@@ -215,9 +221,8 @@ export class OpenLibraryAPI extends APIModel {
 		if (!bookResult.ok) return err(bookResult.error);
 
 		const book = bookResult.value;
-		const olid = bookKey.replace(/^\/books\//i, '');
+		const olid = bookKey.replace(/^\/books\//i, '').replace(/^\/isbn\//i, '');
 		const searchResult = await this.searchByOlid(olid);
-
 		const search = searchResult.ok ? searchResult.value : undefined;
 
 		const title = book.title ?? search?.title ?? 'unknown';
@@ -227,8 +232,15 @@ export class OpenLibraryAPI extends APIModel {
 		const yearFromSearch = search?.first_publish_year?.toString();
 		const year = yearFromBook ?? yearFromSearch ?? 'unknown';
 
-		const pagesFromBook = book.pagination ? Number(book.pagination) : book.number_of_pages;
-		const pages = Number.isFinite(pagesFromBook!) ? Number(pagesFromBook) : (search?.number_of_pages_median ?? search?.number_of_pages);
+		const bookPagesRaw = book.number_of_pages ?? (book.pagination ? Number(book.pagination) : undefined);
+		const searchPagesRaw = search?.number_of_pages ?? search?.number_of_pages_median;
+
+		const pages =
+			Number.isFinite(bookPagesRaw!) && Number(bookPagesRaw) > 0
+				? Number(bookPagesRaw)
+				: Number.isFinite(searchPagesRaw!) && Number(searchPagesRaw) > 0
+					? Number(searchPagesRaw)
+					: undefined;
 
 		const bookIsbn10 = book.isbn_10?.find(el => el.length <= 10);
 		const bookIsbn13 = book.isbn_13?.find(el => el.length === 13);
@@ -248,7 +260,7 @@ export class OpenLibraryAPI extends APIModel {
 				author: search?.author_name?.join(', '),
 				plot: this.pickDescription(search?.description),
 				genres: search?.subject,
-				pages: Number.isFinite(pages!) ? Number(pages) : undefined,
+				pages,
 				image: coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : undefined,
 				released: true,
 				userData: {
@@ -293,8 +305,8 @@ export class OpenLibraryAPI extends APIModel {
 		}
 
 		const data = response.data as { docs: SearchResponse[] };
-
 		const result = data.docs?.[0];
+
 		if (!result) {
 			return err({
 				kind: MDBErrorKind.Api,
@@ -332,6 +344,7 @@ export class OpenLibraryAPI extends APIModel {
 			}),
 		);
 	}
+
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.OpenLibraryAPI_disabledMediaTypes;
 	}
