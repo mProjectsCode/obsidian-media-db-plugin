@@ -28,7 +28,7 @@ export class BookModel extends MediaTypeModel {
 
 		this.author = '';
 		this.plot = '';
-		this.genres= [];
+		this.genres = [];
 		this.pages = 0;
 		this.image = '';
 		this.onlineRating = 0;

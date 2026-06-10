@@ -12,36 +12,42 @@ import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 import { obsidianFetch } from 'packages/obsidian/src/utils/Utils';
 import type { paths } from 'packages/schemas/src/OpenLibrary';
 
-interface SearchResponse {
-	editions: {
-		docs: {
-			key?: string;
-			title?: string;
-			cover_i?: number;
-			isbn?: string[];
-		}[];
-	};
-	cover_i?: number;
-	has_fulltext?: boolean;
-	edition_count?: number;
-	title?: string;
-	author_name?: string[];
-	first_publish_year?: number;
-	key: string;
-	description?: string;
-	subject?: string[];
+type OpenLibraryIdKind = 'book' | 'search';
 
+interface SearchResponse {
+	key?: string;
+	title?: string;
+	cover_i?: number;
+	author_name?: string[];
+	author_key?: string[];
+	first_publish_year?: number;
+	description?: string | { value?: string };
+	subject?: string[];
 	number_of_pages_median?: number;
-	isbn?: string[];
+	number_of_pages?: number;
 	ratings_average?: number;
+	isbn?: string[];
+}
+
+interface BookResponse {
+	key?: string;
+	title?: string;
+	covers?: number[];
+	isbn_10?: string[];
+	isbn_13?: string[];
+	authors?: { key?: string }[];
+	works?: { key?: string }[];
+	pagination?: string;
+	publish_date?: string;
+	number_of_pages?: number;
 }
 
 export class OpenLibraryAPI extends APIModel {
 	plugin: MediaDbPlugin;
+	private client = createClient<paths>({ baseUrl: 'https://openlibrary.org/' });
 
 	constructor(plugin: MediaDbPlugin) {
 		super();
-
 		this.plugin = plugin;
 		this.apiName = 'OpenLibraryAPI';
 		this.apiDescription = 'A free API for books';
@@ -49,16 +55,89 @@ export class OpenLibraryAPI extends APIModel {
 		this.types = [MediaType.Book];
 	}
 
+	private detectIdKind(id: string): OpenLibraryIdKind {
+		if (/\/books\/OL\d+M/i.test(id)) return 'book';
+		return 'search';
+	}
+
+	private normalizeId(id: string): string {
+		return id.startsWith('http') ? new URL(id).pathname : id;
+	}
+
+	private pickDescription(desc?: string | { value?: string }): string | undefined {
+		if (!desc) return undefined;
+		return typeof desc === 'string' ? desc : desc.value;
+	}
+
+	private async fetchOpenLibraryJson<T>(url: string, context: Record<string, unknown>): Promise<Result<T, MDBError>> {
+		try {
+			const response = await obsidianFetch(new Request(`https://openlibrary.org${url}`));
+			if (!response.ok) {
+				return err({
+					kind: MDBErrorKind.Api,
+					message: `MDB | Received status code ${response.status} from ${this.apiName}.`,
+					userMessage: `Received status code ${response.status} from ${this.apiName}.`,
+					context: { ...context, apiName: this.apiName, status: response.status },
+				});
+			}
+			return ok((await response.json()) as T);
+		} catch (cause) {
+			return err(
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
+					message: `MDB | Network error querying ${this.apiName}`,
+					userMessage: `Network error querying ${this.apiName}`,
+					context,
+				}),
+			);
+		}
+	}
+
+	private async searchByOlid(olid: string): Promise<Result<SearchResponse | undefined, MDBError>> {
+		const responseResult = await fromPromise(
+			this.client.GET('/search.json', {
+				params: {
+					query: {
+						q: olid,
+						fields: 'key,title,author_name,author_key,first_publish_year,cover_i,subject,number_of_pages,number_of_pages_median,description,ratings_average,isbn',
+					},
+				},
+				fetch: obsidianFetch,
+			}),
+			cause =>
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
+					message: `MDB | Network error querying ${this.apiName}`,
+					userMessage: `Network error querying ${this.apiName}`,
+					context: { apiName: this.apiName, olid },
+				}),
+		);
+
+		if (!responseResult.ok) return err(responseResult.error);
+
+		const response = responseResult.value;
+		if (response.error !== undefined) {
+			return err({
+				kind: MDBErrorKind.Api,
+				message: `MDB | Received status code ${response.response.status} from ${this.apiName}.`,
+				userMessage: `Received status code ${response.response.status} from ${this.apiName}.`,
+				context: { apiName: this.apiName, status: response.response.status, olid },
+			});
+		}
+
+		const data = response.data as { docs?: SearchResponse[] };
+		return ok(data.docs?.[0]);
+	}
+
 	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const client = createClient<paths>({ baseUrl: 'https://openlibrary.org/' });
-
 		const responseResult = await fromPromise(
-			client.GET('/search.json', {
+			this.client.GET('/search.json', {
 				params: {
 					query: {
 						q: title,
+						fields: 'key,title,author_name,first_publish_year,cover_i,subject,number_of_pages,number_of_pages_median,description,ratings_average',
 					},
 				},
 				fetch: obsidianFetch,
@@ -86,23 +165,28 @@ export class OpenLibraryAPI extends APIModel {
 			});
 		}
 
-		const data = response.data as {
-			docs: SearchResponse[];
-		};
-
-		// console.debug(data);
-
+		const data = response.data as { docs: SearchResponse[] };
 		const ret: MediaTypeModel[] = [];
 
 		for (const result of data.docs) {
+			const isbn10 = result.isbn?.find(el => el.length <= 10);
+			const isbn13 = result.isbn?.find(el => el.length === 13);
+
 			ret.push(
 				new BookModel({
 					title: result.title,
 					englishTitle: result.title,
 					year: result.first_publish_year?.toString() ?? 'unknown',
 					dataSource: this.apiName,
-					id: result.key,
+					id: result.key ?? title,
 					author: result.author_name?.join(', '),
+					plot: this.pickDescription(result.description),
+					genres: result.subject,
+					pages: result.number_of_pages_median ?? result.number_of_pages,
+					onlineRating: result.ratings_average,
+					isbn: isbn10 ? Number(isbn10) : undefined,
+					isbn13: isbn13 ? Number(isbn13) : undefined,
+					image: result.cover_i ? `https://covers.openlibrary.org/b/id/${result.cover_i}-L.jpg` : undefined,
 				}),
 			);
 		}
@@ -113,14 +197,76 @@ export class OpenLibraryAPI extends APIModel {
 	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const client = createClient<paths>({ baseUrl: 'https://openlibrary.org/' });
+		const normalizedId = this.normalizeId(id);
+		const kind = this.detectIdKind(normalizedId);
 
+		if (kind === 'book') {
+			return this.getByBookId(normalizedId);
+		}
+
+		return this.getBySearchQuery(normalizedId);
+	}
+
+	private async getByBookId(bookKey: string): Promise<Result<MediaTypeModel, MDBError>> {
+		const bookResult = await this.fetchOpenLibraryJson<BookResponse>(`${bookKey}.json`, {
+			apiName: this.apiName,
+			bookKey,
+		});
+		if (!bookResult.ok) return err(bookResult.error);
+
+		const book = bookResult.value;
+		const olid = bookKey.replace(/^\/books\//i, '');
+		const searchResult = await this.searchByOlid(olid);
+
+		const search = searchResult.ok ? searchResult.value : undefined;
+
+		const title = book.title ?? search?.title ?? 'unknown';
+		const coverId = book.covers?.[0] ?? search?.cover_i;
+
+		const yearFromBook = book.publish_date;
+		const yearFromSearch = search?.first_publish_year?.toString();
+		const year = yearFromBook ?? yearFromSearch ?? 'unknown';
+
+		const pagesFromBook = book.pagination ? Number(book.pagination) : book.number_of_pages;
+		const pages = Number.isFinite(pagesFromBook!) ? Number(pagesFromBook) : (search?.number_of_pages_median ?? search?.number_of_pages);
+
+		const bookIsbn10 = book.isbn_10?.find(el => el.length <= 10);
+		const bookIsbn13 = book.isbn_13?.find(el => el.length === 13);
+		const searchIsbn10 = search?.isbn?.find(el => el.length <= 10);
+		const searchIsbn13 = search?.isbn?.find(el => el.length === 13);
+
+		return ok(
+			new BookModel({
+				title,
+				englishTitle: title,
+				year,
+				dataSource: this.apiName,
+				url: `https://openlibrary.org${bookKey}`,
+				id: bookKey,
+				isbn: bookIsbn10 ? Number(bookIsbn10) : searchIsbn10 ? Number(searchIsbn10) : undefined,
+				isbn13: bookIsbn13 ? Number(bookIsbn13) : searchIsbn13 ? Number(searchIsbn13) : undefined,
+				author: search?.author_name?.join(', '),
+				plot: this.pickDescription(search?.description),
+				genres: search?.subject,
+				pages: Number.isFinite(pages!) ? Number(pages) : undefined,
+				image: coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : undefined,
+				released: true,
+				userData: {
+					read: false,
+					lastRead: '',
+					personalRating: 0,
+				},
+			}),
+		);
+	}
+
+	private async getBySearchQuery(query: string): Promise<Result<MediaTypeModel, MDBError>> {
 		const responseResult = await fromPromise(
-			client.GET('/search.json', {
+			this.client.GET('/search.json', {
 				params: {
 					query: {
-						q: `${id}`,
-						fields: 'key,title,author_name,number_of_pages_median,first_publish_year,isbn,ratings_score,first_sentence,title_suggest,rating*,cover*,editions,description,subject',
+						q: query,
+						fields: 'key,title,author_name,first_publish_year,cover_i,subject,number_of_pages,number_of_pages_median,description,ratings_average,isbn',
 					},
 				},
 				fetch: obsidianFetch,
@@ -130,78 +276,54 @@ export class OpenLibraryAPI extends APIModel {
 					kind: MDBErrorKind.Network,
 					message: `MDB | Network error querying ${this.apiName}`,
 					userMessage: `Network error querying ${this.apiName}`,
-					context: { apiName: this.apiName, id },
+					context: { apiName: this.apiName, query },
 				}),
 		);
 
-		if (!responseResult.ok) {
-			return err(responseResult.error);
-		}
-		const response = responseResult.value;
+		if (!responseResult.ok) return err(responseResult.error);
 
+		const response = responseResult.value;
 		if (response.error !== undefined) {
 			return err({
 				kind: MDBErrorKind.Api,
 				message: `MDB | Received status code ${response.response.status} from ${this.apiName}.`,
 				userMessage: `Received status code ${response.response.status} from ${this.apiName}.`,
-				context: { apiName: this.apiName, status: response.response.status, id },
+				context: { apiName: this.apiName, status: response.response.status, query },
 			});
 		}
 
-		const data = response.data as {
-			docs: SearchResponse[];
-			q?: string;
-		};
+		const data = response.data as { docs: SearchResponse[] };
 
 		const result = data.docs?.[0];
 		if (!result) {
 			return err({
 				kind: MDBErrorKind.Api,
-				message: `MDB | No data found for ID ${id} in ${this.apiName}.`,
-				userMessage: `No data found for ID ${id}.`,
-				context: { apiName: this.apiName, id },
+				message: `MDB | No data found for query ${query} in ${this.apiName}.`,
+				userMessage: `No data found for query ${query}.`,
+				context: { apiName: this.apiName, query },
 			});
 		}
 
-		let key = result.key;
-		let title = result.title;
-		let cover_i = result.cover_i;
-		let isbnArr = result.isbn;
-
-		// Check if the query is for /isbn/ or /books/ and extract from editions.docs if present
-		const q = data.q ?? '';
-		if ((q.includes('/isbn/') || q.includes('/books/')) && result.editions && Array.isArray(result.editions.docs) && result.editions.docs.length > 0) {
-			const edition = result.editions.docs[0];
-			key = edition.key ?? key;
-			title = edition.title ?? title;
-			cover_i = edition.cover_i ?? cover_i;
-			isbnArr = edition.isbn ?? isbnArr;
-		}
-
-		const pages = Number(result.number_of_pages_median);
-		const isbn = Number((isbnArr ?? []).find((el: string) => el.length <= 10));
-		const isbn13 = Number((isbnArr ?? []).find((el: string) => el.length == 13));
+		const isbn10 = result.isbn?.find(el => el.length <= 10);
+		const isbn13 = result.isbn?.find(el => el.length === 13);
 
 		return ok(
 			new BookModel({
-				title: title,
+				title: result.title,
+				englishTitle: result.title,
 				year: result.first_publish_year?.toString() ?? 'unknown',
 				dataSource: this.apiName,
-				url: `https://openlibrary.org` + key,
-				id: key,
-				isbn: Number.isNaN(isbn) ? undefined : isbn,
-				isbn13: Number.isNaN(isbn13) ? undefined : isbn13,
-				englishTitle: title,
-
+				id: result.key ?? query,
+				url: result.key ? `https://openlibrary.org${result.key}` : undefined,
+				isbn: isbn10 ? Number(isbn10) : undefined,
+				isbn13: isbn13 ? Number(isbn13) : undefined,
 				author: result.author_name?.join(', '),
-				plot: result.description ?? undefined,
-				genres: result.subject ?? undefined,
-				pages: Number.isNaN(pages) ? undefined : pages,
+				plot: this.pickDescription(result.description),
+				genres: result.subject,
+				pages: result.number_of_pages_median ?? result.number_of_pages,
 				onlineRating: result.ratings_average,
-				image: cover_i ? `https://covers.openlibrary.org/b/id/` + cover_i + `-L.jpg` : undefined,
-
+				image: result.cover_i ? `https://covers.openlibrary.org/b/id/${result.cover_i}-L.jpg` : undefined,
 				released: true,
-
 				userData: {
 					read: false,
 					lastRead: '',
