@@ -50,7 +50,7 @@ function replaceTag(match: string, mediaTypeModel: MediaTypeModel, ignoreUndefin
 		let pathString = parts[1];
 
 		// Check if the path is wrapped in [[]] for wikilinks
-		const wikilinkMatch = pathString.match(/^\[\[(.+?)\]\]$/);
+		const wikilinkMatch = /^\[\[(.+?)\]\]$/.exec(pathString);
 		const useWikilinks = !!wikilinkMatch;
 
 		// Extract the actual path (remove [[ ]] if present)
