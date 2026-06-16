@@ -12,8 +12,8 @@ export class BookModel extends MediaTypeModel {
 	pages: number;
 	image: string;
 	onlineRating: number;
-	isbn: number;
-	isbn13: number;
+	isbn: string;
+	isbn13: string;
 
 	released: boolean;
 
@@ -32,8 +32,8 @@ export class BookModel extends MediaTypeModel {
 		this.pages = 0;
 		this.image = '';
 		this.onlineRating = 0;
-		this.isbn = 0;
-		this.isbn13 = 0;
+		this.isbn = '';
+		this.isbn13 = '';
 
 		this.released = false;
 
