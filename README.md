@@ -22,19 +22,76 @@ The plugin allows you to set a template note that gets added to the end of any n
 The plugin also offers simple template tags, for example `{{ title }}`, which will be replaced by the title of the media being imported.  
 Note that template tags are surrounded by two curly braces and spaces. The spaces inside the curly braces are important!
 
-For arrays, there are two special ways of displaying them:
+**Array Operators**
 
-- using `{{ LIST:variable_name }}` will result in:
+For arrays, there are several operators available for different formatting needs:
+
+Body Text Operators (no quotes)
+
+- `{{ LIST:variable_name }}` - Unlinked list:
+
     ```
       - element 1
       - element 2
       - element 3
-      - ...
     ```
-- using `{{ ENUM:variable_name }}` will result in:
+
+- `{{ LIST:[[variable_name]] }}` - Wikilinked list:
+
     ```
-      element 1, element 2, element 3, ...
+      - [[element 1]]
+      - [[element 2]]
+      - [[element 3]]
     ```
+
+- `{{ ENUM:variable_name }}` - Unlinked comma-separated:
+
+    ```
+    element 1, element 2, element 3
+    ```
+
+- `{{ ENUM:[[variable_name]] }}` - Wikilinked comma-separated:
+    ```
+    [[element 1]], [[element 2]], [[element 3]]
+    ```
+
+YAML Frontmatter Operators (with quotes)
+
+- `{{ LISTYAML:variable_name }}` - Unlinked YAML list:
+
+    ```yaml
+    variable_name:
+        - element 1
+        - element 2
+        - element 3
+    ```
+
+- `{{ LISTYAML:[[variable_name]] }}` - Wikilinked YAML list (recognized by Obsidian):
+
+    ```yaml
+    variable_name:
+        - '[[element 1]]'
+        - '[[element 2]]'
+        - '[[element 3]]'
+    ```
+
+- `{{ ENUMYAML:variable_name }}` - Comma-separated for YAML (no wikilink support):
+    ```yaml
+    variable_name: element 1, element 2, element 3
+    ```
+
+Single Element Operators
+
+- `{{ FIRST:variable_name }}` - Returns the first element of an array
+- `{{ FIRST:[[variable_name]] }}` - Returns the first element as a wikilink: `[[element 1]]`
+- `{{ LAST:variable_name }}` - Returns the last element of an array
+- `{{ LAST:[[variable_name]] }}` - Returns the last element as a wikilink: `[[element 3]]`
+
+**Wikilink Support**
+
+Wrap the variable name in double brackets `[[variable_name]]` to create wikilinks for array elements. This works with `LIST`, `LISTYAML`, `ENUM`, `FIRST`, and `LAST` operators. Note that `ENUMYAML` does not support wikilinks - the `[[]]` syntax will be ignored.
+
+**Important:** Use `YAML` variants (`LISTYAML`, `ENUMYAML`) in frontmatter and regular variants (`LIST`, `ENUM`) in the note body.
 
 Available variables that can be used in template tags are any front-matter properties.
 
@@ -125,7 +182,7 @@ Now you select the result you want, and the plugin will cast its magic, creating
 | [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) | The Wikipedia API allows access to all Wikipedia articles.                                        | wiki articles                                         | No                                                                                                                                                                               | None                                                                                                                                                                                       | No                 |
 | [Steam](https://store.steampowered.com/)             | The Steam API offers information on all Steam games.                                              | games                                                 | No                                                                                                                                                                               | 10000 per day                                                                                                                                                                              | No                 |
 | [Open Library](https://openlibrary.org)              | The OpenLibrary API offers metadata for books                                                     | books                                                 | No                                                                                                                                                                               | Cover access is rate-limited when not using CoverID or OLID by max 100 requests/IP every 5 minutes. This plugin uses OLID, so there shouldn't be a rate limit.                             | No                 |
-| Comic Vine                                           | The Comic Vine API offers metadata for comic books                                                | comicbooks                                            | Yes, by making an account [here](https://comicvine.gamespot.com/login-signup/) and going to the [api section](https://comicvine.gamespot.com/api/) of the site                   | 200 requests per resource, per hour. There is also a velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources. | No                 |
+| [Comic Vine](https://comicvine.gamespot.com/)        | The Comic Vine API offers metadata for comic books                                                | comicbooks                                            | Yes, by making an account [here](https://comicvine.gamespot.com/login-signup/) and going to the [api section](https://comicvine.gamespot.com/api/) of the site                   | 200 requests per resource, per hour. There is also a velocity detection to prevent malicious use. If too many requests are made per second, you may receive temporary blocks to resources. | No                 |
 | [VNDB](https://vndb.org/)                            | The VNDB API offers metadata for visual novels                                                    | games                                                 | No                                                                                                                                                                               | 200 requests per 5 minutes                                                                                                                                                                 | Yes                |
 | [Boardgame Geek](https://boardgamegeek.com)          | The Boardgame Geek API offers metadata for boardgames                                             | boardgames                                            | Yes, by making an account [here](https://boardgamegeek.com/join/) and then [requesting an application token](https://boardgamegeek.com/applications)                             | Exact usage limits are still undetermined                                                                                                                                                  | No                 |
 

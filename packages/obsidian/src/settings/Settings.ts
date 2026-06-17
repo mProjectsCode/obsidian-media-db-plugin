@@ -581,7 +581,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		apiKeyGroup.addSetting(
 			setting =>
 				void setting
-					.setName('OMDb API key')
+					.setName('OMDb API Key')
 					.setDesc('API key for "www.omdbapi.com".')
 					.addComponent(el => {
 						const component = new SecretComponent(this.app, el);
@@ -613,7 +613,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		apiKeyGroup.addSetting(
 			setting =>
 				void setting
-					.setName('Moby Games key')
+					.setName('Moby Games Key')
 					.setDesc('API key for "www.mobygames.com".')
 					.addComponent(el => {
 						const component = new SecretComponent(this.app, el);
