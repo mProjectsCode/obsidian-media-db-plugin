@@ -295,3 +295,37 @@ small.media-db-plugin-list-text {
 	width: var(--checkbox-size);
 	height: var(--checkbox-size);
 }
+
+.media-db-plugin-legacy-keys-modal {
+	display: contents;
+}
+
+.media-db-plugin-legacy-keys-intro {
+	color: var(--text-normal);
+}
+
+.media-db-plugin-legacy-keys-wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	width: 100%;
+	max-width: 100%;
+}
+
+.media-db-plugin-legacy-keys-textarea {
+	width: 100%;
+	max-width: 100%;
+	min-height: 100px;
+	min-width: 500px;
+	box-sizing: border-box;
+	resize: vertical;
+	padding: 0.75rem;
+	border-radius: var(--radius-s);
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+	line-height: 1.5;
+	white-space: pre;
+}
