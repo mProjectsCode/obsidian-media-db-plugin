@@ -2,90 +2,92 @@ import type { App } from 'obsidian';
 import { Modal, Setting, Notice } from 'obsidian';
 
 export interface LegacyApiKeyEntry {
-    key: string;
-    value: string;
+	key: string;
+	value: string;
 }
 
 export class LegacyApiKeysModal extends Modal {
-    private entries: LegacyApiKeyEntry[];
-    private onConfirm: () => void;
+	private entries: LegacyApiKeyEntry[];
+	private onConfirm: () => void;
 
-    constructor(app: App, entries: LegacyApiKeyEntry[], onConfirm: () => void) {
-        super(app);
-        this.entries = entries;
-        this.onConfirm = onConfirm;
-    }
+	constructor(app: App, entries: LegacyApiKeyEntry[], onConfirm: () => void) {
+		super(app);
+		this.entries = entries;
+		this.onConfirm = onConfirm;
+	}
 
-    onOpen(): void {
-        const { contentEl } = this;
-        contentEl.addClass('media-db-plugin-legacy-keys-modal');
+	onOpen(): void {
+		const { contentEl } = this;
+		contentEl.addClass('media-db-plugin-legacy-keys-modal');
 
-        contentEl.createEl('h2', { text: 'Media DB plugin: Legacy API keys found' });
+		contentEl.createEl('h2', { text: 'Media DB plugin: Legacy API keys found' });
 
-        const wrapper = contentEl.createDiv({ cls: 'media-db-plugin-legacy-keys-wrapper' });
+		const wrapper = contentEl.createDiv({ cls: 'media-db-plugin-legacy-keys-wrapper' });
 
-        const intro = wrapper.createDiv({ cls: 'media-db-plugin-legacy-keys-intro' });
-        intro.createEl('p', {
-            text: 'Media DB plugin has found old plaintext API keys in your settings. Copy them now if needed, they should be removed for safety. The new keychain-backed system will be used instead. The plugin will not be usable until the old plaintext keys have been deleted.',
-        });
+		const intro = wrapper.createDiv({ cls: 'media-db-plugin-legacy-keys-intro' });
+		intro.createEl('p', {
+			text: 'Media DB plugin has found old plaintext API keys in your settings. Copy them now if needed, they should be removed for safety.',
+		});
 
-        const textarea = wrapper.createEl('textarea', {
-            cls: 'media-db-plugin-legacy-keys-textarea',
-            attr: {
-                readonly: 'true',
-                spellcheck: 'false',
-            },
-        });
+		intro.createEl('p', {
+			text: 'The new keychain-backed system will be used instead. The plugin will not be usable until the old plaintext keys have been deleted.',
+		});
 
-        textarea.value = this.entries.map(e => `${e.key}: ${e.value}`).join('\n');
-        textarea.style.display = 'none';
+		const textarea = wrapper.createEl('textarea', {
+			cls: 'media-db-plugin-legacy-keys-textarea',
+			attr: {
+				readonly: 'true',
+				spellcheck: 'false',
+			},
+		});
 
-        contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
+		textarea.value = this.entries.map(e => `${e.key}: ${e.value}`).join('\n');
+		textarea.addClass('media-db-plugin-hidden');
 
-        const bottomSettingRow = new Setting(contentEl);
+		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
-        bottomSettingRow.addButton(btn => {
-            btn.setButtonText('Copy');
-            btn.onClick(async () => {
-                await navigator.clipboard.writeText(textarea.value);
-                new Notice('Legacy API keys copied to clipboard.');
-            });
-            btn.buttonEl.addClass('media-db-plugin-button');
-        });
+		const bottomSettingRow = new Setting(contentEl);
 
-        bottomSettingRow.addButton(btn => {
-            btn.setButtonText('Show keys');
+		bottomSettingRow.addButton(btn => {
+			btn.setButtonText('Copy');
+			btn.onClick(async () => {
+				await navigator.clipboard.writeText(textarea.value);
+				new Notice('Legacy API keys copied to clipboard.');
+			});
+			btn.buttonEl.addClass('media-db-plugin-button');
+		});
 
-            btn.onClick(() => {
-                const isHidden = textarea.style.display === 'none';
+		bottomSettingRow.addButton(btn => {
+			btn.setButtonText('Show keys');
 
-                if (isHidden) {
-                    textarea.style.display = '';
-                    btn.setButtonText('Hide keys');
-                } else {
-                    textarea.style.display = 'none';
-                    btn.setButtonText('Show keys');
-                }
-            });
+			btn.onClick(() => {
+				const isHidden = textarea.hasClass('media-db-plugin-hidden');
+				if (isHidden) {
+					textarea.removeClass('media-db-plugin-hidden');
+					btn.setButtonText('Hide keys');
+				} else {
+					textarea.addClass('media-db-plugin-hidden');
+					btn.setButtonText('Show keys');
+				}
+			});
 
-            btn.buttonEl.addClass('media-db-plugin-button');
-        });
+			btn.buttonEl.addClass('media-db-plugin-button');
+		});
 
-        bottomSettingRow.addButton(btn => {
-            btn.setButtonText('Delete plaintext keys');
-            btn.setCta();
-            btn.onClick(() => {
-                this.close();
-                this.onConfirm();
-            });
-            btn.buttonEl.addClass('media-db-plugin-button');
+		bottomSettingRow.addButton(btn => {
+			btn.setButtonText('Delete plaintext keys');
+			btn.setCta();
+			btn.onClick(() => {
+				this.close();
+				this.onConfirm();
+			});
+			btn.buttonEl.addClass('media-db-plugin-button');
 			btn.buttonEl.addClass('mod-warning');
 			btn.buttonEl.addClass('mod-danger');
+		});
+	}
 
-        });
-    }
-
-    onClose(): void {
-        this.contentEl.empty();
-    }
+	onClose(): void {
+		this.contentEl.empty();
+	}
 }

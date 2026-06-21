@@ -173,7 +173,7 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	private getLegacyApiKeyEntries(diskSettings: Record<string, unknown>): LegacyApiKeyEntry[] {
-		return LEGACY_API_KEYS.filter(key => typeof diskSettings[key] === 'string' && (diskSettings[key]).length > 0).map(key => ({
+		return LEGACY_API_KEYS.filter(key => typeof diskSettings[key] === 'string' && diskSettings[key].length > 0).map(key => ({
 			key,
 			value: diskSettings[key] as string,
 		}));
@@ -199,11 +199,13 @@ export default class MediaDbPlugin extends Plugin {
 
 		const legacyEntries = this.getLegacyApiKeyEntries(diskSettings);
 		if (legacyEntries.length > 0) {
-			this.app.workspace.onLayoutReady(() => {
-				window.setTimeout(() => {
-					new LegacyApiKeysModal(this.app, legacyEntries, async () => {
-						this.removeLegacyApiKeys(this.settings as unknown as Record<string, unknown>);
-						await this.saveSettings();
+			this.app.workspace.onLayoutReady((): void => {
+				window.setTimeout((): void => {
+					new LegacyApiKeysModal(this.app, legacyEntries, (): void => {
+						void (async (): Promise<void> => {
+							this.removeLegacyApiKeys(this.settings as unknown as Record<string, unknown>);
+							await this.saveSettings();
+						})();
 					}).open();
 				}, 0);
 			});

@@ -329,3 +329,6 @@ small.media-db-plugin-list-text {
 	line-height: 1.5;
 	white-space: pre;
 }
+.media-db-plugin-hidden {
+	display: none !important;
+}
