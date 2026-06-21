@@ -295,3 +295,40 @@ small.media-db-plugin-list-text {
 	width: var(--checkbox-size);
 	height: var(--checkbox-size);
 }
+
+.media-db-plugin-legacy-keys-modal {
+	display: contents;
+}
+
+.media-db-plugin-legacy-keys-intro {
+	color: var(--text-normal);
+}
+
+.media-db-plugin-legacy-keys-wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-3);
+	width: 100%;
+	max-width: 100%;
+}
+
+.media-db-plugin-legacy-keys-textarea {
+	width: 100%;
+	max-width: 100%;
+	min-height: var(--size-4-5);
+	min-width: var(--size-4-7);
+	box-sizing: border-box;
+	resize: vertical;
+	padding: var(--size-4-3);
+	border-radius: var(--radius-s);
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+	line-height: 1.5;
+	white-space: pre;
+}
+.media-db-plugin-hidden {
+	display: none;
+}

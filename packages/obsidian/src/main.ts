@@ -16,6 +16,8 @@ import { TMDBSeasonAPI } from 'packages/obsidian/src/api/apis/TMDBSeasonAPI';
 import { TMDBSeriesAPI } from 'packages/obsidian/src/api/apis/TMDBSeriesAPI';
 import { VNDBAPI } from 'packages/obsidian/src/api/apis/VNDBAPI';
 import { WikipediaAPI } from 'packages/obsidian/src/api/apis/WikipediaAPI';
+import type { LegacyApiKeyEntry } from 'packages/obsidian/src/modals/LegacyApiKeysModal';
+import { LegacyApiKeysModal } from 'packages/obsidian/src/modals/LegacyApiKeysModal';
 import { PropertyMapper } from 'packages/obsidian/src/settings/PropertyMapper';
 import { PropertyMappingModel } from 'packages/obsidian/src/settings/PropertyMapping';
 import type { MediaDbPluginSettings } from 'packages/obsidian/src/settings/Settings';
@@ -168,35 +170,42 @@ export default class MediaDbPlugin extends Plugin {
 		});
 	}
 
-	async loadSettings(): Promise<void> {
-		const diskSettings: MediaDbPluginSettings = (await this.loadData()) as MediaDbPluginSettings;
-		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
-		const loadedSettings: MediaDbPluginSettings = Object.assign({}, defaultSettings, diskSettings);
+	private getLegacyApiKeyEntries(diskSettings: Record<string, unknown>): LegacyApiKeyEntry[] {
+		return this.settings.LegacyApiKeys.filter(key => typeof diskSettings[key] === 'string' && diskSettings[key].length > 0).map(key => ({
+			key,
+			value: diskSettings[key] as string,
+		}));
+	}
 
-		// delete old api keys
-		// @ts-ignore
-		delete loadedSettings.BoardgameGeekKey;
-		// @ts-ignore
-		delete loadedSettings.ComicVineKey;
-		// @ts-ignore
-		delete loadedSettings.GiantBombKey;
-		// @ts-ignore
-		delete loadedSettings.MobyGamesKey;
-		// @ts-ignore
-		delete loadedSettings.OMDbKey;
-		// @ts-ignore
-		delete loadedSettings.TMDBKey;
+	private removeLegacyApiKeys(settings: Record<string, unknown>): void {
+		for (const key of this.settings.LegacyApiKeys) {
+			delete settings[key];
+		}
+	}
+
+	async loadSettings(): Promise<void> {
+		const diskSettings = (await this.loadData()) as Record<string, unknown>;
+		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
+		const loadedSettings = Object.assign({}, defaultSettings, diskSettings) as MediaDbPluginSettings;
 
 		const migratedModels = PropertyMappingModel.migrateModels(
 			loadedSettings.propertyMappingModels || [],
 			defaultSettings.propertyMappingModels.map(m => PropertyMappingModel.fromJSON(m)),
 		);
-
 		loadedSettings.propertyMappingModels = migratedModels.map(m => m.toJSON());
-
 		this.settings = loadedSettings;
 
-		await this.saveSettings();
+		const legacyEntries = this.getLegacyApiKeyEntries(diskSettings);
+		if (legacyEntries.length > 0) {
+			this.app.workspace.onLayoutReady((): void => {
+				window.setTimeout((): void => {
+					new LegacyApiKeysModal(this.app, legacyEntries, (): void => {
+						this.removeLegacyApiKeys(this.settings as unknown as Record<string, unknown>);
+						void this.saveSettings();
+					}).open();
+				}, 0);
+			});
+		}
 	}
 
 	async saveSettings(): Promise<void> {
