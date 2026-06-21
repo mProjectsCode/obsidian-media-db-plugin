@@ -307,7 +307,7 @@ small.media-db-plugin-list-text {
 .media-db-plugin-legacy-keys-wrapper {
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
+	gap: var(--size-4-3);
 	width: 100%;
 	max-width: 100%;
 }
@@ -315,11 +315,11 @@ small.media-db-plugin-list-text {
 .media-db-plugin-legacy-keys-textarea {
 	width: 100%;
 	max-width: 100%;
-	min-height: 100px;
-	min-width: 500px;
+	min-height: var(--size-4-5);
+	min-width: var(--size-4-7);
 	box-sizing: border-box;
 	resize: vertical;
-	padding: 0.75rem;
+	padding: var(--size-4-3);
 	border-radius: var(--radius-s);
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
@@ -330,5 +330,5 @@ small.media-db-plugin-list-text {
 	white-space: pre;
 }
 .media-db-plugin-hidden {
-	display: none !important;
+	display: none;
 }

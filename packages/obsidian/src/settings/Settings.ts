@@ -58,6 +58,8 @@ export interface MediaDbPluginSettings {
 	ComicVineKeyId: string;
 	BoardgameGeekKeyId: string;
 
+	LegacyApiKeys: readonly ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey'];
+
 	sfwFilter: boolean;
 	templates: boolean;
 	customDateFormat: string;
@@ -316,6 +318,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	RAWGAPIKeyId: '',
 	ComicVineKeyId: '',
 	BoardgameGeekKeyId: '',
+
+	LegacyApiKeys: ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey'],
 
 	sfwFilter: true,
 	templates: true,

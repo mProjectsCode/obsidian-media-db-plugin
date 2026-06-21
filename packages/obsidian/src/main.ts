@@ -33,8 +33,6 @@ import { MEDIA_TYPES } from 'packages/obsidian/src/utils/MediaTypeManager';
 import { ModalHelper } from 'packages/obsidian/src/utils/ModalHelper';
 import { unCamelCase } from 'packages/obsidian/src/utils/Utils';
 
-const LEGACY_API_KEYS = ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey'] as const;
-
 export default class MediaDbPlugin extends Plugin {
 	declare settings: MediaDbPluginSettings;
 	apiManager!: APIManager;
@@ -173,14 +171,14 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	private getLegacyApiKeyEntries(diskSettings: Record<string, unknown>): LegacyApiKeyEntry[] {
-		return LEGACY_API_KEYS.filter(key => typeof diskSettings[key] === 'string' && diskSettings[key].length > 0).map(key => ({
+		return this.settings.LegacyApiKeys.filter(key => typeof diskSettings[key] === 'string' && diskSettings[key].length > 0).map(key => ({
 			key,
 			value: diskSettings[key] as string,
 		}));
 	}
 
 	private removeLegacyApiKeys(settings: Record<string, unknown>): void {
-		for (const key of LEGACY_API_KEYS) {
+		for (const key of this.settings.LegacyApiKeys) {
 			delete settings[key];
 		}
 	}
@@ -202,10 +200,8 @@ export default class MediaDbPlugin extends Plugin {
 			this.app.workspace.onLayoutReady((): void => {
 				window.setTimeout((): void => {
 					new LegacyApiKeysModal(this.app, legacyEntries, (): void => {
-						void (async (): Promise<void> => {
-							this.removeLegacyApiKeys(this.settings as unknown as Record<string, unknown>);
-							await this.saveSettings();
-						})();
+						this.removeLegacyApiKeys(this.settings as unknown as Record<string, unknown>);
+						void this.saveSettings();
 					}).open();
 				}, 0);
 			});
