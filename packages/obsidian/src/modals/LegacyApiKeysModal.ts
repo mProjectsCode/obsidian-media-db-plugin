@@ -30,19 +30,14 @@ export class LegacyApiKeysModal extends Modal {
 		});
 
 		intro.createEl('p', {
-			text: 'The new keychain-backed system will be used instead. The plugin will not be usable until the old plaintext keys have been deleted.',
+			text: 'You will need to re-add your API keys using Obsidians encrypted Keychain storage in the plugins settings.',
 		});
 
-		const textarea = wrapper.createEl('textarea', {
-			cls: 'media-db-plugin-legacy-keys-textarea',
-			attr: {
-				readonly: 'true',
-				spellcheck: 'false',
-			},
-		});
+		const pre = wrapper.createEl('pre', { cls: 'media-db-plugin-legacy-keys-pre' });
+		const code = pre.createEl('code');
 
-		textarea.value = this.entries.map(e => `${e.key}: ${e.value}`).join('\n');
-		textarea.addClass('media-db-plugin-hidden');
+		code.innerText = this.entries.map(e => `${e.key}: ${e.value}`).join('\n');
+		pre.addClass('media-db-plugin-hidden');
 
 		contentEl.createDiv({ cls: 'media-db-plugin-spacer' });
 
@@ -51,7 +46,7 @@ export class LegacyApiKeysModal extends Modal {
 		bottomSettingRow.addButton(btn => {
 			btn.setButtonText('Copy');
 			btn.onClick(async () => {
-				await navigator.clipboard.writeText(textarea.value);
+				await navigator.clipboard.writeText(code.innerText);
 				new Notice('Legacy API keys copied to clipboard.');
 			});
 			btn.buttonEl.addClass('media-db-plugin-button');
@@ -61,12 +56,12 @@ export class LegacyApiKeysModal extends Modal {
 			btn.setButtonText('Show keys');
 
 			btn.onClick(() => {
-				const isHidden = textarea.hasClass('media-db-plugin-hidden');
+				const isHidden = pre.hasClass('media-db-plugin-hidden');
 				if (isHidden) {
-					textarea.removeClass('media-db-plugin-hidden');
+					pre.removeClass('media-db-plugin-hidden');
 					btn.setButtonText('Hide keys');
 				} else {
-					textarea.addClass('media-db-plugin-hidden');
+					pre.addClass('media-db-plugin-hidden');
 					btn.setButtonText('Show keys');
 				}
 			});
@@ -76,14 +71,12 @@ export class LegacyApiKeysModal extends Modal {
 
 		bottomSettingRow.addButton(btn => {
 			btn.setButtonText('Delete plaintext keys');
-			btn.setCta();
+			btn.setWarning();
 			btn.onClick(() => {
 				this.close();
 				this.onConfirm();
 			});
 			btn.buttonEl.addClass('media-db-plugin-button');
-			btn.buttonEl.addClass('mod-warning');
-			btn.buttonEl.addClass('mod-danger');
 		});
 	}
 

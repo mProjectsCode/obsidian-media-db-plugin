@@ -11,6 +11,8 @@ import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import { MEDIA_TYPES } from 'packages/obsidian/src/utils/MediaTypeManager';
 import { unCamelCase } from 'packages/obsidian/src/utils/Utils';
 
+export const LEGACY_API_KEY_SETTINGS: readonly string[] = ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey'];
+
 function createDateFormatDescription(preview: string): DocumentFragment {
 	return createFragment(frag => {
 		const container = frag.createDiv();
@@ -57,8 +59,6 @@ export interface MediaDbPluginSettings {
 	RAWGAPIKeyId: string;
 	ComicVineKeyId: string;
 	BoardgameGeekKeyId: string;
-
-	LegacyApiKeys: readonly ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey'];
 
 	sfwFilter: boolean;
 	templates: boolean;
@@ -318,8 +318,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	RAWGAPIKeyId: '',
 	ComicVineKeyId: '',
 	BoardgameGeekKeyId: '',
-
-	LegacyApiKeys: ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey'],
 
 	sfwFilter: true,
 	templates: true,

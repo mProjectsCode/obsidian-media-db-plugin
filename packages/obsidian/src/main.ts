@@ -21,7 +21,7 @@ import { LegacyApiKeysModal } from 'packages/obsidian/src/modals/LegacyApiKeysMo
 import { PropertyMapper } from 'packages/obsidian/src/settings/PropertyMapper';
 import { PropertyMappingModel } from 'packages/obsidian/src/settings/PropertyMapping';
 import type { MediaDbPluginSettings } from 'packages/obsidian/src/settings/Settings';
-import { MediaDbSettingTab } from 'packages/obsidian/src/settings/Settings';
+import { LEGACY_API_KEY_SETTINGS, MediaDbSettingTab } from 'packages/obsidian/src/settings/Settings';
 import { getDefaultSettings } from 'packages/obsidian/src/settings/Settings';
 import { BulkImportHelper } from 'packages/obsidian/src/utils/BulkImportHelper';
 import { DateFormatter } from 'packages/obsidian/src/utils/DateFormatter';
@@ -171,14 +171,14 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	private getLegacyApiKeyEntries(diskSettings: Record<string, unknown>): LegacyApiKeyEntry[] {
-		return this.settings.LegacyApiKeys.filter(key => typeof diskSettings[key] === 'string' && diskSettings[key].length > 0).map(key => ({
+		return LEGACY_API_KEY_SETTINGS.filter(key => typeof diskSettings[key] === 'string' && diskSettings[key].length > 0).map(key => ({
 			key,
 			value: diskSettings[key] as string,
 		}));
 	}
 
 	private removeLegacyApiKeys(settings: Record<string, unknown>): void {
-		for (const key of this.settings.LegacyApiKeys) {
+		for (const key of LEGACY_API_KEY_SETTINGS) {
 			delete settings[key];
 		}
 	}
