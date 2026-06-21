@@ -50,8 +50,8 @@ function createPropertyMappingsDescription(): DocumentFragment {
 export interface MediaDbPluginSettings {
 	OMDbKeyId: string;
 	TMDBKeyId: string;
-	MobyGamesKeyId: string;
-	GiantBombKeyId: string;
+	//MobyGamesKeyId: string;
+	//GiantBombKeyId: string;
 	IGDBClientId: string;
 	IGDBClientSecret: string;
 	RAWGAPIKeyId: string;
@@ -69,12 +69,12 @@ export interface MediaDbPluginSettings {
 
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
-	GiantBombAPI_disabledMediaTypes: MediaType[];
+	//GiantBombAPI_disabledMediaTypes: MediaType[];
 	IGDBAPI_disabledMediaTypes: MediaType[];
 	RAWGAPI_disabledMediaTypes: MediaType[];
 	MALAPI_disabledMediaTypes: MediaType[];
 	MALAPIManga_disabledMediaTypes: MediaType[];
-	MobyGamesAPI_disabledMediaTypes: MediaType[];
+	//MobyGamesAPI_disabledMediaTypes: MediaType[];
 	MusicBrainzAPI_disabledMediaTypes: MediaType[];
 	OMDbAPI_disabledMediaTypes: MediaType[];
 	OpenLibraryAPI_disabledMediaTypes: MediaType[];
@@ -309,8 +309,8 @@ class MediaTypeMappedSettings {
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKeyId: '',
 	TMDBKeyId: '',
-	MobyGamesKeyId: '',
-	GiantBombKeyId: '',
+	//MobyGamesKeyId: '',
+	//GiantBombKeyId: '',
 	IGDBClientId: '',
 	IGDBClientSecret: '',
 	RAWGAPIKeyId: '',
@@ -328,12 +328,12 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
-	GiantBombAPI_disabledMediaTypes: [],
+	//GiantBombAPI_disabledMediaTypes: [],
 	IGDBAPI_disabledMediaTypes: [],
 	RAWGAPI_disabledMediaTypes: [],
 	MALAPI_disabledMediaTypes: [],
 	MALAPIManga_disabledMediaTypes: [],
-	MobyGamesAPI_disabledMediaTypes: [],
+	//MobyGamesAPI_disabledMediaTypes: [],
 	MusicBrainzAPI_disabledMediaTypes: [],
 	OMDbAPI_disabledMediaTypes: [],
 	OpenLibraryAPI_disabledMediaTypes: [],
@@ -610,38 +610,38 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						return component;
 					}),
 		);
-		apiKeyGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Moby Games key')
-					.setDesc('API key for "www.mobygames.com".')
-					.addComponent(el => {
-						const component = new SecretComponent(this.app, el);
+		// apiKeyGroup.addSetting(
+		// 	setting =>
+		// 		void setting
+		// 			.setName('Moby Games key')
+		// 			.setDesc('API key for "www.mobygames.com".')
+		// 			.addComponent(el => {
+		// 				const component = new SecretComponent(this.app, el);
 
-						component.setValue(this.plugin.settings.MobyGamesKeyId).onChange(data => {
-							this.plugin.settings.MobyGamesKeyId = data;
-							void this.plugin.saveSettings();
-						});
+		// 				component.setValue(this.plugin.settings.MobyGamesKeyId).onChange(data => {
+		// 					this.plugin.settings.MobyGamesKeyId = data;
+		// 					void this.plugin.saveSettings();
+		// 				});
 
-						return component;
-					}),
-		);
-		apiKeyGroup.addSetting(
-			setting =>
-				void setting
-					.setName('Giant Bomb Key')
-					.setDesc('API key for "www.giantbomb.com".')
-					.addComponent(el => {
-						const component = new SecretComponent(this.app, el);
+		// 				return component;
+		// 			}),
+		// );
+		// apiKeyGroup.addSetting(
+		// 	setting =>
+		// 		void setting
+		// 			.setName('Giant Bomb Key')
+		// 			.setDesc('API key for "www.giantbomb.com".')
+		// 			.addComponent(el => {
+		// 				const component = new SecretComponent(this.app, el);
 
-						component.setValue(this.plugin.settings.GiantBombKeyId).onChange(data => {
-							this.plugin.settings.GiantBombKeyId = data;
-							void this.plugin.saveSettings();
-						});
+		// 				component.setValue(this.plugin.settings.GiantBombKeyId).onChange(data => {
+		// 					this.plugin.settings.GiantBombKeyId = data;
+		// 					void this.plugin.saveSettings();
+		// 				});
 
-						return component;
-					}),
-		);
+		// 				return component;
+		// 			}),
+		// );
 		apiKeyGroup.addSetting(
 			setting =>
 				void setting
