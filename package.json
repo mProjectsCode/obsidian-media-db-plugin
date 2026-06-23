@@ -6,9 +6,9 @@
 	"scripts": {
 		"dev": "vite build --watch --mode development",
 		"build": "bun run tsc && vite build --mode production",
-		"typecheck": "tsc -noEmit -skipLibCheck",
-		"test": "bun test",
-		"test:log": "LOG_TESTS=true bun test",
+		"typecheck": "tsc -p tsconfig.json -noEmit -skipLibCheck && tsc -p tests/tsconfig.json -noEmit -skipLibCheck",
+		"test": "bun test --preload ./tests/setup.ts",
+		"test:log": "LOG_TESTS=true bun test --preload ./tests/setup.ts",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"lint": "eslint --max-warnings=0 --no-warn-ignored packages/obsidian/src/**",

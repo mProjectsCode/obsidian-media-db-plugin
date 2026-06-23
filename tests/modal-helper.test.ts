@@ -1,45 +1,9 @@
-import { expect, mock, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
-import type { ModalLifecycle, ModalSession } from 'packages/obsidian/src/utils/ModalHelper';
+import { ModalHelper, type ModalLifecycle, type ModalSession } from 'packages/obsidian/src/utils/ModalHelper';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind } from 'packages/obsidian/src/utils/MDBError';
 import { OutcomeStatus } from 'packages/obsidian/src/utils/result';
-
-mock.module('obsidian', () => ({
-	AbstractInputSuggest: class {},
-	Component: class {
-		load(): void {}
-		unload(): void {}
-	},
-	DropdownComponent: class {},
-	MarkdownRenderer: { render: async (): Promise<void> => {} },
-	MarkdownView: class {},
-	Modal: class {
-		app: unknown;
-
-		constructor(app: unknown) {
-			this.app = app;
-		}
-
-		open(): void {}
-		close(): void {}
-	},
-	Notice: class {},
-	normalizePath: (path: string): string => path,
-	moment: Object.assign((value?: unknown): unknown => value, { locale: (): void => {} }),
-	parseYaml: (): unknown => ({}),
-	Plugin: class {},
-	PluginSettingTab: class {},
-	requestUrl: async (): Promise<unknown> => ({}),
-	SecretComponent: class {},
-	Setting: class {},
-	SettingGroup: class {},
-	stringifyYaml: (value: unknown): string => String(value),
-	TFile: class {},
-	TFolder: class {},
-	TextComponent: class {},
-	ToggleComponent: class {},
-}));
 
 class FakeModal implements ModalLifecycle {
 	closeCount = 0;
@@ -64,13 +28,12 @@ function createModalSession(cancelled: () => boolean): ModalSession<undefined, F
 	};
 }
 
-async function createHelper(): Promise<import('packages/obsidian/src/utils/ModalHelper').ModalHelper> {
-	const { ModalHelper } = await import('packages/obsidian/src/utils/ModalHelper');
+function createHelper(): ModalHelper {
 	return new ModalHelper({} as MediaDbPlugin);
 }
 
 test('runModalTask closes the modal after active task success', async () => {
-	const helper = await createHelper();
+	const helper = createHelper();
 	const session = createModalSession(() => false);
 
 	const outcome = await helper.runModalTask(session, async () => 'done');
@@ -80,7 +43,7 @@ test('runModalTask closes the modal after active task success', async () => {
 });
 
 test('runModalTask ignores late success after cancellation', async () => {
-	const helper = await createHelper();
+	const helper = createHelper();
 	let cancelled = false;
 	const session = createModalSession(() => cancelled);
 
@@ -94,7 +57,7 @@ test('runModalTask ignores late success after cancellation', async () => {
 });
 
 test('runModalTask ignores late errors after cancellation', async () => {
-	const helper = await createHelper();
+	const helper = createHelper();
 	let cancelled = false;
 	const session = createModalSession(() => cancelled);
 	const fallback: MDBError = { kind: MDBErrorKind.Modal, message: 'Task failed' };

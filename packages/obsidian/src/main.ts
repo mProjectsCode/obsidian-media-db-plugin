@@ -194,6 +194,9 @@ export default class MediaDbPlugin extends Plugin {
 		);
 		loadedSettings.propertyMappingModels = migratedModels.map(m => m.toJSON());
 		this.settings = loadedSettings;
+		this.mediaTypeManager.updateTemplates(this.settings);
+		this.mediaTypeManager.updateFolders(this.settings);
+		this.dateFormatter.setFormat(this.settings.customDateFormat);
 
 		const legacyEntries = this.getLegacyApiKeyEntries(diskSettings);
 		if (legacyEntries.length > 0) {
