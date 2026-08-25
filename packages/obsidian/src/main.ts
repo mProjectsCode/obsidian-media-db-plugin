@@ -184,7 +184,7 @@ export default class MediaDbPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		const diskSettings = (await this.loadData()) as Record<string, unknown>;
+		const diskSettings = ((await this.loadData()) ?? {}) as Record<string, unknown>;
 		const defaultSettings: MediaDbPluginSettings = getDefaultSettings(this);
 		const loadedSettings = Object.assign({}, defaultSettings, diskSettings) as MediaDbPluginSettings;
 
