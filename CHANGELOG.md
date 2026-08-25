@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.9.1
+
+- Fixed plugin failing to load when no `data.json` was present [#285](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/285) (thanks ltctceplrm)
+
 # 0.9.0
 
 - Added support for the `VNDB` API [#165](https://github.com/mProjectsCode/obsidian-media-db-plugin/pull/165) (thanks Senyksia)
