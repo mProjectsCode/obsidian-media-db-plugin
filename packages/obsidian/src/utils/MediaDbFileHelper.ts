@@ -307,7 +307,8 @@ export class MediaDbFileHelper {
 
 			if (!imageResult.ok) {
 				Logger.warn('MDB | Failed to download image:', imageResult.error);
-				return imageResult;
+				delete mediaTypeModel.image;
+				return ok(undefined);
 			}
 		}
 
