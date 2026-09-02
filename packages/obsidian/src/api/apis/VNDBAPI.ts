@@ -3,6 +3,7 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { GameModel } from 'packages/obsidian/src/models/GameModel';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import { pickVndbTitle, resolveVndbLanguage } from 'packages/obsidian/src/utils/ApiLanguages';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
@@ -236,12 +237,13 @@ export class VNDBAPI extends APIModel {
 		}
 		const vnData = vnDataResult.value;
 
+		const vndbLang = resolveVndbLanguage(this.plugin.settings);
 		const ret: MediaTypeModel[] = [];
 		for (const vn of vnData.results) {
 			ret.push(
 				new GameModel({
 					type: MediaType.Game,
-					title: vn.title,
+					title: pickVndbTitle(vn.titles, vndbLang, vn.title),
 					englishTitle: vn.titles.find(t => t.lang === 'en')?.title ?? vn.title,
 					year: vn.released && vn.released !== 'TBA' ? new Date(vn.released).getFullYear().toString() : 'TBA',
 					dataSource: this.apiName,
@@ -276,6 +278,7 @@ export class VNDBAPI extends APIModel {
 		const vn = vnData.results[0];
 		const releasedIsDate = vn.released !== null && vn.released !== 'TBA';
 		vn.released ??= 'Unknown';
+		const vndbLang = resolveVndbLanguage(this.plugin.settings);
 
 		const releaseDataResult = await this.postReleaseQuery(`{
 			"filters": ["and"
@@ -295,7 +298,7 @@ export class VNDBAPI extends APIModel {
 		return ok(
 			new GameModel({
 				type: MediaType.Game,
-				title: vn.title,
+				title: pickVndbTitle(vn.titles, vndbLang, vn.title),
 				englishTitle: vn.titles.find(t => t.lang === 'en')?.title ?? vn.title,
 				year: releasedIsDate ? new Date(vn.released).getFullYear().toString() : vn.released,
 				dataSource: this.apiName,

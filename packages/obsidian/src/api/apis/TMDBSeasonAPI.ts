@@ -4,6 +4,7 @@ import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
 import { SeasonSearchResultModel } from 'packages/obsidian/src/models/SeasonSearchResultModel';
+import { resolveTmdbLanguage } from 'packages/obsidian/src/utils/ApiLanguages';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
@@ -87,6 +88,7 @@ export class TMDBSeasonAPI extends APIModel {
 					query: {
 						query: encodeURIComponent(title),
 						include_adult: this.plugin.settings.sfwFilter ? false : true,
+						language: resolveTmdbLanguage(this.plugin.settings),
 					},
 				},
 				fetch: obsidianFetch,
@@ -142,6 +144,9 @@ export class TMDBSeasonAPI extends APIModel {
 							},
 							params: {
 								path: { series_id: result.id },
+								query: {
+									language: resolveTmdbLanguage(this.plugin.settings),
+								},
 							},
 							fetch: obsidianFetch,
 						});
@@ -156,7 +161,7 @@ export class TMDBSeasonAPI extends APIModel {
 
 				return new SeasonSearchResultModel({
 					title: `${result.name ?? result.original_name ?? ''}`,
-					englishTitle: result.name ?? result.original_name ?? '',
+					englishTitle: result.original_name ?? result.name ?? '',
 					year: result.first_air_date ? new Date(result.first_air_date).getFullYear().toString() : 'unknown',
 					dataSource: this.apiName,
 					id: result.id?.toString() ?? '',
@@ -188,6 +193,9 @@ export class TMDBSeasonAPI extends APIModel {
 				},
 				params: {
 					path: { series_id: Number.parseInt(tvId, 10) },
+					query: {
+						language: resolveTmdbLanguage(this.plugin.settings),
+					},
 				},
 				fetch: obsidianFetch,
 			}),
@@ -231,7 +239,8 @@ export class TMDBSeasonAPI extends APIModel {
 		if (Array.isArray(seriesData?.seasons)) {
 			for (const season of seriesData.seasons) {
 				const seasonNumber = season.season_number ?? 0;
-				const titleText = `${seriesName} - Season ${seasonNumber}`;
+				const seasonLabel = season.name?.trim() ?? `Season ${seasonNumber}`;
+				const titleText = seriesName ? `${seriesName} - ${seasonLabel}` : seasonLabel;
 
 				ret.push(
 					new SeasonModel({
@@ -290,6 +299,9 @@ export class TMDBSeasonAPI extends APIModel {
 						series_id: tvId,
 						season_number: seasonNumber,
 					},
+					query: {
+						language: resolveTmdbLanguage(this.plugin.settings),
+					},
 				},
 				fetch: obsidianFetch,
 			}),
@@ -344,6 +356,7 @@ export class TMDBSeasonAPI extends APIModel {
 					path: { series_id: tvId },
 					query: {
 						append_to_response: 'credits',
+						language: resolveTmdbLanguage(this.plugin.settings),
 					},
 				},
 				fetch: obsidianFetch,
@@ -391,9 +404,10 @@ export class TMDBSeasonAPI extends APIModel {
 			});
 		}
 
-		const seriesName = seriesData?.name ?? '';
+		const seriesName = seriesData?.name ?? seriesData?.original_name ?? '';
 		const airDate = seasonData.air_date ?? '';
-		const titleText = `${seriesName} - Season ${seasonData.season_number}`;
+		const seasonLabel = seasonData.name?.trim() ?? `Season ${seasonData.season_number}`;
+		const titleText = seriesName ? `${seriesName} - ${seasonLabel}` : seasonLabel;
 
 		// Get airedTo as the air_date of the last episode, if available
 		let airedTo = 'unknown';

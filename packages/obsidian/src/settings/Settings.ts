@@ -7,6 +7,19 @@ import { PropertyMapping, PropertyMappingModel, PropertyMappingOption } from 'pa
 import PropertyMappingModelsComponent from 'packages/obsidian/src/settings/PropertyMappingModelsComponent';
 import { FileSuggest } from 'packages/obsidian/src/settings/suggesters/FileSuggest';
 import { FolderSuggest } from 'packages/obsidian/src/settings/suggesters/FolderSuggest';
+import type { LanguageOption } from 'packages/obsidian/src/utils/ApiLanguages';
+import {
+	INHERIT_LANGUAGE,
+	INHERIT_LANGUAGE_OPTION,
+	MAL_TITLE_OPTIONS,
+	METADATA_LANGUAGES,
+	OPEN_LIBRARY_LANGUAGES,
+	STEAM_LANGUAGES,
+	TMDB_LANGUAGES,
+	VNDB_LANGUAGES,
+	WIKIPEDIA_LANGUAGES,
+	formatLanguageLabel,
+} from 'packages/obsidian/src/utils/ApiLanguages';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import { MEDIA_TYPES } from 'packages/obsidian/src/utils/MediaTypeManager';
 import { unCamelCase } from 'packages/obsidian/src/utils/Utils';
@@ -48,6 +61,34 @@ function createPropertyMappingsDescription(): DocumentFragment {
 	});
 }
 
+function addLanguageDropdownSetting(
+	group: SettingGroup,
+	name: string,
+	desc: string,
+	languages: LanguageOption[],
+	currentId: string,
+	onChange: (id: string) => void,
+	includeInherit: boolean,
+): void {
+	group.addSetting(
+		setting =>
+			void setting
+				.setName(name)
+				.setDesc(desc)
+				.addDropdown(cb => {
+					if (includeInherit) {
+						cb.addOption(INHERIT_LANGUAGE, formatLanguageLabel(INHERIT_LANGUAGE_OPTION));
+					}
+					for (const language of languages) {
+						cb.addOption(language.id, formatLanguageLabel(language));
+					}
+					cb.setValue(currentId).onChange(data => {
+						onChange(data);
+					});
+				}),
+	);
+}
+
 // MARK: Settings
 export interface MediaDbPluginSettings {
 	OMDbKeyId: string;
@@ -68,6 +109,14 @@ export interface MediaDbPluginSettings {
 	enableTemplaterIntegration: boolean;
 	imageDownload: boolean;
 	imageFolder: string;
+
+	metadataLanguage: string;
+	tmdbLanguage: string;
+	wikipediaLanguage: string;
+	steamLanguage: string;
+	vndbLanguage: string;
+	openLibraryLanguage: string;
+	malTitleLanguage: string;
 
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
@@ -328,6 +377,14 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	imageDownload: false,
 	imageFolder: 'Media DB/images',
 
+	metadataLanguage: 'en',
+	tmdbLanguage: INHERIT_LANGUAGE,
+	wikipediaLanguage: INHERIT_LANGUAGE,
+	steamLanguage: INHERIT_LANGUAGE,
+	vndbLanguage: INHERIT_LANGUAGE,
+	openLibraryLanguage: INHERIT_LANGUAGE,
+	malTitleLanguage: INHERIT_LANGUAGE,
+
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
 	//GiantBombAPI_disabledMediaTypes: [],
@@ -574,6 +631,101 @@ export class MediaDbSettingTab extends PluginSettingTab {
 								void this.plugin.saveSettings();
 							});
 					}),
+		);
+
+		// MARK: Languages
+		const languageGroup = new SettingGroup(containerEl);
+		languageGroup.setHeading('Languages');
+
+		addLanguageDropdownSetting(
+			languageGroup,
+			'Global language',
+			'Titles, plots, and other localizable fields are requested in this language when the API supports it. OMDb, Comic Vine, BoardGameGeek, RAWG, MusicBrainz, and IGDB stay in their default language.',
+			METADATA_LANGUAGES,
+			this.plugin.settings.metadataLanguage,
+			id => {
+				this.plugin.settings.metadataLanguage = id;
+				void this.plugin.saveSettings();
+			},
+			false,
+		);
+
+		addLanguageDropdownSetting(
+			languageGroup,
+			'TMDB',
+			'Override for TMDB movies, series, and seasons. TMDB falls back to a default translation when the chosen language is missing.',
+			TMDB_LANGUAGES,
+			this.plugin.settings.tmdbLanguage,
+			id => {
+				this.plugin.settings.tmdbLanguage = id;
+				void this.plugin.saveSettings();
+			},
+			true,
+		);
+
+		addLanguageDropdownSetting(
+			languageGroup,
+			'Wikipedia',
+			'Wikipedia edition used for search and ID lookup. Article IDs belong to that edition.',
+			WIKIPEDIA_LANGUAGES,
+			this.plugin.settings.wikipediaLanguage,
+			id => {
+				this.plugin.settings.wikipediaLanguage = id;
+				void this.plugin.saveSettings();
+			},
+			true,
+		);
+
+		addLanguageDropdownSetting(
+			languageGroup,
+			'Steam',
+			'Store page language for Steam game details.',
+			STEAM_LANGUAGES,
+			this.plugin.settings.steamLanguage,
+			id => {
+				this.plugin.settings.steamLanguage = id;
+				void this.plugin.saveSettings();
+			},
+			true,
+		);
+
+		addLanguageDropdownSetting(
+			languageGroup,
+			'VNDB',
+			'Preferred visual novel title language. Falls back to the official title when missing.',
+			VNDB_LANGUAGES,
+			this.plugin.settings.vndbLanguage,
+			id => {
+				this.plugin.settings.vndbLanguage = id;
+				void this.plugin.saveSettings();
+			},
+			true,
+		);
+
+		addLanguageDropdownSetting(
+			languageGroup,
+			'Open Library',
+			'Filters book search results by original language. English keeps the unfiltered search.',
+			OPEN_LIBRARY_LANGUAGES,
+			this.plugin.settings.openLibraryLanguage,
+			id => {
+				this.plugin.settings.openLibraryLanguage = id;
+				void this.plugin.saveSettings();
+			},
+			true,
+		);
+
+		addLanguageDropdownSetting(
+			languageGroup,
+			'MyAnimeList',
+			'Which title to store from MAL / Tenrai. English and Japanese fall back to the default MAL title when missing.',
+			MAL_TITLE_OPTIONS,
+			this.plugin.settings.malTitleLanguage,
+			id => {
+				this.plugin.settings.malTitleLanguage = id;
+				void this.plugin.saveSettings();
+			},
+			true,
 		);
 
 		// MARK: API keys
