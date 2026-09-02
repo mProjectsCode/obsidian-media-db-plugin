@@ -3,6 +3,7 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { ComicMangaModel } from 'packages/obsidian/src/models/ComicMangaModel';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import { pickMalTitle, resolveMalTitlePreference } from 'packages/obsidian/src/utils/ApiLanguages';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind } from 'packages/obsidian/src/utils/MDBError';
@@ -33,6 +34,14 @@ export class MALAPIManga extends APIModel {
 		this.typeMappings.set('manhua', 'manhua');
 		this.typeMappings.set('light novel', 'light-novel');
 		this.typeMappings.set('novel', 'novel');
+	}
+
+	private preferredTitle(result: { title?: string | null; title_english?: string | null; title_japanese?: string | null }): string {
+		return pickMalTitle(resolveMalTitlePreference(this.plugin.settings), {
+			defaultTitle: result.title,
+			english: result.title_english,
+			japanese: result.title_japanese,
+		});
 	}
 
 	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
@@ -73,7 +82,7 @@ export class MALAPIManga extends APIModel {
 			ret.push(
 				new ComicMangaModel({
 					subType: type,
-					title: result.title,
+					title: this.preferredTitle(result),
 					plot: result.synopsis ?? undefined,
 					englishTitle: result.title_english ?? result.title,
 					alternateTitles: result.titles?.map(x => x.title).filter(isTruthy),
@@ -148,7 +157,7 @@ export class MALAPIManga extends APIModel {
 		return ok(
 			new ComicMangaModel({
 				subType: type,
-				title: result.title,
+				title: this.preferredTitle(result),
 				plot: result.synopsis ?? undefined,
 				englishTitle: result.title_english ?? result.title,
 				alternateTitles: result.titles?.map(x => x.title).filter(isTruthy),

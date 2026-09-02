@@ -8,6 +8,21 @@ A plugin that can query multiple APIs for movies, series, anime, manga, books, c
 
 ### Features
 
+#### Global language
+
+The plugin can request localized titles, plots, genres, and other fields when the API supports it.
+
+Set a **Global language** in the plugin settings. You can also override the language per API:
+
+- **TMDB** — movies, series, and seasons (`language=`), including regional variants such as `fr-FR`, `pt-BR`, `zh-CN`
+- **Wikipedia** — searches the chosen language edition (`fr.wikipedia.org`, `ja.wikipedia.org`, …)
+- **Steam** — store page language for game details
+- **VNDB** — preferred visual novel title language
+- **Open Library** — filters book search by original language (English keeps the unfiltered search)
+- **MyAnimeList / Tenrai** — preferred title (default, English, or Japanese)
+
+OMDb, Comic Vine, BoardGameGeek, RAWG, MusicBrainz, and IGDB do not expose localizable metadata and stay in their default language.
+
 #### Search by Title
 
 Search for movies, series, anime, manga, books, comics, games, music releases, or wiki articles by their name across multiple APIs.
