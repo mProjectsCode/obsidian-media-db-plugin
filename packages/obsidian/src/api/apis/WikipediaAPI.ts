@@ -3,6 +3,7 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { WikiModel } from 'packages/obsidian/src/models/WikiModel';
+import { resolveWikipediaLanguage } from 'packages/obsidian/src/utils/ApiLanguages';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
@@ -56,7 +57,8 @@ export class WikipediaAPI extends APIModel {
 	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&srlimit=20&utf8=&format=json&origin=*`;
+		const wikiLang = resolveWikipediaLanguage(this.plugin.settings);
+		const searchUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&srlimit=20&utf8=&format=json&origin=*`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			method: 'GET',
@@ -108,7 +110,8 @@ export class WikipediaAPI extends APIModel {
 	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=info&pageids=${encodeURIComponent(id)}&inprop=url&format=json&origin=*`;
+		const wikiLang = resolveWikipediaLanguage(this.plugin.settings);
+		const searchUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&prop=info&pageids=${encodeURIComponent(id)}&inprop=url&format=json&origin=*`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			method: 'GET',

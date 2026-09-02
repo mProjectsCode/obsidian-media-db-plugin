@@ -3,6 +3,7 @@ import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { BookModel } from 'packages/obsidian/src/models/BookModel';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import { resolveOpenLibraryLanguage, withOpenLibraryLanguageFilter } from 'packages/obsidian/src/utils/ApiLanguages';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
@@ -147,7 +148,7 @@ export class OpenLibraryAPI extends APIModel {
 				},
 				params: {
 					query: {
-						q: title,
+						q: withOpenLibraryLanguageFilter(title, resolveOpenLibraryLanguage(this.plugin.settings)),
 						fields: 'key,title,author_name,first_publish_year,cover_i,subject,number_of_pages,number_of_pages_median,description,ratings_average,isbn',
 						limit: 20,
 					},

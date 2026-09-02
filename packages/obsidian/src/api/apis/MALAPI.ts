@@ -4,6 +4,7 @@ import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { MovieModel } from 'packages/obsidian/src/models/MovieModel';
 import { SeriesModel } from 'packages/obsidian/src/models/SeriesModel';
+import { pickMalTitle, resolveMalTitlePreference } from 'packages/obsidian/src/utils/ApiLanguages';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind } from 'packages/obsidian/src/utils/MDBError';
@@ -31,6 +32,14 @@ export class MALAPI extends APIModel {
 		this.typeMappings.set('special', 'special');
 		this.typeMappings.set('tv', 'series');
 		this.typeMappings.set('ova', 'ova');
+	}
+
+	private preferredTitle(result: { title?: string | null; title_english?: string | null; title_japanese?: string | null }): string {
+		return pickMalTitle(resolveMalTitlePreference(this.plugin.settings), {
+			defaultTitle: result.title,
+			english: result.title_english,
+			japanese: result.title_japanese,
+		});
 	}
 
 	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
@@ -72,7 +81,7 @@ export class MALAPI extends APIModel {
 				ret.push(
 					new MovieModel({
 						subType: '',
-						title: result.title,
+						title: this.preferredTitle(result),
 						englishTitle: result.title_english ?? result.title,
 						year,
 						dataSource: this.apiName,
@@ -84,7 +93,7 @@ export class MALAPI extends APIModel {
 				ret.push(
 					new MovieModel({
 						subType: type,
-						title: result.title,
+						title: this.preferredTitle(result),
 						englishTitle: result.title_english ?? result.title,
 						year,
 						dataSource: this.apiName,
@@ -95,7 +104,7 @@ export class MALAPI extends APIModel {
 				ret.push(
 					new SeriesModel({
 						subType: type,
-						title: result.title,
+						title: this.preferredTitle(result),
 						englishTitle: result.title_english ?? result.title,
 						year,
 						dataSource: this.apiName,
@@ -151,7 +160,7 @@ export class MALAPI extends APIModel {
 			return ok(
 				new MovieModel({
 					subType: undefined,
-					title: result.title,
+					title: this.preferredTitle(result),
 					englishTitle: result.title_english ?? result.title,
 					japaneseTitle: result.title_japanese,
 					year: year,
@@ -184,7 +193,7 @@ export class MALAPI extends APIModel {
 			return ok(
 				new MovieModel({
 					subType: type,
-					title: result.title,
+					title: this.preferredTitle(result),
 					englishTitle: result.title_english ?? result.title,
 					japaneseTitle: result.title_japanese,
 					year: year,
@@ -215,7 +224,7 @@ export class MALAPI extends APIModel {
 			return ok(
 				new SeriesModel({
 					subType: type,
-					title: result.title,
+					title: this.preferredTitle(result),
 					englishTitle: result.title_english ?? result.title,
 					japaneseTitle: result.title_japanese,
 					year: year,
