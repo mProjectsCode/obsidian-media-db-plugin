@@ -1,6 +1,7 @@
 import 'packages/obsidian/src/styles.css';
 import { Plugin, TFolder } from 'obsidian';
 import { APIManager } from 'packages/obsidian/src/api/APIManager';
+import { PodchaserAPI } from 'packages/obsidian/src/api/apis/PodchaserAPI';
 import { BoardGameGeekAPI } from 'packages/obsidian/src/api/apis/BoardGameGeekAPI';
 import { ComicVineAPI } from 'packages/obsidian/src/api/apis/ComicVineAPI';
 import { IGDBAPI } from 'packages/obsidian/src/api/apis/IGDBAPI';
@@ -81,6 +82,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new IGDBAPI(this));
 		this.apiManager.registerAPI(new RAWGAPI(this));
 		this.apiManager.registerAPI(new VNDBAPI(this));
+		this.apiManager.registerAPI(new PodchaserAPI(this));
 	}
 
 	private registerRibbonAndFileMenu(): void {

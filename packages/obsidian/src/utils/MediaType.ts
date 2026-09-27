@@ -1,5 +1,6 @@
 export enum MediaType {
 	Movie = 'movie',
+	Podcast = 'podcast',
 	Series = 'series',
 	Season = 'season',
 	ComicManga = 'comicManga',
