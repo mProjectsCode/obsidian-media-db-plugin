@@ -22,7 +22,7 @@ type IdResponse = Record<
 	string,
 	{
 		success: boolean;
-		data: GameDetails;
+		data?: GameDetails;
 	}
 >;
 
@@ -233,13 +233,12 @@ export class SteamAPI extends APIModel {
 		// console.debug(await fetchData.json);
 		const data = (await fetchData.json) as IdResponse;
 
-		let result: GameDetails | undefined = undefined;
-		for (const [key, value] of Object.entries(data)) {
-			// after some testing I found out that id is somehow a number despite that it's defined as string...
-			if (key === String(id)) {
-				result = value.data;
-			}
-		}
+		const requestedEntry = data[String(id)];
+		const result = requestedEntry?.success
+			? requestedEntry.data
+			: Object.values(data).find(
+					entry => entry.success && String(entry.data?.steam_appid) === String(id),
+				)?.data;
 		if (!result) {
 			return err({
 				kind: MDBErrorKind.Api,
