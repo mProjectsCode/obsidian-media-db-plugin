@@ -1,0 +1,266 @@
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin: diffs
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/exampleVault: .obsidian
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git: COMMIT_EDITMSG
+diff -b -r /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/config /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/config
+5a6,11
+> [remote "origin"]
+> 	url = https://github.com/Phan-boy/obsidian-media-db-plugin.git
+> 	fetch = +refs/heads/*:refs/remotes/origin/*
+> [branch "master"]
+> 	remote = origin
+> 	merge = refs/heads/master
+Binary files /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/index and /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/index differ
+diff -b -r /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/logs/HEAD /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/logs/HEAD
+1,2c1
+< 0000000000000000000000000000000000000000 ddf20e1d68f629bcf546aff246212a473950843d antwan <antwan@dell-latitude-e6430s.lan> 1790470966 -0400	commit (initial): got the api to work. i just need to refine its impmentation
+< ddf20e1d68f629bcf546aff246212a473950843d 42ac885c663e1b0e698145808868aaed15c0ecad antwan <antwan@dell-latitude-e6430s.lan> 1790526977 -0400	commit: removed hardcoded authentication
+---
+> 0000000000000000000000000000000000000000 81ff85560f2aeba0a90e6fe82c05363fc6119d4c antwan <antwan@dell-latitude-e6430s.lan> 1790528348 -0400	clone: from https://github.com/Phan-boy/obsidian-media-db-plugin.git
+diff -b -r /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/logs/refs/heads/master /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/logs/refs/heads/master
+1,2c1
+< 0000000000000000000000000000000000000000 ddf20e1d68f629bcf546aff246212a473950843d antwan <antwan@dell-latitude-e6430s.lan> 1790470966 -0400	commit (initial): got the api to work. i just need to refine its impmentation
+< ddf20e1d68f629bcf546aff246212a473950843d 42ac885c663e1b0e698145808868aaed15c0ecad antwan <antwan@dell-latitude-e6430s.lan> 1790526977 -0400	commit: removed hardcoded authentication
+---
+> 0000000000000000000000000000000000000000 81ff85560f2aeba0a90e6fe82c05363fc6119d4c antwan <antwan@dell-latitude-e6430s.lan> 1790528348 -0400	clone: from https://github.com/Phan-boy/obsidian-media-db-plugin.git
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/logs/refs: remotes
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 04
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 05
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 08
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 0b
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 0f
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 10
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 12
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 16
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 17
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 1a
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 1f
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 22
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 23
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 24
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 26
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 27
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 2a
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 2c
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 2e
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 2f
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 32
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 33
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 35
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 36
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 39
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 3a
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 3d
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 42
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 47
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 48
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 49
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 4a
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 4b
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 4c
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 53
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 56
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 57
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 5b
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 5d
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 5f
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 61
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 62
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 65
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 68
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 69
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 6b
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 6d
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 6e
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 73
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 78
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 7a
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 7b
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 7c
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 80
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 82
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 83
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 84
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 91
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 93
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 97
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 9a
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 9b
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: 9d
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: a3
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: a6
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: a7
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: a9
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: aa
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: ab
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: ac
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: ae
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: af
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: b0
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: b2
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: b7
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: b9
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: ba
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: bb
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: bc
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: bf
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: c6
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: c9
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: ca
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: cc
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: cd
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: d6
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: d7
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: dc
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: dd
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: de
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: e0
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: e3
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: e6
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: e7
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: ea
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: ed
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: f2
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: f6
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: fb
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/objects: fd
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/objects/pack: pack-7a0edc1a7524234d32ee4e74eadea06408098926.idx
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/objects/pack: pack-7a0edc1a7524234d32ee4e74eadea06408098926.pack
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/objects/pack: pack-7a0edc1a7524234d32ee4e74eadea06408098926.rev
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git: packed-refs
+diff -b -r /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/.git/refs/heads/master /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/refs/heads/master
+1c1
+< 42ac885c663e1b0e698145808868aaed15c0ecad
+---
+> 81ff85560f2aeba0a90e6fe82c05363fc6119d4c
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/.git/refs: remotes
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master: node_modules
+diff -b -r /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/package.json /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/package.json
+42,45d41
+< 	},
+< 	"dependencies": {
+< 		"graphql": "^17.0.2",
+< 		"graphql-request": "^7.4.0"
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master: package-lock.json
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/packages/obsidian/src/api/apis: PodchaserAPI.ts
+diff -b -r /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/packages/obsidian/src/main.ts /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/packages/obsidian/src/main.ts
+4d3
+< import { PodchaserAPI } from 'packages/obsidian/src/api/apis/PodchaserAPI';
+85d83
+< 		this.apiManager.registerAPI(new PodchaserAPI(this));
+Only in /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/packages/obsidian/src/models: PodcastModel.ts
+diff -b -r /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/packages/obsidian/src/settings/Settings.ts /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/packages/obsidian/src/settings/Settings.ts
+62,64d61
+< 	PodchaserClientId: string;
+< 	PodchaserClientSecret: string;
+< 
+102,103d98
+< 	podcastTemplate: string;
+< 	
+114d108
+< 	podcastFileNameTemplate: string;
+125d118
+< 	podcastFolder: string;
+139d131
+< 	podcastPropertyConversionRules: string;
+172,173d163
+< 			case MediaType.Podcast:
+< 				return settings.podcastTemplate;
+206,208d195
+< 			case MediaType.Podcast:
+< 				settings.podcastTemplate = template;
+< 				break;
+232,233d218
+< 			case MediaType.Podcast:
+< 				return settings.podcastFileNameTemplate;
+266,268d250
+< 			case MediaType.Podcast:
+< 				settings.podcastFileNameTemplate = template;
+< 				break;
+292,294d273
+< 			case MediaType.Podcast:
+< 				return settings.podcastFolder;
+< 		
+327d305
+< 
+343,344d320
+< 	PodchaserClientId: '',
+< 	PodchaserClientSecret: '',
+382d357
+< 	podcastTemplate: '',
+393d367
+< 	podcastFileNameTemplate: '{{ title }}',
+404d377
+< 	podcastFolder: 'Media DB/podcast',
+418,419d390
+< 	podcastPropertyConversionRules: '',
+< 
+644,694d614
+< 		/*
+< 		apiKeyGroup.addSetting(
+< 			setting =>
+< 				void setting
+< 					.setName('Podchaser API key')
+< 					.setDesc('API Read Access Token for "https://www.podchaser.com/".')
+< 					.addComponent(el => {
+< 						const component = new SecretComponent(this.app, el);
+< 
+< 						component.setValue(this.plugin.settings.PodchaserKeyID).onChange(data => {
+< 							this.plugin.settings.PodchaserKeyID = data;
+< 							void this.plugin.saveSettings();
+< 						});
+< 
+< 						return component;
+< 					}),
+< 		);
+< 		*/
+< 		apiKeyGroup.addSetting(
+< 			setting =>
+< 				void setting
+< 					.setName('Podchaser Client ID')
+< 					.setDesc('Client ID for Podchaser API (Required for Podchaser OAuth).')
+< 					.addComponent(el => {
+< 						const component = new SecretComponent(this.app, el);
+< 
+< 						component.setValue(this.plugin.settings.PodchaserClientId).onChange(data => {
+< 							this.plugin.settings.PodchaserClientId = data;
+< 							void this.plugin.saveSettings();
+< 						});
+< 
+< 						return component;
+< 					}),
+< 		);
+< 		apiKeyGroup.addSetting(
+< 			setting =>
+< 				void setting
+< 					.setName('Podchaser Client Secret')
+< 					.setDesc('Client Secret for Podchaser API.')
+< 					.addComponent(el => {
+< 						const component = new SecretComponent(this.app, el);
+< 
+< 						component.setValue(this.plugin.settings.PodchaserClientSecret).onChange(data => {
+< 							this.plugin.settings.PodchaserClientSecret = data;
+< 							void this.plugin.saveSettings();
+< 						});
+< 
+< 						return component;
+< 					}),
+< 		);
+< 
+diff -b -r /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/packages/obsidian/src/utils/MediaTypeManager.ts /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/packages/obsidian/src/utils/MediaTypeManager.ts
+14d13
+< import { PodcastModel } from 'packages/obsidian/src/models/PodcastModel';
+28d26
+< 	MediaType.Podcast,
+56,57d53
+< 		this.mediaFileNameTemplateMap.set(MediaType.Podcast, settings.podcastFileNameTemplate);
+< 
+69d64
+< 		this.mediaTemplateMap.set(MediaType.Podcast, settings.podcastTemplate);
+83d77
+< 		this.mediaFolderMap.set(MediaType.Podcast, settings.podcastFolder);
+169,170d162
+< 		} else if (mediaType === MediaType.Podcast) {
+< 			return new PodcastModel(obj);
+diff -b -r /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/new_code/obsidian-media-db-plugin-master/packages/obsidian/src/utils/MediaType.ts /home/antwan/Documents/Coding/projects/obsidan_mdb_v2/github_fork/obsidian-media-db-plugin/packages/obsidian/src/utils/MediaType.ts
+3d2
+< 	Podcast = 'podcast',

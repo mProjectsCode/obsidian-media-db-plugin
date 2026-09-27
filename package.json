@@ -39,5 +39,9 @@
 		"vite": "^8.0.16",
 		"vite-plugin-banner": "^0.8.1",
 		"vite-plugin-static-copy": "^4.1.1"
+	},
+	"dependencies": {
+		"graphql": "^17.0.2",
+		"graphql-request": "^7.4.0"
 	}
 }

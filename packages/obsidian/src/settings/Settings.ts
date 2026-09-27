@@ -59,6 +59,9 @@ export interface MediaDbPluginSettings {
 	RAWGAPIKeyId: string;
 	ComicVineKeyId: string;
 	BoardgameGeekKeyId: string;
+	PodchaserClientId: string;
+	PodchaserClientSecret: string;
+
 
 	sfwFilter: boolean;
 	templates: boolean;
@@ -96,6 +99,8 @@ export interface MediaDbPluginSettings {
 	musicReleaseTemplate: string;
 	boardgameTemplate: string;
 	bookTemplate: string;
+	podcastTemplate: string;
+	
 
 	movieFileNameTemplate: string;
 	seriesFileNameTemplate: string;
@@ -106,6 +111,7 @@ export interface MediaDbPluginSettings {
 	musicReleaseFileNameTemplate: string;
 	boardgameFileNameTemplate: string;
 	bookFileNameTemplate: string;
+	podcastFileNameTemplate: string;
 
 	movieFolder: string;
 	seriesFolder: string;
@@ -116,6 +122,7 @@ export interface MediaDbPluginSettings {
 	musicReleaseFolder: string;
 	boardgameFolder: string;
 	bookFolder: string;
+	podcastFolder: string;
 
 	propertyMappingModels: PropertyMappingModelData[];
 
@@ -129,6 +136,7 @@ export interface MediaDbPluginSettings {
 	musicReleasePropertyConversionRules: string;
 	boardgamePropertyConversionRules: string;
 	bookPropertyConversionRules: string;
+	podcastPropertyConversionRules: string;
 }
 
 /**
@@ -161,6 +169,8 @@ class MediaTypeMappedSettings {
 				return settings.boardgameTemplate;
 			case MediaType.Book:
 				return settings.bookTemplate;
+			case MediaType.Podcast:
+				return settings.podcastTemplate;
 		}
 	}
 
@@ -193,6 +203,9 @@ class MediaTypeMappedSettings {
 			case MediaType.Book:
 				settings.bookTemplate = template;
 				break;
+			case MediaType.Podcast:
+				settings.podcastTemplate = template;
+				break;
 		}
 	}
 
@@ -216,6 +229,8 @@ class MediaTypeMappedSettings {
 				return settings.boardgameFileNameTemplate;
 			case MediaType.Book:
 				return settings.bookFileNameTemplate;
+			case MediaType.Podcast:
+				return settings.podcastFileNameTemplate;
 		}
 	}
 
@@ -248,6 +263,9 @@ class MediaTypeMappedSettings {
 			case MediaType.Book:
 				settings.bookFileNameTemplate = template;
 				break;
+			case MediaType.Podcast:
+				settings.podcastFileNameTemplate = template;
+				break;
 		}
 	}
 
@@ -271,6 +289,9 @@ class MediaTypeMappedSettings {
 				return settings.boardgameFolder;
 			case MediaType.Book:
 				return settings.bookFolder;
+			case MediaType.Podcast:
+				return settings.podcastFolder;
+		
 		}
 	}
 
@@ -303,6 +324,7 @@ class MediaTypeMappedSettings {
 			case MediaType.Book:
 				settings.bookFolder = folder;
 				break;
+
 		}
 	}
 }
@@ -318,6 +340,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	RAWGAPIKeyId: '',
 	ComicVineKeyId: '',
 	BoardgameGeekKeyId: '',
+	PodchaserClientId: '',
+	PodchaserClientSecret: '',
 
 	sfwFilter: true,
 	templates: true,
@@ -355,6 +379,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseTemplate: '',
 	boardgameTemplate: '',
 	bookTemplate: '',
+	podcastTemplate: '',
 
 	movieFileNameTemplate: '{{ title }} ({{ year }})',
 	seriesFileNameTemplate: '{{ title }} ({{ year }})',
@@ -365,6 +390,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
 	boardgameFileNameTemplate: '{{ title }} ({{ year }})',
 	bookFileNameTemplate: '{{ title }} ({{ year }})',
+	podcastFileNameTemplate: '{{ title }}',
 
 	movieFolder: 'Media DB/movies',
 	seriesFolder: 'Media DB/series',
@@ -375,6 +401,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleaseFolder: 'Media DB/music',
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
+	podcastFolder: 'Media DB/podcast',
 
 	propertyMappingModels: [],
 
@@ -388,6 +415,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
 	bookPropertyConversionRules: '',
+	podcastPropertyConversionRules: '',
+
 };
 
 export const lockedPropertyMappings: string[] = ['type', 'id', 'dataSource'];
@@ -612,6 +641,57 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						return component;
 					}),
 		);
+		/*
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Podchaser API key')
+					.setDesc('API Read Access Token for "https://www.podchaser.com/".')
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.PodchaserKeyID).onChange(data => {
+							this.plugin.settings.PodchaserKeyID = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
+					}),
+		);
+		*/
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Podchaser Client ID')
+					.setDesc('Client ID for Podchaser API (Required for Podchaser OAuth).')
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.PodchaserClientId).onChange(data => {
+							this.plugin.settings.PodchaserClientId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
+					}),
+		);
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Podchaser Client Secret')
+					.setDesc('Client Secret for Podchaser API.')
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.PodchaserClientSecret).onChange(data => {
+							this.plugin.settings.PodchaserClientSecret = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
+					}),
+		);
+
 		// apiKeyGroup.addSetting(
 		// 	setting =>
 		// 		void setting

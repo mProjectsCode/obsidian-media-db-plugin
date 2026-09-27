@@ -11,6 +11,7 @@ import { MusicReleaseModel } from 'packages/obsidian/src/models/MusicReleaseMode
 import { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
 import { SeriesModel } from 'packages/obsidian/src/models/SeriesModel';
 import { WikiModel } from 'packages/obsidian/src/models/WikiModel';
+import { PodcastModel } from 'packages/obsidian/src/models/PodcastModel';
 import type { MediaDbPluginSettings } from 'packages/obsidian/src/settings/Settings';
 import { ILLEGAL_FILENAME_CHARACTERS } from 'packages/obsidian/src/utils/IllegalFilenameCharactersList';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
@@ -24,6 +25,7 @@ export const MEDIA_TYPES: MediaType[] = [
 	MediaType.Game,
 	MediaType.Movie,
 	MediaType.MusicRelease,
+	MediaType.Podcast,
 	MediaType.Series,
 	MediaType.Season,
 	MediaType.Wiki,
@@ -51,6 +53,8 @@ export class MediaTypeManager {
 		this.mediaFileNameTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.BoardGame, settings.boardgameFileNameTemplate);
 		this.mediaFileNameTemplateMap.set(MediaType.Book, settings.bookFileNameTemplate);
+		this.mediaFileNameTemplateMap.set(MediaType.Podcast, settings.podcastFileNameTemplate);
+
 
 		this.mediaTemplateMap = new Map<MediaType, string>();
 		this.mediaTemplateMap.set(MediaType.Movie, settings.movieTemplate);
@@ -62,6 +66,7 @@ export class MediaTypeManager {
 		this.mediaTemplateMap.set(MediaType.MusicRelease, settings.musicReleaseTemplate);
 		this.mediaTemplateMap.set(MediaType.BoardGame, settings.boardgameTemplate);
 		this.mediaTemplateMap.set(MediaType.Book, settings.bookTemplate);
+		this.mediaTemplateMap.set(MediaType.Podcast, settings.podcastTemplate);
 	}
 
 	updateFolders(settings: MediaDbPluginSettings): void {
@@ -75,6 +80,7 @@ export class MediaTypeManager {
 		this.mediaFolderMap.set(MediaType.MusicRelease, settings.musicReleaseFolder);
 		this.mediaFolderMap.set(MediaType.BoardGame, settings.boardgameFolder);
 		this.mediaFolderMap.set(MediaType.Book, settings.bookFolder);
+		this.mediaFolderMap.set(MediaType.Podcast, settings.podcastFolder);
 	}
 
 	getFileName(mediaTypeModel: MediaTypeModel): string {
@@ -160,7 +166,9 @@ export class MediaTypeManager {
 			return new BoardGameModel(obj);
 		} else if (mediaType === MediaType.Book) {
 			return new BookModel(obj);
-		}
+		} else if (mediaType === MediaType.Podcast) {
+			return new PodcastModel(obj);
+		} 
 
 		throw new Error(`Unknown media type: ${mediaType}`);
 	}
