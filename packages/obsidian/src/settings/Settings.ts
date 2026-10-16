@@ -51,6 +51,8 @@ function createPropertyMappingsDescription(): DocumentFragment {
 // MARK: Settings
 export interface MediaDbPluginSettings {
 	OMDbKeyId: string;
+	HardcoverClientId: string;
+	HardcoverOAuthSecretId: string;
 	TMDBKeyId: string;
 	//MobyGamesKeyId: string;
 	//GiantBombKeyId: string;
@@ -80,6 +82,7 @@ export interface MediaDbPluginSettings {
 	MusicBrainzAPI_disabledMediaTypes: MediaType[];
 	OMDbAPI_disabledMediaTypes: MediaType[];
 	OpenLibraryAPI_disabledMediaTypes: MediaType[];
+	HardcoverAPI_disabledMediaTypes: MediaType[];
 	SteamAPI_disabledMediaTypes: MediaType[];
 	TMDBMovieAPI_disabledMediaTypes: MediaType[];
 	TMDBSeasonAPI_disabledMediaTypes: MediaType[];
@@ -310,6 +313,8 @@ class MediaTypeMappedSettings {
 // MARK: Defaults
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKeyId: '',
+	HardcoverClientId: '',
+	HardcoverOAuthSecretId: '',
 	TMDBKeyId: '',
 	//MobyGamesKeyId: '',
 	//GiantBombKeyId: '',
@@ -339,6 +344,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	MusicBrainzAPI_disabledMediaTypes: [],
 	OMDbAPI_disabledMediaTypes: [],
 	OpenLibraryAPI_disabledMediaTypes: [],
+	HardcoverAPI_disabledMediaTypes: [MediaType.Book],
 	SteamAPI_disabledMediaTypes: [],
 	TMDBMovieAPI_disabledMediaTypes: [],
 	TMDBSeasonAPI_disabledMediaTypes: [],
@@ -579,6 +585,41 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		// MARK: API keys
 		const apiKeyGroup = new SettingGroup(containerEl);
 		apiKeyGroup.setHeading('API Keys');
+
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Hardcover OAuth client ID')
+					.setDesc(
+						'Public native-app client ID from Hardcover Developer Apps. Register obsidian://media-db-hardcover as the redirect and allow only read:catalog. No client secret is used.',
+					)
+					.addText(component => {
+						component.setValue(this.plugin.settings.HardcoverClientId).onChange(data => {
+							this.plugin.hardcoverOAuth.cancelPendingAuthorization();
+							this.plugin.settings.HardcoverClientId = data.trim();
+							void this.plugin.saveSettings();
+						});
+					}),
+		);
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Hardcover connection')
+					.setDesc('Connect in your browser to read public book metadata. Keep this vault open until you return. Credentials are stored in SecretStorage.')
+					.addButton(button =>
+						button.setButtonText('Connect').onClick(async () => {
+							const result = await this.plugin.hardcoverOAuth.beginAuthorization();
+							if (result.ok) window.open(result.value, '_blank', 'noopener');
+							else new Notice(result.error.userMessage ?? 'Could not start Hardcover connection.');
+						}),
+					)
+					.addButton(button =>
+						button.setButtonText('Disconnect').onClick(async () => {
+							const result = await this.plugin.hardcoverOAuth.disconnect();
+							new Notice(result.ok ? 'Hardcover disconnected.' : (result.error.userMessage ?? 'Could not disconnect Hardcover.'));
+						}),
+					),
+		);
 
 		apiKeyGroup.addSetting(
 			setting =>

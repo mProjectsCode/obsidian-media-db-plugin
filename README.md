@@ -129,6 +129,18 @@ Now you select the result you want, and the plugin will cast its magic, creating
 | [VNDB](https://vndb.org/)                            | The VNDB API offers metadata for visual novels                                                     | games                                                 | No                                                                                                                                                                               | 200 requests per 5 minutes                                                                                                                                                                 | Yes                |
 | [Boardgame Geek](https://boardgamegeek.com)          | The Boardgame Geek API offers metadata for boardgames                                              | boardgames                                            | Yes, by making an account [here](https://boardgamegeek.com/join/) and then [requesting an application token](https://boardgamegeek.com/applications)                             | Exact usage limits are still undetermined                                                                                                                                                  | No                 |
 
+#### Hardcover setup
+
+Hardcover is an optional book provider, disabled by default. It uses OAuth authorization-code flow with S256 PKCE, requesting only `read:catalog` (public catalog metadata and search). No personal access token or client secret is required.
+
+For development, register a **Mobile, desktop, or CLI** public application at [Hardcover Developer Apps](https://hardcover.app/account/developer-apps). Register `obsidian://media-db-hardcover` as its redirect URI, allow only `read:catalog`, and disable Device Authorization Grant. Enter its public client ID in **Hardcover OAuth client ID** in Media DB settings. A production client registration should be owned by the project maintainer; the plugin does not include a default client ID.
+
+Click **Connect**, authorize catalog access in your browser, and return to the vault that started the connection. Enable **HardcoverAPI** under **Book settings**, then search for books normally or select HardcoverAPI in advanced search. OAuth access and rotating refresh credentials are stored only in Obsidian SecretStorage; settings contain a secret identifier. **Disconnect** revokes the refresh credentials before clearing the local connection. If revocation fails, reconnect to the network and retry Disconnect.
+
+For ID searches, enter the numeric Hardcover **book ID**, not an edition ID or ISBN. Imports include title, authors, original publication year, description, genres, cover, average Hardcover rating, pages, and available ISBNs. ISBNs and page count use the default physical edition, falling back to the default ebook edition. This imports catalog metadata; it does not sync reading history or modify your Hardcover library.
+
+Search returns up to 20 results. Requests are spaced at least 1.1 seconds apart. Authorization failures, insufficient permissions, and rate limits are reported without creating an entry. See [Hardcover's OAuth documentation](https://docs.hardcover.app/api/oauth/) for registration and authorization details.
+
 #### Notes
 
 - [Tenrai](https://tenrai.org/)
